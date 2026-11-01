@@ -1,0 +1,34 @@
+name: BETQ quality gate
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate source syntax
+        run: npm run check
+      - name: Offline unit and HTTP tests
+        run: npm test
+      - name: Smoke test server and demo API
+        shell: bash
+        run: |
+          node src/server.mjs > /tmp/betq-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          for i in {1..20}; do
+            curl -fsS http://127.0.0.1:3000/api/health >/tmp/health.json && break
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:3000/ >/dev/null
+          curl -fsS 'http://127.0.0.1:3000/api/slate?mode=demo' > /tmp/demo.json
+          node -e "const d=require('/tmp/demo.json'); if(!d.demo || d.summary.games!==3) process.exit(1)"

@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080c17">
+  <meta name="description" content="BETQ.ai — Transparent, market-first sports quant research and paper execution terminal.">
+  <title>BETQ.ai | Quant Intelligence Terminal</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script defer src="/app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+      <a class="brand" href="/" aria-label="BETQ.ai home">
+        <span class="brand-mark">BQ<span class="brand-flare">.</span></span>
+        <span class="brand-copy"><strong>BETQ<span>.ai</span></strong><small>QUANT INTELLIGENCE</small></span>
+      </a>
+      <div class="sidebar-overline">TERMINAL / v0.1</div>
+      <nav class="nav-list" aria-label="Terminal views">
+        <button class="nav-item active" type="button" data-tab="overview"><span class="nav-icon">◫</span><span>Command Center</span><span class="nav-shortcut">01</span></button>
+        <button class="nav-item" type="button" data-tab="games"><span class="nav-icon">◉</span><span>Game Monitor</span><span class="nav-shortcut">02</span></button>
+        <button class="nav-item" type="button" data-tab="signals"><span class="nav-icon">⌁</span><span>Signal Scanner</span><span class="nav-shortcut">03</span></button>
+        <button class="nav-item" type="button" data-tab="execution"><span class="nav-icon">⇅</span><span>Paper Execution</span><span class="nav-shortcut">04</span></button>
+        <button class="nav-item" type="button" data-tab="audit"><span class="nav-icon">◇</span><span>Audit & Quality</span><span class="nav-shortcut">05</span></button>
+        <button class="nav-item" type="button" data-tab="settings"><span class="nav-icon">⚙</span><span>Settings</span><span class="nav-shortcut">06</span></button>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <div class="source-box">
+        <div class="tiny-row"><span class="pulse-dot" id="sidebar-dot"></span><span id="sidebar-feed">Checking data source</span></div>
+        <div class="source-rule"></div>
+        <div class="source-line"><span>Model</span><b>MARKET v0.1</b></div>
+        <div class="source-line"><span>Execution</span><b>PAPER ONLY</b></div>
+      </div>
+      <div class="sidebar-footer"><span class="sidebar-glyph">✦</span> INTELLIGENCE OVER INSTINCT <span class="copyright">© 2026 BETQ</span></div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-nav-button" type="button" id="menu-toggle" aria-label="Toggle navigation">☰</button>
+          <div class="breadcrumb">WORKSPACE <span>/</span> <b id="breadcrumb-page">COMMAND CENTER</b></div>
+        </div>
+        <div class="topbar-right">
+          <span class="time-now" id="clock">--:--:--</span>
+          <span class="divider-vertical"></span>
+          <span class="feed-chip" id="feed-chip"><span class="pulse-dot"></span> CONNECTING</span>
+          <button class="refresh-btn" type="button" data-action="refresh" aria-label="Refresh current slate" title="Refresh current slate">↻</button>
+        </div>
+      </header>
+
+      <main class="main-content" id="main-content">
+        <section class="hero">
+          <div class="hero-lines" aria-hidden="true"></div>
+          <div class="hero-main">
+            <div class="eyebrow"><span class="eyebrow-square"></span> BETQ QUANT LAB <span class="eyebrow-slash">//</span> SPORTS MARKET INTELLIGENCE</div>
+            <h1>See the <em>edge.</em><br>Question the signal.</h1>
+            <p>Institutional-style price discovery for sports markets. Transparent probabilities, auditable EV, strict data gates, zero blind confidence.</p>
+            <div class="hero-actions">
+              <button class="primary-button" data-tab="signals" type="button">Open signal scanner <span>↗</span></button>
+              <span class="hero-subtag"><span class="hollow-dot"></span> RESEARCH TERMINAL / NO AUTO-BETTING</span>
+            </div>
+          </div>
+          <div class="hero-stamp"><span>BETQ</span><strong>01</strong><small>QUANTITATIVE<br>ENGINE</small></div>
+        </section>
+
+        <section class="toolbar">
+          <div class="toolbar-group">
+            <span class="toolbar-label">LEAGUE</span>
+            <div class="choice-bar" id="sport-filters">
+              <button type="button" data-sport="americanfootball_nfl" class="chosen">NFL</button>
+              <button type="button" data-sport="basketball_nba">NBA</button>
+              <button type="button" data-sport="baseball_mlb">MLB</button>
+              <button type="button" data-sport="icehockey_nhl">NHL</button>
+              <button type="button" data-sport="americanfootball_ncaaf">NCAAF</button>
+            </div>
+          </div>
+          <div class="toolbar-group">
+            <span class="toolbar-label">MARKET</span>
+            <div class="choice-bar" id="market-filters">
+              <button type="button" data-market="h2h" class="chosen">Moneyline</button>
+              <button type="button" data-market="spreads">Spread</button>
+              <button type="button" data-market="totals">Totals</button>
+            </div>
+          </div>
+          <div class="toolbar-group mode-group">
+            <span class="toolbar-label">DATA MODE</span>
+            <div class="choice-bar mode-toggle">
+              <button type="button" data-mode="live" class="chosen">Live</button>
+              <button type="button" data-mode="demo">Demo</button>
+            </div>
+          </div>
+        </section>
+
+        <div id="banner" class="notice warning" role="status">
+          <span>◈</span><p>Connecting to market data source…</p>
+        </div>
+
+        <section class="page active" id="page-overview" aria-label="Command center">
+          <div class="section-heading"><div><div class="eyebrow subtle">01 / LIVE WORKSPACE</div><h2>Market command center</h2></div><p id="last-refreshed">Awaiting first snapshot</p></div>
+          <div class="metric-grid" id="metric-grid"></div>
+          <div class="main-grid">
+            <section class="panel wide-panel">
+              <div class="panel-head"><div><span class="panel-kicker">SIGNALS / RANKED</span><h3>Price opportunity board</h3></div><button type="button" class="text-link" data-tab="signals">Full scanner ↗</button></div>
+              <div class="table-scroll"><table class="data-table"><thead><tr><th>CONTRACT</th><th>BEST BOOK</th><th>FAIR P</th><th>EDGE</th><th>EV</th><th>STATUS</th></tr></thead><tbody id="opportunity-table"></tbody></table></div>
+            </section>
+            <section class="panel spotlight-panel">
+              <div class="panel-head"><div><span class="panel-kicker">DEEP DIVE / SELECTED</span><h3>Signal anatomy</h3></div><span class="header-mini-icon">⌁</span></div>
+              <div id="spotlight"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-head"><div><span class="panel-kicker">CROSS-MARKET VIEW</span><h3>Detected edge by game</h3></div><span class="faint-caption">INDICATIVE PRICE %</span></div>
+              <div id="edge-chart" class="chart-content"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-head"><div><span class="panel-kicker">CONTROL ROOM</span><h3>Methodology & guardrails</h3></div><span class="header-mini-icon">◇</span></div>
+              <div class="guardrail-list">
+                <div><span class="guardrail-icon">01</span><p><b>Market consensus, not a crystal ball.</b><small>Each offer is evaluated against other sportsbooks after removing vig.</small></p></div>
+                <div><span class="guardrail-icon">02</span><p><b>Apples-to-apples comparisons.</b><small>Spread and total contracts match exactly on the point line.</small></p></div>
+                <div><span class="guardrail-icon">03</span><p><b>Freshness before opportunity.</b><small>Expired, thin and kickoff-adjacent signals are suppressed.</small></p></div>
+                <div><span class="guardrail-icon">04</span><p><b>Paper before capital.</b><small>No live wagering; preliminary sizing is theoretical.</small></p></div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="page" id="page-games" aria-label="Game monitor">
+          <div class="section-heading"><div><div class="eyebrow subtle">02 / GAME MONITOR</div><h2>Game intelligence</h2></div><button class="outline-button" type="button" data-action="scores">Load live scores ↗</button></div>
+          <div id="scores" class="scores-panel"></div>
+          <div class="game-grid" id="game-grid"></div>
+        </section>
+
+        <section class="page" id="page-signals" aria-label="Signal scanner">
+          <div class="section-heading"><div><div class="eyebrow subtle">03 / MARKET SCANNER</div><h2>All priced outcomes</h2></div><span class="faint-caption">MARKET-ONLY / NOT MODEL PICKS</span></div>
+          <div class="scanner-bar"><input id="signal-search" aria-label="Search teams, selections or books" placeholder="Search team, bookmaker or selection…"><select id="signal-sort" aria-label="Sort signals"><option value="ev">Highest EV estimate</option><option value="quality">Highest data quality</option><option value="edge">Highest price edge</option><option value="soon">Soonest kickoff</option></select><label class="filter-checkbox"><input type="checkbox" id="watch-only"> WATCH only</label></div>
+          <div class="signal-grid" id="signal-grid"></div>
+        </section>
+
+        <section class="page" id="page-execution" aria-label="Paper execution">
+          <div class="section-heading"><div><div class="eyebrow subtle">04 / RISK LAB</div><h2>Paper execution</h2></div><span class="danger-inline">● NO REAL WAGERS</span></div>
+          <div id="execution-view"></div>
+        </section>
+
+        <section class="page" id="page-audit" aria-label="Audit and quality">
+          <div class="section-heading"><div><div class="eyebrow subtle">05 / GOVERNANCE</div><h2>Data quality & model audit</h2></div><span class="tag-neutral">TRANSPARENCY FIRST</span></div>
+          <div id="audit-view"></div>
+        </section>
+
+        <section class="page" id="page-settings" aria-label="Settings">
+          <div class="section-heading"><div><div class="eyebrow subtle">06 / CONTROL PLANE</div><h2>Terminal settings</h2></div><span class="tag-neutral">LOCAL SETTINGS</span></div>
+          <div class="settings-grid">
+            <section class="panel"><div class="panel-head"><div><span class="panel-kicker">PAPER LEDGER</span><h3>Risk preferences</h3></div></div>
+              <label class="form-label" for="bankroll">Paper bankroll ($)</label><input id="bankroll" class="setting-input" type="number" min="10" max="10000000" step="10" value="1000">
+              <label class="form-label" for="maxrisk">Maximum stake per paper ticket (% bankroll)</label><input id="maxrisk" class="setting-input" type="number" min="0.1" max="1" step="0.1" value="1">
+              <p class="form-help">Paper sizing is capped at 1% per ticket and never triggers sportsbook orders. Saved only in this browser.</p><button type="button" class="primary-button" data-action="save-settings">Save settings</button>
+            </section>
+            <section class="panel"><div class="panel-head"><div><span class="panel-kicker">DATA SERVICES</span><h3>Live API configuration</h3></div></div>
+              <p class="settings-paragraph">The Odds API key must be set on the running Node.js server as <code>ODDS_API_KEY</code>. Never paste a private key into a webpage, public GitHub file or the browser console.</p>
+              <p class="settings-paragraph">Your GitHub Actions secret alone does not configure a Render deployment. Add the variable to Render's service environment when deploying.</p>
+              <a class="text-link" href="https://the-odds-api.com/liveapi/guides/v4/" target="_blank" rel="noopener noreferrer">The Odds API documentation ↗</a>
+            </section>
+          </div>
+        </section>
+      </main>
+      <footer class="app-footer"><span>BETQ.ai <span class="footer-faint">/ QUANT INTELLIGENCE TERMINAL</span></span><span>Market-derived estimates · Not independently validated · No real wagering</span></footer>
+    </div>
+  </div>
+  <div class="toast" role="status" id="toast" aria-live="polite"></div>
+</body>
+</html>
