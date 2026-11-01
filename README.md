@@ -13,7 +13,7 @@ cp .env.example .env  # optional; environment variable loading described below
 ODDS_API_KEY=your_the_odds_api_key npm start
 ```
 
-Open http://localhost:3000. Without the key, use **Demo** to explore synthetic, clearly labeled sample events. The `.env` file is not auto-loaded; Node 22 can use `node --env-file=.env src/server.js` or set environment variables in your hosting platform.
+Open http://localhost:3000. Without the key, use **Demo** to explore synthetic, clearly labeled sample events. The `.env` file is not auto-loaded; Node 22 can use `node --env-file=.env src/server.mjs` or set environment variables in your hosting platform.
 
 Run `npm test` for the offline quant and HTTP/security tests. Run `npm run check` for syntax validation.
 
