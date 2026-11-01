@@ -231,8 +231,8 @@
     const max = Math.max(2, ...bars.map(x => x.value));
     $('edge-chart').innerHTML = bars.length ? bars.map(b =>
       '<div class="bar-chart-row"><span class="bar-name" title="' + esc(b.label) + '">' +
-      esc(b.label) + '</span><div class="bar-track"><div class="bar-fill" style="width:' +
-      Math.min(100, Math.max(0, b.value / max * 100)) + '%"></div></div><b class="bar-number">' +
+      esc(b.label) + '</span><progress class="edge-progress" max="100" value="' +
+      Math.min(100, Math.max(0, b.value / max * 100)) + '"></progress><b class="bar-number">' +
       num(b.value) + 'pp</b></div>').join('') +
       '<p class="chart-note">Cross-book price advantage, not historical predictive accuracy. ' +
       'Each bar is calculated from the current selected market snapshot.</p>' :
@@ -364,20 +364,20 @@
     $('execution-view').innerHTML = '<div class="execution-grid">' +
       '<article class="panel execution-card"><div class="label-sm">PAPER BANKROLL</div><div class="big-stat">' +
       usd(state.bankroll) + '</div><div class="risk-details">Configured maximum stake: ' + num(state.maxRisk) +
-      '% per paper ticket · 5% portfolio exposure cap.</div><div class="risk-meter"><div class="risk-meter-fill" style="width:' +
-      ratio + '%"></div></div><div class="risk-details">Open exposure: ' + usd(exposure) + ' of ' +
+      '% per paper ticket · 5% portfolio exposure cap.</div><progress class="risk-progress" max="100" value="' +
+      ratio + '"></progress><div class="risk-details">Open exposure: ' + usd(exposure) + ' of ' +
       usd(state.bankroll * 0.05) + ' cap · Worst case if all open tickets lose: -' +
       usd(exposure) + '</div></article>' +
       '<article class="panel execution-card"><div class="label-sm">PAPER LEDGER / MANUALLY SETTLED</div><div class="big-stat ' +
       (totalPnl >= 0 ? 'positive' : 'negative') + '">' + usd(totalPnl) +
       '</div><div class="risk-details">' + state.ledger.length + ' historical paper tickets · ' +
       open.length + ' open · ' + closed.length + ' manually settled.<br>W/L/V outcomes are user-entered and not performance-verified.</div></article>' +
-      '</div><section class="panel" style="margin-top:17px"><div class="panel-head"><div><span class="panel-kicker">PAPER TRADING ONLY</span><h3>Position ledger</h3></div><span class="danger-inline">NO SPORTSBOOK ORDERS</span></div>' +
+      '</div><section class="panel top-gap"><div class="panel-head"><div><span class="panel-kicker">PAPER TRADING ONLY</span><h3>Position ledger</h3></div><span class="danger-inline">NO SPORTSBOOK ORDERS</span></div>' +
       '<div class="table-scroll"><table class="execution-table"><thead><tr><th>CONTRACT</th><th>OBSERVED QUOTE</th><th>STAKE</th><th>MODE</th><th>STATUS</th><th>P/L</th><th>MANUAL RESULT</th></tr></thead><tbody>' +
       (tickets || '<tr><td colspan="7">' +
       empty('No paper tickets yet', 'Open the Signal Scanner and stage a WATCH contract to explore paper risk. No real bets will be placed.') +
       '</td></tr>') + '</tbody></table></div></section>' +
-      '<div class="notice info" style="margin-top:17px"><span>◇</span><p>Paper results are manually entered, not verified against official results. ' +
+      '<div class="notice info top-gap"><span>◇</span><p>Paper results are manually entered, not verified against official results. ' +
       'The baseline is market consensus, not an independent predictive model. No responsible real-money sizing can be inferred from these simulations.</p></div>';
   }
 
@@ -403,9 +403,9 @@
       auditRow('Real money order execution', 'Intentionally disabled; paper records are local only', 'OFFLINE', false)
     ];
     $('audit-view').innerHTML = '<div class="audit-grid">' +
-      '<article class="panel"><div class="panel-head"><div><span class="panel-kicker">PROVENANCE & METHODS</span><h3>Quant pipeline</h3></div></div><div style="padding:0 20px">' +
+      '<article class="panel"><div class="panel-head"><div><span class="panel-kicker">PROVENANCE & METHODS</span><h3>Quant pipeline</h3></div></div><div class="audit-rows">' +
       rows.slice(0, 5).join('') + '</div></article>' +
-      '<article class="panel"><div class="panel-head"><div><span class="panel-kicker">INTEGRITY CHECKS</span><h3>Unverified capabilities</h3></div></div><div style="padding:0 20px">' +
+      '<article class="panel"><div class="panel-head"><div><span class="panel-kicker">INTEGRITY CHECKS</span><h3>Unverified capabilities</h3></div></div><div class="audit-rows">' +
       rows.slice(5).join('') + '</div></article>' +
       '<article class="panel audit-note"><h3>Market snapshot</h3><p>League: ' + esc(sportLabels[state.sport]) +
       ' · market: ' + esc(marketLabels[state.market]) + ' · mode: ' + esc(state.mode.toUpperCase()) +
@@ -477,7 +477,7 @@
       const data = await requestJSON('/api/scores?sport=' + encodeURIComponent(state.sport));
       const games = data.games || [];
       $('scores').innerHTML = games.length ? '<section class="panel"><div class="panel-head"><div><span class="panel-kicker">THE ODDS API</span><h3>Scores & game status</h3></div><span class="faint-caption">RECEIVED ' +
-        esc(when(data.receivedAt)) + '</span></div><div style="padding:12px">' +
+        esc(when(data.receivedAt)) + '</span></div><div class="score-rows">' +
         games.slice(0, 24).map(g => {
           const names = new Map((g.scores || []).map(x => [x.name, x.score]));
           return '<div class="score-entry"><span>' + esc(g.awayTeam) + ' <b>' + esc(names.get(g.awayTeam) ?? '—') +
