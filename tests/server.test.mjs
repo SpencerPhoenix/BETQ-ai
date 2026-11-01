@@ -79,7 +79,7 @@ test('Odds provider cache avoids duplicate credits', async () => {
   assert.match(seenUrl, /markets=h2h/);
   assert.equal(source.status().quota.remaining, 496);
   assert.equal(JSON.stringify(source.status()).includes('SERVER_SIDE_SECRET'), false);
-  await assert.rejects(source.getOdds('unknown_sport', 'h2h'), { code: 'INVALID_FILTER' });
+  assert.throws(() => source.getOdds('unknown_sport', 'h2h'), { code: 'INVALID_FILTER' });
 });
 test('Provider errors never echo private credentials', async () => {
   const source = createOddsSource({
