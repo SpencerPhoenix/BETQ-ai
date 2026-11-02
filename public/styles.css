@@ -492,3 +492,32 @@ progress.evidence-meter::-moz-progress-bar {background:var(--lime);border-radius
 
 .agent-bias-warning{padding:13px 18px;background:#302224;border-top:1px solid #654447;color:#e9c4b9;font-size:11px;line-height:1.7;}
 .agent-bias-warning b{color:#ffe4d9;}
+
+/* v0.9 | Prospective NFL QB information-latency shadow intelligence */
+.shadow-head-panel,.shadow-study-panel,.shadow-method-panel{margin:18px 0;}
+.shadow-head-panel .metric-grid,.shadow-study-panel .metric-grid{padding:17px 17px 2px;}
+.shadow-view-switch{display:flex;gap:7px;flex-wrap:wrap;}
+.shadow-view-switch .small-button.active{border-color:#b8da8d;background:#25362c;color:#dcebc4;}
+.shadow-live-notice,.shadow-diagnostic{
+  margin:15px 18px 18px;padding:13px 14px;border-left:3px solid #9681b6;
+  background:#222435;color:#b1bdcc;font-size:11px;line-height:1.8;
+}
+.shadow-live-notice b{color:#e8e1f0;}
+.shadow-mode-warning{
+  background:#342b1f;color:#ebd3aa;border-bottom:1px solid #705536;
+  padding:14px 18px;font-size:11px;line-height:1.8;
+}
+.shadow-mode-warning b{color:#f5e0b2;}
+.shadow-steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:13px;padding:17px;}
+.shadow-steps>div{background:#182434;border:1px solid #304254;
+  border-radius:9px;padding:15px;}
+.shadow-steps b{display:block;color:#d3e8f3;font-size:12px;line-height:1.6;}
+.shadow-steps p{color:#a2b2c5;font-size:11px;line-height:1.8;margin:8px 0 0;}
+.shadow-disclaimer{margin:0 18px 20px;padding:11px;color:#adbac7;
+  border-left:2px solid #caac78;font-size:11px;line-height:1.7;}
+@media(max-width:700px){
+  .shadow-steps{grid-template-columns:1fr;padding:12px;}
+  .shadow-head-panel .metric-grid,.shadow-study-panel .metric-grid{padding:10px;}
+  .shadow-live-notice,.shadow-diagnostic{margin:10px;}
+}
