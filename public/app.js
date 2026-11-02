@@ -25,6 +25,7 @@
     pricingResult: null, pricingError: null, priceVerification: null,
     replaySummary: null, replayPlays: null, replayError: null,
     marketChallenge: null,
+    riskStress: null,
     replaySeason: 2025, replayThreshold: 3, replayPage: 0, replayLoading: false,
     selectedId: null, search: '', sort: 'ev', watchOnly: false,
     loading: false, ledger: Array.isArray(safeGet(LEDGER, [])) ? safeGet(LEDGER, []) : []
@@ -204,6 +205,57 @@
       '<button class="text-link" type="button" data-tab="replay">See seasons &amp; win/loss records ↗</button></div>';
   }
 
+
+
+  function renderRiskStress(){
+    const root=$('risk-stress-view');if(!root)return;
+    const r=state.riskStress;
+    if(!r){root.innerHTML=empty('Loading risk stress',
+      'Reviewing conditional historical closing-price scenarios; no paid sports API requests.');return;}
+    if(!r.available||!Array.isArray(r.scenarios)){
+      root.innerHTML=empty('Risk stress not yet published',
+        'No validated historical selection sequence is available for the risk calculation.');return;
+    }
+    const baseline=r.scenarios.find(x=>x.label==='BASELINE_CONDITIONAL_RESAMPLE_1_PERCENT_RISK');
+    const adverse=r.scenarios.find(x=>x.label==='ADVERSE_2_PERCENT_WINS_FLIPPED');
+    const half=r.scenarios.find(x=>x.label==='HALF_STAKE_CONDITIONAL_RESAMPLE');
+    if(!baseline){root.innerHTML=empty('Risk stress incomplete','Expected source-audited scenario not found.');return;}
+    const b=baseline.result;
+    const stats='<div class="metric-grid">'+
+      metric('CONDITIONAL PATHS',String(b.iterations),
+        'Seed '+b.seed+' · season/week grouped resampling','', '◉')+
+      metric('MEDIAN PATH RETURN',signed(b.endingBankrollReturnPercent.median,2)+'%',
+        'Historical hypothetical price sequence; not an actual return','violet','∑')+
+      metric('BOTTOM 5% PATH RETURN',signed(b.endingBankrollReturnPercent.p05,2)+'%',
+        'Conditional lower-tail scenario · not forecast','', '⌁')+
+      metric('PRACTICAL LOSS THRESHOLD',num(b.frequencyCrossingPracticalRuinPercent,2)+'%',
+        'Simulated frequency of touching half the starting bankroll','cyan','◇')+'</div>';
+    const scenarios=[baseline,adverse,half].filter(Boolean).map(x=>{
+      const y=x.result;
+      return '<article class="risk-stress-card"><span>'+esc(x.label.replaceAll('_',' '))+
+        '</span><strong>'+signed(y.endingBankrollReturnPercent.median,2)+
+        '% median</strong><div><small>50% bankroll threshold touched: '+
+        num(y.frequencyCrossingPracticalRuinPercent,2)+'%</small>'+
+        '<small>95th percentile maximum drawdown: '+
+        num(y.pathMaxDrawdownPercent.p95,2)+'%</small>'+
+        '<small>Risk per sampled selection: '+num(y.stakePercent,2)+'%</small></div></article>';
+    }).join('');
+    root.innerHTML='<section class="panel"><div class="panel-head"><div>'+
+      '<span class="panel-kicker">HISTORICAL RETROSPECTIVE OUTCOMES · WEEK-BLOCK RESAMPLING</span>'+
+      '<h3>Stress-test the selection system, not a marketing confidence score</h3></div>'+
+      '<span class="status-tag pass">NO VERIFIED RUIN PROBABILITY</span></div>'+
+      '<div class="risk-stress-inner">'+stats+
+      '<div class="risk-stress-scenarios">'+scenarios+'</div>'+
+      '<p class="risk-stress-note"><b>What these numbers mean:</b> '+
+      'The model repeatedly resamples '+String(r.historicalWeekBlocks)+
+      ' historical NFL week groups from '+String(r.historicalEligibleDecisions)+
+      ' source-completed hypothetical decisions. It starts at '+num(b.startingBankroll,0)+
+      ' units and labels touching '+num(b.practicalRuinThreshold,0)+
+      ' units a practical loss threshold. Simulated frequencies are conditional on the '+
+      'recorded losing strategy and unverified closing odds. This does not measure an exact '+
+      'real-world probability of ruin, future profitability or account performance.</p>'+
+      '</div></section>';
+  }
 
   function renderMarketChallenge(){
     const root=$('market-challenge-view');if(!root)return;
@@ -1073,7 +1125,7 @@
   function render() {
     renderFilters(); renderFeed(); renderBanner(); renderMetrics(); renderAgentRun();
     renderOpportunities(); renderSpotlight(); renderChart();
-    renderGames(); renderSignals(); renderModel(); renderIntelligence(); renderEvidence(); renderReplay(); renderMarketChallenge(); renderPricing(); renderExecution(); renderAudit();
+    renderGames(); renderSignals(); renderModel(); renderIntelligence(); renderEvidence(); renderReplay(); renderMarketChallenge(); renderRiskStress(); renderPricing(); renderExecution(); renderAudit();
   }
 
   async function loadIntelligence() {
@@ -1093,6 +1145,11 @@
     try { state.nflModel = await requestJSON('/api/model/nfl'); }
     catch { state.nflModel = { available:false, reason:'MODEL_ENDPOINT_UNAVAILABLE' }; }
     renderModel(); renderAudit(); renderSpotlight();
+  }
+  async function loadRiskStress(){
+    try{state.riskStress=await requestJSON('/api/risk/nfl');}
+    catch{state.riskStress={available:false,reason:'RISK_RESEARCH_UNAVAILABLE'};}
+    renderRiskStress();
   }
   async function loadMarketChallenge(){
     try{
@@ -1270,6 +1327,7 @@
   loadEvidence();
   loadReplay();
   loadMarketChallenge();
+  loadRiskStress();
   loadPriceVerification();
   loadSlate();
 })();
