@@ -10,7 +10,7 @@ import { createHash } from 'node:crypto';
 import { dirname, resolve } from 'node:path';
 import { parseCsv, cleanGames, fitNflElo, MODEL_VERSION } from '../src/nfl-elo.mjs';
 
-const URL = 'https://raw.githubusercontent.com/nflverse/nfldata/master/data/games.csv';
+const URL = 'https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv';
 const args = process.argv.slice(2);
 const input = args.includes('--input') ? args[args.indexOf('--input') + 1] : null;
 const target = args.includes('--output') ? args[args.indexOf('--output') + 1] : 'data/nfl_elo.json';
@@ -31,7 +31,7 @@ const games = cleanGames(parseCsv(raw), { today:new Date().toISOString().slice(0
 const checksum = createHash('sha256').update(games.map(g =>
   [g.id,g.date,g.home,g.away,g.homeScore,g.awayScore,g.neutral].join('|')).join('\n')).digest('hex');
 const existing = await readFile(target,'utf8').then(JSON.parse).catch(()=>null);
-if (existing?.version===MODEL_VERSION && existing?.completedGamesSha256===checksum) {
+if (existing?.version===MODEL_VERSION && existing?.completedGamesSha256===checksum && existing?.source?.url===URL) {
   console.log('No completed results changed; existing model remains unchanged');
   console.log(JSON.stringify({ready:existing.readyForResearch,holdout:existing.holdout,generatedAt:existing.generatedAt}));
   process.exit(0);
@@ -40,7 +40,7 @@ const fit = fitNflElo(games);
 const artifact = {
   schema:1, version:MODEL_VERSION, type:'PREGAME_NFL_ELO_BASELINE',
   source:{
-    project:'nflverse/nfldata',description:'Historical NFL schedules and results maintained by Lee Sharpe',
+    project:'nflverse/nflverse-data',description:'NFL schedule release maintained by Lee Sharpe, published by nflverse',
     url:URL,license:'CC BY 4.0',extractedUTC:new Date().toISOString()
   },
   generatedAt:new Date().toISOString(),
