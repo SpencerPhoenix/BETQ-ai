@@ -21,7 +21,7 @@
     mode: prefs.mode === 'demo' ? 'demo' : 'live',
     bankroll: Number.isFinite(prefs.bankroll) && prefs.bankroll >= 10 ? prefs.bankroll : 1000,
     maxRisk: Number.isFinite(prefs.maxRisk) && prefs.maxRisk >= 0.1 && prefs.maxRisk <= 1 ? prefs.maxRisk : 1,
-    slate: null, error: null, sourceHealth: null, nflModel: null, evidence: null,
+    slate: null, error: null, sourceHealth: null, nflModel: null, evidence: null, efficiency: null, injurySource: null,
     selectedId: null, search: '', sort: 'ev', watchOnly: false,
     loading: false, ledger: Array.isArray(safeGet(LEDGER, [])) ? safeGet(LEDGER, []) : []
   };
@@ -89,7 +89,7 @@
     if (tab === 'settings') syncSettings();
     if (tab === 'execution') renderExecution();
     if (tab === 'audit') renderAudit();
-    if (tab === 'model') renderModel();
+    if (tab === 'model') { renderModel(); renderIntelligence(); }
     if (tab === 'evidence') renderEvidence();
     if (tab === 'signals') renderSignals();
     if (tab === 'games') renderGames();
@@ -122,7 +122,7 @@
         ' <button type="button" class="text-link" data-mode="demo">Explore demo ↗</button></p>';
     } else if (state.slate) {
       element.classList.add('info');
-      element.innerHTML = '<span>◇</span><p><b>LIVE MARKET SNAPSHOT · MANUAL REFRESH.</b> ↻ updates on demand to conserve API credits. Market consensus is not an independent prediction. The NFL Elo research model is in <button type="button" class="text-link" data-tab="model">Prediction Lab ↗</button>; injuries and starters remain unverified.</p>';
+      element.innerHTML = '<span>◇</span><p><b>LIVE MARKET · MANUAL REFRESH.</b> ↻ refreshes on demand to conserve API credits. NFL Elo and the historical EPA challenger appear separately in <button type="button" class="text-link" data-tab="model">Prediction Lab ↗</button>. Injury status may be stale; confirmed starters are not modeled.</p>';
     } else {
       element.classList.add('info');
       element.innerHTML = '<span>◈</span><p>Connecting to the odds provider…</p>';
@@ -468,6 +468,111 @@
   }
 
 
+
+  function renderIntelligence() {
+    const root=$('intelligence-view');
+    if(!root)return;
+    const r=state.efficiency,injSource=state.injurySource;
+    if(!r||!injSource){
+      root.innerHTML=empty('Loading source-backed NFL intelligence',
+        'Reading independent EPA challenger evaluation and public weekly injury report provenance…');
+      return;
+    }
+    const holdout=r.holdout,eligible=r.available===true,good=eligible&&
+      r.promotableInHistoricalHoldout===true;
+    const modelHead='<div class="section-heading nfl4-subtitle"><div>'+
+      '<div class="eyebrow subtle">04B / FEATURE INTELLIGENCE</div>'+
+      '<h2>EPA challenger & roster watch</h2></div>'+
+      '<span class="tag-neutral">RESEARCH ONLY · NO AUTO-PROMOTION</span></div>';
+    const model=eligible ?
+      '<div class="nfl4-three-metrics">'+
+        '<div><label>2025 ELO BRIER</label><strong>'+
+          num(holdout.elo?.brier,5)+'</strong></div>'+
+        '<div><label>EPA CHALLENGER BRIER</label><strong class="'+
+          (good?'positive':'')+'">'+num(holdout.challenger?.brier,5)+'</strong></div>'+
+        '<div><label>PAIRED IMPROVEMENT</label><strong>'+
+          signed(holdout.deltaBrier,5)+'</strong></div></div>'+
+        '<div class="nfl4-intel-body"><p><b>Untouched 2025 test:</b> '+
+        esc(String(holdout.challenger?.n||0))+' completed games. EPA/success/rest challenger '+
+        (good?'passed its predefined historical proper-score gate.':'did not pass the historical promotion gate.')+
+        ' The paired 95% bootstrap interval for baseline minus challenger Brier is '+
+        signed(holdout.confidence95?.lower,5)+' to '+
+        signed(holdout.confidence95?.upper,5)+
+        '. This is not a forward betting ROI or proof of execution edge.</p>'+
+        '<p>Feature source: nflverse play-by-play, '+esc(r.sourceManifest?.sourceLastCompletedGame||'date unknown')+
+        ' through the most recent processed game · '+esc(String(r.coverage?.featureReadyGames||0))+
+        ' lagged games evaluated. Current model selection is still Elo.</p>'+
+        '</div>' :
+      '<div class="nfl4-intel-body"><p><b>Challenger unavailable.</b> '+
+      esc(r.reason||'Feature model not yet published')+
+      '. Elo remains the source of the published pregame baseline.</p></div>';
+    const injuryStatus=injSource.available ?
+      '<p><b>Injury source:</b> nflverse weekly reports · last published '+
+       esc(when(injSource.sourceUpdatedAt))+' · '+
+       esc(String(injSource.reportCount||0))+' team/week reports. '+
+       (injSource.playerTimestampAvailable ?
+         'Individual player update times reported.' :
+         'No individual player update timestamps in the current CSV; source file vintage only.')+
+       '</p>' :
+      '<p><b>Injury source unavailable or stale.</b> Reported injuries and starter status are not assumed healthy. '+
+       esc(injSource.reason||'No fresh data')+'</p>';
+    const caution='<p class="nfl4-caution">Reported QB names are not confirmed starters. This build does not '+
+      'claim a QB injury adjustment or change betting recommendations automatically. '+
+      'EPA is computed only from previously completed games.</p>';
+    const cards=(state.mode==='live'&&state.sport==='americanfootball_nfl'&&
+      state.market==='h2h'?(state.slate?.events||[]):[])
+      .filter(e=>!e.started).slice(0,20).map(e=>{
+        const m=e.efficiencyChallenger,inj=e.injuryContext;
+        const h=inj?.home,a=inj?.away;
+        const source=inj?.available===true;
+        const qbs=x=>x?.reportedQBs?.length?
+          x.reportedQBs.map(p=>esc(p.player)+' ('+esc(p.status)+')').join('; ') :
+          'No QB listing — starter still unverified';
+        const injuryInfo=source ?
+          '<div class="nfl4-injury-row"><div><span>'+esc(e.homeTeam)+
+            ' report</span><b>'+(h?.reported?String(h.count)+' flagged':'No matching week report')+
+            '</b><small>'+qbs(h)+'</small></div><div><span>'+esc(e.awayTeam)+
+            ' report</span><b>'+(a?.reported?String(a.count)+' flagged':'No matching week report')+
+            '</b><small>'+qbs(a)+'</small></div></div>' :
+          '<p class="nfl4-warning">Injury week or source is not verified: '+
+            esc(inj?.reason||'Unavailable')+'. No availability assumptions applied.</p>';
+        const modelInfo=m?.available?
+          '<div class="nfl4-prob-row"><div><span>BASELINE ELO · HOME</span><strong>'+
+            pct(m.baselineEloProbability)+'</strong></div><div><span>EPA CHALLENGER · HOME</span>'+
+            '<strong>'+pct(m.homeWinProbability)+'</strong></div><div>'+
+            '<span>CHALLENGER DELTA</span><strong>'+
+            signed((m.homeWinProbability-m.baselineEloProbability)*100,2)+'pp</strong></div></div>'+
+          '<div class="nfl4-feature-row">Offensive EPA/play: '+esc(e.homeTeam)+' '+
+             num(m.inputs.homeOffEPA,3)+' vs '+esc(e.awayTeam)+' '+
+             num(m.inputs.awayOffEPA,3)+' · Allowed EPA/play: '+
+             num(m.inputs.homeDefAllowedEPA,3)+' / '+num(m.inputs.awayDefAllowedEPA,3)+
+             ' · Rest differential: '+signed(m.inputs.restDaysDifferential,0)+' days</div>' :
+          '<p class="nfl4-warning">EPA challenger suppressed: '+
+          esc(m?.reason||'Not enough prior completed data')+'. Elo baseline remains unchanged.</p>';
+        return '<article class="panel nfl4-match">'+
+          '<div class="panel-head"><div><span class="panel-kicker">WEEKLY NFL INTELLIGENCE</span>'+
+          '<h3>'+esc(eventLabel(e))+'</h3></div>'+
+          '<span class="faint-caption">'+esc(when(e.commenceTime))+'</span></div>'+
+          '<div class="nfl4-match-content">'+modelInfo+injuryInfo+'</div>'+
+          '</article>';
+      }).join('');
+    root.innerHTML=modelHead+
+      '<div class="nfl4-columns"><section class="panel">'+
+        '<div class="panel-head"><div><span class="panel-kicker">LAGGED EPA / SUCCESS / REST</span>'+
+        '<h3>Independent challenger evaluation</h3></div><span class="status-tag '+
+        (good?'watch':'pass')+'">'+(good?'HOLDOUT GATE PASSED':'UNPROMOTED')+
+        '</span></div>'+model+'</section>'+
+      '<section class="panel"><div class="panel-head"><div><span class="panel-kicker">REPORT SOURCE GOVERNANCE</span>'+
+      '<h3>Reported injuries ≠ confirmed starters</h3></div></div>'+
+      '<div class="nfl4-intel-body">'+injuryStatus+caution+'</div></section></div>'+
+      '<div class="section-heading nfl4-subtitle"><div><div class="eyebrow subtle">SOURCE-ALIGNED / UPCOMING</div>'+
+      '<h2>Game-level research comparisons</h2></div>'+
+      '<span class="faint-caption">NO WAGERING EXECUTION</span></div>'+
+      '<div class="nfl4-game-grid">'+
+        (cards||empty('Select live NFL moneylines','The current league and market do not have eligible future NFL game comparisons.'))+
+      '</div>';
+  }
+
   function renderEvidence() {
     const root = $('evidence-view');
     if (!root) return;
@@ -578,7 +683,22 @@
           'Evidence journal not yet available',
         state.evidence?.settledGames >= 30 ? 'SAMPLE READY' : 'COLLECTING',
         state.evidence?.settledGames >= 30),
-      auditRow('Injuries and lineup verification', 'Not integrated. Must be verified independently.', 'NOT VERIFIED', false),
+      auditRow('EPA/success/rest independent challenger',
+        state.efficiency?.available ? '2025 holdout baseline Brier '+
+          num(state.efficiency.holdout?.elo?.brier,5)+' versus feature Brier '+
+          num(state.efficiency.holdout?.challenger?.brier,5)+
+          '. Not automatically promoted.' : 'Research challenger not available or source stale',
+        state.efficiency?.available ? 'RESEARCH' : 'UNAVAILABLE', Boolean(state.efficiency?.available)),
+      auditRow('NFL injury report provenance',
+        state.injurySource?.available ?
+          'Community report as-of '+when(state.injurySource.sourceUpdatedAt)+
+          '; player-level update timestamps '+(state.injurySource.playerTimestampAvailable?'present':'not provided') :
+          'Current injury source unavailable or stale',
+        state.injurySource?.available?'SOURCE LOADED':'UNVERIFIED',
+        Boolean(state.injurySource?.available)),
+      auditRow('Starting QB and injury effect on model',
+        'No verified starting quarterback decisions. Injury reports do not alter probabilities.',
+        'NOT MODELED',false),
       auditRow('Weather and venue conditions', 'Not integrated. Must be verified independently.', 'NOT VERIFIED', false),
       auditRow('First half / halftime model', 'Not supplied by the three featured markets endpoint', 'NOT MODELED', false),
       auditRow('Real money order execution', 'Intentionally disabled; paper records are local only', 'OFFLINE', false)
@@ -620,9 +740,22 @@
   function render() {
     renderFilters(); renderFeed(); renderBanner(); renderMetrics();
     renderOpportunities(); renderSpotlight(); renderChart();
-    renderGames(); renderSignals(); renderModel(); renderEvidence(); renderExecution(); renderAudit();
+    renderGames(); renderSignals(); renderModel(); renderIntelligence(); renderEvidence(); renderExecution(); renderAudit();
   }
 
+  async function loadIntelligence() {
+    const [eff,inj]=await Promise.all([
+      requestJSON('/api/model/efficiency').catch(err=>({
+        available:false,reason:err?.code||'EFFICIENCY_ENDPOINT_UNAVAILABLE'
+      })),
+      requestJSON('/api/injuries/nfl').catch(err=>({
+        available:false,reason:err?.code||'INJURY_ENDPOINT_UNAVAILABLE'
+      }))
+    ]);
+    state.efficiency=eff;
+    state.injurySource=inj;
+    renderIntelligence();renderAudit();
+  }
   async function loadModel() {
     try { state.nflModel = await requestJSON('/api/model/nfl'); }
     catch { state.nflModel = { available:false, reason:'MODEL_ENDPOINT_UNAVAILABLE' }; }
@@ -725,6 +858,7 @@
   render();
   loadHealth();
   loadModel();
+  loadIntelligence();
   loadEvidence();
   loadSlate();
 })();
