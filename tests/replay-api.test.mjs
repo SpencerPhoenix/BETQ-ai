@@ -75,7 +75,7 @@ test('Every slate request creates independent stage report without claiming acti
   await withLocal(async(base,calls)=>{
     const r=await fetch(base+'/api/slate?mode=demo&sport=americanfootball_nfl&market=h2h');
     const j=await r.json();
-    assert.equal(j.agentRun.version,'quant-agent-run-1');
+    assert.equal(j.agentRun.version,'quant-agent-run-2');
     assert.equal(j.agentRun.mayWager,false);
     assert.equal(j.agentRun.decision,'DEMO_NO_ACTION');
     assert.equal(j.agentRun.realMoneyROI,null);
