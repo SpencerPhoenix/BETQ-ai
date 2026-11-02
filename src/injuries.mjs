@@ -107,7 +107,11 @@ export function injuryContextForGame(event,artifact,now=Date.now()){
   if(!artifact||artifact.schema!==1||artifact.source!=='NFLVERSE_INJURIES')
     return {available:false,reason:'INJURY_REPORT_NOT_CONFIGURED'};
   const home=NFL_TEAMS[event.home_team],away=NFL_TEAMS[event.away_team];
-  const week=Number(event.week);
+  const kick=Date.parse(event.commence_time || '');
+  const fixture=Number.isFinite(kick) && Array.isArray(artifact.fixtures) ?
+    artifact.fixtures.find(f=>f.home===home&&f.away===away&&
+      Math.abs(kick-Date.parse(f.gameDate+'T12:00:00Z'))<=36*3600000) : null;
+  const week=Number(event.week ?? fixture?.week);
   if(!home||!away||!Number.isInteger(week)||week<1||week>23)
     return {available:false,reason:'SCHEDULE_WEEK_NOT_VERIFIED'};
   const vintage=Date.parse(artifact.sourceUpdatedAt);
