@@ -1,6 +1,6 @@
 {
   "name": "betq-ai",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "description": "BETQ.ai Quant Sports Intelligence Terminal",
@@ -11,7 +11,8 @@
     "start": "node src/server.mjs",
     "dev": "node --watch src/server.mjs",
     "test": "node --test",
-    "check": "node --check src/engine.mjs && node --check src/odds.mjs && node --check src/demo.mjs && node --check src/server.mjs && node --check public/app.js && node --check src/nfl-elo.mjs && node --check scripts/train-nfl.mjs && node --check src/market-consensus.mjs && node --check src/evidence.mjs && node --check scripts/capture-evidence.mjs && node --check src/evidence-feed.mjs && node --check src/pbp.mjs && node --check src/nfl-efficiency.mjs && node --check src/injuries.mjs && node --check scripts/train-efficiency.mjs && node --check scripts/update-injuries.mjs && node --check src/integrity.mjs && node --check src/statistical-audit.mjs && node --check src/price-metrics.mjs && node --check src/historical-replay.mjs && node --check src/agent-run.mjs && node --check scripts/generate-replay.mjs",
-    "replay": "node scripts/generate-replay.mjs"
+    "check": "node --check src/engine.mjs && node --check src/odds.mjs && node --check src/demo.mjs && node --check src/server.mjs && node --check public/app.js && node --check src/nfl-elo.mjs && node --check scripts/train-nfl.mjs && node --check src/market-consensus.mjs && node --check src/evidence.mjs && node --check scripts/capture-evidence.mjs && node --check src/evidence-feed.mjs && node --check src/pbp.mjs && node --check src/nfl-efficiency.mjs && node --check src/injuries.mjs && node --check scripts/train-efficiency.mjs && node --check scripts/update-injuries.mjs && node --check src/integrity.mjs && node --check src/statistical-audit.mjs && node --check src/price-metrics.mjs && node --check src/historical-replay.mjs && node --check src/agent-run.mjs && node --check scripts/generate-replay.mjs && node --check src/market-challenge.mjs && node --check scripts/run-market-challenge.mjs",
+    "replay": "node scripts/generate-replay.mjs",
+    "challenge": "node scripts/run-market-challenge.mjs"
   }
 }
