@@ -96,9 +96,12 @@ for(const year of summary.years){
     ' modelAcc '+year.allGameForecast.accuracyPercent+
     '% modelBrier '+year.allGameForecast.brier+
     ' marketBrier '+(year.closingMarketBenchmark?.brier??'NA')+
+    ' marketFavoriteAcc '+year.closingMarketBenchmark?.favoriteWinnerAccuracyPercent+
     ' priceCoverage '+year.closingMoneylineCoverage.coveragePercent+
     '% threshold3 plays '+r.graded+' W/L '+r.wins+'/'+r.losses+
-    ' hypotheticalROI '+r.hypotheticalClosingPriceROI+'%');
+    ' forecastPickWin '+r.expectedSelectionWinRatePercent+
+    '% actualPickWin '+r.winRatePercent+
+    '% gap '+r.actualMinusForecastWinPoints+'pp hypotheticalROI '+r.hypotheticalClosingPriceROI+'%');
 }
 const total=summary.aggregateByThreshold['3'];
 console.log('TOTAL fixed 3% hypothetical closing-price selections '+total.graded+
