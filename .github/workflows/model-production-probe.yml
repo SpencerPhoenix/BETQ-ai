@@ -1,0 +1,60 @@
+name: BETQ v0.2 production model audit
+on:
+  push:
+    paths:
+      - '.github/workflows/model-production-probe.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify live deployment model provenance and quota gates
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          const base='https://betq-ai.onrender.com';
+          const request=async (path)=>{
+            const r=await fetch(base+path,{headers:{Accept:'application/json'},
+              signal:AbortSignal.timeout(95000)});
+            const j=await r.json();
+            if(!r.ok)throw Error(path+': HTTP '+r.status+' '+String(j.error?.code||''));
+            return j;
+          };
+          const health=await request('/api/health');
+          if(health.version!=='0.2.0')throw Error('Backend is not deployed at v0.2; version='+health.version);
+          if(health.nflModel?.available!==true)throw Error('NFL model artifact missing from production runtime');
+          if(health.odds?.budget?.limit!==12)throw Error('Daily provider credit governor is not enabled');
+          console.log('DEPLOYMENT VERSION: '+health.version);
+          console.log('DAILY CREDIT LIMIT: '+health.odds.budget.limit);
+          console.log('PROVIDER CREDITS LEFT: '+String(health.odds.quota?.remaining??'not reported'));
+          const m=await request('/api/model/nfl');
+          if(!m.available||m.source?.project!=='nflverse/nflverse-data'||m.holdout?.n<250||
+             m.holdout?.brier>=0.25||m.readyForResearch!==true)
+            throw Error('Model provenance/holdout quality gate failed');
+          console.log('MODEL: '+m.modelVersion+' · '+m.source.project+' · trained through '+m.lastGameDate);
+          console.log('HOLDOUT: '+m.holdout.n+' games · Brier '+m.holdout.brier+' · accuracy '+m.holdout.accuracy);
+          const cfg=await request('/api/config');
+          if(cfg.wageringEnabled!==false||cfg.autoRefresh!==false)
+            throw Error('Unsafe execution or uncontrolled polling enabled');
+          const demo=await request('/api/slate?mode=demo&sport=americanfootball_nfl&market=h2h');
+          if(!demo.demo||!demo.events.length||demo.events.some(e=>e.independentModel))
+            throw Error('Demo/live projections mixed');
+          const live=await request('/api/slate?mode=live&sport=americanfootball_nfl&market=h2h');
+          if(live.demo!==false||live.source!=='THE_ODDS_API_V4')throw Error('Live odds source invalid');
+          const pending=live.events.filter(e=>!e.started);
+          const modeled=pending.filter(e=>e.independentModel?.available);
+          if(pending.length>0&&modeled.length===0)
+            throw Error('No real upcoming NFL games received model predictions');
+          if(modeled.some(e=>e.independentModel.use!=='RESEARCH_ONLY'||
+             e.opportunities.some(s=>s.eloStatus&&s.eloStatus!=='RESEARCH_ONLY')))
+            throw Error('Research projections mislabeled as executable');
+          console.log('LIVE NFL GAMES: '+live.summary.games+' · priced signals '+live.summary.signals);
+          console.log('ELIGIBLE UPCOMING: '+pending.length+' · independently modeled '+modeled.length);
+          console.log('RESULT: PASS — v0.2 live, model source valid, guarded, research-only');
+          NODE
