@@ -17,15 +17,16 @@
         <span class="brand-mark">BQ<span class="brand-flare">.</span></span>
         <span class="brand-copy"><strong>BETQ<span>.ai</span></strong><small>QUANT INTELLIGENCE</small></span>
       </a>
-      <div class="sidebar-overline">TERMINAL / v0.2</div>
+      <div class="sidebar-overline">TERMINAL / v0.3</div>
       <nav class="nav-list" aria-label="Terminal views">
         <button class="nav-item active" type="button" data-tab="overview"><span class="nav-icon">◫</span><span>Command Center</span><span class="nav-shortcut">01</span></button>
         <button class="nav-item" type="button" data-tab="games"><span class="nav-icon">◉</span><span>Game Monitor</span><span class="nav-shortcut">02</span></button>
         <button class="nav-item" type="button" data-tab="signals"><span class="nav-icon">⌁</span><span>Signal Scanner</span><span class="nav-shortcut">03</span></button>
         <button class="nav-item" type="button" data-tab="model"><span class="nav-icon">⊞</span><span>Prediction Lab</span><span class="nav-shortcut">04</span></button>
-        <button class="nav-item" type="button" data-tab="execution"><span class="nav-icon">⇅</span><span>Paper Execution</span><span class="nav-shortcut">05</span></button>
-        <button class="nav-item" type="button" data-tab="audit"><span class="nav-icon">◇</span><span>Audit & Quality</span><span class="nav-shortcut">06</span></button>
-        <button class="nav-item" type="button" data-tab="settings"><span class="nav-icon">⚙</span><span>Settings</span><span class="nav-shortcut">07</span></button>
+        <button class="nav-item" type="button" data-tab="evidence"><span class="nav-icon">▤</span><span>Evidence Lab</span><span class="nav-shortcut">05</span></button>
+        <button class="nav-item" type="button" data-tab="execution"><span class="nav-icon">⇅</span><span>Paper Execution</span><span class="nav-shortcut">06</span></button>
+        <button class="nav-item" type="button" data-tab="audit"><span class="nav-icon">◇</span><span>Audit & Quality</span><span class="nav-shortcut">07</span></button>
+        <button class="nav-item" type="button" data-tab="settings"><span class="nav-icon">⚙</span><span>Settings</span><span class="nav-shortcut">08</span></button>
       </nav>
       <div class="sidebar-spacer"></div>
       <div class="source-box">
@@ -143,18 +144,23 @@
           <div id="model-view"></div>
         </section>
 
+        <section class="page" id="page-evidence" aria-label="Forward evidence lab">
+          <div class="section-heading"><div><div class="eyebrow subtle">05 / PROSPECTIVE VALIDATION</div><h2>Forward evidence & calibration</h2></div><span class="tag-neutral">PRE-KICKOFF SNAPSHOTS · NO BACKFILL</span></div>
+          <div id="evidence-view" aria-live="polite"></div>
+        </section>
+
         <section class="page" id="page-execution" aria-label="Paper execution">
-          <div class="section-heading"><div><div class="eyebrow subtle">05 / RISK LAB</div><h2>Paper execution</h2></div><span class="danger-inline">● NO REAL WAGERS</span></div>
+          <div class="section-heading"><div><div class="eyebrow subtle">06 / RISK LAB</div><h2>Paper execution</h2></div><span class="danger-inline">● NO REAL WAGERS</span></div>
           <div id="execution-view"></div>
         </section>
 
         <section class="page" id="page-audit" aria-label="Audit and quality">
-          <div class="section-heading"><div><div class="eyebrow subtle">06 / GOVERNANCE</div><h2>Data quality & model audit</h2></div><span class="tag-neutral">TRANSPARENCY FIRST</span></div>
+          <div class="section-heading"><div><div class="eyebrow subtle">07 / GOVERNANCE</div><h2>Data quality & model audit</h2></div><span class="tag-neutral">TRANSPARENCY FIRST</span></div>
           <div id="audit-view"></div>
         </section>
 
         <section class="page" id="page-settings" aria-label="Settings">
-          <div class="section-heading"><div><div class="eyebrow subtle">07 / CONTROL PLANE</div><h2>Terminal settings</h2></div><span class="tag-neutral">LOCAL SETTINGS</span></div>
+          <div class="section-heading"><div><div class="eyebrow subtle">08 / CONTROL PLANE</div><h2>Terminal settings</h2></div><span class="tag-neutral">LOCAL SETTINGS</span></div>
           <div class="settings-grid">
             <section class="panel"><div class="panel-head"><div><span class="panel-kicker">PAPER LEDGER</span><h3>Risk preferences</h3></div></div>
               <label class="form-label" for="bankroll">Paper bankroll ($)</label><input id="bankroll" class="setting-input" type="number" min="10" max="10000000" step="10" value="1000">
