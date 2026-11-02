@@ -15,7 +15,9 @@ export function createOddsSource({
   apiKey = process.env.ODDS_API_KEY || '',
   fetchImpl = globalThis.fetch,
   clock = Date.now,
-  ttlMs = Number(process.env.CACHE_TTL_MS) || 90000
+  ttlMs = Number(process.env.CACHE_TTL_MS) || 300000,
+  dailyCreditCap = Number(process.env.ODDS_DAILY_CREDIT_LIMIT) || 12,
+  reserveCredits = Number(process.env.ODDS_MIN_CREDITS_RESERVE) || 50
 } = {}) {
   const cache = new Map();
   const inflight = new Map();
@@ -23,14 +25,37 @@ export function createOddsSource({
   let lastError = null;
   const configured = Boolean(apiKey.trim());
   const headersSnapshot = { remaining: null, used: null, last: null };
+  const safeDailyCap = Math.max(1,Math.min(100,Math.floor(dailyCreditCap)));
+  const safeReserve = Math.max(0,Math.min(5000,Math.floor(reserveCredits)));
+  const budget = { day: '', used: 0 };
+  function budgetStatus() {
+    const day = new Date(clock()).toISOString().slice(0,10);
+    if (budget.day !== day) { budget.day = day; budget.used = 0; }
+    return {
+      utcDay: day, used: budget.used, limit: safeDailyCap,
+      available: Math.max(0,safeDailyCap-budget.used),
+      minimumProviderCredits: safeReserve,
+      persistent: false
+    };
+  }
 
-  async function request(path, query, cacheId) {
+  async function request(path, query, cacheId,estimatedCredits=1) {
     if (!configured) throw new OddsError('SETUP_REQUIRED', 503, 'Set ODDS_API_KEY in the running server environment to enable live odds.');
     const fresh = cache.get(cacheId);
     if (fresh && clock() - fresh.storedAt < Math.max(5000, ttlMs)) {
       return { ...fresh.payload, cacheHit: true };
     }
     if (inflight.has(cacheId)) return inflight.get(cacheId);
+    budgetStatus();
+    if (headersSnapshot.remaining !== null && headersSnapshot.remaining <= safeReserve) {
+      throw new OddsError('PROVIDER_CREDIT_RESERVE',429,
+        'Remaining provider credits are at the reserved minimum. Raise budget settings only after reviewing available credits.');
+    }
+    if (budget.used + estimatedCredits > safeDailyCap) {
+      throw new OddsError('API_DAILY_BUDGET',429,
+        'Daily provider request budget reached. No new paid data requests until the next UTC day.');
+    }
+    budget.used += estimatedCredits;
     const pending = (async () => {
       const url = new URL('https://api.the-odds-api.com/v4/sports/' + path);
       url.searchParams.set('apiKey', apiKey);
@@ -64,6 +89,10 @@ export function createOddsSource({
         last: intHeader(response.headers, 'x-requests-last')
       };
       Object.assign(headersSnapshot, quota);
+      // Reconcile estimate with actual provider charge, if supplied.
+      if (quota.last !== null && quota.last >= 0 && quota.last <= 100) {
+        budget.used = Math.max(0, budget.used + quota.last - estimatedCredits);
+      }
       lastSuccess = receivedAt;
       lastError = null;
       const payload = { events: data, receivedAt, cacheHit: false, quota };
@@ -75,20 +104,21 @@ export function createOddsSource({
   }
   return {
     configured,
-    status() { return { configured, lastSuccess, lastError, quota: { ...headersSnapshot }, cacheEntries: cache.size }; },
+    status() { return { configured, lastSuccess, lastError, quota: { ...headersSnapshot },
+      budget: budgetStatus(), cacheEntries: cache.size }; },
     getOdds(sport, market) {
       if (!Object.hasOwn(SPORTS, sport) || !Object.hasOwn(MARKETS, market)) {
         throw new OddsError('INVALID_FILTER', 400, 'Unsupported sport or market.');
       }
       return request(encodeURIComponent(sport) + '/odds', {
         regions: 'us', markets: market, oddsFormat: 'american', dateFormat: 'iso'
-      }, 'odds:' + sport + ':' + market);
+      }, 'odds:' + sport + ':' + market,1);
     },
     getScores(sport) {
       if (!Object.hasOwn(SPORTS, sport)) throw new OddsError('INVALID_FILTER', 400, 'Unsupported sport.');
       return request(encodeURIComponent(sport) + '/scores', {
         daysFrom: '1', dateFormat: 'iso'
-      }, 'scores:' + sport);
+      }, 'scores:' + sport,2);
     }
   };
 }
