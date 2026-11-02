@@ -72,7 +72,7 @@
   const findSignal = (id) => all().find(s => s.id === id);
   const eventLabel = (event) => event.awayTeam + ' @ ' + event.homeTeam;
   const statusTag = (status) => '<span class="status-tag ' +
-    (status === 'WATCH' ? 'watch' : 'pass') + '">' + esc(status) + '</span>';
+    (status === 'WATCH' ? 'watch' : 'pass') + '">' + esc(status === 'WATCH' ? 'PRICE WATCH · NOT A BET' : status) + '</span>';
   const metric = (label, value, sub, color, glyph) =>
     '<article class="metric-card"><div class="metric-top"><span class="metric-label">' +
     esc(label) + '</span><span class="metric-icon">' + glyph +
@@ -133,7 +133,7 @@
         ' <button type="button" class="text-link" data-mode="demo">Explore demo ↗</button></p>';
     } else if (state.slate) {
       element.classList.add('info');
-      element.innerHTML = '<span>◇</span><p><b>LIVE MARKET · MANUAL REFRESH.</b> ↻ refreshes on demand to conserve API credits. NFL Elo and the historical EPA challenger appear separately in <button type="button" class="text-link" data-tab="model">Prediction Lab ↗</button>. Injury status may be stale; confirmed starters are not modeled.</p>';
+      element.innerHTML = '<span>◇</span><p><b>NO VALIDATED BETTING EDGE · PAPER STAGING LOCKED.</b> ↻ refreshes live quotes manually to protect API credits. NFL Elo and the historical EPA challenger appear separately in <button type="button" class="text-link" data-tab="model">Prediction Lab ↗</button>. Injury status may be stale; confirmed starters are not modeled.</p>';
     } else {
       element.classList.add('info');
       element.innerHTML = '<span>◈</span><p>Connecting to the odds provider…</p>';
@@ -376,7 +376,7 @@
     const quota = state.slate?.quota?.remaining;
     $('metric-grid').innerHTML =
       metric('GAMES TRACKED', s ? String(s.games) : '—', sportLabels[state.sport] + ' / ' + marketLabels[state.market], '', '◉') +
-      metric('WATCH SIGNALS', s ? String(watch.length) : '—', 'Market-derived only', 'lime', '⌁') +
+      metric('PRICE WATCHES', s ? String(watch.length) : '—', 'Market-only differences · no bet', 'lime', '⌁') +
       metric('BEST INDICATIVE EV', best === null ? '—' : signed(best) + '%', 'Not calibrated to future outcomes', 'violet', '↗') +
       metric('QUALITY / 100', quality === null ? '—' : String(quality), quota === null || quota === undefined ? 'Quota not reported' : 'API credits left: ' + quota, 'cyan', '◇');
     $('last-refreshed').textContent = state.slate ? 'Data received ' + when(state.slate.receivedAt) +
@@ -440,7 +440,7 @@
       '<button type="button" class="outline-button" data-watch="' + esc(signal.id) + '">☆ ' +
       (isWatched(signal.id) ? 'Watching' : 'Add to watchlist') + '</button>' +
       '<button type="button" class="primary-button" data-paper="' + esc(signal.id) + '"' +
-      (signal.status === 'WATCH' ? '' : ' disabled') + '>Stage paper ticket ↗</button></div></div>';
+      (signal.paperStagingAuthorized === true && state.slate?.executionGate?.bettingAuthorized === true ? '' : ' disabled') + '>Paper staging locked · research only</button></div></div>';
   }
 
   function renderChart() {
@@ -479,7 +479,7 @@
         '<div class="game-bottom"><span>' + event.bookmakerCount + ' sportsbooks · '
         event.totalMarkets + ' matched contract(s)</span>' +
         (top ? '<button type="button" class="text-link" data-pick="' + esc(top.id) + '">Inspect ' +
-          esc(signed(top.evPercent)) + '% EV ↗</button>' : '<span>No qualifying quotes</span>') + '</div></article>';
+          esc(signed(top.evPercent)) + '% price scenario (not a bet) ↗</button>' : '<span>No qualifying quotes</span>') + '</div></article>';
     }).join('') || empty('No upcoming games with listed odds', 'The provider may not have posted prices for this market or league yet.');
     if (state.mode === 'demo') $('scores').innerHTML = '<div class="notice">Demo scores are intentionally not generated. No fictitious final results are shown.</div>';
   }
@@ -514,7 +514,7 @@
       '">Inspect</button><button class="small-button" type="button" data-watch="' + esc(s.id) +
       '">' + (isWatched(s.id) ? '★ Saved' : '☆ Watch') +
       '</button><button class="small-button" type="button" data-paper="' + esc(s.id) + '"' +
-      (s.status === 'WATCH' ? '' : ' disabled') + '>+ Paper</button></span></div></article>'
+      (s.paperStagingAuthorized === true && state.slate?.executionGate?.bettingAuthorized === true ? '' : ' disabled') + '>Paper locked</button></span></div></article>'
     ).join('') || empty('No matching signals', 'Try a different filter, sport or data mode.');
   }
 
@@ -532,10 +532,15 @@
   }
 
   function stagePaper(id) {
+    // Defense in depth: the server's final decision overrides market WATCH.
+    if(state.slate?.agentRun?.mayWager !== true ||
+       state.slate?.executionGate?.bettingAuthorized !== true)
+      return toast('Automated paper staging locked: no validated model advantage. Prospective research is tracked separately.');
     const signal = findSignal(id);
     if(state.loading || state.slate?.sport!==state.sport || state.slate?.market!==state.market)
       return toast('Paper staging blocked: snapshot does not match current filters.');
-    if (!signal || signal.status !== 'WATCH') return toast('Paper staging blocked: signal is not WATCH.');
+    if (!signal || signal.paperStagingAuthorized !== true || signal.executionAuthorized !== true)
+      return toast('Paper staging blocked by the central risk authority.');
     if (signal.event.started || Date.parse(signal.event.commenceTime) - Date.now() < 300000)
       return toast('Paper staging blocked: game started or kickoff imminent.');
     if (Date.now() - Date.parse(signal.lastUpdated) > 600000)
