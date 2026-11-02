@@ -1,0 +1,35 @@
+{
+  "verifiedAt": "2026-11-02T04:51:13Z",
+  "release": "0.5.0",
+  "deployedCodeSha": "e4ab9bd99b6978d5a57b1c4f786cf71d5e460a7c",
+  "serviceUrl": "https://betq-ai.onrender.com",
+  "renderDeployId": "dep-dbk1d4nlk1mc73aifqn0",
+  "productionAuditRun": 41390715887,
+  "productionAuditJob": 125101268913,
+  "checks": {
+    "healthVersion": "0.5.0",
+    "versionMatchedHomepage": true,
+    "calculatorStatus": 200,
+    "prohibitedSettlementStatus": 400,
+    "demoResearchIsolation": true,
+    "realMoneyROI": null,
+    "verifiedCLV": null,
+    "sourceAssertionsMaintained": true,
+    "paidOddsRequestsFromAudit": 0,
+    "exampleRawPriceChangePercent": 6.0606,
+    "exampleNoVigPriceProxyPercent": 3.9125,
+    "exampleNetProfitUsd": 100,
+    "exampleStakeUsd": 110
+  },
+  "qualityGate": {
+    "tests": 95,
+    "passed": 95,
+    "failed": 0
+  },
+  "knownLimits": [
+    "Example prices are hypothetical and do not establish certified closing line value.",
+    "No audited account fills or independently verified real money settlements exist.",
+    "No price-specific historical season ROI or bookmaker closing odds are reconstructed from model outcomes.",
+    "Validation exercise is focused on server endpoints and source labels, not a complete live UI device farm."
+  ]
+}
