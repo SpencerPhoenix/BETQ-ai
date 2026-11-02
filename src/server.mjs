@@ -13,6 +13,7 @@ import { createEvidenceFeed } from './evidence-feed.mjs';
 import { challengerResearchForEvent } from './nfl-efficiency.mjs';
 import { injuryContextForGame } from './injuries.mjs';
 import { illustrativePrice, PriceAuditError } from './price-metrics.mjs';
+import { assembleAgentRun } from './agent-run.mjs';
 
 const PUBLIC_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../public');
 function loadModelArtifact() {
@@ -44,6 +45,15 @@ function loadEvidence() {
 }
 const NFL_EVIDENCE=loadEvidence();
 const NFL_EVIDENCE_FEED=createEvidenceFeed({fallback:NFL_EVIDENCE});
+function loadReplayFile(name){
+  try {
+    const path=resolve(dirname(fileURLToPath(import.meta.url)),'../data/replay/'+name);
+    const data=JSON.parse(readFileSync(path,'utf8'));
+    return data?.schema===1&&data?.version==='nfl-replay-v1'?data:null;
+  } catch{return null;}
+}
+const NFL_REPLAY_SUMMARY=loadReplayFile('summary.json');
+const NFL_REPLAY_FULL=loadReplayFile('nfl_2022_2025.json');
 const roundModel = (n, digits = 2) => Number.isFinite(n) ? Number(n.toFixed(digits)) : null;
 const ASSETS = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
@@ -80,6 +90,8 @@ export function createHandler({
   nflInjuries = NFL_INJURIES,
   nflEvidence = NFL_EVIDENCE,
   evidenceFeed = NFL_EVIDENCE_FEED,
+  replaySummary = NFL_REPLAY_SUMMARY,
+  replayFull = NFL_REPLAY_FULL,
   maxAgeMs = Number(process.env.ODDS_MAX_AGE_MS) || 600000
 } = {}) {
   const access = new Map();
@@ -193,6 +205,60 @@ export function createHandler({
         if (url.pathname === '/api/evidence/nfl') {
           return reply(res, 200, await evidenceFeed.get());
         }
+        if (url.pathname === '/api/replay/nfl') {
+          if(!replaySummary||replaySummary.schema!==1)
+            return reply(res,200,{
+              available:false,reason:'REPLAY_DATA_NOT_PUBLISHED',
+              model:'SEASON_FROZEN_ELO_ONLY',
+              verifiedROI:null,verifiedCLV:null
+            });
+          return reply(res,200,{
+            available:true,...replaySummary,verifiedROI:null,verifiedCLV:null,
+            dataTrust:'CLOSING_PRICE_RETROSPECTIVE_NOT_VERIFIED_ENTRY'
+          });
+        }
+        if (url.pathname === '/api/replay/nfl/plays') {
+          const season=Number(url.searchParams.get('season'));
+          const threshold=Number(url.searchParams.get('ev')??'3');
+          const page=Number(url.searchParams.get('page')??'0');
+          if(![2022,2023,2024,2025].includes(season)||
+             ![0,3,5].includes(threshold)||
+             !Number.isInteger(page)||page<0||page>20||
+             [...url.searchParams.keys()].some(k=>!['season','ev','page'].includes(k)))
+            return reply(res,400,{error:{code:'INVALID_REPLAY_FILTER',
+              message:'Use season=2022-2025, ev=0/3/5, and page=0-20.'}});
+          if(!replayFull)return reply(res,200,{available:false,reason:'REPLAY_DATA_NOT_PUBLISHED'});
+          const year=replayFull.years.find(y=>y.season===season);
+          if(!year)return reply(res,200,{available:false,reason:'REPLAY_SEASON_UNAVAILABLE'});
+          const qualifying=year.decisions.filter(d=>d.priceAvailable&&
+            d.estimatedEV>=threshold/100);
+          const size=30;
+          const rows=qualifying.slice(page*size,(page+1)*size).map(d=>{
+            const tie=d.actual==='TIE';
+            const win=!tie&&d.actual===d.selectedSide;
+            const price=d.selectedOdds;
+            const decimal=price>0?1+price/100:1+100/Math.abs(price);
+            return {
+              gameId:d.gameId,date:d.date,week:d.week,
+              matchup:d.away+' @ '+d.home,
+              selectedSide:d.selectedSide,selectedTeam:
+                d.selectedSide==='home'?d.home:d.away,
+              selectedAmericanOdds:price,modelProbability:d.selectedProbability,
+              estimatedEVPercent:Number((100*d.estimatedEV).toFixed(2)),
+              closingMarketHomeProbability:d.closeMarketHomeProbability,
+              gameResult:d.finalScore,
+              outcome:tie?'TIE_UNGRADED':win?'WIN':'LOSS',
+              hypotheticalUnitProfit:tie?null:Number((win?decimal-1:-1).toFixed(4)),
+              executableEntryVerified:false,priceTimeVerified:false,
+              priceBasis:'HISTORICAL_CLOSING_REFERENCE_ONLY'
+            };
+          });
+          return reply(res,200,{
+            available:true,season,thresholdEVPercent:threshold,
+            page,total:qualifying.length,pageSize:size,pageCount:Math.ceil(qualifying.length/size),
+            rows,realMoneyROI:null,verifiedCLV:null
+          });
+        }
         if (url.pathname === '/api/price/verification') {
           return reply(res,200,{
             version:'0.5.0',verifiedROI:null,verifiedCLV:null,
@@ -293,8 +359,10 @@ export function createHandler({
               }
             }
           }
+          const agentRun=assembleAgentRun(analysis,replaySummary,{now:analysisNow});
           return reply(res, 200, {
             ...analysis,
+            agentRun,
             receivedAt: snapshot.receivedAt, cacheHit: snapshot.cacheHit,
             quota: snapshot.quota, warnings: [
               'Market consensus is not an independently validated win-probability model.',
