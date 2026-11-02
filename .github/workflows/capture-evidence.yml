@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - '.github/workflows/capture-evidence.yml'
+      - 'scripts/capture-evidence.mjs'
   workflow_dispatch:
   schedule:
     # One early research snapshot daily (UTC); pregame capture is source-timestamp gated.
