@@ -18,7 +18,7 @@ test('Historical outcomes preserve week block identity and flat hypothetical one
   assert.equal(p.blocks.length,30);
   assert.equal(p.eligible,240);
   assert.equal(p.noVerifiedEntry,true);
-  assert.ok(p.blocks[0].rows.some(x=>x.netPerUnit===1.2));
+  assert.ok(p.blocks[0].rows.some(x=>Math.abs(x.netPerUnit-1.2)<1e-10));
   assert.ok(p.blocks[0].rows.some(x=>x.netPerUnit===-1));
   assert.match(p.priceBasis,/NOT_VERIFIED/);
 });
