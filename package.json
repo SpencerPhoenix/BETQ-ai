@@ -1,14 +1,16 @@
 {
   "name": "betq-ai",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "BETQ.ai Quant Sports Intelligence Terminal",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "start": "node src/server.mjs",
     "dev": "node --watch src/server.mjs",
     "test": "node --test",
-    "check": "node --check src/engine.mjs && node --check src/odds.mjs && node --check src/demo.mjs && node --check src/server.mjs && node --check public/app.js"
+    "check": "node --check src/engine.mjs && node --check src/odds.mjs && node --check src/demo.mjs && node --check src/server.mjs && node --check public/app.js && node --check src/nfl-elo.mjs && node --check scripts/train-nfl.mjs"
   }
 }
