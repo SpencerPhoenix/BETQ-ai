@@ -79,8 +79,9 @@ export function observationsFromSlate(slate,rows,now=Date.now(),season=new Date(
     const window=kick-now<=90*60000?'NEAR_KICKOFF':'DAILY';
     // A new independent model may enter the research journal later on the
     // same day without rewriting previously frozen Elo-only observations.
-    const id=hash([season,row.game_id,new Date(now).toISOString().slice(0,10),
-      window,validChallenger?'CHALLENGER:'+cModel.modelVersion:'ELO_ONLY'].join('|'));
+    const key=[season,row.game_id,new Date(now).toISOString().slice(0,10),window];
+    if(validChallenger)key.push('CHALLENGER:'+cModel.modelVersion);
+    const id=hash(key.join('|'));
     accepted.push({
       id,gameId:row.game_id,providerEventId:String(event.id),
       season,home:canonicalTeam(row.home_team),away:canonicalTeam(row.away_team),
@@ -136,6 +137,7 @@ export function updateJournal(existing,captures,results,now=Date.now()) {
          (!Number.isFinite(s.challengerHomeProbability)||
           s.challengerHomeProbability<=0||s.challengerHomeProbability>=1||
           s.challengerResearchOnly!==true||
+          !Number.isFinite(parsed(s.challengerBuiltAt))||
           parsed(s.challengerBuiltAt)>parsed(s.capturedAt)+60000)))
       throw Error('Invalid/post-kickoff forecast');
     if(!ids.has(s.id)){journal.snapshots.push(structuredClone(s));ids.add(s.id);added++;}
