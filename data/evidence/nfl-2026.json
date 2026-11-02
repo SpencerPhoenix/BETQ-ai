@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "season": 2026,
+  "sport": "americanfootball_nfl",
+  "provenance": {
+    "model": "BETQ_NFL_ELO",
+    "market": "THE_ODDS_API_V4_DERIVED",
+    "results": "NFLVERSE_SCHEDULES_CC_BY_4_0"
+  },
+  "snapshots": [],
+  "settlements": []
+}
