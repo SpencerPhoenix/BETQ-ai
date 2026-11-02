@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "version": "nfl-efficiency-1",
-  "generatedAt": "2026-11-02T01:22:05.925Z",
+  "generatedAt": "2026-11-02T01:32:46.047Z",
   "source": "NFLVERSE_PBP_CC_BY_4_0",
   "type": "INDEPENDENT_CHALLENGER_RESEARCH",
   "training": {
@@ -452,5 +452,5 @@
     "qualifyingPlays": 295837
   },
   "eloBaselineVersion": "nfl-elo-1",
-  "dataFingerprint": "bf837b38eeaa626df7365118587549250b29bf7b11cbb58be5e4937eb6636ff3"
+  "dataFingerprint": "c7b2f01730f144c60c0c844ea0664fd06e50f2e2fc6a5964acd38beae17338fa"
 }
