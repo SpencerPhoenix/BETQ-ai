@@ -13,7 +13,7 @@ test('Agent cockpit and season replay are visible navigation destinations',async
     'closing prices without a verified entry timestamp','Previous 30','Next 30']){
     assert.ok(html.includes(label),label);
   }
-  assert.match(html,/TERMINAL \/ v0\.6\.0/);
+  assert.match(html,/TERMINAL \/ v0\.7\.0/);
 });
 test('On activation the frontend loads historical results and runs agent briefing on slate',async()=>{
   const js=await path('public/app.js');
