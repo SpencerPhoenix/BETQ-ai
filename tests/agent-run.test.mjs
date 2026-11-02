@@ -29,7 +29,7 @@ test('Agent stages never promote a historical model that loses proper score to m
   assert.equal(r.mayWager,false);
   assert.equal(r.realMoneyROI,null);
   assert.equal(r.verifiedCLV,null);
-  assert.deepEqual(r.stages.map(s=>s.id),['market','quant','history','risk']);
+  assert.deepEqual(r.stages.map(s=>s.id),['market','quant','calibration','history','risk']);
 });
 test('Agent supports other leagues only as unmodeled markets',()=>{
   const result=assembleAgentRun({...slate,sport:'basketball_nba'},history);
