@@ -1,0 +1,75 @@
+name: BETQ preregistered model promotion power study
+on:
+  push:
+    paths:
+      - 'src/promotion-power.mjs'
+      - 'scripts/run-promotion-power.mjs'
+      - '.github/workflows/promotion-power.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: betq-power-2026-research
+  cancel-in-progress: false
+jobs:
+  experiment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify frozen protocol and synthetic model-approval tests
+        run: |
+          test -s docs/RESEARCH_PROTOCOL_POWER_MARGIN_2026_11_02.md
+          npm run check
+          npm test
+      - name: Test 7 null/signal cells with 2000 worlds each, refitting prior-only models
+        run: node scripts/run-promotion-power.mjs
+      - name: Audit all cell counts, seed, source trust and no betting authorization
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const p=JSON.parse(readFileSync('data/promotion-power/summary.json','utf8'));
+          if(p.version!=='betq-promotion-power-v1'||p.schema!==1||
+             p.worldsPerCell!==2000||p.bootstrapDraws!==300||p.seed!==20261102||
+             p.results.length!==7||p.bettingAuthorized!==false||
+             p.modelPromoted!==false||p.verifiedCLV!==null||p.verifiedROI!==null||
+             p.realWorldFalsePositiveRateKnown!==false)
+             throw Error('Power results violate pre-registration');
+          if(!p.results.some(r=>r.id==='NULL_MARKET_IS_TRUE'))
+            throw Error('Missing efficient-market no-edge null control');
+          for(const r of p.results){
+            if(r.worlds!==2000||r.originalStrictGate.approved<0||
+               r.originalStrictGate.approved>r.worlds||
+               !Number.isFinite(r.originalStrictGate.passRatePercent)||
+               !Number.isFinite(r.diagnosticPooledGate.passRatePercent))
+              throw Error('Invalid synthetic power cell');
+            console.log('POWER AUDIT '+r.id+' '+r.originalStrictGate.approved+'/'+r.worlds+
+              ' strict; '+r.diagnosticPooledGate.approved+' pooled');
+          }
+          console.log('POWER IS CONDITIONAL ON SYNTHETIC SIGNAL ASSUMPTIONS; NO BETTING EDGE ESTABLISHED');
+          NODE
+      - name: Publish versioned synthetic power research only
+        shell: bash
+        run: |
+          if [[ -n "$(git status --porcelain -- data/promotion-power/)" ]]; then
+            git config user.name "betq-power-research-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add data/promotion-power/summary.json
+            git commit -m "data: publish preregistered 14000-world synthetic signal-detection power research"
+            for attempt in 1 2 3; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then
+                echo "Power research committed with source attribution."
+                exit 0
+              fi
+              sleep 3
+            done
+            echo "Cannot safely publish after concurrent main commits" >&2
+            exit 1
+          else
+            echo "Power artifact unchanged."
+          fi
