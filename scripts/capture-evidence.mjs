@@ -52,7 +52,8 @@ const schedule=await getCsv();
 let captures=[],skipped=[],captureStatus='SUCCESS';
 try {
   const slate=await getSlate();
-  const derived=observationsFromSlate(slate,schedule,now,season);
+  // Capture at the time of actual receipt, not before possible Render cold-start latency.
+  const derived=observationsFromSlate(slate,schedule,Date.now(),season);
   captures=derived.accepted;
   skipped=derived.skipped;
 } catch(err) {
