@@ -210,8 +210,8 @@ function disagreementBins(rows,priorRows,{count=10}={}){
     }))
   };
 }
-function nestedTest(byYear,{
-  sampleCI=2000,seed=20261102
+export function evaluateNestedResidualGate(byYear,{
+  sampleCI=2000,seed=20261102,analysisMode='FULL'
 }={}){
   const out=[],combinedRows=[],combinedMarket=[],combinedCalibrated=[],combinedResidual=[];
   for(const testYear of SELECTED_YEARS){
@@ -224,7 +224,8 @@ function nestedTest(byYear,{
     const cal=holdout.map(x=>fittedProbability(x,marketCal));
     const corrected=holdout.map(x=>fittedProbability(x,residual));
     const original=holdout.map(x=>x.elo);
-    const ci=weekClusteredPairedCI(holdout,cal,corrected,{resamples:sampleCI,seed:seed+testYear});
+    const ci=analysisMode==='POWER'?null:
+      weekClusteredPairedCI(holdout,cal,corrected,{resamples:sampleCI,seed:seed+testYear});
     out.push({
       season:testYear,trainedSeasons:[testYear-2,testYear-1],
       originalElo:evaluate(holdout,original),
@@ -235,7 +236,7 @@ function nestedTest(byYear,{
       calibratedMarketMinusResidualBrier:round(evaluate(holdout,cal).brier-evaluate(holdout,corrected).brier,6),
       calibratedMarketMinusResidualLogLoss:round(evaluate(holdout,cal).logLoss-evaluate(holdout,corrected).logLoss,6),
       confidence95:ci,
-      disagreementAudit:disagreementBins(holdout,earlier)
+      disagreementAudit:analysisMode==='POWER'?null:disagreementBins(holdout,earlier)
     });
     combinedRows.push(...holdout);combinedMarket.push(...market);
     combinedCalibrated.push(...cal);combinedResidual.push(...corrected);
@@ -273,7 +274,7 @@ function nullWorlds(realByYear,{
         ...row,actual:rand()<row.market?1:0
       })));
     }
-    const out=nestedTest(simulated,{sampleCI:resamples,seed:seed+i*37});
+    const out=evaluateNestedResidualGate(simulated,{sampleCI:resamples,seed:seed+i*37});
     if(out.evidenceFlagPassed)passing++;
     if(out.pooled.positiveSeasonCount>=3)positiveYears3++;
     if(i<4)examples.push({
@@ -307,7 +308,7 @@ export function evaluateResidualResearch(replays,{
   for(let year=2020;year<=2025;year++){
     if((byYear.get(year)?.length??0)<200)throw Error('Missing historical source season '+year);
   }
-  const actual=nestedTest(byYear,{sampleCI:uncertaintyResamples,seed:nullSeed});
+  const actual=evaluateNestedResidualGate(byYear,{sampleCI:uncertaintyResamples,seed:nullSeed});
   const nullResult=nullWorlds(byYear,{
     worlds:nullIterations,seed:nullSeed,resamples:uncertaintyResamples
   });
