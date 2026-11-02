@@ -4,7 +4,7 @@
   const $ = (id) => document.getElementById(id);
   const STORE = 'betq-terminal-v1';
   const LEDGER = 'betq-paper-v1';
-  const allowedTabs = ['overview', 'games', 'signals', 'model', 'evidence', 'execution', 'audit', 'settings'];
+  const allowedTabs = ['overview', 'games', 'signals', 'model', 'evidence', 'pricing', 'execution', 'audit', 'settings'];
   const marketLabels = { h2h: 'Moneyline', spreads: 'Spread', totals: 'Total' };
   const sportLabels = {
     americanfootball_nfl: 'NFL', basketball_nba: 'NBA', baseball_mlb: 'MLB',
@@ -22,6 +22,7 @@
     bankroll: Number.isFinite(prefs.bankroll) && prefs.bankroll >= 10 ? prefs.bankroll : 1000,
     maxRisk: Number.isFinite(prefs.maxRisk) && prefs.maxRisk >= 0.1 && prefs.maxRisk <= 1 ? prefs.maxRisk : 1,
     slate: null, error: null, sourceHealth: null, nflModel: null, evidence: null, efficiency: null, injurySource: null,
+    pricingResult: null, pricingError: null, priceVerification: null,
     selectedId: null, search: '', sort: 'ev', watchOnly: false,
     loading: false, ledger: Array.isArray(safeGet(LEDGER, [])) ? safeGet(LEDGER, []) : []
   };
@@ -88,11 +89,12 @@
     header.style.display = tab === 'overview' ? '' : 'none';
     $('breadcrumb-page').textContent = ({
       overview: 'COMMAND CENTER', games: 'GAME MONITOR', signals: 'SIGNAL SCANNER',
-      model: 'PREDICTION LAB', evidence: 'FORWARD EVIDENCE', execution: 'PAPER EXECUTION', audit: 'AUDIT & QUALITY', settings: 'SETTINGS'
+      model: 'PREDICTION LAB', evidence: 'FORWARD EVIDENCE', pricing: 'ROI & CLV LAB', execution: 'PAPER EXECUTION', audit: 'AUDIT & QUALITY', settings: 'SETTINGS'
     })[tab];
     $('sidebar').classList.remove('open');
     if (tab === 'settings') syncSettings();
     if (tab === 'execution') renderExecution();
+    if (tab === 'pricing') renderPricing();
     if (tab === 'audit') renderAudit();
     if (tab === 'model') { renderModel(); renderIntelligence(); }
     if (tab === 'evidence') renderEvidence();
@@ -369,6 +371,88 @@
     ticket.manualSettlement = true;
     saveLedger(); renderExecution();
     toast('Paper result marked ' + result + '. This result was not verified by a feed.');
+  }
+
+
+  function renderPricing() {
+    const overview=$('pricing-overview'),result=$('pricing-calculation');
+    if(!overview||!result)return;
+    const seen=new Set();
+    let stakeCents=0,netCents=0,graded=0,voids=0;
+    for(const t of state.ledger){
+      if(!t||typeof t.id!=='string'||seen.has(t.id))continue;
+      seen.add(t.id);
+      if(t.manualSettlement!==true)continue;
+      if(t.status==='VOID'){voids++;continue;}
+      if(!['WIN','LOSS','PUSH'].includes(t.status)||
+        !Number.isFinite(t.stake)||t.stake<=0||!Number.isFinite(t.pnl))continue;
+      stakeCents+=Math.round(t.stake*100);
+      netCents+=Math.round(t.pnl*100);
+      graded++;
+    }
+    const manualRoi=stakeCents>0?100*netCents/stakeCents:null;
+    const verified=state.priceVerification;
+    overview.innerHTML='<div class="metric-grid">'+
+      metric('VERIFIED REAL-MONEY ROI','—','No authenticated transaction ledger','', '∅')+
+      metric('VERIFIED CLOSING VALUE','—','No certified matched closing quotes','', '◇')+
+      metric('LOCAL PAPER ROI',manualRoi===null?'—':signed(manualRoi,2)+'%',
+        graded+' manually settled positions · not audited','violet','⌁')+
+      metric('MANUAL PAPER NET',graded?usd(netCents/100):'—',
+        'Risked '+usd(stakeCents/100)+' · '+voids+' void excluded','cyan','∑')+'</div>'+
+      '<div class="notice info"><span>◇</span><p><b>Source verification: unavailable.</b> '+
+      'These paper results are entered manually in this browser. No real-money ROI or '+
+      'certified CLV is established. '+
+      (verified?.reason?esc(verified.reason):
+        'Trusted bookmaker transaction and closing quote feeds have not been attached.')+
+      '</p></div>';
+    const o=state.pricingResult;
+    if(state.pricingError) {
+      result.innerHTML='<div class="notice"><span>!</span><p>'+
+        esc(state.pricingError)+'</p></div>';
+    }else if(!o){
+      result.innerHTML=empty('Illustrative comparison only',
+        'Enter two American prices and an optional opposite-side close to calculate math. No bet or quote is recorded.');
+    }else {
+      result.innerHTML='<div class="pricing-result-grid">'+
+        '<div><label>Entry decimal odds</label><strong>'+num(o.entryDecimal,4)+'</strong></div>'+
+        '<div><label>Closing decimal odds</label><strong>'+num(o.closingDecimal,4)+'</strong></div>'+
+        '<div><label>Raw price movement</label><strong class="'+
+          (o.rawCLVPercent>=0?'positive':'negative')+'">'+signed(o.rawCLVPercent,2)+'%</strong></div>'+
+        '<div><label>Implied probability change</label><strong>'+signed(o.impliedProbabilityMovePoints,2)+
+          ' pp</strong></div>'+
+        '<div><label>No-vig closing price proxy</label><strong>'+
+          (o.noVigCLVPercent===null?'—':signed(o.noVigCLVPercent,2)+'%')+'</strong></div>'+
+        '<div><label>Hypothetical result P/L</label><strong>'+
+          (o.settlement?.netProfit===null?'Unsettled':usd(o.settlement?.netProfit))+
+          '</strong></div></div>'+
+        '<p class="pricing-disclaimer">These are <b>illustrative calculations, not verified ROI or CLV</b>. '+
+        'Closing quotes and matched real-money fills have not been authenticated. '+
+        'The no-vig proxy removes margin only when both closing prices are supplied.</p>';
+    }
+  }
+
+  async function loadPriceVerification(){
+    try{state.priceVerification=await requestJSON('/api/price/verification');}
+    catch{state.priceVerification={verifiedROI:null,verifiedCLV:null};}
+    renderPricing();
+  }
+
+  async function calculateIllustrativePricing(){
+    const params=new URLSearchParams({
+      entry:$('pricing-entry').value,
+      close:$('pricing-close').value,
+      stake:$('pricing-stake').value,
+      result:$('pricing-result').value
+    });
+    if($('pricing-opposite').value.trim()!=='')
+      params.set('closingOpposite',$('pricing-opposite').value);
+    try{
+      state.pricingResult=await requestJSON('/api/price/illustration?'+params.toString());
+      state.pricingError=null;
+    }catch(err){
+      state.pricingResult=null;state.pricingError=err.message||'Invalid hypothetical price pair.';
+    }
+    renderPricing();
   }
 
   function renderExecution() {
@@ -736,6 +820,9 @@
           'Current injury source unavailable or stale',
         state.injurySource?.available?'SOURCE LOADED':'UNVERIFIED',
         Boolean(state.injurySource?.available)),
+      auditRow('Real-money ROI & certified closing lines',
+        'No authenticated filled wagers, independently graded settlements or full matched closing price history',
+        'NOT VERIFIED',false),
       auditRow('Starting QB and injury effect on model',
         'No verified starting quarterback decisions. Injury reports do not alter probabilities.',
         'NOT MODELED',false),
@@ -780,7 +867,7 @@
   function render() {
     renderFilters(); renderFeed(); renderBanner(); renderMetrics();
     renderOpportunities(); renderSpotlight(); renderChart();
-    renderGames(); renderSignals(); renderModel(); renderIntelligence(); renderEvidence(); renderExecution(); renderAudit();
+    renderGames(); renderSignals(); renderModel(); renderIntelligence(); renderEvidence(); renderPricing(); renderExecution(); renderAudit();
   }
 
   async function loadIntelligence() {
@@ -883,6 +970,10 @@
       event.preventDefault(); row.click();
     }
   });
+  $('pricing-form').addEventListener('submit', (event) => {
+    event.preventDefault();
+    calculateIllustrativePricing();
+  });
   $('menu-toggle').addEventListener('click', () => $('sidebar').classList.toggle('open'));
   $('signal-search').addEventListener('input', (e) => { state.search = e.target.value; renderSignals(); });
   $('signal-sort').addEventListener('change', (e) => { state.sort = e.target.value; renderSignals(); });
@@ -902,5 +993,6 @@
   loadModel();
   loadIntelligence();
   loadEvidence();
+  loadPriceVerification();
   loadSlate();
 })();
