@@ -47,6 +47,11 @@ test('Live NFL odds carry Elo research-only evidence without changing market sta
     const payload=await r.json();
     assert.equal(payload.demo,false);
     const game=payload.events[0];
+    assert.equal(game.marketConsensus.available,true);
+    assert.equal(game.marketConsensus.method,'ALL_BOOKS_MEDIAN_DE_VIG');
+    assert.equal(game.marketConsensus.books,3);
+    assert.ok(game.marketConsensus.homeProbability>0&&game.marketConsensus.homeProbability<1);
+    assert.equal(game.marketConsensus.basis,'MARKET_DERIVED_NOT_INDEPENDENT');
     assert.equal(game.independentModel.available,true);
     assert.equal(game.independentModel.independentOfOdds,true);
     assert.equal(game.independentModel.use,'RESEARCH_ONLY');
