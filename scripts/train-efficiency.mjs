@@ -59,7 +59,8 @@ artifact.sourceManifest={
 artifact.eloBaselineVersion=elo.version;
 artifact.dataFingerprint=createHash('sha256').update(
   JSON.stringify([elo.completedGamesSha256,manifests.map(x=>[x.season,x.completeGames]),
-    games.map(g=>[g.id,g.homeScore,g.awayScore])])
+    games.map(g=>[g.id,g.homeScore,g.awayScore]),
+    Object.entries(allPbp).sort(([a],[b])=>a.localeCompare(b))])
 ).digest('hex');
 const prior=await readFile(TARGET,'utf8').then(JSON.parse).catch(()=>null);
 if(prior?.dataFingerprint===artifact.dataFingerprint&&prior?.version===artifact.version){
