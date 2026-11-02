@@ -29,7 +29,7 @@ test('Agent stages never promote a historical model that loses proper score to m
   assert.equal(r.mayWager,false);
   assert.equal(r.realMoneyROI,null);
   assert.equal(r.verifiedCLV,null);
-  assert.deepEqual(r.stages.map(s=>s.id),['market','quant','calibration','history','risk']);
+  assert.deepEqual(r.stages.map(s=>s.id),['market','quant','calibration','selection','history','risk']);
 });
 test('Agent supports other leagues only as unmodeled markets',()=>{
   const result=assembleAgentRun({...slate,sport:'basketball_nba'},history);
@@ -49,4 +49,22 @@ test('Missing historical audit cannot imply a market edge',()=>{
 test('No qualifying live model also suppresses historical pick claims',()=>{
   const r=assembleAgentRun({...slate,events:[{...game,independentModel:{available:false}}]},history);
   assert.equal(r.decision,'PASS_MISSING_MODEL');
+});
+
+test('Selection Bias Guardian quantifies underdog over-selection, no betting authority',()=>{
+  const marketChallenge={
+    years:[2022,2023,2024,2025].map(season=>({
+      season,modelContributionWeight:0,
+      training:{trainedOnYears:[season-2,season-1]},
+      closingMarket:{brier:.2},
+      falseEdgeAudit:{original3PercentCandidates:220,marketUnderdogCandidates:180}
+    }))
+  };
+  const r=assembleAgentRun(slate,history,{marketChallenge});
+  assert.equal(r.historicalUnderdogSelectionAudit.available,true);
+  assert.equal(r.historicalUnderdogSelectionAudit.candidateSelections,880);
+  assert.equal(r.historicalUnderdogSelectionAudit.marketUnderdogSelections,720);
+  assert.equal(r.historicalUnderdogSelectionAudit.riskFlag,'MODEL_OVERSELECTS_MARKET_UNDERDOGS');
+  assert.equal(r.stages.find(x=>x.id==='selection').state,'UNDERDOG_CONCENTRATION');
+  assert.equal(r.mayWager,false);
 });
