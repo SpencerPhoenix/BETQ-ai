@@ -29,7 +29,7 @@ export function parseGenericCsv(text) {
   if(field||row.length){push();records.push(row);}
   if(!records.length)throw Error('Empty CSV');
   const headers=records.shift().map((s,i)=>i===0?s.replace(/^\uFEFF/,''):s);
-  for(const field of ['season','week','team','position','full_name','report_status','date_modified']){
+  for(const field of ['season','week','team','position','full_name','report_status']){
     if(!headers.includes(field))throw Error('Missing injury report column '+field);
   }
   return records.map(cols=>Object.fromEntries(headers.map((k,i)=>[k,cols[i]??''])));
@@ -40,6 +40,7 @@ export function compileInjuryReports(rows,{season,sourceUpdatedAt,now=Date.now()
     throw Error('Invalid injury season');
   const teams=new Set(Object.values(NFL_TEAMS));
   const latest=new Map();
+  const conflicts=new Set();
   const srcAt=Date.parse(sourceUpdatedAt);
   for(const row of rows){
     if(Number(row.season)!==season)continue;
@@ -49,17 +50,25 @@ export function compileInjuryReports(rows,{season,sourceUpdatedAt,now=Date.now()
     const practice=norm(row.practice_status);
     const name=norm(row.full_name);
     if(!name||name.length>100||!norm(row.position))continue;
-    const at=Date.parse(norm(row.date_modified));
+    const actualUpdate=Date.parse(norm(row.date_modified));
+    const at=Number.isFinite(actualUpdate)?actualUpdate:srcAt;
     if(!Number.isFinite(at)||at>now+60000)continue;
     const id=norm(row.gsis_id)||name;
     const key=weekKey(team,week)+':'+id;
+    if(conflicts.has(key))continue;
     const old=latest.get(key);
     if(old&&old.dateEpoch>at)continue;
+    // If timestamps are unavailable and a player has conflicting designations,
+    // do not infer which status was published last.
+    if(old&&old.dateModified===null&&!Number.isFinite(actualUpdate)&&
+       old.gameStatus!==(status||'NOT_REPORTED')){
+      latest.delete(key);conflicts.add(key);continue;
+    }
     latest.set(key,{
       team,week,id,player:name,position:norm(row.position),
       gameStatus:status||'NOT_REPORTED',practiceStatus:practice||null,
       injury:norm(row.report_primary_injury)||null,
-      dateEpoch:at,dateModified:new Date(at).toISOString()
+      dateEpoch:at,dateModified:Number.isFinite(actualUpdate)?new Date(actualUpdate).toISOString():null
     });
   }
   const buckets=new Map();
@@ -81,6 +90,7 @@ export function compileInjuryReports(rows,{season,sourceUpdatedAt,now=Date.now()
     reports[key]={
       team:list[0].team,week:list[0].week,
       lastPlayerUpdate:new Date(latestAt).toISOString(),
+      individualTimestampAvailable:list.some(x=>x.dateModified!==null),
       flaggedCount:selected.length,
       statusCounts:{
         out:selected.filter(x=>x.gameStatus==='OUT').length,
@@ -98,6 +108,8 @@ export function compileInjuryReports(rows,{season,sourceUpdatedAt,now=Date.now()
     sourceUpdatedAt:Number.isFinite(srcAt)?new Date(srcAt).toISOString():null,
     builtAt:new Date(now).toISOString(),
     reportCount:Object.keys(reports).length,
+    ambiguousPlayerRecords:conflicts.size,
+    perPlayerTimestampsAvailable:rows.some(x=>Number.isFinite(Date.parse(norm(x.date_modified)))),
     reports,
     advisory:'Reported player status is not confirmed quarterback starter status. Injury adjustments are not modeled.'
   };
