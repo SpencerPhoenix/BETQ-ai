@@ -1,6 +1,6 @@
 /**
  * NFL outcome-only Elo baseline.
- * Source: nflverse/nfldata historical game schedules (CC BY 4.0).
+ * Source: nflverse/nflverse-data schedules release (CC BY 4.0); maintained by Lee Sharpe.
  * This module does not use betting prices, future outcomes, injuries, or weather.
  */
 export const MODEL_VERSION = 'nfl-elo-1';
