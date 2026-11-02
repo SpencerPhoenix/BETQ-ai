@@ -3,13 +3,13 @@
   "version": "nfl-elo-1",
   "type": "PREGAME_NFL_ELO_BASELINE",
   "source": {
-    "project": "nflverse/nfldata",
-    "description": "Historical NFL schedules and results maintained by Lee Sharpe",
-    "url": "https://raw.githubusercontent.com/nflverse/nfldata/master/data/games.csv",
+    "project": "nflverse/nflverse-data",
+    "description": "NFL schedule release maintained by Lee Sharpe, published by nflverse",
+    "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
     "license": "CC BY 4.0",
-    "extractedUTC": "2026-11-02T00:27:03.208Z"
+    "extractedUTC": "2026-11-02T00:37:03.355Z"
   },
-  "generatedAt": "2026-11-02T00:27:03.208Z",
+  "generatedAt": "2026-11-02T00:37:03.355Z",
   "completedGamesSha256": "f3a360530663b81a8eb2d30f5d9c75cd7b2cf0d25aa329185f0822c4dd4c1408",
   "lastGameDate": "2026-11-01",
   "seasons": [
