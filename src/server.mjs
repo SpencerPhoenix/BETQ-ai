@@ -14,6 +14,7 @@ import { challengerResearchForEvent } from './nfl-efficiency.mjs';
 import { injuryContextForGame } from './injuries.mjs';
 import { illustrativePrice, PriceAuditError } from './price-metrics.mjs';
 import { assembleAgentRun } from './agent-run.mjs';
+import { applyDecisionAuthority } from './decision-policy.mjs';
 
 const PUBLIC_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../public');
 function loadModelArtifact() {
@@ -385,6 +386,7 @@ export function createHandler({
             }
           }
           const agentRun=assembleAgentRun(analysis,replaySummary,{now:analysisNow,marketChallenge});
+          applyDecisionAuthority(analysis,agentRun,{asOf:analysisNow});
           return reply(res, 200, {
             ...analysis,
             agentRun,
