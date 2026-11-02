@@ -63,6 +63,14 @@ New metadata endpoints: `GET /api/model/efficiency` and `GET /api/injuries/nfl`.
 
 See `docs/INTELLIGENCE.md` for methodological details, uncertainty, credit safeguards and remaining validation.
 
+## ROI & Closing Line Value (v0.5)
+
+The terminal now includes an **ROI & CLV Lab**. It illustrates how American prices are converted into decimal odds, how to compute matched price movement and an optional two-sided no-vig closing reference, and how WIN/LOSS/PUSH/VOID change net profit per stake.
+
+**Never interpret an illustrative price difference as verified CLV or an example settlement as verified ROI.** BETQ does not yet have an authenticated sportsbook fill ledger, certified matched closing quotes, or independently confirmed real-money settlements. Its existing derived-probability evidence journal cannot reconstruct them. The UI separates real metrics (unavailable) from local manually graded **paper-only** ROI.
+
+The calculator is a read-only, rate-limited same-origin endpoint; it does not consume Odds API credits or record user entries. The underlying engine validates identical event/market/side/period/handicap and chronological quotes before even labeling a closing-price proxy. Details and worked examples: [Price Validation contract](docs/PRICE_VALIDATION.md).
+
 ## Deploy
 
 `render.yaml` describes an optional Render Node web service. Link the repository in Render, then enter `ODDS_API_KEY` in the service environment. Deployment is managed separately in Render; a GitHub commit does not guarantee that the service successfully redeployed. Verify the production version at `GET /api/health`.
