@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "nfl-replay-v1",
+  "version": "nfl-replay-v2",
   "sport": "americanfootball_nfl",
   "type": "RETROSPECTIVE_WALK_FORWARD_RESEARCH",
   "modelParametersRelearnedEachSeason": true,
@@ -69,6 +69,7 @@
       "closingMarketBenchmark": {
         "n": 282,
         "brier": 0.20929,
+        "favoriteWinnerAccuracyPercent": 65.6,
         "logLoss": 0.60496,
         "pairedModelBrier": 0.22604,
         "benchmark": "DE_VIGGED_RETROSPECTIVE_CLOSING_MONEYLINES"
@@ -83,6 +84,11 @@
           "losses": 166,
           "tiesExcluded": 2,
           "winRatePercent": 34.39,
+          "expectedSelectionWinRatePercent": 49.01,
+          "referenceMarketWinProbabilityPercent": 39.38,
+          "averageOfferedImpliedProbabilityPercent": 40.42,
+          "meanEstimatedEVPercent": 27.55,
+          "actualMinusForecastWinPoints": -14.62,
           "wilson95": [
             0.2881,
             0.4043
@@ -609,6 +615,11 @@
           "losses": 154,
           "tiesExcluded": 1,
           "winRatePercent": 33.91,
+          "expectedSelectionWinRatePercent": 48.63,
+          "referenceMarketWinProbabilityPercent": 38.34,
+          "averageOfferedImpliedProbabilityPercent": 39.36,
+          "meanEstimatedEVPercent": 29.8,
+          "actualMinusForecastWinPoints": -14.73,
           "wilson95": [
             0.2813,
             0.402
@@ -1135,6 +1146,11 @@
           "losses": 145,
           "tiesExcluded": 1,
           "winRatePercent": 33.49,
+          "expectedSelectionWinRatePercent": 47.76,
+          "referenceMarketWinProbabilityPercent": 37.03,
+          "averageOfferedImpliedProbabilityPercent": 38.01,
+          "meanEstimatedEVPercent": 31.59,
+          "actualMinusForecastWinPoints": -14.27,
           "wilson95": [
             0.2756,
             0.3999
@@ -8236,6 +8252,7 @@
       "closingMarketBenchmark": {
         "n": 285,
         "brier": 0.21864,
+        "favoriteWinnerAccuracyPercent": 67.02,
         "logLoss": 0.62697,
         "pairedModelBrier": 0.23529,
         "benchmark": "DE_VIGGED_RETROSPECTIVE_CLOSING_MONEYLINES"
@@ -8250,6 +8267,11 @@
           "losses": 166,
           "tiesExcluded": 0,
           "winRatePercent": 33.6,
+          "expectedSelectionWinRatePercent": 46.64,
+          "referenceMarketWinProbabilityPercent": 37.38,
+          "averageOfferedImpliedProbabilityPercent": 38.98,
+          "meanEstimatedEVPercent": 27.63,
+          "actualMinusForecastWinPoints": -13.04,
           "wilson95": [
             0.2803,
             0.3966
@@ -8776,6 +8798,11 @@
           "losses": 150,
           "tiesExcluded": 0,
           "winRatePercent": 30.88,
+          "expectedSelectionWinRatePercent": 45.44,
+          "referenceMarketWinProbabilityPercent": 35.22,
+          "averageOfferedImpliedProbabilityPercent": 36.73,
+          "meanEstimatedEVPercent": 31.61,
+          "actualMinusForecastWinPoints": -14.56,
           "wilson95": [
             0.2511,
             0.3731
@@ -9302,6 +9329,11 @@
           "losses": 140,
           "tiesExcluded": 0,
           "winRatePercent": 30.35,
+          "expectedSelectionWinRatePercent": 44.86,
+          "referenceMarketWinProbabilityPercent": 34.16,
+          "averageOfferedImpliedProbabilityPercent": 35.62,
+          "meanEstimatedEVPercent": 33.81,
+          "actualMinusForecastWinPoints": -14.51,
           "wilson95": [
             0.2441,
             0.3702
@@ -16426,6 +16458,7 @@
       "closingMarketBenchmark": {
         "n": 285,
         "brier": 0.20097,
+        "favoriteWinnerAccuracyPercent": 70.88,
         "logLoss": 0.58921,
         "pairedModelBrier": 0.21163,
         "benchmark": "DE_VIGGED_RETROSPECTIVE_CLOSING_MONEYLINES"
@@ -16440,6 +16473,11 @@
           "losses": 152,
           "tiesExcluded": 0,
           "winRatePercent": 37.96,
+          "expectedSelectionWinRatePercent": 48.13,
+          "referenceMarketWinProbabilityPercent": 38.39,
+          "averageOfferedImpliedProbabilityPercent": 40.03,
+          "meanEstimatedEVPercent": 26.05,
+          "actualMinusForecastWinPoints": -10.17,
           "wilson95": [
             0.3211,
             0.4418
@@ -16966,6 +17004,11 @@
           "losses": 139,
           "tiesExcluded": 0,
           "winRatePercent": 36.82,
+          "expectedSelectionWinRatePercent": 47.21,
+          "referenceMarketWinProbabilityPercent": 36.68,
+          "averageOfferedImpliedProbabilityPercent": 38.25,
+          "meanEstimatedEVPercent": 28.88,
+          "actualMinusForecastWinPoints": -10.39,
           "wilson95": [
             0.3072,
             0.4337
@@ -17492,6 +17535,11 @@
           "losses": 134,
           "tiesExcluded": 0,
           "winRatePercent": 35.27,
+          "expectedSelectionWinRatePercent": 46.69,
+          "referenceMarketWinProbabilityPercent": 35.77,
+          "averageOfferedImpliedProbabilityPercent": 37.3,
+          "meanEstimatedEVPercent": 30.45,
+          "actualMinusForecastWinPoints": -11.42,
           "wilson95": [
             0.2908,
             0.4199
@@ -24616,6 +24664,7 @@
       "closingMarketBenchmark": {
         "n": 284,
         "brier": 0.21091,
+        "favoriteWinnerAccuracyPercent": 65.85,
         "logLoss": 0.60699,
         "pairedModelBrier": 0.22235,
         "benchmark": "DE_VIGGED_RETROSPECTIVE_CLOSING_MONEYLINES"
@@ -24630,6 +24679,11 @@
           "losses": 139,
           "tiesExcluded": 1,
           "winRatePercent": 41.6,
+          "expectedSelectionWinRatePercent": 49.33,
+          "referenceMarketWinProbabilityPercent": 40.26,
+          "averageOfferedImpliedProbabilityPercent": 41.98,
+          "meanEstimatedEVPercent": 25.63,
+          "actualMinusForecastWinPoints": -7.74,
           "wilson95": [
             0.3552,
             0.4794
@@ -25156,6 +25210,11 @@
           "losses": 129,
           "tiesExcluded": 1,
           "winRatePercent": 38.28,
+          "expectedSelectionWinRatePercent": 47.98,
+          "referenceMarketWinProbabilityPercent": 38.09,
+          "averageOfferedImpliedProbabilityPercent": 39.72,
+          "meanEstimatedEVPercent": 28.99,
+          "actualMinusForecastWinPoints": -9.7,
           "wilson95": [
             0.3196,
             0.4502
@@ -25682,6 +25741,11 @@
           "losses": 118,
           "tiesExcluded": 1,
           "winRatePercent": 35.16,
+          "expectedSelectionWinRatePercent": 46.67,
+          "referenceMarketWinProbabilityPercent": 35.97,
+          "averageOfferedImpliedProbabilityPercent": 37.52,
+          "meanEstimatedEVPercent": 32.69,
+          "actualMinusForecastWinPoints": -11.5,
           "wilson95": [
             0.286,
             0.4234
@@ -32770,6 +32834,11 @@
       "losses": 623,
       "tiesExcluded": 3,
       "winRatePercent": 36.82,
+      "expectedSelectionWinRatePercent": 48.27,
+      "referenceMarketWinProbabilityPercent": 38.84,
+      "averageOfferedImpliedProbabilityPercent": 40.34,
+      "meanEstimatedEVPercent": 26.73,
+      "actualMinusForecastWinPoints": -11.45,
       "wilson95": [
         0.3386,
         0.3987
@@ -33421,6 +33490,11 @@
       "losses": 572,
       "tiesExcluded": 2,
       "winRatePercent": 34.93,
+      "expectedSelectionWinRatePercent": 47.33,
+      "referenceMarketWinProbabilityPercent": 37.1,
+      "averageOfferedImpliedProbabilityPercent": 38.52,
+      "meanEstimatedEVPercent": 29.82,
+      "actualMinusForecastWinPoints": -12.41,
       "wilson95": [
         0.3185,
         0.3814
@@ -34072,6 +34146,11 @@
       "losses": 537,
       "tiesExcluded": 2,
       "winRatePercent": 33.54,
+      "expectedSelectionWinRatePercent": 46.52,
+      "referenceMarketWinProbabilityPercent": 35.75,
+      "averageOfferedImpliedProbabilityPercent": 37.12,
+      "meanEstimatedEVPercent": 32.1,
+      "actualMinusForecastWinPoints": -12.98,
       "wilson95": [
         0.3037,
         0.3687
@@ -34726,8 +34805,8 @@
     "Tie games excluded from graded hypothetical bets; count disclosed",
     "Accuracy measures all games, not just filtered candidate picks"
   ],
-  "generatedAt": "2026-11-02T04:58:21.992Z",
-  "sourceSha256": "b0386e7d8e580ac4ff048bcc603cdc99f3310e17299232958265b1259064ffff",
+  "generatedAt": "2026-11-02T05:09:07.150Z",
+  "sourceSha256": "31517952f47f42b86e2956e55ff59d2480d0f72542cb74cb456c7c04bd7bab01",
   "researchWarnings": [
     "This 2025 historical data and existing BETQ model variants have been repeatedly inspected; these are exploratory reconstructions, not a pristine untouched model trial.",
     "Historical closing odds from nflverse are source-retrospective, not pregame timestamped bet fills.",

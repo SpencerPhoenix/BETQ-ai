@@ -1,14 +1,14 @@
 {
   "schema": 1,
-  "version": "nfl-replay-v1",
-  "generatedAt": "2026-11-02T04:58:21.992Z",
+  "version": "nfl-replay-v2",
+  "generatedAt": "2026-11-02T05:09:07.150Z",
   "source": {
     "name": "nflverse/nflverse-data schedules",
     "credit": "nflverse / Lee Sharpe (CC BY 4.0)",
     "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
     "odds": "Recorded closing moneylines, no historical quote times/book fills"
   },
-  "sourceSha256": "b0386e7d8e580ac4ff048bcc603cdc99f3310e17299232958265b1259064ffff",
+  "sourceSha256": "31517952f47f42b86e2956e55ff59d2480d0f72542cb74cb456c7c04bd7bab01",
   "model": "SEASON_PRE_FIT_ELO_DAY_FROZEN",
   "defaultThresholdEVPercent": 3,
   "verifiedBettingROI": null,
@@ -49,6 +49,7 @@
       "closingMarketBenchmark": {
         "n": 282,
         "brier": 0.20929,
+        "favoriteWinnerAccuracyPercent": 65.6,
         "logLoss": 0.60496,
         "pairedModelBrier": 0.22604,
         "benchmark": "DE_VIGGED_RETROSPECTIVE_CLOSING_MONEYLINES"
@@ -66,6 +67,10 @@
             0.2881,
             0.4043
           ],
+          "expectedSelectionWinRatePercent": 49.01,
+          "referenceMarketWinProbabilityPercent": 39.38,
+          "meanEstimatedEVPercent": 27.55,
+          "actualMinusForecastWinPoints": -14.62,
           "hypotheticalNetUnits": -40.7,
           "hypotheticalClosingPriceROI": -16.09,
           "maxConsecutiveLosses": 10,
@@ -83,6 +88,10 @@
             0.2813,
             0.402
           ],
+          "expectedSelectionWinRatePercent": 48.63,
+          "referenceMarketWinProbabilityPercent": 38.34,
+          "meanEstimatedEVPercent": 29.8,
+          "actualMinusForecastWinPoints": -14.73,
           "hypotheticalNetUnits": -35.61,
           "hypotheticalClosingPriceROI": -15.28,
           "maxConsecutiveLosses": 10,
@@ -100,6 +109,10 @@
             0.2756,
             0.3999
           ],
+          "expectedSelectionWinRatePercent": 47.76,
+          "referenceMarketWinProbabilityPercent": 37.03,
+          "meanEstimatedEVPercent": 31.59,
+          "actualMinusForecastWinPoints": -14.27,
           "hypotheticalNetUnits": -30.61,
           "hypotheticalClosingPriceROI": -14.04,
           "maxConsecutiveLosses": 10,
@@ -141,6 +154,7 @@
       "closingMarketBenchmark": {
         "n": 285,
         "brier": 0.21864,
+        "favoriteWinnerAccuracyPercent": 67.02,
         "logLoss": 0.62697,
         "pairedModelBrier": 0.23529,
         "benchmark": "DE_VIGGED_RETROSPECTIVE_CLOSING_MONEYLINES"
@@ -158,6 +172,10 @@
             0.2803,
             0.3966
           ],
+          "expectedSelectionWinRatePercent": 46.64,
+          "referenceMarketWinProbabilityPercent": 37.38,
+          "meanEstimatedEVPercent": 27.63,
+          "actualMinusForecastWinPoints": -13.04,
           "hypotheticalNetUnits": -26.37,
           "hypotheticalClosingPriceROI": -10.55,
           "maxConsecutiveLosses": 9,
@@ -175,6 +193,10 @@
             0.2511,
             0.3731
           ],
+          "expectedSelectionWinRatePercent": 45.44,
+          "referenceMarketWinProbabilityPercent": 35.22,
+          "meanEstimatedEVPercent": 31.61,
+          "actualMinusForecastWinPoints": -14.56,
           "hypotheticalNetUnits": -25.48,
           "hypotheticalClosingPriceROI": -11.74,
           "maxConsecutiveLosses": 9,
@@ -192,6 +214,10 @@
             0.2441,
             0.3702
           ],
+          "expectedSelectionWinRatePercent": 44.86,
+          "referenceMarketWinProbabilityPercent": 34.16,
+          "meanEstimatedEVPercent": 33.81,
+          "actualMinusForecastWinPoints": -14.51,
           "hypotheticalNetUnits": -21.46,
           "hypotheticalClosingPriceROI": -10.68,
           "maxConsecutiveLosses": 12,
@@ -233,6 +259,7 @@
       "closingMarketBenchmark": {
         "n": 285,
         "brier": 0.20097,
+        "favoriteWinnerAccuracyPercent": 70.88,
         "logLoss": 0.58921,
         "pairedModelBrier": 0.21163,
         "benchmark": "DE_VIGGED_RETROSPECTIVE_CLOSING_MONEYLINES"
@@ -250,6 +277,10 @@
             0.3211,
             0.4418
           ],
+          "expectedSelectionWinRatePercent": 48.13,
+          "referenceMarketWinProbabilityPercent": 38.39,
+          "meanEstimatedEVPercent": 26.05,
+          "actualMinusForecastWinPoints": -10.17,
           "hypotheticalNetUnits": -22.33,
           "hypotheticalClosingPriceROI": -9.12,
           "maxConsecutiveLosses": 11,
@@ -267,6 +298,10 @@
             0.3072,
             0.4337
           ],
+          "expectedSelectionWinRatePercent": 47.21,
+          "referenceMarketWinProbabilityPercent": 36.68,
+          "meanEstimatedEVPercent": 28.88,
+          "actualMinusForecastWinPoints": -10.39,
           "hypotheticalNetUnits": -18.72,
           "hypotheticalClosingPriceROI": -8.51,
           "maxConsecutiveLosses": 11,
@@ -284,6 +319,10 @@
             0.2908,
             0.4199
           ],
+          "expectedSelectionWinRatePercent": 46.69,
+          "referenceMarketWinProbabilityPercent": 35.77,
+          "meanEstimatedEVPercent": 30.45,
+          "actualMinusForecastWinPoints": -11.42,
           "hypotheticalNetUnits": -18.82,
           "hypotheticalClosingPriceROI": -9.09,
           "maxConsecutiveLosses": 11,
@@ -325,6 +364,7 @@
       "closingMarketBenchmark": {
         "n": 284,
         "brier": 0.21091,
+        "favoriteWinnerAccuracyPercent": 65.85,
         "logLoss": 0.60699,
         "pairedModelBrier": 0.22235,
         "benchmark": "DE_VIGGED_RETROSPECTIVE_CLOSING_MONEYLINES"
@@ -342,6 +382,10 @@
             0.3552,
             0.4794
           ],
+          "expectedSelectionWinRatePercent": 49.33,
+          "referenceMarketWinProbabilityPercent": 40.26,
+          "meanEstimatedEVPercent": 25.63,
+          "actualMinusForecastWinPoints": -7.74,
           "hypotheticalNetUnits": -4.76,
           "hypotheticalClosingPriceROI": -2,
           "maxConsecutiveLosses": 9,
@@ -359,6 +403,10 @@
             0.3196,
             0.4502
           ],
+          "expectedSelectionWinRatePercent": 47.98,
+          "referenceMarketWinProbabilityPercent": 38.09,
+          "meanEstimatedEVPercent": 28.99,
+          "actualMinusForecastWinPoints": -9.7,
           "hypotheticalNetUnits": -10.23,
           "hypotheticalClosingPriceROI": -4.89,
           "maxConsecutiveLosses": 10,
@@ -376,6 +424,10 @@
             0.286,
             0.4234
           ],
+          "expectedSelectionWinRatePercent": 46.67,
+          "referenceMarketWinProbabilityPercent": 35.97,
+          "meanEstimatedEVPercent": 32.69,
+          "actualMinusForecastWinPoints": -11.5,
           "hypotheticalNetUnits": -12.03,
           "hypotheticalClosingPriceROI": -6.61,
           "maxConsecutiveLosses": 10,
@@ -392,6 +444,10 @@
       "losses": 623,
       "tiesExcluded": 3,
       "winRatePercent": 36.82,
+      "expectedSelectionWinRatePercent": 48.27,
+      "referenceMarketWinProbabilityPercent": 38.84,
+      "meanEstimatedEVPercent": 26.73,
+      "actualMinusForecastWinPoints": -11.45,
       "hypotheticalNetUnits": -94.16,
       "hypotheticalRiskedUnits": 986,
       "hypotheticalClosingPriceROI": -9.55,
@@ -405,6 +461,10 @@
       "losses": 572,
       "tiesExcluded": 2,
       "winRatePercent": 34.93,
+      "expectedSelectionWinRatePercent": 47.33,
+      "referenceMarketWinProbabilityPercent": 37.1,
+      "meanEstimatedEVPercent": 29.82,
+      "actualMinusForecastWinPoints": -12.41,
       "hypotheticalNetUnits": -90.04,
       "hypotheticalRiskedUnits": 879,
       "hypotheticalClosingPriceROI": -10.24,
@@ -418,6 +478,10 @@
       "losses": 537,
       "tiesExcluded": 2,
       "winRatePercent": 33.54,
+      "expectedSelectionWinRatePercent": 46.52,
+      "referenceMarketWinProbabilityPercent": 35.75,
+      "meanEstimatedEVPercent": 32.1,
+      "actualMinusForecastWinPoints": -12.98,
       "hypotheticalNetUnits": -82.93,
       "hypotheticalRiskedUnits": 808,
       "hypotheticalClosingPriceROI": -10.26,
