@@ -363,13 +363,13 @@
 
   function settlePaper(id, result) {
     const ticket = state.ledger.find(t => t.id === id);
-    if (!ticket || ticket.status !== 'OPEN' || !['WIN', 'LOSS', 'VOID'].includes(result)) return;
+    if (!ticket || ticket.status !== 'OPEN' || !['WIN', 'LOSS', 'PUSH', 'VOID'].includes(result)) return;
     ticket.status = result;
     ticket.settledAt = new Date().toISOString();
     ticket.pnl = result === 'WIN' ? Number((ticket.stake * (ticket.decimalOdds - 1)).toFixed(2))
       : result === 'LOSS' ? -ticket.stake : 0;
     ticket.manualSettlement = true;
-    saveLedger(); renderExecution();
+    saveLedger(); renderExecution(); renderPricing();
     toast('Paper result marked ' + result + '. This result was not verified by a feed.');
   }
 
@@ -471,6 +471,7 @@
         '<button type="button" class="small-button" data-settle="' + esc(ticket.id) +
         '" data-result="WIN">W</button> <button type="button" class="small-button" data-settle="' +
         esc(ticket.id) + '" data-result="LOSS">L</button> <button type="button" class="small-button" data-settle="' +
+        esc(ticket.id) + '" data-result="PUSH">Push</button> <button type="button" class="small-button" data-settle="' +
         esc(ticket.id) + '" data-result="VOID">Void</button>' : '<small>MANUAL</small>') + '</td></tr>'
     ).join('');
     $('execution-view').innerHTML = '<div class="execution-grid">' +
