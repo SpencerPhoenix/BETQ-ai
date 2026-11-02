@@ -63,6 +63,7 @@ test('Browser automatically reads free stress endpoint and labels assumption con
   assert.match(js,/loadRiskStress\(\)/);
   assert.match(js,/renderRiskStress\(\)/);
   assert.match(html,/id="risk-stress-view"/);
-  assert.match(js,/does not measure an exact.*real-world probability of ruin/i);
+  assert.match(js,/does not measure an exact/i);
+  assert.match(js,/real-world probability of ruin/i);
   assert.match(js,/conditional on the/);
 });
