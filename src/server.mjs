@@ -1,12 +1,22 @@
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import { createOddsSource, OddsError } from './odds.mjs';
 import { analyzeEvents, SPORTS, MARKETS } from './engine.mjs';
 import { demoEvents } from './demo.mjs';
+import { predictNflEvent, MODEL_VERSION } from './nfl-elo.mjs';
 
 const PUBLIC_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../public');
+function loadModelArtifact() {
+  try {
+    const artifact = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), '../data/nfl_elo.json'), 'utf8'));
+    return artifact?.schema === 1 && artifact?.version === MODEL_VERSION ? artifact : null;
+  } catch { return null; }
+}
+const NFL_ARTIFACT = loadModelArtifact();
+const roundModel = (n, digits = 2) => Number.isFinite(n) ? Number(n.toFixed(digits)) : null;
 const ASSETS = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
   ['/index.html', ['index.html', 'text/html; charset=utf-8']],
@@ -37,6 +47,7 @@ function safeError(res, err) {
 export function createHandler({
   source = createOddsSource(),
   clock = Date.now,
+  nflArtifact = NFL_ARTIFACT,
   maxAgeMs = Number(process.env.ODDS_MAX_AGE_MS) || 600000
 } = {}) {
   const access = new Map();
@@ -59,15 +70,35 @@ export function createHandler({
           return reply(res, 429, { error: { code: 'LOCAL_RATE_LIMIT', message: 'Too many requests. Try again shortly.' } });
         }
         if (url.pathname === '/api/health') return reply(res, 200, {
-          status: 'ok', app: 'BETQ.ai', version: '0.1.0',
-          serverTime: new Date(now).toISOString(), odds: source.status()
+          status: 'ok', app: 'BETQ.ai', version: '0.2.0',
+          serverTime: new Date(now).toISOString(), odds: source.status(),
+          nflModel: { available: Boolean(nflArtifact?.readyForResearch), version: nflArtifact?.version || null }
         });
         if (url.pathname === '/api/config') return reply(res, 200, {
           sports: SPORTS, markets: MARKETS,
           maxAgeMs, refreshMs: 90000,
-          marketOnly: true, wageringEnabled: false,
-          modelValidated: false, injuryDataConnected: false, halftimeModelConnected: false
+          marketOnlySignals: true, nflResearchModel: Boolean(nflArtifact?.readyForResearch),
+          wageringEnabled: false, injuryDataConnected: false, halftimeModelConnected: false
         });
+        if (url.pathname === '/api/model/nfl') {
+          if (!nflArtifact) return reply(res, 200, {
+            available: false, modelVersion: MODEL_VERSION, reason: 'ARTIFACT_NOT_AVAILABLE'
+          });
+          const sample = predictNflEvent({
+            home_team: 'Kansas City Chiefs', away_team: 'Las Vegas Raiders'
+          }, nflArtifact, now);
+          return reply(res, 200, {
+            available: sample.available, reason: sample.available ? null : sample.reason,
+            modelVersion: nflArtifact.version, generatedAt: nflArtifact.generatedAt,
+            lastGameDate: nflArtifact.lastGameDate, readyForResearch: nflArtifact.readyForResearch,
+            source: nflArtifact.source, trainingProtocol: nflArtifact.trainingProtocol,
+            tuning: nflArtifact.tuning, calibration: nflArtifact.calibration,
+            holdout: nflArtifact.holdout, completedGames: nflArtifact.completedGames,
+            completed2026: nflArtifact.completed2026, params: nflArtifact.params,
+            ratings: nflArtifact.ratings, limitations: nflArtifact.limitations,
+            use: 'RESEARCH_ONLY'
+          });
+        }
         if (url.pathname === '/api/slate') {
           const sport = url.searchParams.get('sport') || 'americanfootball_nfl';
           const market = url.searchParams.get('market') || 'h2h';
@@ -83,12 +114,34 @@ export function createHandler({
           const analysis = analyzeEvents(snapshot.events, {
             sport, market, asOf: now, maxAgeMs, demo
           });
+          if (!demo && sport === 'americanfootball_nfl' && market === 'h2h') {
+            for (const game of analysis.events) {
+              const projection = game.started
+                ? { available: false, reason: 'GAME_ALREADY_STARTED' }
+                : predictNflEvent({
+                    home_team: game.homeTeam, away_team: game.awayTeam
+                  }, nflArtifact, now);
+              game.independentModel = projection;
+              if (projection.available) {
+                for (const signal of game.opportunities) {
+                  const p = signal.side === 'home' ? projection.homeWinProbability
+                    : signal.side === 'away' ? projection.awayWinProbability : null;
+                  if (p === null) continue;
+                  signal.eloBaselineProbability = p;
+                  signal.eloPriceEdgePoints = roundModel((p - signal.impliedProbability) * 100);
+                  signal.eloIndicativeEvPercent = roundModel((p * signal.decimalOdds - 1) * 100);
+                  signal.eloStatus = 'RESEARCH_ONLY';
+                }
+              }
+            }
+          }
           return reply(res, 200, {
             ...analysis,
             receivedAt: snapshot.receivedAt, cacheHit: snapshot.cacheHit,
             quota: snapshot.quota, warnings: [
               'Market consensus is not an independently validated win-probability model.',
-              'Injury, lineup, weather, halftime and historical calibration are not yet verified.',
+              'NFL pregame Elo model is independently backtested on 2025 outcomes but is not injury or starter adjusted; compare with sportsbook market carefully.',
+              'Other sports and period/halftime bets do not have a trained model yet.',
               'No real wagers are placed. Demo events and prices are entirely synthetic.'
             ]
           });
