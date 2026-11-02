@@ -49,7 +49,7 @@ function loadReplayFile(name){
   try {
     const path=resolve(dirname(fileURLToPath(import.meta.url)),'../data/replay/'+name);
     const data=JSON.parse(readFileSync(path,'utf8'));
-    return data?.schema===1&&data?.version==='nfl-replay-v1'?data:null;
+    return data?.schema===1&&data?.version==='nfl-replay-v2'?data:null;
   } catch{return null;}
 }
 const NFL_REPLAY_SUMMARY=loadReplayFile('summary.json');
