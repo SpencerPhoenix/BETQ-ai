@@ -24,6 +24,8 @@ jobs:
         run: |
           npm run check
           npm test
+      - name: Refresh historical replay against the current nflverse release
+        run: node scripts/generate-replay.mjs
       - name: Evaluate annual out-of-time market calibration and favorite-only sensitivity
         run: node scripts/run-market-challenge.mjs
       - name: Verify historical attribution and zero verified ROI/CLV claims
@@ -49,10 +51,10 @@ jobs:
       - name: Commit derived model selection research
         shell: bash
         run: |
-          if [[ -n "$(git status --porcelain -- data/market-challenge/)" ]]; then
+          if [[ -n "$(git status --porcelain -- data/market-challenge/ data/replay/)" ]]; then
             git config user.name "betq-quant-research-bot"
             git config user.email "actions@users.noreply.github.com"
-            git add data/market-challenge/
+            git add data/market-challenge/ data/replay/
             git commit -m "data: publish nested market/Elo validation and hit-rate versus ROI benchmarks"
             for attempt in 1 2 3; do
               git fetch origin main
