@@ -36,13 +36,11 @@ const statusSQL=[
   '(SELECT count(*)::int FROM betq_shadow.qb_source_reviews) AS qb_reviews'
 ].join(' ');
 
-const insertQuoteSQL=[
+const insertQuotePrefix=[
   'INSERT INTO betq_shadow.quote_observations(',
   'record_id,sport,event_id,home_team,away_team,kickoff_at,',
   'market,period,bookmaker_key,home_american,away_american,',
-  'source_market_updated_at,first_observed_at,fair_home_probability,payload_digest)',
-  'VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)',
-  'ON CONFLICT(record_id) DO NOTHING'
+  'source_market_updated_at,first_observed_at,fair_home_probability,payload_digest)'
 ].join(' ');
 
 const insertCandidateSQL=[
@@ -96,13 +94,27 @@ export function postgresShadowStore(pool){
       let inserted=0;
       try{
         await client.query('BEGIN');
-        for(const r of normalized.records){
-          const result=await client.query(insertQuoteSQL,[
-            r.recordId,r.sport,r.eventId,r.homeTeam,r.awayTeam,
-            r.kickoffAt,r.market,r.period,r.bookmakerKey,
-            r.homeAmerican,r.awayAmerican,r.sourceMarketUpdatedAt,
-            r.firstObservedAt,r.fairHomeProbability,r.payloadDigest
-          ]);
+        // Bounded atomic multi-row inserts: one transaction and at most
+        // 10 parameterized statements, not a query per bookmaker observation.
+        if(normalized.records.length>1000)
+          throw Error('SHADOW_QUOTE_BATCH_TOO_LARGE');
+        for(let offset=0;offset<normalized.records.length;offset+=100){
+          const batch=normalized.records.slice(offset,offset+100);
+          const params=[],placeholders=[];
+          for(const r of batch){
+            const index=params.length;
+            placeholders.push('('+Array.from({length:15},(_,j)=>'$'+(index+j+1)).join(',')+')');
+            params.push(
+              r.recordId,r.sport,r.eventId,r.homeTeam,r.awayTeam,
+              r.kickoffAt,r.market,r.period,r.bookmakerKey,
+              r.homeAmerican,r.awayAmerican,r.sourceMarketUpdatedAt,
+              r.firstObservedAt,r.fairHomeProbability,r.payloadDigest
+            );
+          }
+          const result=await client.query(
+            insertQuotePrefix+' VALUES '+placeholders.join(',')+
+            ' ON CONFLICT(record_id) DO NOTHING',params
+          );
           inserted+=result.rowCount||0;
         }
         await client.query('COMMIT');
