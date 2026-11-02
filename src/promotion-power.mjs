@@ -125,7 +125,7 @@ export function runPromotionPowerStudy(frames,{
   cells=POWER_CELLS,
   worldsPerCell=POWER_PROTOCOL.worldsPerCell,
   bootstrapDraws=POWER_PROTOCOL.pairedBootstrapDraws,
-  seed=POWER_PROTOCOL.seed
+  seed=POWER_PROTOCOL.seed,onCell=()=>{}
 }={}){
   validateFrames(frames);
   if(!Array.isArray(cells)||!cells.length||cells.length>10||
@@ -153,7 +153,7 @@ export function runPromotionPowerStudy(frames,{
       values.push(result.residualPooledLogLossGain);
     }
     values.sort((a,b)=>a-b);
-    results.push({
+    const cellResult={
       id:cell.id,signalLogitScale:cell.s,
       signalObservationCorrelation:cell.rho,
       weekShockSd:cell.weekShockSd,
@@ -176,7 +176,9 @@ export function runPromotionPowerStudy(frames,{
       fittedResidualLogLossGainP05:round(quantile(values,.05),6),
       fittedResidualLogLossGainMedian:round(quantile(values,.5),6),
       fittedResidualLogLossGainP95:round(quantile(values,.95),6)
-    });
+    };
+    results.push(cellResult);
+    if(typeof onCell==='function')onCell(cellResult);
   }
   const nullResult=results.find(r=>r.id==='NULL_MARKET_IS_TRUE');
   return {
