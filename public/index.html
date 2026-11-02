@@ -17,17 +17,18 @@
         <span class="brand-mark">BQ<span class="brand-flare">.</span></span>
         <span class="brand-copy"><strong>BETQ<span>.ai</span></strong><small>QUANT INTELLIGENCE</small></span>
       </a>
-      <div class="sidebar-overline">TERMINAL / v0.5.0</div>
+      <div class="sidebar-overline">TERMINAL / v0.6.0</div>
       <nav class="nav-list" aria-label="Terminal views">
         <button class="nav-item active" type="button" data-tab="overview"><span class="nav-icon">◫</span><span>Command Center</span><span class="nav-shortcut">01</span></button>
         <button class="nav-item" type="button" data-tab="games"><span class="nav-icon">◉</span><span>Game Monitor</span><span class="nav-shortcut">02</span></button>
         <button class="nav-item" type="button" data-tab="signals"><span class="nav-icon">⌁</span><span>Signal Scanner</span><span class="nav-shortcut">03</span></button>
         <button class="nav-item" type="button" data-tab="model"><span class="nav-icon">⊞</span><span>Prediction Lab</span><span class="nav-shortcut">04</span></button>
         <button class="nav-item" type="button" data-tab="evidence"><span class="nav-icon">▤</span><span>Evidence Lab</span><span class="nav-shortcut">05</span></button>
-        <button class="nav-item" type="button" data-tab="pricing"><span class="nav-icon">%</span><span>ROI &amp; CLV Lab</span><span class="nav-shortcut">06</span></button>
-        <button class="nav-item" type="button" data-tab="execution"><span class="nav-icon">⇅</span><span>Paper Execution</span><span class="nav-shortcut">07</span></button>
-        <button class="nav-item" type="button" data-tab="audit"><span class="nav-icon">◇</span><span>Audit & Quality</span><span class="nav-shortcut">08</span></button>
-        <button class="nav-item" type="button" data-tab="settings"><span class="nav-icon">⚙</span><span>Settings</span><span class="nav-shortcut">09</span></button>
+        <button class="nav-item" type="button" data-tab="replay"><span class="nav-icon">↺</span><span>Historical Replay</span><span class="nav-shortcut">06</span></button>
+        <button class="nav-item" type="button" data-tab="pricing"><span class="nav-icon">%</span><span>ROI &amp; CLV Lab</span><span class="nav-shortcut">07</span></button>
+        <button class="nav-item" type="button" data-tab="execution"><span class="nav-icon">⇅</span><span>Paper Execution</span><span class="nav-shortcut">08</span></button>
+        <button class="nav-item" type="button" data-tab="audit"><span class="nav-icon">◇</span><span>Audit & Quality</span><span class="nav-shortcut">09</span></button>
+        <button class="nav-item" type="button" data-tab="settings"><span class="nav-icon">⚙</span><span>Settings</span><span class="nav-shortcut">10</span></button>
       </nav>
       <div class="sidebar-spacer"></div>
       <div class="source-box">
@@ -103,6 +104,10 @@
         <section class="page active" id="page-overview" aria-label="Command center">
           <div class="section-heading"><div><div class="eyebrow subtle">01 / LIVE WORKSPACE</div><h2>Market command center</h2></div><p id="last-refreshed">Awaiting first snapshot</p></div>
           <div class="metric-grid" id="metric-grid"></div>
+          <section class="panel agent-run-panel">
+            <div class="panel-head"><div><span class="panel-kicker">EVERY ACTIVATION / DETERMINISTIC QUANT AGENTS</span><h3>Agent decision &amp; quality gates</h3></div><button type="button" class="text-link" data-tab="replay">Historical proof ↗</button></div>
+            <div id="agent-run-view" aria-live="polite"></div>
+          </section>
           <div class="main-grid">
             <section class="panel wide-panel">
               <div class="panel-head"><div><span class="panel-kicker">SIGNALS / RANKED</span><h3>Price opportunity board</h3></div><button type="button" class="text-link" data-tab="signals">Full scanner ↗</button></div>
@@ -151,8 +156,24 @@
           <div id="evidence-view" aria-live="polite"></div>
         </section>
 
+        <section class="page" id="page-replay" aria-label="Historical NFL season-by-season replay">
+          <div class="section-heading"><div><div class="eyebrow subtle">06 / AS-OF RESEARCH LAB</div><h2>Historical Replay: Would BETQ have won?</h2></div><span class="tag-neutral">CLOSING-PRICE HYPOTHETICAL / NO CLV</span></div>
+          <div class="notice info"><span>◇</span><p>Seasons are tested with Elo parameters trained on earlier years and game-day-frozen probabilities. Recorded nflverse moneylines are <b>closing prices without a verified entry timestamp</b>. Pick returns are hypothetical, not executable or verified betting ROI. Historical EPA challenger is not yet nested season-by-season.</p></div>
+          <div class="replay-control-bar">
+            <div><label for="replay-threshold">Minimum modeled EV</label><select id="replay-threshold"><option value="0">0%+ (research)</option><option value="3" selected>3%+ (fixed default)</option><option value="5">5%+ (sensitivity)</option></select></div>
+            <div><label for="replay-season">Inspect season</label><select id="replay-season"><option value="2025" selected>2025</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option></select></div>
+            <span class="faint-caption">All rules evaluated; no after-the-fact threshold optimization.</span>
+          </div>
+          <div id="replay-overview" aria-live="polite"></div>
+          <section class="panel replay-picks-panel">
+            <div class="panel-head"><div><span class="panel-kicker">EVERY RULE-QUALIFIED PLAY / CHRONOLOGICAL</span><h3>What would the model have selected?</h3></div><span class="faint-caption">ONE UNIT / CLOSING REFERENCE</span></div>
+            <div id="replay-plays" aria-live="polite"></div>
+            <div class="replay-pagination"><button class="outline-button" data-action="replay-prev" type="button">Previous 30</button><span id="replay-page-label" class="faint-caption">Page 1</span><button class="outline-button" data-action="replay-next" type="button">Next 30</button></div>
+          </section>
+        </section>
+
         <section class="page" id="page-pricing" aria-label="ROI and closing line price laboratory">
-          <div class="section-heading"><div><div class="eyebrow subtle">06 / PRICE VALIDATION</div><h2>ROI &amp; Closing Line Value</h2></div><span class="tag-neutral">VERIFICATION REQUIRED</span></div>
+          <div class="section-heading"><div><div class="eyebrow subtle">07 / PRICE VALIDATION</div><h2>ROI &amp; Closing Line Value</h2></div><span class="tag-neutral">VERIFICATION REQUIRED</span></div>
           <div id="pricing-overview" aria-live="polite"></div>
           <div class="pricing-columns">
             <section class="panel">
@@ -185,17 +206,17 @@
         </section>
 
         <section class="page" id="page-execution" aria-label="Paper execution">
-          <div class="section-heading"><div><div class="eyebrow subtle">07 / RISK LAB</div><h2>Paper execution</h2></div><span class="danger-inline">● NO REAL WAGERS</span></div>
+          <div class="section-heading"><div><div class="eyebrow subtle">08 / RISK LAB</div><h2>Paper execution</h2></div><span class="danger-inline">● NO REAL WAGERS</span></div>
           <div id="execution-view"></div>
         </section>
 
         <section class="page" id="page-audit" aria-label="Audit and quality">
-          <div class="section-heading"><div><div class="eyebrow subtle">08 / GOVERNANCE</div><h2>Data quality & model audit</h2></div><span class="tag-neutral">TRANSPARENCY FIRST</span></div>
+          <div class="section-heading"><div><div class="eyebrow subtle">09 / GOVERNANCE</div><h2>Data quality & model audit</h2></div><span class="tag-neutral">TRANSPARENCY FIRST</span></div>
           <div id="audit-view"></div>
         </section>
 
         <section class="page" id="page-settings" aria-label="Settings">
-          <div class="section-heading"><div><div class="eyebrow subtle">09 / CONTROL PLANE</div><h2>Terminal settings</h2></div><span class="tag-neutral">LOCAL SETTINGS</span></div>
+          <div class="section-heading"><div><div class="eyebrow subtle">10 / CONTROL PLANE</div><h2>Terminal settings</h2></div><span class="tag-neutral">LOCAL SETTINGS</span></div>
           <div class="settings-grid">
             <section class="panel"><div class="panel-head"><div><span class="panel-kicker">PAPER LEDGER</span><h3>Risk preferences</h3></div></div>
               <label class="form-label" for="bankroll">Paper bankroll ($)</label><input id="bankroll" class="setting-input" type="number" min="10" max="10000000" step="10" value="1000">
