@@ -51,6 +51,18 @@ After the game, a later nflverse final score is joined to the locked model forec
 
 Important: a same-time market-consensus baseline is **not closing-line value**, and there are no verified real-money betting results, CLV, ROI, or automated orders. The journal cannot establish profitability without full price-time-aligned odds archival, settlement verification, and prospective testing. The server reads the latest derived summary from a fixed public GitHub URL with a five-minute cache, so newly committed evidence can appear without a fresh Render deployment. GitHub serves a derived research journal; durable raw-odds archival requires a separate authenticated database, not the expiring free Render database allocated to another project. See `docs/EVIDENCE.md`.
 
+## Phase 4: Independent NFL EPA challenger and sourced injury reports
+
+The Prediction Lab includes a **separately backtested, unpromoted challenger** using lagged offensive/defensive EPA, success rates, and rest days. nflverse PBP data is processed as a streaming source, retaining only complete-game derived statistics. Source-vintage reporting and a 2025 untouched holdout are visible in the read-only API.
+
+On 284 untouched 2025 NFL games, the original Elo scored Brier 0.22235 and the EPA challenger Brier 0.21935 (paired improvement 0.003; deterministic bootstrap 95% interval +0.00025 to +0.00567). This is evidence of a **modest historical probability-scoring improvement**, not a validated bookmaker edge or forward-season betting profit. Automatic promotion and real wagering remain disabled.
+
+A separate nflverse weekly injury-status report includes an upstream source timestamp, game-week matchup matching, and honest unavailable/stale flags. Player status is **not confirmed starting QB status** and makes no adjustments to model probabilities. Current 2026 CSV supplies source vintage but does not include individual player update timestamps; BETQ will never invent them.
+
+New metadata endpoints: `GET /api/model/efficiency` and `GET /api/injuries/nfl`. In live NFL moneyline mode, per-game results include `efficiencyChallenger` and `injuryContext`. Two new GitHub Actions jobs refresh the research model weekly and public reports daily, without consuming paid Odds API credits. The paid production odds probe is now **manual-only**.
+
+See `docs/INTELLIGENCE.md` for methodological details, uncertainty, credit safeguards and remaining validation.
+
 ## Deploy
 
 `render.yaml` describes an optional Render Node web service. Link the repository in Render, then enter `ODDS_API_KEY` in the service environment. Deployment is managed separately in Render; a GitHub commit does not guarantee that the service successfully redeployed. Verify the production version at `GET /api/health`.
