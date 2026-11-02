@@ -4,7 +4,7 @@
   const $ = (id) => document.getElementById(id);
   const STORE = 'betq-terminal-v1';
   const LEDGER = 'betq-paper-v1';
-  const allowedTabs = ['overview', 'games', 'signals', 'model', 'evidence', 'replay', 'pricing', 'execution', 'audit', 'settings'];
+  const allowedTabs = ['overview', 'games', 'signals', 'model', 'evidence', 'latency', 'replay', 'pricing', 'execution', 'audit', 'settings'];
   const marketLabels = { h2h: 'Moneyline', spreads: 'Spread', totals: 'Total' };
   const sportLabels = {
     americanfootball_nfl: 'NFL', basketball_nba: 'NBA', baseball_mlb: 'MLB',
@@ -26,6 +26,7 @@
     replaySummary: null, replayPlays: null, replayError: null,
     marketChallenge: null,
     riskStress: null,
+    shadowStatus: null, shadowStudy: null, shadowDemo: null, shadowView: 'live', shadowError: null,
     replaySeason: 2025, replayThreshold: 3, replayPage: 0, replayLoading: false,
     selectedId: null, search: '', sort: 'ev', watchOnly: false,
     loading: false, ledger: Array.isArray(safeGet(LEDGER, [])) ? safeGet(LEDGER, []) : []
@@ -93,13 +94,14 @@
     header.style.display = tab === 'overview' ? '' : 'none';
     $('breadcrumb-page').textContent = ({
       overview: 'COMMAND CENTER', games: 'GAME MONITOR', signals: 'SIGNAL SCANNER',
-      model: 'PREDICTION LAB', evidence: 'FORWARD EVIDENCE', replay: 'HISTORICAL REPLAY', pricing: 'ROI & CLV LAB', execution: 'PAPER EXECUTION', audit: 'AUDIT & QUALITY', settings: 'SETTINGS'
+      model: 'PREDICTION LAB', evidence: 'FORWARD EVIDENCE', latency: 'QB LATENCY STUDY', replay: 'HISTORICAL REPLAY', pricing: 'ROI & CLV LAB', execution: 'PAPER EXECUTION', audit: 'AUDIT & QUALITY', settings: 'SETTINGS'
     })[tab];
     $('sidebar').classList.remove('open');
     if (tab === 'settings') syncSettings();
     if (tab === 'execution') renderExecution();
     if (tab === 'pricing') renderPricing();
     if (tab === 'replay') renderReplay();
+    if (tab === 'latency') renderShadow();
     if (tab === 'audit') renderAudit();
     if (tab === 'model') { renderModel(); renderIntelligence(); }
     if (tab === 'evidence') renderEvidence();
@@ -263,6 +265,93 @@
       'recorded losing strategy and unverified closing odds. This does not measure an exact '+
       'real-world probability of ruin, future profitability or account performance.</p>'+
       '</div></section>';
+  }
+
+
+  function renderShadow(){
+    const readiness=$('shadow-readiness'),study=$('shadow-study-view');
+    if(!readiness||!study)return;
+    const status=state.shadowStatus;
+    if(!status){
+      readiness.innerHTML=empty('No private archive connected',
+        state.shadowError||'Research status is unavailable; capture defaults to OFF.');
+    }else{
+      const running=status.available===true&&status.captureEnabled===true&&
+        status.durableStorage===true;
+      readiness.innerHTML='<div class="metric-grid">'+
+        metric('LIVE ARCHIVAL',running?'PRIVATE COLLECTION READY':'NOT COLLECTING',
+          'Requires a dedicated private PostgreSQL database and explicit license review',
+          running?'lime':'','◷')+
+        metric('SOURCE-REVIEWED QB EVENTS',
+          running?String(status.independentlyReviewedQBEvents??0):'—',
+          'Official announcement candidate plus independent source review','violet','▤')+
+        metric('RECORDED QUOTE REVISIONS',
+          running?String(status.recordedQuoteRevisions??0):'—',
+          'Never presented as verified bettable prices','cyan','⌁')+
+        metric('ACTUAL CLV / ROI','UNAVAILABLE',
+          'No authenticated accepted bets or settlements','', '∅')+
+        '</div>'+
+        '<p class="shadow-live-notice"><b>'+esc(running?
+          'Dedicated private capture configured.':'Safe mode: disabled by default.')+
+        '</b> '+esc(status.reason||'No private capture status provided.')+
+        ' Historical Odds API requests, automatic polling, and real wagering remain off. '+
+        'This page does not trigger sportsbook requests.</p>';
+    }
+    document.querySelectorAll('[data-shadow-view]').forEach(b=>
+      b.classList.toggle('active',b.dataset.shadowView===state.shadowView));
+    const live=state.shadowView==='live';
+    const result=live?state.shadowStudy:state.shadowDemo;
+    if(!result){
+      study.innerHTML=empty('No observational study available',
+        'Read-only synthetic example or private source summary not loaded.');
+      return;
+    }
+    if(!live){
+      if(result.synthetic!==true){
+        study.innerHTML=empty('Demo provenance failed',
+          'A genuine QB study cannot be substituted for synthetic fixture data.');return;
+      }
+      study.innerHTML='<div class="shadow-mode-warning"><b>100% FICTIONAL EXAMPLE — NOT A REAL NFL QB UPDATE OR OBSERVED BOOKMAKER PRICE.</b> No predictive accuracy, execution, or profitable opportunity is implied.</div>'+
+        '<div class="metric-grid">'+
+        metric('FICTIONAL QB SOURCE EVENTS',String(result.nQBEventsEligible),
+          'Collector first-seen and independent simulated review','violet','◇')+
+        metric('HYPOTHETICAL QB-TEAM MOVE',
+          result.outcome?.median60mQBTeamMovementPoints===null?'—':
+            String(result.outcome.median60mQBTeamMovementPoints)+' pp',
+          'Fictional 60-minute de-vigged price movement','cyan','↗')+
+        metric('FICTIONAL TIME TO NOTICEABLE CHANGE',
+          result.outcome?.medianObservedMaterialMoveLatencyMinutes===null?'—':
+            String(result.outcome.medianObservedMaterialMoveLatencyMinutes)+' min',
+          'At least a 0.5 percentage-point movement','', '◷')+
+        metric('BOOKMAKER EXECUTABILITY','NOT VERIFIED',
+          'No real provider feed or accepted transaction','', '∅')+
+        '</div>'+
+        '<p class="shadow-diagnostic">The synthetic workflow compares an official-looking QB report candidate, '+
+        'a separate human review time, matching quote revisions from four fictional books, and two fictional comparison games. '+
+        'Actual studies must use observed source timestamps, independent review, enough matched controls, and private durable storage.</p>';
+      return;
+    }
+    const useReal=result.available===true&&result.eventCount>=10&&
+      result.outcome&&status?.available===true;
+    study.innerHTML='<div class="shadow-mode-warning"><b>REAL STUDY STATUS — '+
+      esc(useReal?'DESCRIPTIVE ASSOCIATION ONLY':'NO ELIGIBLE VERIFIED COHORT YET')+
+      '</b> No actual wager or causal sportsbook repricing effect has been established.</div>'+
+      '<div class="metric-grid">'+
+      metric('REPORTABLE QB EVENTS',useReal?String(result.reportableEffects):'—',
+        'Minimum ten source-reviewed events with matched bookmaker/control observations','', '▤')+
+      metric('OBSERVED QB-TEAM MOVEMENT',useReal?
+        String(result.outcome.median60mQBTeamMovementPoints)+' pp':'—',
+        'Descriptive first-observed after reviewed announcement','cyan','↗')+
+      metric('OBSERVED REPRICING DELAY',useReal?
+        String(result.outcome.medianObservedMaterialMoveLatencyMinutes)+' min':'—',
+        'Only collector-observed market updates; no historical backfill','', '◷')+
+      metric('CAUSAL EDGE / VERIFIED CLV','NOT ESTABLISHED',
+        'No independently certified controls, executable fills or price advantage','violet','∅')+
+      '</div>'+
+      '<p class="shadow-diagnostic">'+esc(result.reason||
+        'No reviewed matched-control cohort is available.')+
+      '. Absence of a recorded QB event in a comparison game does not prove the game had no other news. '+
+      'Source article publication time does not establish when a sportsbook quote was available.</p>';
   }
 
   function renderMarketChallenge(){
@@ -1133,7 +1222,7 @@
   function render() {
     renderFilters(); renderFeed(); renderBanner(); renderMetrics(); renderAgentRun();
     renderOpportunities(); renderSpotlight(); renderChart();
-    renderGames(); renderSignals(); renderModel(); renderIntelligence(); renderEvidence(); renderReplay(); renderMarketChallenge(); renderRiskStress(); renderPricing(); renderExecution(); renderAudit();
+    renderGames(); renderSignals(); renderModel(); renderIntelligence(); renderEvidence(); renderShadow(); renderReplay(); renderMarketChallenge(); renderRiskStress(); renderPricing(); renderExecution(); renderAudit();
   }
 
   async function loadIntelligence() {
@@ -1153,6 +1242,19 @@
     try { state.nflModel = await requestJSON('/api/model/nfl'); }
     catch { state.nflModel = { available:false, reason:'MODEL_ENDPOINT_UNAVAILABLE' }; }
     renderModel(); renderAudit(); renderSpotlight();
+  }
+  async function loadShadow(){
+    const [status,study,demo]=await Promise.all([
+      requestJSON('/api/shadow/status').catch(()=>null),
+      requestJSON('/api/shadow/study').catch(()=>null),
+      requestJSON('/api/shadow/demo').catch(()=>null)
+    ]);
+    state.shadowStatus=status;
+    state.shadowStudy=study;
+    state.shadowDemo=demo;
+    state.shadowError=(!status||!study||!demo)?
+      'One or more local shadow research endpoints are unavailable.':null;
+    renderShadow();
   }
   async function loadRiskStress(){
     try{state.riskStress=await requestJSON('/api/risk/nfl');}
@@ -1267,6 +1369,11 @@
       $('replay-season').value=String(state.replaySeason);
       state.replayPage=0;state.replayPlays=null;loadReplayPlays();return;
     }
+    const shadowView=event.target.closest('[data-shadow-view]');
+    if(shadowView&&['live','demo'].includes(shadowView.dataset.shadowView)){
+      state.shadowView=shadowView.dataset.shadowView;
+      renderShadow();return;
+    }
     const tab = event.target.closest('[data-tab]');
     if (tab) { setTab(tab.dataset.tab); return; }
     const sport = event.target.closest('[data-sport]');
@@ -1336,6 +1443,7 @@
   loadReplay();
   loadMarketChallenge();
   loadRiskStress();
+  loadShadow();
   loadPriceVerification();
   loadSlate();
 })();
