@@ -1,6 +1,6 @@
 {
   "name": "betq-ai",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "description": "BETQ.ai Quant Sports Intelligence Terminal",
@@ -11,6 +11,6 @@
     "start": "node src/server.mjs",
     "dev": "node --watch src/server.mjs",
     "test": "node --test",
-    "check": "node --check src/engine.mjs && node --check src/odds.mjs && node --check src/demo.mjs && node --check src/server.mjs && node --check public/app.js && node --check src/nfl-elo.mjs && node --check scripts/train-nfl.mjs && node --check src/market-consensus.mjs && node --check src/evidence.mjs && node --check scripts/capture-evidence.mjs && node --check src/evidence-feed.mjs"
+    "check": "node --check src/engine.mjs && node --check src/odds.mjs && node --check src/demo.mjs && node --check src/server.mjs && node --check public/app.js && node --check src/nfl-elo.mjs && node --check scripts/train-nfl.mjs && node --check src/market-consensus.mjs && node --check src/evidence.mjs && node --check scripts/capture-evidence.mjs && node --check src/evidence-feed.mjs && node --check src/pbp.mjs && node --check src/nfl-efficiency.mjs && node --check src/injuries.mjs && node --check scripts/train-efficiency.mjs && node --check scripts/update-injuries.mjs"
   }
 }
