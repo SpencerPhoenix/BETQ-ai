@@ -1,7 +1,8 @@
 {
   "schema": 1,
   "version": "nfl-efficiency-1",
-  "generatedAt": "2026-11-02T01:32:46.047Z",
+  "evaluationVersion": 2,
+  "generatedAt": "2026-11-02T03:13:39.863Z",
   "source": "NFLVERSE_PBP_CC_BY_4_0",
   "type": "INDEPENDENT_CHALLENGER_RESEARCH",
   "training": {
@@ -42,7 +43,19 @@
       "lower": 0.00025,
       "upper": 0.00567,
       "mean": 0.00299
-    }
+    },
+    "weekSensitivity": {
+      "method": "PAIRED_WEEK_BLOCK_BOOTSTRAP",
+      "n": 284,
+      "weeks": 22,
+      "repeats": 2000,
+      "meanImprovement": 0.002995,
+      "limitation": "Within-week resampling only; recurring teams and cross-week dependence remain.",
+      "available": true,
+      "lower": 0.000082,
+      "upper": 0.006022
+    },
+    "referenceSeasonPreviouslyInspected": true
   },
   "coefficients": {
     "epa": 0,
