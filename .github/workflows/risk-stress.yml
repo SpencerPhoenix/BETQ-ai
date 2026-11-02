@@ -1,0 +1,66 @@
+name: BETQ historical bankroll stress
+on:
+  push:
+    paths:
+      - 'src/risk-stress.mjs'
+      - 'scripts/run-risk-stress.mjs'
+      - 'data/replay/nfl_2022_2025.json'
+      - '.github/workflows/risk-stress.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: betq-risk-stress
+  cancel-in-progress: false
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate all engine and historical integrity tests
+        run: |
+          npm run check
+          npm test
+      - name: Run seeded week-dependence and adverse-condition bankroll simulations
+        run: node scripts/run-risk-stress.mjs
+      - name: Reject risk-of-ruin and profitability misrepresentation
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync('data/risk/summary.json','utf8'));
+          if(r.version!=='betq-risk-research-v1'||r.scenarios.length!==3||
+             r.verifiedROI!==null||r.verifiedCLV!==null||
+             r.bettingAuthorized!==false||r.historicalPriceTimeVerified!==false||
+             r.historicalEligibleDecisions<600||r.historicalWeekBlocks<50)
+            throw Error('Invalid stress provenance or unsupported profit claim');
+          for(const s of r.scenarios){
+            if(s.result.iterations!==10000||s.result.exactRealWorldRiskOfRuin!==null||
+               s.result.providerPriceTimeVerified!==false||
+               s.result.practicalRuinThreshold!==50)
+              throw Error('Misleading or incomplete risk scenario');
+          }
+          console.log('PASS: 10k paths per scenario, source retrospective only, no actual ruin/ROI claim.');
+          NODE
+      - name: Publish derived research stress when updated
+        shell: bash
+        run: |
+          if [[ -n "$(git status --porcelain -- data/risk/)" ]]; then
+            git config user.name "betq-risk-research-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add data/risk/summary.json
+            git commit -m "data: publish week-clustered 10k-path hypothetical bankroll risk scenarios"
+            for attempt in 1 2 3; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then exit 0; fi
+              sleep 3
+            done
+            echo "Unable to safely publish after concurrent updates" >&2
+            exit 1
+          else
+            echo "Stress source and model unchanged."
+          fi
