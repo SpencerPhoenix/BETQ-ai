@@ -1,0 +1,456 @@
+{
+  "schema": 1,
+  "version": "nfl-efficiency-1",
+  "generatedAt": "2026-11-02T01:22:05.925Z",
+  "source": "NFLVERSE_PBP_CC_BY_4_0",
+  "type": "INDEPENDENT_CHALLENGER_RESEARCH",
+  "training": {
+    "tune": "2018-2022",
+    "calibrate": "2023-2024",
+    "untouchedHoldout": "2025",
+    "minPriorGamesPerTeam": 4,
+    "trendGames": 8
+  },
+  "tuning": {
+    "n": 1302,
+    "brier": 0.22276,
+    "logLoss": 0.63791,
+    "accuracy": 0.6413
+  },
+  "calibration": {
+    "n": 570,
+    "brier": 0.22188,
+    "logLoss": 0.63586,
+    "accuracy": 0.6474
+  },
+  "holdout": {
+    "elo": {
+      "n": 284,
+      "brier": 0.22235,
+      "logLoss": 0.63596,
+      "accuracy": 0.6585
+    },
+    "challenger": {
+      "n": 284,
+      "brier": 0.21935,
+      "logLoss": 0.6295,
+      "accuracy": 0.662
+    },
+    "deltaBrier": 0.003,
+    "confidence95": {
+      "method": "PAIRED_BOOTSTRAP_2000",
+      "lower": 0.00025,
+      "upper": 0.00567,
+      "mean": 0.00299
+    }
+  },
+  "coefficients": {
+    "epa": 0,
+    "success": 1.7999999999999998,
+    "rest": 0.012
+  },
+  "coefficientScale": 0.6,
+  "readyForResearch": true,
+  "promotable": true,
+  "coverage": {
+    "historicalGames": 2346,
+    "featureReadyGames": 2274
+  },
+  "teamFeatures": {
+    "PHI": {
+      "n": 8,
+      "offEPA": -0.12654,
+      "defEPA": 0.10974,
+      "offSuccess": 0.37029,
+      "defSuccess": 0.4602,
+      "netEPA": -0.23628,
+      "netSuccess": -0.08991,
+      "latestGameDate": "2026-10-26"
+    },
+    "ATL": {
+      "n": 8,
+      "offEPA": -0.13014,
+      "defEPA": -0.05942,
+      "offSuccess": 0.40045,
+      "defSuccess": 0.44856,
+      "netEPA": -0.07072,
+      "netSuccess": -0.04812,
+      "latestGameDate": "2026-11-01"
+    },
+    "BAL": {
+      "n": 8,
+      "offEPA": -0.08328,
+      "defEPA": 0.02932,
+      "offSuccess": 0.41772,
+      "defSuccess": 0.45399,
+      "netEPA": -0.1126,
+      "netSuccess": -0.03627,
+      "latestGameDate": "2026-11-01"
+    },
+    "BUF": {
+      "n": 8,
+      "offEPA": 0.13161,
+      "defEPA": -0.01346,
+      "offSuccess": 0.47857,
+      "defSuccess": 0.43327,
+      "netEPA": 0.14506,
+      "netSuccess": 0.0453,
+      "latestGameDate": "2026-11-01"
+    },
+    "GB": {
+      "n": 8,
+      "offEPA": 0.02537,
+      "defEPA": -0.09767,
+      "offSuccess": 0.40673,
+      "defSuccess": 0.42861,
+      "netEPA": 0.12304,
+      "netSuccess": -0.02188,
+      "latestGameDate": "2026-10-29"
+    },
+    "CHI": {
+      "n": 8,
+      "offEPA": 0.00119,
+      "defEPA": -0.01596,
+      "offSuccess": 0.45784,
+      "defSuccess": 0.40879,
+      "netEPA": 0.01715,
+      "netSuccess": 0.04904,
+      "latestGameDate": "2026-10-22"
+    },
+    "IND": {
+      "n": 8,
+      "offEPA": -0.15677,
+      "defEPA": 0.02357,
+      "offSuccess": 0.41306,
+      "defSuccess": 0.40745,
+      "netEPA": -0.18034,
+      "netSuccess": 0.0056,
+      "latestGameDate": "2026-11-01"
+    },
+    "CIN": {
+      "n": 8,
+      "offEPA": 0.1296,
+      "defEPA": 0.01104,
+      "offSuccess": 0.52185,
+      "defSuccess": 0.43931,
+      "netEPA": 0.11857,
+      "netSuccess": 0.08254,
+      "latestGameDate": "2026-11-01"
+    },
+    "CAR": {
+      "n": 8,
+      "offEPA": -0.04087,
+      "defEPA": 0.03632,
+      "offSuccess": 0.40878,
+      "defSuccess": 0.44935,
+      "netEPA": -0.07719,
+      "netSuccess": -0.04057,
+      "latestGameDate": "2026-10-29"
+    },
+    "DAL": {
+      "n": 8,
+      "offEPA": 0.07392,
+      "defEPA": 0.09402,
+      "offSuccess": 0.46006,
+      "defSuccess": 0.43507,
+      "netEPA": -0.0201,
+      "netSuccess": 0.02499,
+      "latestGameDate": "2026-11-01"
+    },
+    "NE": {
+      "n": 8,
+      "offEPA": 0.08753,
+      "defEPA": 0.01827,
+      "offSuccess": 0.45578,
+      "defSuccess": 0.43453,
+      "netEPA": 0.06926,
+      "netSuccess": 0.02125,
+      "latestGameDate": "2026-11-01"
+    },
+    "HOU": {
+      "n": 8,
+      "offEPA": 0.02093,
+      "defEPA": 0.02321,
+      "offSuccess": 0.42135,
+      "defSuccess": 0.41114,
+      "netEPA": -0.00228,
+      "netSuccess": 0.01021,
+      "latestGameDate": "2026-10-25"
+    },
+    "NYG": {
+      "n": 8,
+      "offEPA": 0.02482,
+      "defEPA": -0.02449,
+      "offSuccess": 0.41128,
+      "defSuccess": 0.41395,
+      "netEPA": 0.04931,
+      "netSuccess": -0.00266,
+      "latestGameDate": "2026-10-25"
+    },
+    "JAX": {
+      "n": 8,
+      "offEPA": 0.15219,
+      "defEPA": -0.10498,
+      "offSuccess": 0.46589,
+      "defSuccess": 0.41532,
+      "netEPA": 0.25716,
+      "netSuccess": 0.05056,
+      "latestGameDate": "2026-11-01"
+    },
+    "LAC": {
+      "n": 8,
+      "offEPA": -0.28918,
+      "defEPA": -0.07114,
+      "offSuccess": 0.33378,
+      "defSuccess": 0.42904,
+      "netEPA": -0.21803,
+      "netSuccess": -0.09526,
+      "latestGameDate": "2026-11-01"
+    },
+    "KC": {
+      "n": 8,
+      "offEPA": 0.05755,
+      "defEPA": -0.04413,
+      "offSuccess": 0.44992,
+      "defSuccess": 0.39614,
+      "netEPA": 0.10168,
+      "netSuccess": 0.05378,
+      "latestGameDate": "2026-11-01"
+    },
+    "CLE": {
+      "n": 8,
+      "offEPA": -0.08988,
+      "defEPA": -0.01902,
+      "offSuccess": 0.42755,
+      "defSuccess": 0.41456,
+      "netEPA": -0.07086,
+      "netSuccess": 0.01299,
+      "latestGameDate": "2026-11-01"
+    },
+    "PIT": {
+      "n": 8,
+      "offEPA": 0.01232,
+      "defEPA": -0.08357,
+      "offSuccess": 0.42619,
+      "defSuccess": 0.41185,
+      "netEPA": 0.09589,
+      "netSuccess": 0.01434,
+      "latestGameDate": "2026-11-01"
+    },
+    "DEN": {
+      "n": 8,
+      "offEPA": -0.00282,
+      "defEPA": -0.03231,
+      "offSuccess": 0.37276,
+      "defSuccess": 0.40266,
+      "netEPA": 0.0295,
+      "netSuccess": -0.0299,
+      "latestGameDate": "2026-11-01"
+    },
+    "SEA": {
+      "n": 8,
+      "offEPA": -0.05638,
+      "defEPA": -0.14139,
+      "offSuccess": 0.4104,
+      "defSuccess": 0.35947,
+      "netEPA": 0.08501,
+      "netSuccess": 0.05093,
+      "latestGameDate": "2026-10-25"
+    },
+    "MIN": {
+      "n": 8,
+      "offEPA": -0.11573,
+      "defEPA": -0.18133,
+      "offSuccess": 0.3821,
+      "defSuccess": 0.38332,
+      "netEPA": 0.0656,
+      "netSuccess": -0.00122,
+      "latestGameDate": "2026-11-01"
+    },
+    "SF": {
+      "n": 8,
+      "offEPA": 0.10833,
+      "defEPA": -0.03228,
+      "offSuccess": 0.5118,
+      "defSuccess": 0.43672,
+      "netEPA": 0.14061,
+      "netSuccess": 0.07508,
+      "latestGameDate": "2026-10-25"
+    },
+    "NO": {
+      "n": 8,
+      "offEPA": -0.0581,
+      "defEPA": 0.03468,
+      "offSuccess": 0.39915,
+      "defSuccess": 0.46223,
+      "netEPA": -0.09279,
+      "netSuccess": -0.06307,
+      "latestGameDate": "2026-10-25"
+    },
+    "TB": {
+      "n": 8,
+      "offEPA": -0.07853,
+      "defEPA": -0.22218,
+      "offSuccess": 0.41521,
+      "defSuccess": 0.3783,
+      "netEPA": 0.14365,
+      "netSuccess": 0.03691,
+      "latestGameDate": "2026-11-01"
+    },
+    "MIA": {
+      "n": 8,
+      "offEPA": -0.05178,
+      "defEPA": 0.13285,
+      "offSuccess": 0.40941,
+      "defSuccess": 0.49513,
+      "netEPA": -0.18463,
+      "netSuccess": -0.08572,
+      "latestGameDate": "2026-11-01"
+    },
+    "TEN": {
+      "n": 8,
+      "offEPA": -0.07559,
+      "defEPA": 0.06938,
+      "offSuccess": 0.41922,
+      "defSuccess": 0.4818,
+      "netEPA": -0.14496,
+      "netSuccess": -0.06258,
+      "latestGameDate": "2026-11-01"
+    },
+    "ARI": {
+      "n": 8,
+      "offEPA": -0.03682,
+      "defEPA": 0.06716,
+      "offSuccess": 0.41828,
+      "defSuccess": 0.41981,
+      "netEPA": -0.10398,
+      "netSuccess": -0.00153,
+      "latestGameDate": "2026-11-01"
+    },
+    "WAS": {
+      "n": 8,
+      "offEPA": -0.01212,
+      "defEPA": 0.07368,
+      "offSuccess": 0.41288,
+      "defSuccess": 0.4755,
+      "netEPA": -0.08579,
+      "netSuccess": -0.06263,
+      "latestGameDate": "2026-10-19"
+    },
+    "LV": {
+      "n": 8,
+      "offEPA": 0.0251,
+      "defEPA": 0.12606,
+      "offSuccess": 0.42127,
+      "defSuccess": 0.48305,
+      "netEPA": -0.10095,
+      "netSuccess": -0.06177,
+      "latestGameDate": "2026-11-01"
+    },
+    "LA": {
+      "n": 8,
+      "offEPA": 0.01407,
+      "defEPA": -0.14608,
+      "offSuccess": 0.48289,
+      "defSuccess": 0.38726,
+      "netEPA": 0.16015,
+      "netSuccess": 0.09563,
+      "latestGameDate": "2026-11-01"
+    },
+    "DET": {
+      "n": 8,
+      "offEPA": 0.08524,
+      "defEPA": 0.05797,
+      "offSuccess": 0.49157,
+      "defSuccess": 0.44055,
+      "netEPA": 0.02727,
+      "netSuccess": 0.05102,
+      "latestGameDate": "2026-11-01"
+    },
+    "NYJ": {
+      "n": 8,
+      "offEPA": 0.06359,
+      "defEPA": 0.04543,
+      "offSuccess": 0.46425,
+      "defSuccess": 0.44426,
+      "netEPA": 0.01816,
+      "netSuccess": 0.01999,
+      "latestGameDate": "2026-11-01"
+    }
+  },
+  "limitations": [
+    "2018-2025 historical EPA values are retrospective and may be revised by nflverse",
+    "Quarterback / injured-starter status is not verified or modeled",
+    "Rest is derived from previous completed team game dates, not itinerary",
+    "Future games are excluded from feature history",
+    "A holdout Brier improvement does not establish profitable bookmaker execution",
+    "Challenger is never automatically promoted based solely on a positive point estimate"
+  ],
+  "sourceManifest": {
+    "project": "nflverse/nflverse-data",
+    "attribution": "nflverse / nflfastR; CC BY 4.0",
+    "license": "CC BY 4.0",
+    "scheduleUrl": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+    "pbpReleases": [
+      {
+        "season": 2018,
+        "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2018.csv.gz",
+        "completeGames": 267,
+        "parsedBytes": 93444643
+      },
+      {
+        "season": 2019,
+        "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2019.csv.gz",
+        "completeGames": 267,
+        "parsedBytes": 93850470
+      },
+      {
+        "season": 2020,
+        "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2020.csv.gz",
+        "completeGames": 269,
+        "parsedBytes": 94680935
+      },
+      {
+        "season": 2021,
+        "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2021.csv.gz",
+        "completeGames": 285,
+        "parsedBytes": 99167764
+      },
+      {
+        "season": 2022,
+        "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2022.csv.gz",
+        "completeGames": 284,
+        "parsedBytes": 99104597
+      },
+      {
+        "season": 2023,
+        "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2023.csv.gz",
+        "completeGames": 285,
+        "parsedBytes": 99720219
+      },
+      {
+        "season": 2024,
+        "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2024.csv.gz",
+        "completeGames": 285,
+        "parsedBytes": 99483810
+      },
+      {
+        "season": 2025,
+        "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2025.csv.gz",
+        "completeGames": 285,
+        "parsedBytes": 97951485
+      },
+      {
+        "season": 2026,
+        "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2026.csv.gz",
+        "completeGames": 119,
+        "parsedBytes": 41771976
+      }
+    ],
+    "sourceLastCompletedGame": "2026-11-01",
+    "playedGamesWithPbp": 2346,
+    "qualifyingPlays": 295837
+  },
+  "eloBaselineVersion": "nfl-elo-1",
+  "dataFingerprint": "bf837b38eeaa626df7365118587549250b29bf7b11cbb58be5e4937eb6636ff3"
+}
