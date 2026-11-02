@@ -32,7 +32,7 @@ test('Pregame prediction is recorded before outcome-driven Elo update',()=>{
   assert.equal(track.history[0].prediction,0.5);
   assert.equal(track.history[0].actual,1);
   assert.ok(track.history[1].prediction<0.5);
-  assert.ok(track.ratings.KC>track.ratings.LV);
+  assert.ok(track.history[1].awayRating>track.history[1].homeRating);
   assert.equal(track.history[2].actual,0.5);
   assert.equal(evaluate(track.history).n,3);
   assert.equal(evaluate(track.history).tiesExcluded,1);
