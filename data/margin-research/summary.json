@@ -1,0 +1,222 @@
+{
+  "schema": 1,
+  "version": "betq-margin-research-v1",
+  "sourceSignValidation": {
+    "validatedOnYears": [
+      2020,
+      2021
+    ],
+    "convention": "POSITIVE_IS_EXPECTED_HOME_MARGIN",
+    "pretestGames": 553,
+    "empiricalPretestCorrelation": 0.45359,
+    "sourceMetadata": "nflverse spread_line from PFR schedules; no actual entry timestamp",
+    "note": "Sign checked only in pre-2022 years; not selected using target-season scores."
+  },
+  "type": "RETROSPECTIVE_CLOSING_SPREAD_MARGIN_RESEARCH",
+  "model": "Ridge-corrected closing point spread by frozen Elo-minus-market logit residual",
+  "dataProvenance": "HISTORICAL_CLOSING_NOT_KNOWN_EXECUTABLE_ENTRY",
+  "testYears": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "finalScoreUsedOnlyAsEvaluationLabel": true,
+  "correctedForecastUsesFutureOutcomes": false,
+  "automaticPromotion": false,
+  "verifiedROI": null,
+  "verifiedCLV": null,
+  "bettingAuthorized": false,
+  "years": [
+    {
+      "season": 2022,
+      "trainedYears": [
+        2020,
+        2021
+      ],
+      "n": 284,
+      "coefficients": {
+        "intercept": -0.4293695,
+        "residualWeight": 0.26586421,
+        "fitRows": 553,
+        "ridgeIntercept": 2,
+        "ridgeSlope": 20,
+        "formula": "spread + intercept + residualWeight*(logit(Elo)-logit(no-vig market))"
+      },
+      "closingSpreadBaseline": {
+        "n": 284,
+        "mse": 131.95687,
+        "rmse": 11.4872,
+        "mae": 8.7835
+      },
+      "eloMarginResidual": {
+        "n": 284,
+        "mse": 132.25882,
+        "rmse": 11.5004,
+        "mae": 8.7803
+      },
+      "improvementMse": -0.30195,
+      "paired95": {
+        "method": "PAIRED_SEASON_WEEK_BOOTSTRAP",
+        "weeks": 22,
+        "repeats": 2000,
+        "meanImprovement": -0.30196,
+        "lower95": -1.38087,
+        "upper95": 0.67158
+      }
+    },
+    {
+      "season": 2023,
+      "trainedYears": [
+        2021,
+        2022
+      ],
+      "n": 285,
+      "coefficients": {
+        "intercept": 0.19705126,
+        "residualWeight": 0.23508584,
+        "fitRows": 569,
+        "ridgeIntercept": 2,
+        "ridgeSlope": 20,
+        "formula": "spread + intercept + residualWeight*(logit(Elo)-logit(no-vig market))"
+      },
+      "closingSpreadBaseline": {
+        "n": 285,
+        "mse": 173.55351,
+        "rmse": 13.174,
+        "mae": 9.9842
+      },
+      "eloMarginResidual": {
+        "n": 285,
+        "mse": 173.37636,
+        "rmse": 13.1672,
+        "mae": 9.9992
+      },
+      "improvementMse": 0.17715,
+      "paired95": {
+        "method": "PAIRED_SEASON_WEEK_BOOTSTRAP",
+        "weeks": 22,
+        "repeats": 2000,
+        "meanImprovement": 0.17714,
+        "lower95": -0.4803,
+        "upper95": 0.79274
+      }
+    },
+    {
+      "season": 2024,
+      "trainedYears": [
+        2022,
+        2023
+      ],
+      "n": 285,
+      "coefficients": {
+        "intercept": 0.69620607,
+        "residualWeight": -0.22466196,
+        "fitRows": 569,
+        "ridgeIntercept": 2,
+        "ridgeSlope": 20,
+        "formula": "spread + intercept + residualWeight*(logit(Elo)-logit(no-vig market))"
+      },
+      "closingSpreadBaseline": {
+        "n": 285,
+        "mse": 161.8114,
+        "rmse": 12.7205,
+        "mae": 9.7035
+      },
+      "eloMarginResidual": {
+        "n": 285,
+        "mse": 161.27872,
+        "rmse": 12.6996,
+        "mae": 9.6994
+      },
+      "improvementMse": 0.53268,
+      "paired95": {
+        "method": "PAIRED_SEASON_WEEK_BOOTSTRAP",
+        "weeks": 22,
+        "repeats": 2000,
+        "meanImprovement": 0.53268,
+        "lower95": -1.50083,
+        "upper95": 2.74517
+      }
+    },
+    {
+      "season": 2025,
+      "trainedYears": [
+        2023,
+        2024
+      ],
+      "n": 285,
+      "coefficients": {
+        "intercept": 0.82122892,
+        "residualWeight": -1.09876575,
+        "fitRows": 570,
+        "ridgeIntercept": 2,
+        "ridgeSlope": 20,
+        "formula": "spread + intercept + residualWeight*(logit(Elo)-logit(no-vig market))"
+      },
+      "closingSpreadBaseline": {
+        "n": 285,
+        "mse": 149.93509,
+        "rmse": 12.2448,
+        "mae": 9.6702
+      },
+      "eloMarginResidual": {
+        "n": 285,
+        "mse": 149.05979,
+        "rmse": 12.209,
+        "mae": 9.7012
+      },
+      "improvementMse": 0.8753,
+      "paired95": {
+        "method": "PAIRED_SEASON_WEEK_BOOTSTRAP",
+        "weeks": 22,
+        "repeats": 2000,
+        "meanImprovement": 0.8753,
+        "lower95": -2.04653,
+        "upper95": 3.89014
+      }
+    }
+  ],
+  "pooled": {
+    "closingSpreadBaseline": {
+      "n": 1139,
+      "mse": 154.33385,
+      "rmse": 12.4231,
+      "mae": 9.536
+    },
+    "eloMarginResidual": {
+      "n": 1139,
+      "mse": 154.01251,
+      "rmse": 12.4102,
+      "mae": 9.5457
+    },
+    "improvementMse": 0.32134,
+    "positiveSeasonCount": 3,
+    "paired95": {
+      "method": "PAIRED_SEASON_WEEK_BOOTSTRAP",
+      "weeks": 88,
+      "repeats": 2000,
+      "lower95": -0.57827,
+      "upper95": 1.27782
+    }
+  },
+  "exploratoryEvidenceFlag": false,
+  "limitations": [
+    "Final game margin is used as the evaluation outcome, never a feature at forecast time.",
+    "Closing spread and closing moneylines are retrospective source references; no historical wager or opening-to-close move was validated.",
+    "This test uses the old Elo residual only, not a fully refitted player or scoring-distribution model.",
+    "Feature and model concept were chosen after earlier historical NFL results were examined; no fresh out-of-sample claim.",
+    "Week-group bootstrap does not capture all repeated team dependence."
+  ],
+  "sourceSha256": "7bf3e1d9bcf0805fd0fdd1b95a5f016798a3705beebfea9240689c14a0270f8c",
+  "generatedAt": "2026-11-02T18:12:03.770Z",
+  "source": {
+    "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+    "author": "nflverse / Lee Sharpe",
+    "license": "CC BY 4.0",
+    "description": "Completed game scores + historic closing spreads and moneylines, NOT point-in-time offer prices"
+  },
+  "protocol": "docs/RESEARCH_PROTOCOL_POWER_MARGIN_2026_11_02.md",
+  "protocolCommit": "3fd15fb1bfbf8cf874cb70c96ff088d46ee4ad46",
+  "futureApplicationRequiresNewProspectiveTest": true
+}
