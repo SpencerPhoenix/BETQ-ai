@@ -29,7 +29,8 @@ if(replay.years.some(y=>y.nonTieGames<240||y.closingMoneylineCoverage.validGames
   throw Error('Insufficient 2022–2025 real outcome/closing odds coverage');
 const hash=createHash('sha256').update(downloaded).digest('hex');
 const stored=await readFile(OUT,'utf8').then(JSON.parse).catch(()=>null);
-if(stored?.sourceSha256===hash&&stored?.version===replay.version){
+if(stored?.sourceSha256===hash&&stored?.version===replay.version&&
+   stored?.years?.[0]?.selectionRules?.[0]?.actualMinusForecastWinPoints!==undefined){
   console.log('No historical source changes, retaining previous artifact.');
   console.log(JSON.stringify(stored.years.map(y=>({season:y.season,
     accuracy:y.allGameForecast.accuracyPercent,priceCoverage:y.closingMoneylineCoverage.coveragePercent,
