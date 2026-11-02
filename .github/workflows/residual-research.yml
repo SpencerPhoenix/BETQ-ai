@@ -1,0 +1,93 @@
+name: BETQ pre-registered residual and winner's-curse research
+on:
+  push:
+    paths:
+      - '.github/workflows/residual-research.yml'
+      - 'src/residual-research.mjs'
+      - 'scripts/run-residual-research.mjs'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: betq-preregistered-residual-research
+  cancel-in-progress: false
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check code and independent anti-hindsight tests
+        run: |
+          npm run check
+          npm test
+      - name: Confirm experiment preregistration exists in repository
+        run: |
+          test -s docs/RESEARCH_PROTOCOL_RESIDUAL_2026_11_02.md
+          git log --format='%H %s' -- docs/RESEARCH_PROTOCOL_RESIDUAL_2026_11_02.md | tail -n 2
+      - name: Execute frozen 2020–2025 nested research and 400 no-edge synthetic worlds
+        run: node scripts/run-residual-research.mjs
+      - name: Audit independent year splits, bins, false-approval rate, and prohibited claims
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const p='data/residual-research/summary.json';
+          const r=JSON.parse(readFileSync(p,'utf8'));
+          if(r.schema!==1||r.version!=='betq-residual-research-v1'||
+             r.perSeason.length!==4||r.testYears.join(',')!=='2022,2023,2024,2025'||
+             r.zeroEdgeSyntheticNull.iterations!==400||
+             r.zeroEdgeSyntheticNull.seed!==20261102||
+             r.modelPromoted!==false||r.realBettingAuthorized!==false||
+             r.verifiedROI!==null||r.verifiedCLV!==null||
+             r.verifiedIncrementalProfitability!==false||
+             r.dataUsedForPriorModelDevelopment!==true)
+            throw Error('Invalid preregistration, selection or source integrity');
+          const nullCount=r.zeroEdgeSyntheticNull.falseApprovalCount;
+          if(!Number.isInteger(nullCount)||nullCount<0||nullCount>400)
+            throw Error('Invalid efficient-market false-approval count');
+          let sum=0;
+          for(const yr of r.perSeason) {
+            if(yr.trainedSeasons[0]!==yr.season-2||
+               yr.trainedSeasons[1]!==yr.season-1||
+               yr.incrementalResidual.n<200||
+               yr.disagreementAudit.bins.length!==10||
+               yr.disagreementAudit.bins.reduce((s,b)=>s+b.n,0)!==yr.incrementalResidual.n)
+               throw Error('Chronological research or disagreement bin integrity failed '+yr.season);
+            sum+=yr.incrementalResidual.n;
+            console.log('PROPER SCORE '+yr.season+' raw-market Brier '+yr.closingMarket.brier+
+              ' calibrated-market '+yr.calibratedMarket.brier+
+              ' residual '+yr.incrementalResidual.brier+
+              ' residual coefficient '+yr.coefficients.residualModel.modelResidualWeight);
+          }
+          if(r.pooledDisagreement.reduce((s,b)=>s+b.n,0)!==sum)
+            throw Error('Pooled disagreement and annual game counts differ');
+          console.log('Synthetic no-edge approvals '+nullCount+' / 400');
+          console.log('PRODUCTION PROMOTION: NOT PERMITTED');
+          console.log('VERIFIED ROI/CLV: UNAVAILABLE');
+          NODE
+      - name: Commit only source-attributed research artifact if changed
+        shell: bash
+        run: |
+          if [[ -n "$(git status --porcelain -- data/residual-research/)" ]]; then
+            git config user.name "betq-independent-research-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add data/residual-research/summary.json
+            git commit -m "data: publish preregistered market residual, disagreement and zero-edge null evidence"
+            for n in 1 2 3; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then
+                echo 'Preregistered research published.'
+                exit 0
+              fi
+              sleep 3
+            done
+            echo 'Could not publish safely after concurrent updates' >&2
+            exit 1
+          else
+            echo 'No new experiment outcomes; no commit required.'
+          fi
