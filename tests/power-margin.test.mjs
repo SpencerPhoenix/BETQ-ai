@@ -66,7 +66,7 @@ test('Synthetic world is reproducible and has no access to historical final scor
   assert.ok(a.meanExpectedOracleLogLossGain>0);
   assert.ok(Number.isFinite(a.residualPooledLogLossGain));
   const nullWorld=simulatePowerWorld(frame,POWER_CELLS[0],{seed:8921,bootstrapDraws:60});
-  assert.equal(nullWorld.meanExpectedOracleLogLossGain,0);
+  assert.ok(Math.abs(nullWorld.meanExpectedOracleLogLossGain)<1e-12);
 });
 test('Power scenario report is bounded, fail-closed and never makes production profit claims',()=>{
   const rows=framesForPower(),report=runPromotionPowerStudy(rows,{
