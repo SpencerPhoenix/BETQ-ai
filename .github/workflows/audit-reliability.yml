@@ -19,6 +19,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Reproducible locked dependency installation
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Syntax and complete regression suite including seeded stress cases
         shell: bash
         run: |
