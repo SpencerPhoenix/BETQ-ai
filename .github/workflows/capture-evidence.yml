@@ -42,13 +42,13 @@ jobs:
         run: |
           for attempt in {1..12}; do
             if curl --max-time 45 -fsS https://betq-ai.onrender.com/api/health |
-              node -e "let s='';process.stdin.on('data',c=>s+=c);process.stdin.on('end',()=>process.exit(JSON.parse(s).version==='0.3.0'?0:1))"; then
-              echo 'Production v0.3 running; collecting real pregame evidence.'
+              node -e "let s='';process.stdin.on('data',c=>s+=c);process.stdin.on('end',()=>process.exit(JSON.parse(s).version==='0.4.0'?0:1))"; then
+              echo 'Production v0.4 running; collecting real pregame evidence.'
               exit 0
             fi
             sleep 12
           done
-          echo 'Production v0.3 not ready; no paid odds requested.' >&2
+          echo 'Production v0.4 not ready; no paid odds requested.' >&2
           exit 1
       - name: Capture prospectively dated probabilities and reconcile finalized scores
         run: node scripts/capture-evidence.mjs
