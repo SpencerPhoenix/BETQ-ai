@@ -9,6 +9,7 @@ import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {resolve,dirname} from 'node:path';
 import {SHADOW_SCHEMA,normalizeOwnedOddsSnapshot} from './shadow-latency.mjs';
+import {evaluateQBLatency} from './shadow-study.mjs';
 
 const DISABLED_REASON='DEDICATED_PRIVATE_DURABLE_DATABASE_NOT_CONFIGURED';
 const baseStatus=()=>({
@@ -140,14 +141,77 @@ export function postgresShadowStore(pool){
     async analysis(){
       const status=await this.status();
       if(!status.available)return {...status,studyMode:'NO_PRIVATE_DATA'};
+      // All raw rows remain server-side; only aggregate research may be public.
+      // 90-day bound, fixed source scope, no client-selected SQL.
+      const cutoff=new Date(Date.now()-90*86400000).toISOString();
+      const q=await pool.query([
+        'SELECT record_id,event_id,home_team,away_team,bookmaker_key,',
+        'market,period,fair_home_probability,first_observed_at',
+        'FROM betq_shadow.quote_observations',
+        'WHERE first_observed_at >= $1',
+        'ORDER BY first_observed_at DESC LIMIT 20000'
+      ].join(' '),[cutoff]);
+      const n=await pool.query([
+        'SELECT record_id,event_id,team,qb_name,report_status,',
+        'source_url,source_kind,kickoff_at,first_observed_at,publisher_claimed_at',
+        'FROM betq_shadow.qb_news_candidates',
+        'WHERE first_observed_at >= $1',
+        'ORDER BY first_observed_at DESC LIMIT 250'
+      ].join(' '),[cutoff]);
+      const v=await pool.query([
+        'SELECT r.candidate_record_id,r.reviewed_at,r.reviewer_id,',
+        'r.source_evidence_digest FROM betq_shadow.qb_source_reviews r',
+        'JOIN betq_shadow.qb_news_candidates n',
+        'ON n.record_id=r.candidate_record_id',
+        'WHERE n.first_observed_at >= $1',
+        'ORDER BY r.reviewed_at DESC LIMIT 250'
+      ].join(' '),[cutoff]);
+      const quotes=q.rows.map(r=>({
+        recordId:r.record_id,eventId:r.event_id,
+        homeTeam:r.home_team,awayTeam:r.away_team,
+        bookmakerKey:r.bookmaker_key,market:r.market,period:r.period,
+        fairHomeProbability:Number(r.fair_home_probability),
+        firstObservedAt:new Date(r.first_observed_at).toISOString()
+      }));
+      const candidates=n.rows.map(r=>({
+        recordId:r.record_id,eventId:r.event_id,
+        team:r.team,qbName:r.qb_name,status:r.report_status,
+        sourceUrl:r.source_url,sourceKind:r.source_kind,
+        firstObservedAt:new Date(r.first_observed_at).toISOString(),
+        sourcePublishedAt:r.publisher_claimed_at?
+          new Date(r.publisher_claimed_at).toISOString():null,
+        kickoffAt:new Date(r.kickoff_at).toISOString()
+      }));
+      const reviews=v.rows.map(r=>({
+        recordId:r.candidate_record_id,
+        reviewedAt:new Date(r.reviewed_at).toISOString(),
+        reviewerId:r.reviewer_id,sourceEvidenceDigest:r.source_evidence_digest,
+        reviewStatus:'OFFICIAL_SOURCE_REVIEWED'
+      }));
+      // These are OTHER games without a recorded QB news event, not
+      // independently verified no-news counterfactuals.
+      const candidateEventIds=new Set(candidates.map(r=>r.eventId));
+      const controlGameIds=[...new Set(quotes.map(r=>r.eventId))]
+        .filter(id=>!candidateEventIds.has(id)).slice(0,200);
+      const study=evaluateQBLatency({
+        quoteRecords:quotes,newsCandidates:candidates,reviews,
+        controlGameIds,requireControl:true,minimumBooks:3,synthetic:false
+      });
+      const reportable=study.nQBEventsEligible>=10;
       return {
         schema:1,version:SHADOW_SCHEMA,
-        available:false,captureEnabled:true,durableStorage:true,
-        reason:'NO_SOURCE_REVIEWED_MATCHED_CONTROL_COHORT_YET',
+        available:reportable,captureEnabled:true,durableStorage:true,
+        reason:reportable?'DESCRIPTIVE_RESEARCH_ONLY':
+          'INSUFFICIENT_SOURCE_REVIEWED_MATCHED_CONTROL_COHORT',
         recordedQuoteRevisions:status.recordedQuoteRevisions,
         QBNewsCandidates:status.QBNewsCandidates,
         independentlyReviewedQBEvents:status.independentlyReviewedQBEvents,
-        studyMode:'SOURCE_REVIEW_AND_CONTROL_GATES_UNFULFILLED',
+        studyMode:'PROSPECTIVE_QUOTE_ASSOCIATION_NOT_CAUSAL',
+        eventCount:study.nQBEventsEligible,
+        controlMethod:'OTHER_GAMES_WITH_NO_RECORDED_QB_CHANGE',
+        controlsIndependentlyCertifiedNoNews:false,
+        reportableEffects:reportable?study.nQBEventsEligible:0,
+        outcome:reportable?study.outcome:null,
         rawBookmakerQuotesExposed:false,sourceURLsExposed:false,
         firstPublicationVerified:false,realMoneyROI:null,verifiedCLV:null,
         wageringAuthorized:false,causalityEstablished:false
