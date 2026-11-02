@@ -33,7 +33,7 @@ jobs:
           import {readFileSync} from 'node:fs';
           const r=JSON.parse(readFileSync('data/replay/nfl_2022_2025.json','utf8'));
           const s=JSON.parse(readFileSync('data/replay/summary.json','utf8'));
-          if(r.version!=='nfl-replay-v1'||r.years.length!==4||
+          if(r.version!=='nfl-replay-v2'||r.years.length!==4||
              s.verifiedBettingROI!==null||s.verifiedCLV!==null||
              r.verifiedCLV!==false||r.verifiedROI!==false)
             throw Error('Research replay or source honesty gate failed');
