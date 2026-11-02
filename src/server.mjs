@@ -9,6 +9,7 @@ import { demoEvents } from './demo.mjs';
 import { predictNflEvent, MODEL_VERSION } from './nfl-elo.mjs';
 import { nflMoneylineConsensus } from './market-consensus.mjs';
 import { emptyJournal, summarizeEvidence } from './evidence.mjs';
+import { createEvidenceFeed } from './evidence-feed.mjs';
 
 const PUBLIC_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../public');
 function loadModelArtifact() {
@@ -27,6 +28,7 @@ function loadEvidence() {
   }
 }
 const NFL_EVIDENCE=loadEvidence();
+const NFL_EVIDENCE_FEED=createEvidenceFeed({fallback:NFL_EVIDENCE});
 const roundModel = (n, digits = 2) => Number.isFinite(n) ? Number(n.toFixed(digits)) : null;
 const ASSETS = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
@@ -60,6 +62,7 @@ export function createHandler({
   clock = Date.now,
   nflArtifact = NFL_ARTIFACT,
   nflEvidence = NFL_EVIDENCE,
+  evidenceFeed = NFL_EVIDENCE_FEED,
   maxAgeMs = Number(process.env.ODDS_MAX_AGE_MS) || 600000
 } = {}) {
   const access = new Map();
@@ -116,7 +119,7 @@ export function createHandler({
           });
         }
         if (url.pathname === '/api/evidence/nfl') {
-          return reply(res, 200, nflEvidence);
+          return reply(res, 200, await evidenceFeed.get());
         }
         if (url.pathname === '/api/slate') {
           const sport = url.searchParams.get('sport') || 'americanfootball_nfl';
