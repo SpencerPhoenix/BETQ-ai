@@ -4,7 +4,7 @@
   const $ = (id) => document.getElementById(id);
   const STORE = 'betq-terminal-v1';
   const LEDGER = 'betq-paper-v1';
-  const allowedTabs = ['overview', 'games', 'signals', 'model', 'evidence', 'pricing', 'execution', 'audit', 'settings'];
+  const allowedTabs = ['overview', 'games', 'signals', 'model', 'evidence', 'replay', 'pricing', 'execution', 'audit', 'settings'];
   const marketLabels = { h2h: 'Moneyline', spreads: 'Spread', totals: 'Total' };
   const sportLabels = {
     americanfootball_nfl: 'NFL', basketball_nba: 'NBA', baseball_mlb: 'MLB',
@@ -23,6 +23,8 @@
     maxRisk: Number.isFinite(prefs.maxRisk) && prefs.maxRisk >= 0.1 && prefs.maxRisk <= 1 ? prefs.maxRisk : 1,
     slate: null, error: null, sourceHealth: null, nflModel: null, evidence: null, efficiency: null, injurySource: null,
     pricingResult: null, pricingError: null, priceVerification: null,
+    replaySummary: null, replayPlays: null, replayError: null,
+    replaySeason: 2025, replayThreshold: 3, replayPage: 0, replayLoading: false,
     selectedId: null, search: '', sort: 'ev', watchOnly: false,
     loading: false, ledger: Array.isArray(safeGet(LEDGER, [])) ? safeGet(LEDGER, []) : []
   };
@@ -89,12 +91,13 @@
     header.style.display = tab === 'overview' ? '' : 'none';
     $('breadcrumb-page').textContent = ({
       overview: 'COMMAND CENTER', games: 'GAME MONITOR', signals: 'SIGNAL SCANNER',
-      model: 'PREDICTION LAB', evidence: 'FORWARD EVIDENCE', pricing: 'ROI & CLV LAB', execution: 'PAPER EXECUTION', audit: 'AUDIT & QUALITY', settings: 'SETTINGS'
+      model: 'PREDICTION LAB', evidence: 'FORWARD EVIDENCE', replay: 'HISTORICAL REPLAY', pricing: 'ROI & CLV LAB', execution: 'PAPER EXECUTION', audit: 'AUDIT & QUALITY', settings: 'SETTINGS'
     })[tab];
     $('sidebar').classList.remove('open');
     if (tab === 'settings') syncSettings();
     if (tab === 'execution') renderExecution();
     if (tab === 'pricing') renderPricing();
+    if (tab === 'replay') renderReplay();
     if (tab === 'audit') renderAudit();
     if (tab === 'model') { renderModel(); renderIntelligence(); }
     if (tab === 'evidence') renderEvidence();
@@ -165,6 +168,123 @@
     document.querySelectorAll('[data-sport]').forEach(el => el.classList.toggle('chosen', el.dataset.sport === state.sport));
     document.querySelectorAll('[data-market]').forEach(el => el.classList.toggle('chosen', el.dataset.market === state.market));
     document.querySelectorAll('[data-mode]').forEach(el => el.classList.toggle('chosen', el.dataset.mode === state.mode));
+  }
+
+
+  function renderAgentRun(){
+    const root=$('agent-run-view');
+    if(!root)return;
+    const a=state.slate?.agentRun;
+    if(!a){
+      root.innerHTML=empty('Agent evaluation awaiting current slate',
+        state.error ? 'No verified live feed: '+state.error.message :
+          'Market and model gates run on the server with every slate request.');
+      return;
+    }
+    const status='<div class="agent-status"><span class="status-tag '+
+      (a.decision.startsWith('PASS')?'pass':'watch')+'">'+esc(a.decision)+
+      '</span><strong>'+esc(a.reason)+'</strong>'+
+      '<small>Checked '+esc(when(a.evaluatedAt))+
+      ' · '+a.observedOffers+' price observations · '+a.modelEligibleGames+
+      ' eligible NFL projections · '+a.modelPriceCandidatesReviewed+
+      ' unapproved research candidates</small></div>';
+    const stages=(a.stages||[]).map(stage=>
+      '<article class="agent-stage"><span>'+esc(stage.name)+'</span>'+
+      '<strong>'+esc(stage.state)+'</strong>'+
+      '<small>'+esc(stage.detail)+'</small></article>').join('');
+    root.innerHTML=status+'<div class="agent-stage-grid">'+stages+'</div>'+
+      '<div class="agent-foot">Historical return is evaluated against recorded closing prices, not verified executable entries. '+
+      '<button class="text-link" type="button" data-tab="replay">See seasons &amp; win/loss records ↗</button></div>';
+  }
+
+  function renderReplay(){
+    const root=$('replay-overview'),table=$('replay-plays'),page=$('replay-page-label');
+    if(!root||!table||!page)return;
+    const rep=state.replaySummary;
+    if(!rep?.available){
+      root.innerHTML=empty('Preparing historical replay',
+        state.replayError||'Season-frozen historical replay artifact has not finished publishing.');
+      table.innerHTML=empty('No selections yet','The historical source report is not available.');
+      page.textContent='No pages';
+      return;
+    }
+    const selected=String(state.replayThreshold);
+    const combined=rep.aggregateByThreshold?.[selected];
+    const grades=combined?combined.wins+'–'+combined.losses:'—';
+    const rows=(rep.years||[]).map(y=>{
+      const chosen=y.selectionRules.find(r=>r.thresholdEVPercent===state.replayThreshold);
+      return '<tr><td><button type="button" class="text-link" data-replay-season="'+y.season+
+        '">'+y.season+'</button></td><td>'+num(y.allGameForecast.accuracyPercent,2)+
+        '%</td><td>'+num(y.allGameForecast.brier,5)+
+        '</td><td class="positive">'+num(y.closingMarketBenchmark?.brier,5)+
+        '</td><td>'+y.closingMoneylineCoverage.coveragePercent+
+        '%</td><td><strong>'+chosen.wins+'–'+chosen.losses+
+        '</strong><small>'+chosen.graded+' graded</small></td>'+
+        '<td>'+num(chosen.winRatePercent,2)+'%</td>'+
+        '<td class="'+(chosen.hypotheticalClosingPriceROI>=0?'positive':'negative')+'">'+
+        signed(chosen.hypotheticalClosingPriceROI,2)+'%</td></tr>';
+    }).join('');
+    const summary='<div class="metric-grid">'+
+      metric('PICKS GRADED',combined?.graded===undefined?'—':String(combined.graded),
+        'Fixed '+state.replayThreshold+'% modeled EV gate · one side/game','', '⌁')+
+      metric('WINS / LOSSES',grades,
+        combined?.graded?num(combined.winRatePercent,2)+'% hit rate':'No graded selections',
+        'violet','◉')+
+      metric('HYPOTHETICAL ROI',combined?.hypotheticalClosingPriceROI===null?'—':
+        signed(combined.hypotheticalClosingPriceROI,2)+'%',
+        'Closing-price assumption · not fill verified',
+        '','∑')+
+      metric('MARKET BENCHMARK','4 seasons',
+        'Compare Elo vs no-vig closing-market Brier','cyan','◇')+
+      '</div>';
+    root.innerHTML=summary+
+      '<section class="panel replay-season-panel"><div class="panel-head"><div>'+
+      '<span class="panel-kicker">ALL GAMES VS FILTERED SELECTIONS</span>'+
+      '<h3>Season-by-season results</h3></div>'+
+      '<span class="faint-caption">LOWER BRIER IS BETTER</span></div>'+
+      '<div class="table-scroll"><table class="data-table replay-season-table">'+
+      '<thead><tr><th>SEASON</th><th>ALL-GAME WIN %</th><th>BETQ BRIER</th>'+
+      '<th>MARKET BRIER</th><th>PRICE COVERAGE</th><th>PLAY W–L</th>'+
+      '<th>PICK WIN %</th><th>HYP. ROI</th></tr></thead>'+
+      '<tbody>'+rows+'</tbody></table></div></section>'+
+      '<div class="notice replay-warning"><span>!</span><p>'+
+      '<b>Findings must not be marketed as proof of winning.</b> Lower error in the closing-market column means '+
+      'bookmakers were more accurate at assigning probabilities that season. '+
+      'Closing prices alone cannot establish when an offer was available, a real-money return, or CLV.</p></div>';
+    if(state.replayError){
+      table.innerHTML=empty('Unable to load selected plays',state.replayError);
+      page.textContent='No pages';return;
+    }
+    if(state.replayLoading&&!state.replayPlays){
+      table.innerHTML=empty('Loading historical decisions','No paid sportsbook credits are used.');
+      return;
+    }
+    const plays=state.replayPlays;
+    if(!plays?.available||!Array.isArray(plays.rows)){
+      table.innerHTML=empty('No selected plays','Choose a historical season and a model EV threshold.');
+      page.textContent='No pages';return;
+    }
+    const lines=plays.rows.map(p=>
+      '<tr><td><strong>'+esc(p.matchup)+'</strong><small>'+
+      esc(p.date)+' · Week '+esc(p.week)+'</small></td>'+
+      '<td>'+esc(p.selectedTeam)+'</td><td><span class="odds-pill">'+
+      esc(odds(p.selectedAmericanOdds))+'</span></td>'+
+      '<td>'+pct(p.modelProbability,1)+'</td>'+
+      '<td class="'+(p.estimatedEVPercent>=0?'positive':'negative')+'">'+
+      signed(p.estimatedEVPercent,2)+'%</td><td>'+
+      '<span class="status-tag '+(p.outcome==='WIN'?'watch':'pass')+'">'+
+      esc(p.outcome)+'</span><small>Final '+esc(p.gameResult)+'</small></td>'+
+      '<td class="'+(p.hypotheticalUnitProfit>=0?'positive':'negative')+'">'+
+      (p.hypotheticalUnitProfit===null?'—':signed(p.hypotheticalUnitProfit,2)+'u')+
+      '</td></tr>').join('');
+    table.innerHTML='<div class="table-scroll"><table class="data-table replay-plays-table">'+
+      '<thead><tr><th>GAME</th><th>RESEARCH SIDE</th><th>CLOSE ODDS</th>'+
+      '<th>MODEL P</th><th>EST. EV</th><th>RESULT</th><th>1u P/L</th></tr></thead>'+
+      '<tbody>'+lines+'</tbody></table></div>'+
+      '<p class="replay-table-note">'+esc(String(plays.total))+' rule-qualified decisions. '+
+      'Historical closing odds are not verified offered entry prices. '+esc(String(plays.season))+
+      ' / '+esc(String(plays.thresholdEVPercent))+'% modeled EV gate.</p>';
+    page.textContent='Page '+(plays.page+1)+' of '+Math.max(1,plays.pageCount);
   }
 
   function renderMetrics() {
@@ -866,9 +986,9 @@
   }
 
   function render() {
-    renderFilters(); renderFeed(); renderBanner(); renderMetrics();
+    renderFilters(); renderFeed(); renderBanner(); renderMetrics(); renderAgentRun();
     renderOpportunities(); renderSpotlight(); renderChart();
-    renderGames(); renderSignals(); renderModel(); renderIntelligence(); renderEvidence(); renderPricing(); renderExecution(); renderAudit();
+    renderGames(); renderSignals(); renderModel(); renderIntelligence(); renderEvidence(); renderReplay(); renderPricing(); renderExecution(); renderAudit();
   }
 
   async function loadIntelligence() {
@@ -888,6 +1008,46 @@
     try { state.nflModel = await requestJSON('/api/model/nfl'); }
     catch { state.nflModel = { available:false, reason:'MODEL_ENDPOINT_UNAVAILABLE' }; }
     renderModel(); renderAudit(); renderSpotlight();
+  }
+  async function loadReplay() {
+    state.replayLoading = true;
+    try {
+      const summary = await requestJSON('/api/replay/nfl');
+      state.replaySummary = summary;
+      state.replayError = summary?.available === true ? null : 'Historical replay report has not been published.';
+      state.replayPage = 0;
+      if (summary?.available) await loadReplayPlays();
+    } catch (err) {
+      state.replaySummary = null;
+      state.replayError = err?.message || 'Historical replay could not be loaded.';
+    } finally {
+      state.replayLoading = false;
+      renderReplay();
+    }
+  }
+  let replaySerial = 0;
+  async function loadReplayPlays() {
+    if (!state.replaySummary?.available) return;
+    const serial=++replaySerial;
+    state.replayLoading=true;
+    renderReplay();
+    try {
+      const p='/api/replay/nfl/plays?season='+state.replaySeason+
+        '&ev='+state.replayThreshold+'&page='+state.replayPage;
+      const data=await requestJSON(p);
+      if(serial!==replaySerial)return;
+      state.replayPlays=data;
+      state.replayError=null;
+    }catch(err){
+      if(serial!==replaySerial)return;
+      state.replayPlays=null;
+      state.replayError=err?.message||'Selected play list unavailable.';
+    }finally{
+      if(serial===replaySerial){
+        state.replayLoading=false;
+        renderReplay();
+      }
+    }
   }
   async function loadEvidence() {
     try { state.evidence = await requestJSON('/api/evidence/nfl'); }
@@ -944,6 +1104,12 @@
   }
 
   document.addEventListener('click', (event) => {
+    const replayYear=event.target.closest('[data-replay-season]');
+    if(replayYear){
+      state.replaySeason=Number(replayYear.dataset.replaySeason);
+      $('replay-season').value=String(state.replaySeason);
+      state.replayPage=0;state.replayPlays=null;loadReplayPlays();return;
+    }
     const tab = event.target.closest('[data-tab]');
     if (tab) { setTab(tab.dataset.tab); return; }
     const sport = event.target.closest('[data-sport]');
@@ -961,6 +1127,14 @@
     const result = event.target.closest('[data-settle]');
     if (result) { settlePaper(result.dataset.settle, result.dataset.result); return; }
     const action = event.target.closest('[data-action]');
+    if (action?.dataset.action === 'replay-prev'){
+      if(state.replayPage>0){state.replayPage--;loadReplayPlays();}return;
+    }
+    if (action?.dataset.action === 'replay-next'){
+      if(state.replayPlays&&state.replayPage+1<state.replayPlays.pageCount){
+        state.replayPage++;loadReplayPlays();
+      }return;
+    }
     if (action?.dataset.action === 'refresh') { loadSlate(); loadHealth(); loadEvidence(); return; }
     if (action?.dataset.action === 'scores') { loadScores(); return; }
     if (action?.dataset.action === 'save-settings') { saveSettings(); return; }
@@ -976,6 +1150,14 @@
     calculateIllustrativePricing();
   });
   $('menu-toggle').addEventListener('click', () => $('sidebar').classList.toggle('open'));
+  $('replay-season').addEventListener('change',e=>{
+    state.replaySeason=Number(e.target.value);state.replayPage=0;
+    state.replayPlays=null;loadReplayPlays();
+  });
+  $('replay-threshold').addEventListener('change',e=>{
+    state.replayThreshold=Number(e.target.value);state.replayPage=0;
+    state.replayPlays=null;loadReplayPlays();
+  });
   $('signal-search').addEventListener('input', (e) => { state.search = e.target.value; renderSignals(); });
   $('signal-sort').addEventListener('change', (e) => { state.sort = e.target.value; renderSignals(); });
   $('watch-only').addEventListener('change', (e) => { state.watchOnly = e.target.checked; renderSignals(); });
@@ -994,6 +1176,7 @@
   loadModel();
   loadIntelligence();
   loadEvidence();
+  loadReplay();
   loadPriceVerification();
   loadSlate();
 })();
