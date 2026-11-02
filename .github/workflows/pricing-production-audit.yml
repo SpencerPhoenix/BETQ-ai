@@ -1,0 +1,75 @@
+name: BETQ v0.5 ROI and CLV production audit
+on:
+  push:
+    paths:
+      - '.github/workflows/pricing-production-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify version-matched site and free pricing mathematics, no paid odds
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          const base='https://betq-ai.onrender.com';
+          const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+          async function get(path){
+            const res=await fetch(base+path,{
+              headers:{Accept:'application/json'},signal:AbortSignal.timeout(95000)
+            });
+            const body=await res.text();
+            let data=null;try{data=JSON.parse(body)}catch{}
+            return {status:res.status,data,body,headers:res.headers};
+          }
+          let health=null;
+          for(let i=0;i<10;i++){
+            try{
+              const h=await get('/api/health');
+              if(h.status===200&&h.data?.version==='0.5.0'){health=h.data;break;}
+            }catch{}
+            await sleep(8000);
+          }
+          if(!health)throw Error('Production v0.5.0 not responding');
+          const landing=await fetch(base+'/',{signal:AbortSignal.timeout(30000)});
+          const html=await landing.text();
+          if(!landing.ok||!html.includes('data-tab="pricing"')||
+             !html.includes('id="pricing-form"')||
+             !html.includes('TERMINAL / v0.5.0'))
+            throw Error('ROI/CLV interface not version-matched in production');
+          const verification=await get('/api/price/verification');
+          if(verification.status!==200||
+             verification.data.verifiedROI!==null||
+             verification.data.verifiedCLV!==null||
+             verification.data.performanceClaimsAllowed!==false)
+            throw Error('Missing real-world transaction source misrepresented as verified');
+          const example=await get('/api/price/illustration?entry=-110&close=-125&closingOpposite=%2B115&stake=110&result=WIN');
+          if(example.status!==200||
+             example.data.type!=='ILLUSTRATIVE_PRICE_MATH'||
+             example.data.verifiedROI!==false||
+             example.data.verifiedCLV!==false||
+             example.data.settlement.netProfit!==100||
+             Math.abs(example.data.rawCLVPercent-6.0606)>0.002||
+             !(example.data.noVigCLVPercent>0))
+            throw Error('Hypothetical price mathematics mismatch');
+          const negative=await get('/api/price/illustration?entry=-110&close=-125&stake=100&result=UNKNOWN');
+          if(negative.status!==400)throw Error('Invalid settlement not rejected');
+          const d=await get('/api/slate?mode=demo&sport=americanfootball_nfl&market=h2h');
+          if(d.status!==200||d.data.demo!==true||
+             d.data.events.some(e=>e.injuryContext||e.efficiencyChallenger))
+            throw Error('Demo research isolation violated');
+          console.log('PRODUCTION VERSION: '+health.version);
+          console.log('ROI REAL-WORLD AUDIT: UNAVAILABLE, source gate maintained');
+          console.log('CLV REAL-WORLD AUDIT: UNAVAILABLE, source gate maintained');
+          console.log('SAMPLE AMERICAN PRICE CHANGE: '+example.data.rawCLVPercent+'%');
+          console.log('SAMPLE NO-VIG CLOSING PROXY: '+example.data.noVigCLVPercent+'%');
+          console.log('SAMPLE WIN PROFIT: '+example.data.settlement.netProfit+' USD on '+example.data.settlement.risked+' risked');
+          console.log('EXTERNAL PAID PROVIDER CALLS: ZERO (read-only demo and price endpoints)');
+          console.log('RESULT: PASS');
+          NODE
