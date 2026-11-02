@@ -489,3 +489,6 @@ progress.evidence-meter::-moz-progress-bar {background:var(--lime);border-radius
 .risk-stress-note{margin:12px 0 0;padding:14px;border-left:3px solid #bb99d0;background:#25253a;color:#aebacc;font-size:12px;line-height:1.85;}
 .risk-stress-note b{color:#efe5f8;}
 @media(max-width:1050px){.risk-stress-scenarios{grid-template-columns:1fr;}.risk-stress-card>span{min-height:0;}}
+
+.agent-bias-warning{padding:13px 18px;background:#302224;border-top:1px solid #654447;color:#e9c4b9;font-size:11px;line-height:1.7;}
+.agent-bias-warning b{color:#ffe4d9;}
