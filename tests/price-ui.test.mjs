@@ -29,7 +29,7 @@ test('Frontend price calculator uses dedicated free pricing route, never odds-pr
   assert.ok(!fn.includes('ODDS_API_KEY'));
   assert.ok(js.includes("$('pricing-form').addEventListener('submit'"));
   assert.ok(js.includes('state.priceVerification'));
-  assert.ok(js.includes('verified real-money'));
+  assert.match(js,/VERIFIED REAL-MONEY ROI/);
 });
 
 test('Manual paper metrics cannot be presented as independently verified ROI/CLV',async()=>{
