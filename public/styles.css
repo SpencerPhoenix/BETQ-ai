@@ -370,3 +370,30 @@ progress.evidence-meter::-moz-progress-bar {background:var(--lime);border-radius
 @media(max-width:550px) {.evidence-body{padding:14px;}.evidence-row{align-items:flex-start;}.evidence-performance strong{font-size:17px;}}
 
 .sidebar { overflow-y:auto; scrollbar-width:thin; }
+
+/* Phase 4: NFL intelligence challenge cards, always distinct from market picks. */
+.nfl4-subtitle{margin-top:28px;}
+.nfl4-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px;}
+.nfl4-three-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:16px;gap:8px;}
+.nfl4-three-metrics>div{background:#1b2736;border:1px solid #314256;border-radius:9px;padding:12px;min-width:0;}
+.nfl4-three-metrics label{color:#859bad;font-size:9px;letter-spacing:.6px;line-height:1.5;display:block;}
+.nfl4-three-metrics strong{font-size:21px;font-variant-numeric:tabular-nums;display:block;margin-top:9px;letter-spacing:-.6px;}
+.nfl4-intel-body{padding:14px 20px 21px;}
+.nfl4-intel-body p{font-size:12px;color:#97a9bd;line-height:1.72;margin:0 0 12px;}
+.nfl4-intel-body b{color:#e2ecf4;}
+.nfl4-caution{border-left:3px solid #9474be;padding:11px;background:#1d2034;border-radius:4px;}
+.nfl4-game-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px;}
+.nfl4-match-content{padding:17px;}
+.nfl4-prob-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;}
+.nfl4-prob-row>div{background:#19283a;border:1px solid #334354;border-radius:9px;padding:12px;min-width:0;}
+.nfl4-prob-row span{color:#89a1af;font-size:9px;letter-spacing:.65px;line-height:1.5;display:block;min-height:28px;}
+.nfl4-prob-row strong{color:#c1f28d;font-size:18px;font-variant-numeric:tabular-nums;display:block;margin-top:4px;}
+.nfl4-feature-row{font-size:10px;color:#98b1bd;line-height:1.7;border:1px solid #354843;background:#1b2b29;border-radius:7px;margin-top:12px;padding:12px;}
+.nfl4-injury-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:13px;}
+.nfl4-injury-row>div{border:1px solid #374052;background:#1a2330;padding:11px;border-radius:8px;min-width:0;}
+.nfl4-injury-row span{display:block;color:#8092a7;font-size:10px;}
+.nfl4-injury-row b{display:block;color:#e2e9f2;margin:7px 0 2px;font-size:12px;}
+.nfl4-injury-row small{display:block;font-size:10px;color:#9caaba;line-height:1.6;}
+.nfl4-warning{font-size:11px;line-height:1.6;color:#e7bea1;background:#332922;border-left:2px solid #d9aa6b;padding:10px;margin:12px 0 0;}
+@media(max-width:1160px){.nfl4-columns,.nfl4-game-grid{grid-template-columns:1fr;}}
+@media(max-width:550px){.nfl4-three-metrics strong{font-size:16px}.nfl4-prob-row{grid-template-columns:repeat(2,1fr)}.nfl4-injury-row{grid-template-columns:1fr}.nfl4-intel-body{padding:13px;}}
