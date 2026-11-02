@@ -55,6 +55,11 @@ function loadReplayFile(name){
 }
 const NFL_REPLAY_SUMMARY=loadReplayFile('summary.json');
 const NFL_REPLAY_FULL=loadReplayFile('nfl_2022_2025.json');
+const NFL_RISK_REPORT=loadResearchArtifact('risk/summary.json',a=>
+  a?.schema===1&&a?.version==='betq-risk-research-v1'&&
+  a?.verifiedROI===null&&a?.verifiedCLV===null&&
+  a?.bettingAuthorized===false&&a?.historicalPriceTimeVerified===false&&
+  Array.isArray(a.scenarios));
 const NFL_MARKET_CHALLENGE=loadResearchArtifact('market-challenge/summary.json',a=>
   a?.schema===1&&a?.version==='market-challenge-v1'&&a?.bettingAuthorized===false&&
   a?.verifiedCLV===null&&a?.verifiedROI===null&&Array.isArray(a.years));
@@ -97,6 +102,7 @@ export function createHandler({
   replaySummary = NFL_REPLAY_SUMMARY,
   replayFull = NFL_REPLAY_FULL,
   marketChallenge = NFL_MARKET_CHALLENGE,
+  riskReport = NFL_RISK_REPORT,
   maxAgeMs = Number(process.env.ODDS_MAX_AGE_MS) || 600000
 } = {}) {
   const access = new Map();
@@ -209,6 +215,16 @@ export function createHandler({
         }
         if (url.pathname === '/api/evidence/nfl') {
           return reply(res, 200, await evidenceFeed.get());
+        }
+        if (url.pathname === '/api/risk/nfl') {
+          if(!riskReport)return reply(res,200,{
+            available:false,reason:'STRESS_REPORT_NOT_PUBLISHED',
+            verifiedROI:null,verifiedCLV:null,exactRealWorldRiskOfRuin:null
+          });
+          return reply(res,200,{
+            available:true,...riskReport,verifiedROI:null,verifiedCLV:null,
+            exactRealWorldRiskOfRuin:null,bettingAuthorized:false
+          });
         }
         if (url.pathname === '/api/research/market') {
           if(!marketChallenge)return reply(res,200,{
