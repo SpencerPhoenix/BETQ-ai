@@ -17,7 +17,7 @@ test('Agent cockpit and season replay are visible navigation destinations',async
 });
 test('On activation the frontend loads historical results and runs agent briefing on slate',async()=>{
   const js=await path('public/app.js');
-  assert.match(js,/loadReplay\(\);\s*loadPriceVerification\(\);\s*loadSlate\(\)/);
+  assert.match(js,/loadReplay\(\);\s*loadMarketChallenge\(\);\s*loadPriceVerification\(\);\s*loadSlate\(\)/);
   assert.match(js,/renderAgentRun\(\)/);
   assert.match(js,/renderReplay\(\)/);
   assert.match(js,/\/api\/replay\/nfl\/plays\?season=/);
