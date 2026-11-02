@@ -1,0 +1,74 @@
+name: BETQ preregistered NFL margin residual evaluation
+on:
+  push:
+    paths:
+      - 'src/margin-research.mjs'
+      - 'scripts/run-margin-study.mjs'
+      - '.github/workflows/margin-research.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: betq-margin-2026-research
+  cancel-in-progress: false
+jobs:
+  experiment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run syntax, regression and margin integrity tests
+        run: |
+          npm run check
+          npm test
+      - name: Run frozen NFL 2022-2025 margin research
+        run: node scripts/run-margin-study.mjs
+      - name: Audit source sign, sample coverage and no-execution claims
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const m=JSON.parse(readFileSync('data/margin-research/summary.json','utf8'));
+          if(m.schema!==1||m.version!=='betq-margin-research-v1'||
+             m.sourceSignValidation?.empiricalPretestCorrelation<0.2||
+             m.sourceSignValidation?.validatedOnYears.join(',')!=='2020,2021'||
+             m.pooled.closingSpreadBaseline.n<800||m.pooled.eloMarginResidual.n<800||
+             m.years.length!==4||m.automaticPromotion!==false||
+             m.verifiedROI!==null||m.verifiedCLV!==null||m.bettingAuthorized!==false||
+             m.correctedForecastUsesFutureOutcomes!==false)
+             throw Error('Preregistration, data sign or source safety failed');
+          for(const y of m.years){
+            if(y.trainedYears[0]!==y.season-2||y.trainedYears[1]!==y.season-1||
+               y.n<200||!Number.isFinite(y.closingSpreadBaseline.mse)||
+               !Number.isFinite(y.eloMarginResidual.mse))
+              throw Error('Invalid model past-only margin evaluation');
+          }
+          console.log('MARGIN SOURCE SIGN VALIDATED FROM PRE-2022 DATA');
+          console.log('POOLED MSE '+m.pooled.closingSpreadBaseline.mse+
+            ' baseline, '+m.pooled.eloMarginResidual.mse+' correction');
+          console.log('NO REAL-MONEY BETS OR PRICING RETURN CLAIMS');
+          NODE
+      - name: Commit only derived frozen margin research
+        shell: bash
+        run: |
+          if [[ -n "$(git status --porcelain -- data/margin-research/)" ]]; then
+            git config user.name "betq-quant-research-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add data/margin-research/summary.json
+            git commit -m "data: publish preregistered NFL 2022-2025 closing-spread margin research"
+            for attempt in 1 2 3; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then
+                echo "Derived margin research published."
+                exit 0
+              fi
+              sleep 3
+            done
+            echo "Could not publish after source branch advanced" >&2
+            exit 1
+          else
+            echo "Report unchanged."
+          fi
