@@ -1,0 +1,50 @@
+name: BETQ v0.7 independent market calibration production verification
+on:
+  push:
+    paths: ['.github/workflows/market-production-audit.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify source-honest model gate, prior-year research and live UI without paid odds
+        run: |
+          node --input-type=module <<'NODE'
+          const root='https://betq-ai.onrender.com';
+          async function read(path){
+            const r=await fetch(root+path,{signal:AbortSignal.timeout(95000)});
+            const t=await r.text();let data=null;try{data=JSON.parse(t)}catch{}
+            if(!r.ok)throw Error(path+': HTTP '+r.status);
+            return {data,text:t};
+          }
+          const health=(await read('/api/health')).data;
+          if(health.version!=='0.7.0')throw Error('Wrong deployed version '+health.version);
+          const m=(await read('/api/research/market')).data;
+          if(!m.available||m.version!=='market-challenge-v1'||m.years.length!==4||
+             m.bettingAuthorized!==false||m.verifiedROI!==null||m.verifiedCLV!==null)
+            throw Error('Invalid market research state');
+          if(!m.years.every(y=>y.modelContributionWeight===0&&
+             y.conservativelyCalibrated.brier===y.closingMarket.brier))
+            throw Error('Unsupported independent model promotion');
+          const favorite=m.pooledPolicy.MARKET_FAVORITE_65;
+          if(favorite.winRatePercent<70||favorite.hypotheticalClosingPriceROIPercent>=0)
+            throw Error('Win rate vs ROI source benchmark mismatch');
+          const html=(await read('/')).text;
+          if(!html.includes('TERMINAL / v0.7.0')||!html.includes('id="market-challenge-view"'))
+            throw Error('Unmatched UI/version');
+          const demo=(await read('/api/slate?mode=demo')).data;
+          if(demo.agentRun.mayWager!==false||demo.agentRun.decision!=='DEMO_NO_ACTION')
+            throw Error('Demo authorization safety failure');
+          console.log('PRODUCTION v0.7.0: PASS');
+          console.log('Independent model weight all four years: ZERO');
+          console.log('Favorite 65% hit rate: '+favorite.winRatePercent+'%');
+          console.log('Favorite 65% hypothetical ROI: '+favorite.hypotheticalClosingPriceROIPercent+'%');
+          console.log('Real wagering: OFF; Verified ROI and CLV: UNAVAILABLE');
+          console.log('Paid live sportsbook API requests: ZERO');
+          NODE
