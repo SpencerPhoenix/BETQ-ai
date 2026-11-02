@@ -12,7 +12,7 @@ const round=(v,d=4)=>Number.isFinite(v)?Number(v.toFixed(d)):null;
 const order=(a,b)=>a.date.localeCompare(b.date)||a.gameId.localeCompare(b.gameId);
 const quantile=(a,p)=>{
   const i=(a.length-1)*p,lo=Math.floor(i),hi=Math.ceil(i);
-  return a[lo]*(hi-i)+a[hi]*(i-lo);
+  return lo===hi?a[lo]:a[lo]*(hi-i)+a[hi]*(i-lo);
 };
 function randomGenerator(seed){
   let state=(seed>>>0)||1;
