@@ -1,0 +1,434 @@
+{
+  "schema": 1,
+  "version": "nfl-replay-v1",
+  "generatedAt": "2026-11-02T04:58:21.992Z",
+  "source": {
+    "name": "nflverse/nflverse-data schedules",
+    "credit": "nflverse / Lee Sharpe (CC BY 4.0)",
+    "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+    "odds": "Recorded closing moneylines, no historical quote times/book fills"
+  },
+  "sourceSha256": "b0386e7d8e580ac4ff048bcc603cdc99f3310e17299232958265b1259064ffff",
+  "model": "SEASON_PRE_FIT_ELO_DAY_FROZEN",
+  "defaultThresholdEVPercent": 3,
+  "verifiedBettingROI": null,
+  "verifiedCLV": null,
+  "historicalReplayROIType": "HYPOTHETICAL_CLOSING_PRICE_ONLY",
+  "years": [
+    {
+      "season": 2022,
+      "tunedYears": [
+        2015,
+        2019
+      ],
+      "calibratedYears": [
+        2020,
+        2021
+      ],
+      "params": {
+        "k": 40,
+        "homeAdv": 40,
+        "regression": 0.35,
+        "scale": 0.9
+      },
+      "games": 284,
+      "tiesExcluded": 2,
+      "allGameForecast": {
+        "n": 282,
+        "correct": 176,
+        "incorrect": 106,
+        "accuracyPercent": 62.41,
+        "brier": 0.22604,
+        "logLoss": 0.64225
+      },
+      "closingMoneylineCoverage": {
+        "validGamesWithBothPrices": 282,
+        "missingOnNonTies": 0,
+        "coveragePercent": 100
+      },
+      "closingMarketBenchmark": {
+        "n": 282,
+        "brier": 0.20929,
+        "logLoss": 0.60496,
+        "pairedModelBrier": 0.22604,
+        "benchmark": "DE_VIGGED_RETROSPECTIVE_CLOSING_MONEYLINES"
+      },
+      "selectionRules": [
+        {
+          "thresholdEVPercent": 0,
+          "pricedCandidates": 255,
+          "graded": 253,
+          "wins": 87,
+          "losses": 166,
+          "tiesExcluded": 2,
+          "winRatePercent": 34.39,
+          "wilson95": [
+            0.2881,
+            0.4043
+          ],
+          "hypotheticalNetUnits": -40.7,
+          "hypotheticalClosingPriceROI": -16.09,
+          "maxConsecutiveLosses": 10,
+          "maximumUnitDrawdown": 50.26
+        },
+        {
+          "thresholdEVPercent": 3,
+          "pricedCandidates": 234,
+          "graded": 233,
+          "wins": 79,
+          "losses": 154,
+          "tiesExcluded": 1,
+          "winRatePercent": 33.91,
+          "wilson95": [
+            0.2813,
+            0.402
+          ],
+          "hypotheticalNetUnits": -35.61,
+          "hypotheticalClosingPriceROI": -15.28,
+          "maxConsecutiveLosses": 10,
+          "maximumUnitDrawdown": 49.65
+        },
+        {
+          "thresholdEVPercent": 5,
+          "pricedCandidates": 219,
+          "graded": 218,
+          "wins": 73,
+          "losses": 145,
+          "tiesExcluded": 1,
+          "winRatePercent": 33.49,
+          "wilson95": [
+            0.2756,
+            0.3999
+          ],
+          "hypotheticalNetUnits": -30.61,
+          "hypotheticalClosingPriceROI": -14.04,
+          "maxConsecutiveLosses": 10,
+          "maximumUnitDrawdown": 50.33
+        }
+      ]
+    },
+    {
+      "season": 2023,
+      "tunedYears": [
+        2016,
+        2020
+      ],
+      "calibratedYears": [
+        2021,
+        2022
+      ],
+      "params": {
+        "k": 52,
+        "homeAdv": 40,
+        "regression": 0.35,
+        "scale": 0.75
+      },
+      "games": 285,
+      "tiesExcluded": 0,
+      "allGameForecast": {
+        "n": 285,
+        "correct": 171,
+        "incorrect": 114,
+        "accuracyPercent": 60,
+        "brier": 0.23529,
+        "logLoss": 0.6638
+      },
+      "closingMoneylineCoverage": {
+        "validGamesWithBothPrices": 285,
+        "missingOnNonTies": 0,
+        "coveragePercent": 100
+      },
+      "closingMarketBenchmark": {
+        "n": 285,
+        "brier": 0.21864,
+        "logLoss": 0.62697,
+        "pairedModelBrier": 0.23529,
+        "benchmark": "DE_VIGGED_RETROSPECTIVE_CLOSING_MONEYLINES"
+      },
+      "selectionRules": [
+        {
+          "thresholdEVPercent": 0,
+          "pricedCandidates": 250,
+          "graded": 250,
+          "wins": 84,
+          "losses": 166,
+          "tiesExcluded": 0,
+          "winRatePercent": 33.6,
+          "wilson95": [
+            0.2803,
+            0.3966
+          ],
+          "hypotheticalNetUnits": -26.37,
+          "hypotheticalClosingPriceROI": -10.55,
+          "maxConsecutiveLosses": 9,
+          "maximumUnitDrawdown": 32.37
+        },
+        {
+          "thresholdEVPercent": 3,
+          "pricedCandidates": 217,
+          "graded": 217,
+          "wins": 67,
+          "losses": 150,
+          "tiesExcluded": 0,
+          "winRatePercent": 30.88,
+          "wilson95": [
+            0.2511,
+            0.3731
+          ],
+          "hypotheticalNetUnits": -25.48,
+          "hypotheticalClosingPriceROI": -11.74,
+          "maxConsecutiveLosses": 9,
+          "maximumUnitDrawdown": 28.89
+        },
+        {
+          "thresholdEVPercent": 5,
+          "pricedCandidates": 201,
+          "graded": 201,
+          "wins": 61,
+          "losses": 140,
+          "tiesExcluded": 0,
+          "winRatePercent": 30.35,
+          "wilson95": [
+            0.2441,
+            0.3702
+          ],
+          "hypotheticalNetUnits": -21.46,
+          "hypotheticalClosingPriceROI": -10.68,
+          "maxConsecutiveLosses": 12,
+          "maximumUnitDrawdown": 27.67
+        }
+      ]
+    },
+    {
+      "season": 2024,
+      "tunedYears": [
+        2017,
+        2021
+      ],
+      "calibratedYears": [
+        2022,
+        2023
+      ],
+      "params": {
+        "k": 40,
+        "homeAdv": 25,
+        "regression": 0.35,
+        "scale": 0.9
+      },
+      "games": 285,
+      "tiesExcluded": 0,
+      "allGameForecast": {
+        "n": 285,
+        "correct": 198,
+        "incorrect": 87,
+        "accuracyPercent": 69.47,
+        "brier": 0.21163,
+        "logLoss": 0.61271
+      },
+      "closingMoneylineCoverage": {
+        "validGamesWithBothPrices": 285,
+        "missingOnNonTies": 0,
+        "coveragePercent": 100
+      },
+      "closingMarketBenchmark": {
+        "n": 285,
+        "brier": 0.20097,
+        "logLoss": 0.58921,
+        "pairedModelBrier": 0.21163,
+        "benchmark": "DE_VIGGED_RETROSPECTIVE_CLOSING_MONEYLINES"
+      },
+      "selectionRules": [
+        {
+          "thresholdEVPercent": 0,
+          "pricedCandidates": 245,
+          "graded": 245,
+          "wins": 93,
+          "losses": 152,
+          "tiesExcluded": 0,
+          "winRatePercent": 37.96,
+          "wilson95": [
+            0.3211,
+            0.4418
+          ],
+          "hypotheticalNetUnits": -22.33,
+          "hypotheticalClosingPriceROI": -9.12,
+          "maxConsecutiveLosses": 11,
+          "maximumUnitDrawdown": 41.59
+        },
+        {
+          "thresholdEVPercent": 3,
+          "pricedCandidates": 220,
+          "graded": 220,
+          "wins": 81,
+          "losses": 139,
+          "tiesExcluded": 0,
+          "winRatePercent": 36.82,
+          "wilson95": [
+            0.3072,
+            0.4337
+          ],
+          "hypotheticalNetUnits": -18.72,
+          "hypotheticalClosingPriceROI": -8.51,
+          "maxConsecutiveLosses": 11,
+          "maximumUnitDrawdown": 40.33
+        },
+        {
+          "thresholdEVPercent": 5,
+          "pricedCandidates": 207,
+          "graded": 207,
+          "wins": 73,
+          "losses": 134,
+          "tiesExcluded": 0,
+          "winRatePercent": 35.27,
+          "wilson95": [
+            0.2908,
+            0.4199
+          ],
+          "hypotheticalNetUnits": -18.82,
+          "hypotheticalClosingPriceROI": -9.09,
+          "maxConsecutiveLosses": 11,
+          "maximumUnitDrawdown": 39.79
+        }
+      ]
+    },
+    {
+      "season": 2025,
+      "tunedYears": [
+        2018,
+        2022
+      ],
+      "calibratedYears": [
+        2023,
+        2024
+      ],
+      "params": {
+        "k": 40,
+        "homeAdv": 25,
+        "regression": 0.35,
+        "scale": 1.1
+      },
+      "games": 285,
+      "tiesExcluded": 1,
+      "allGameForecast": {
+        "n": 284,
+        "correct": 187,
+        "incorrect": 97,
+        "accuracyPercent": 65.85,
+        "brier": 0.22235,
+        "logLoss": 0.63596
+      },
+      "closingMoneylineCoverage": {
+        "validGamesWithBothPrices": 284,
+        "missingOnNonTies": 0,
+        "coveragePercent": 100
+      },
+      "closingMarketBenchmark": {
+        "n": 284,
+        "brier": 0.21091,
+        "logLoss": 0.60699,
+        "pairedModelBrier": 0.22235,
+        "benchmark": "DE_VIGGED_RETROSPECTIVE_CLOSING_MONEYLINES"
+      },
+      "selectionRules": [
+        {
+          "thresholdEVPercent": 0,
+          "pricedCandidates": 239,
+          "graded": 238,
+          "wins": 99,
+          "losses": 139,
+          "tiesExcluded": 1,
+          "winRatePercent": 41.6,
+          "wilson95": [
+            0.3552,
+            0.4794
+          ],
+          "hypotheticalNetUnits": -4.76,
+          "hypotheticalClosingPriceROI": -2,
+          "maxConsecutiveLosses": 9,
+          "maximumUnitDrawdown": 18.53
+        },
+        {
+          "thresholdEVPercent": 3,
+          "pricedCandidates": 210,
+          "graded": 209,
+          "wins": 80,
+          "losses": 129,
+          "tiesExcluded": 1,
+          "winRatePercent": 38.28,
+          "wilson95": [
+            0.3196,
+            0.4502
+          ],
+          "hypotheticalNetUnits": -10.23,
+          "hypotheticalClosingPriceROI": -4.89,
+          "maxConsecutiveLosses": 10,
+          "maximumUnitDrawdown": 23.24
+        },
+        {
+          "thresholdEVPercent": 5,
+          "pricedCandidates": 183,
+          "graded": 182,
+          "wins": 64,
+          "losses": 118,
+          "tiesExcluded": 1,
+          "winRatePercent": 35.16,
+          "wilson95": [
+            0.286,
+            0.4234
+          ],
+          "hypotheticalNetUnits": -12.03,
+          "hypotheticalClosingPriceROI": -6.61,
+          "maxConsecutiveLosses": 10,
+          "maximumUnitDrawdown": 23.24
+        }
+      ]
+    }
+  ],
+  "aggregateByThreshold": {
+    "0": {
+      "thresholdEVPercent": 0,
+      "graded": 986,
+      "wins": 363,
+      "losses": 623,
+      "tiesExcluded": 3,
+      "winRatePercent": 36.82,
+      "hypotheticalNetUnits": -94.16,
+      "hypotheticalRiskedUnits": 986,
+      "hypotheticalClosingPriceROI": -9.55,
+      "maxConsecutiveLosses": 11,
+      "maximumUnitDrawdown": 110.99
+    },
+    "3": {
+      "thresholdEVPercent": 3,
+      "graded": 879,
+      "wins": 307,
+      "losses": 572,
+      "tiesExcluded": 2,
+      "winRatePercent": 34.93,
+      "hypotheticalNetUnits": -90.04,
+      "hypotheticalRiskedUnits": 879,
+      "hypotheticalClosingPriceROI": -10.24,
+      "maxConsecutiveLosses": 11,
+      "maximumUnitDrawdown": 113.45
+    },
+    "5": {
+      "thresholdEVPercent": 5,
+      "graded": 808,
+      "wins": 271,
+      "losses": 537,
+      "tiesExcluded": 2,
+      "winRatePercent": 33.54,
+      "hypotheticalNetUnits": -82.93,
+      "hypotheticalRiskedUnits": 808,
+      "hypotheticalClosingPriceROI": -10.26,
+      "maxConsecutiveLosses": 12,
+      "maximumUnitDrawdown": 109.06
+    }
+  },
+  "riskDisclosure": [
+    "This 2025 historical data and existing BETQ model variants have been repeatedly inspected; these are exploratory reconstructions, not a pristine untouched model trial.",
+    "Historical closing odds from nflverse are source-retrospective, not pregame timestamped bet fills.",
+    "The rule uses those closing odds as a hypothetical decision-time price and cannot establish achievable ROI or CLV.",
+    "Current feature challenger is not yet refitted separately for each prior test season; this artifact evaluates the season-fitted Elo baseline only."
+  ]
+}
