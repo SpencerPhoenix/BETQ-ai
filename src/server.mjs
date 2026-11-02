@@ -15,8 +15,12 @@ import { injuryContextForGame } from './injuries.mjs';
 import { illustrativePrice, PriceAuditError } from './price-metrics.mjs';
 import { assembleAgentRun } from './agent-run.mjs';
 import { applyDecisionAuthority } from './decision-policy.mjs';
+import { configuredShadowStore } from './shadow-store.mjs';
+import { evaluateQBLatency, syntheticQBStudyFixture } from './shadow-study.mjs';
 
 const PUBLIC_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../public');
+const SHADOW_PRIVATE = configuredShadowStore();
+const SHADOW_SYNTHETIC_REPORT = evaluateQBLatency(syntheticQBStudyFixture());
 function loadModelArtifact() {
   try {
     const artifact = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), '../data/nfl_elo.json'), 'utf8'));
@@ -103,6 +107,7 @@ export function createHandler({
   replayFull = NFL_REPLAY_FULL,
   marketChallenge = NFL_MARKET_CHALLENGE,
   riskReport = NFL_RISK_REPORT,
+  shadowStore = SHADOW_PRIVATE,
   maxAgeMs = Number(process.env.ODDS_MAX_AGE_MS) || 600000
 } = {}) {
   const access = new Map();
@@ -126,7 +131,7 @@ export function createHandler({
           return reply(res, 429, { error: { code: 'LOCAL_RATE_LIMIT', message: 'Too many requests. Try again shortly.' } });
         }
         if (url.pathname === '/api/health') return reply(res, 200, {
-          status: 'ok', app: 'BETQ.ai', version: '0.8.0',
+          status: 'ok', app: 'BETQ.ai', version: '0.9.0',
           serverTime: new Date(now).toISOString(), odds: source.status(),
           nflModel: { available: Boolean(nflArtifact?.readyForResearch), version: nflArtifact?.version || null },
           forwardEvidence: { status: nflEvidence.status, prospectiveGames: nflEvidence.prospectiveGames,
@@ -213,6 +218,18 @@ export function createHandler({
             advisory:nflInjuries.advisory
           });
         }
+        if (url.pathname === '/api/shadow/status') {
+          // Never returns bookmaker identities, prices, article URLs, or DB credentials.
+          return reply(res,200,await shadowStore.status());
+        }
+        if (url.pathname === '/api/shadow/study') {
+          // When no private vetted database exists, there is no live study.
+          return reply(res,200,await shadowStore.analysis());
+        }
+        if (url.pathname === '/api/shadow/demo') {
+          // Entirely synthetic, immutable fixture; zero odds-provider requests.
+          return reply(res,200,SHADOW_SYNTHETIC_REPORT);
+        }
         if (url.pathname === '/api/evidence/nfl') {
           return reply(res, 200, await evidenceFeed.get());
         }
@@ -293,7 +310,7 @@ export function createHandler({
         }
         if (url.pathname === '/api/price/verification') {
           return reply(res,200,{
-            version:'0.8.0',verifiedROI:null,verifiedCLV:null,
+            version:'0.9.0',verifiedROI:null,verifiedCLV:null,
             realMoneyTransactionsConnected:false,
             verifiedBookmakerClosingQuotesConnected:false,
             prospectivePriceLedgerConnected:false,
@@ -360,6 +377,18 @@ export function createHandler({
             ? { events: demoEvents(sport, now), receivedAt: new Date(now).toISOString(), cacheHit: false, quota: null }
             : await source.getOdds(sport, market);
           const analysisNow=clock(); // Upstream fetch can cross kickoff or the freshness boundary.
+          // Private opt-in capture reuses EXACTLY this already paid live response:
+          // no second provider call, no demo, no caching-as-new-observation.
+          let shadowCapture={captured:false,inserted:0,reason:'NOT_CAPTURED'};
+          if(!demo&&sport==='americanfootball_nfl'&&market==='h2h'&&
+             snapshot.cacheHit!==true){
+            try{
+              shadowCapture=await shadowStore.capture(snapshot,{now:analysisNow});
+            }catch{
+              shadowCapture={captured:false,inserted:0,
+                reason:'PRIVATE_CAPTURE_REJECTED'};
+            }
+          }
           const analysis = analyzeEvents(snapshot.events, {
             sport, market, asOf: analysisNow, maxAgeMs, demo
           });
@@ -406,6 +435,7 @@ export function createHandler({
           return reply(res, 200, {
             ...analysis,
             agentRun,
+            shadowCapture,
             receivedAt: snapshot.receivedAt, cacheHit: snapshot.cacheHit,
             quota: snapshot.quota, warnings: [
               'Market consensus is not an independently validated win-probability model.',
