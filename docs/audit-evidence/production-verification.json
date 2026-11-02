@@ -1,0 +1,37 @@
+{
+  "verifiedAt": "2026-11-02T04:18:14.111Z",
+  "releaseVersion": "0.4.1",
+  "deployedCodeCommit": "cc1b1728f07e92186b5e91c275a7a836b29601c5",
+  "productionUrl": "https://betq-ai.onrender.com",
+  "renderServiceId": "srv-dbjrsns9v7es73avsgf0",
+  "renderDeployId": "dep-dbk0tnlg1s2s738vs8qg",
+  "verificationWorkflowRun": 41381929079,
+  "verificationJobId": 125092055020,
+  "result": "PASS",
+  "previousAttemptFailure": "Release 0.4.1 not live; Render was still serving the previous 0.4.0 code commit",
+  "resolution": "Redeployed the existing tested main commit without modifying runtime application code or adding credentials, then reran the failed no-paid-odds smoke job",
+  "homepageStatus": 200,
+  "modelAvailable": true,
+  "automaticModelPromotion": false,
+  "injuryStarterVerified": false,
+  "evidenceGames": 17,
+  "completedForwardGames": 0,
+  "realizedROI": null,
+  "verifiedCLV": null,
+  "paidOddsRequestsInVerification": 0,
+  "checks": [
+    "Backend health reports release 0.4.1",
+    "Homepage contains matching v0.4.1 UI version",
+    "Read-only model, injury, evidence and configuration endpoints respond",
+    "Wagering and automatic paid-odds polling remain disabled",
+    "Research model is not automatically promoted and does not claim a verified real-money edge",
+    "No asserted confirmed starting quarterback or injury probability adjustment",
+    "Demo mode contains no live team-specific injury or challenger forecasts"
+  ],
+  "limitations": [
+    "Live provider odds endpoint intentionally not requested by this smoke check",
+    "No production load test or sportsbook execution test performed",
+    "No new improved win-rate or profitable betting claim",
+    "Historical and mock-browser audit evidence remains separately documented in docs/AUDIT_RESEARCH.md"
+  ]
+}
