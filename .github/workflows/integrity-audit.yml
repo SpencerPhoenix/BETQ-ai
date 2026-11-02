@@ -1,0 +1,35 @@
+name: BETQ probability integrity audit
+on:
+  push:
+    branches: ['audit/probability-integrity-20261102']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: betq-integrity-audit
+  cancel-in-progress: true
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and offline regression baseline
+        run: |
+          mkdir -p audit-output
+          npm run check | tee audit-output/syntax.txt
+          npm test | tee audit-output/tests.txt
+      - name: Snapshot tracked source for reproducible audit
+        if: always()
+        run: |
+          git rev-parse HEAD > audit-output/source-commit.txt
+          git archive --format=tar.gz HEAD > audit-output/source.tar.gz
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: betq-integrity-audit
+          path: audit-output/
+          retention-days: 7
