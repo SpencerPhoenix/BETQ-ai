@@ -76,7 +76,7 @@ export function createHandler({
         });
         if (url.pathname === '/api/config') return reply(res, 200, {
           sports: SPORTS, markets: MARKETS,
-          maxAgeMs, refreshMs: 90000,
+          maxAgeMs, refreshMs: null, autoRefresh: false,
           marketOnlySignals: true, nflResearchModel: Boolean(nflArtifact?.readyForResearch),
           wageringEnabled: false, injuryDataConnected: false, halftimeModelConnected: false
         });
