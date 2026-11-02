@@ -101,7 +101,7 @@ test('Reproducible no-edge synthetic worlds show false approval rate as CONDITIO
   assert.equal(a.zeroEdgeSyntheticNull.assumption,'TRUE_P_HOME_EQUALS_RETROSPECTIVE_DE_VIGGED_CLOSING_MARKET');
   assert.ok(a.zeroEdgeSyntheticNull.falseApprovalCount>=0);
   assert.ok(a.zeroEdgeSyntheticNull.falseApprovalCount<=7);
-  assert.equal(a.bettingAuthorized,false);
+  assert.equal(a.realBettingAuthorized,false);
   assert.equal(a.modelPromoted,false);
   assert.equal(a.dataUsedForPriorModelDevelopment,true);
   assert.equal(a.verifiedIncrementalProfitability,false);
