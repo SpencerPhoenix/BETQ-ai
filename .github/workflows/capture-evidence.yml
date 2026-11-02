@@ -1,0 +1,98 @@
+name: BETQ prospective NFL evidence collector
+on:
+  push:
+    paths:
+      - '.github/workflows/capture-evidence.yml'
+  workflow_dispatch:
+  schedule:
+    # One early research snapshot daily (UTC); pregame capture is source-timestamp gated.
+    - cron: '41 11 * * *'
+    # Sunday pre-kickoff windows across DST and typical NFL game slates.
+    - cron: '15 16 * * 0'
+    - cron: '15 17 * * 0'
+    - cron: '15 21 * * 0'
+    - cron: '15 22 * * 0'
+    # Sunday night primetime windows (UTC Monday).
+    - cron: '35 0 * * 1'
+    - cron: '35 1 * * 1'
+permissions:
+  contents: write
+concurrency:
+  group: betq-nfl-forward-evidence
+  cancel-in-progress: false
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate quant and evidence code
+        run: |
+          npm run check
+          npm test
+      - name: Verify deployed version before capturing a pregame forecast
+        shell: bash
+        run: |
+          for attempt in {1..12}; do
+            if curl --max-time 45 -fsS https://betq-ai.onrender.com/api/health |
+              node -e "let s='';process.stdin.on('data',c=>s+=c);process.stdin.on('end',()=>process.exit(JSON.parse(s).version==='0.3.0'?0:1))"; then
+              echo 'Production v0.3 running; collecting real pregame evidence.'
+              exit 0
+            fi
+            sleep 12
+          done
+          echo 'Production v0.3 not ready; no paid odds requested.' >&2
+          exit 1
+      - name: Capture prospectively dated probabilities and reconcile finalized scores
+        run: node scripts/capture-evidence.mjs
+      - name: Audit journal integrity, time ordering, and absence of raw odds
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFile,readdir} from 'node:fs/promises';
+          import {validateJournal,summarizeEvidence} from './src/evidence.mjs';
+          const files=(await readdir('data/evidence')).filter(x=>/^nfl-\d{4}\.json$/.test(x));
+          for(const name of files){
+            const j=validateJournal(JSON.parse(await readFile('data/evidence/'+name,'utf8')));
+            const ids=new Set();
+            for(const s of j.snapshots){
+              if(ids.has(s.id))throw Error('Duplicate immutable observation');
+              ids.add(s.id);
+              if(Date.parse(s.capturedAt)>=Date.parse(s.commenceTime))throw Error('Post-kickoff record');
+              if(s.researchOnly!==true)throw Error('Evidence record incorrectly advertised');
+            }
+            const json=JSON.stringify(j);
+            if(/americanOdds|decimalOdds|bookmakerKey|bookmakers|API_KEY|apiKey/.test(json))
+              throw Error('Raw bookmaker data or secret risk in published journal');
+            const report=summarizeEvidence(j);
+            if(report.forwardMetrics&&report.settledGames<30)throw Error('Premature sample metrics');
+            console.log('PASS '+name+' · '+report.prospectiveGames+' forecast games, '+report.settledGames+' finals');
+          }
+          NODE
+      - name: Commit derived research evidence only when changed
+        shell: bash
+        run: |
+          if [[ -n "$(git status --porcelain -- data/evidence/)" ]]; then
+            git config user.name "betq-evidence-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add data/evidence/
+            git commit -m "data: append prospective NFL evidence and reconcile final scores"
+            for attempt in 1 2 3; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then
+                echo 'Derived evidence committed. Production will auto-deploy.'
+                exit 0
+              fi
+              sleep 3
+            done
+            echo 'Could not safely publish after concurrent main updates' >&2
+            exit 1
+          else
+            echo 'No new evidence. No commit or redeploy needed.'
+          fi
