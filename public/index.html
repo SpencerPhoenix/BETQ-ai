@@ -17,16 +17,17 @@
         <span class="brand-mark">BQ<span class="brand-flare">.</span></span>
         <span class="brand-copy"><strong>BETQ<span>.ai</span></strong><small>QUANT INTELLIGENCE</small></span>
       </a>
-      <div class="sidebar-overline">TERMINAL / v0.4.1</div>
+      <div class="sidebar-overline">TERMINAL / v0.5.0</div>
       <nav class="nav-list" aria-label="Terminal views">
         <button class="nav-item active" type="button" data-tab="overview"><span class="nav-icon">◫</span><span>Command Center</span><span class="nav-shortcut">01</span></button>
         <button class="nav-item" type="button" data-tab="games"><span class="nav-icon">◉</span><span>Game Monitor</span><span class="nav-shortcut">02</span></button>
         <button class="nav-item" type="button" data-tab="signals"><span class="nav-icon">⌁</span><span>Signal Scanner</span><span class="nav-shortcut">03</span></button>
         <button class="nav-item" type="button" data-tab="model"><span class="nav-icon">⊞</span><span>Prediction Lab</span><span class="nav-shortcut">04</span></button>
         <button class="nav-item" type="button" data-tab="evidence"><span class="nav-icon">▤</span><span>Evidence Lab</span><span class="nav-shortcut">05</span></button>
-        <button class="nav-item" type="button" data-tab="execution"><span class="nav-icon">⇅</span><span>Paper Execution</span><span class="nav-shortcut">06</span></button>
-        <button class="nav-item" type="button" data-tab="audit"><span class="nav-icon">◇</span><span>Audit & Quality</span><span class="nav-shortcut">07</span></button>
-        <button class="nav-item" type="button" data-tab="settings"><span class="nav-icon">⚙</span><span>Settings</span><span class="nav-shortcut">08</span></button>
+        <button class="nav-item" type="button" data-tab="pricing"><span class="nav-icon">%</span><span>ROI &amp; CLV Lab</span><span class="nav-shortcut">06</span></button>
+        <button class="nav-item" type="button" data-tab="execution"><span class="nav-icon">⇅</span><span>Paper Execution</span><span class="nav-shortcut">07</span></button>
+        <button class="nav-item" type="button" data-tab="audit"><span class="nav-icon">◇</span><span>Audit & Quality</span><span class="nav-shortcut">08</span></button>
+        <button class="nav-item" type="button" data-tab="settings"><span class="nav-icon">⚙</span><span>Settings</span><span class="nav-shortcut">09</span></button>
       </nav>
       <div class="sidebar-spacer"></div>
       <div class="source-box">
@@ -150,18 +151,51 @@
           <div id="evidence-view" aria-live="polite"></div>
         </section>
 
+        <section class="page" id="page-pricing" aria-label="ROI and closing line price laboratory">
+          <div class="section-heading"><div><div class="eyebrow subtle">06 / PRICE VALIDATION</div><h2>ROI &amp; Closing Line Value</h2></div><span class="tag-neutral">VERIFICATION REQUIRED</span></div>
+          <div id="pricing-overview" aria-live="polite"></div>
+          <div class="pricing-columns">
+            <section class="panel">
+              <div class="panel-head"><div><span class="panel-kicker">HYPOTHETICAL MATH ONLY</span><h3>Odds and settlement calculator</h3></div><span class="header-mini-icon">∑</span></div>
+              <form id="pricing-form" class="pricing-form">
+                <div class="pricing-fields">
+                  <div><label for="pricing-entry">Entry American odds</label><input id="pricing-entry" type="number" step="1" min="-50000" max="50000" value="-110" required></div>
+                  <div><label for="pricing-close">Closing American odds</label><input id="pricing-close" type="number" step="1" min="-50000" max="50000" value="-125" required></div>
+                  <div><label for="pricing-opposite">Opposite closing odds (optional, for no-vig)</label><input id="pricing-opposite" type="number" step="1" min="-50000" max="50000" value="115"></div>
+                  <div><label for="pricing-stake">Hypothetical stake ($)</label><input id="pricing-stake" type="number" min=".01" max="1000000" step=".01" value="110" required></div>
+                  <div><label for="pricing-result">Hypothetical result</label>
+                    <select id="pricing-result"><option value="OPEN">Unsettled</option><option value="WIN" selected>Win</option><option value="LOSS">Loss</option><option value="PUSH">Push</option><option value="VOID">Void</option></select>
+                  </div>
+                </div>
+                <button class="primary-button" type="submit">Calculate price change &amp; example profit</button>
+              </form>
+              <div id="pricing-calculation" class="pricing-calculation" aria-live="polite"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-head"><div><span class="panel-kicker">DEFINITIONS &amp; CONTROLS</span><h3>What counts as evidence?</h3></div><span class="header-mini-icon">◇</span></div>
+              <div class="pricing-notes">
+                <p><strong>Stake-based ROI</strong> = 100 × net profit ÷ total risked on graded bets. WIN, LOSS and PUSH are included; VOID and OPEN are excluded. Paper trades are not account-verified.</p>
+                <p><strong>Raw price movement</strong> = 100 × (entry decimal odds ÷ closing decimal odds − 1). The same selection, period, and handicap must be compared.</p>
+                <p><strong>No-vig closing benchmark</strong> = 100 × (entry decimal odds × margin-free closing probability − 1). Both sides of a matched closing market are required.</p>
+                <p><strong>Actual CLV</strong> requires a documented filled entry and a time-stamped closing quote recorded immediately before kickoff. An illustrative pair is never verified CLV.</p>
+                <p>**Not supported yet:** audited real-money ROI, official closing-price coverage, or independently verified sportsbook fills. Results remain unavailable until those sources exist.</p>
+              </div>
+            </section>
+          </div>
+        </section>
+
         <section class="page" id="page-execution" aria-label="Paper execution">
-          <div class="section-heading"><div><div class="eyebrow subtle">06 / RISK LAB</div><h2>Paper execution</h2></div><span class="danger-inline">● NO REAL WAGERS</span></div>
+          <div class="section-heading"><div><div class="eyebrow subtle">07 / RISK LAB</div><h2>Paper execution</h2></div><span class="danger-inline">● NO REAL WAGERS</span></div>
           <div id="execution-view"></div>
         </section>
 
         <section class="page" id="page-audit" aria-label="Audit and quality">
-          <div class="section-heading"><div><div class="eyebrow subtle">07 / GOVERNANCE</div><h2>Data quality & model audit</h2></div><span class="tag-neutral">TRANSPARENCY FIRST</span></div>
+          <div class="section-heading"><div><div class="eyebrow subtle">08 / GOVERNANCE</div><h2>Data quality & model audit</h2></div><span class="tag-neutral">TRANSPARENCY FIRST</span></div>
           <div id="audit-view"></div>
         </section>
 
         <section class="page" id="page-settings" aria-label="Settings">
-          <div class="section-heading"><div><div class="eyebrow subtle">08 / CONTROL PLANE</div><h2>Terminal settings</h2></div><span class="tag-neutral">LOCAL SETTINGS</span></div>
+          <div class="section-heading"><div><div class="eyebrow subtle">09 / CONTROL PLANE</div><h2>Terminal settings</h2></div><span class="tag-neutral">LOCAL SETTINGS</span></div>
           <div class="settings-grid">
             <section class="panel"><div class="panel-head"><div><span class="panel-kicker">PAPER LEDGER</span><h3>Risk preferences</h3></div></div>
               <label class="form-label" for="bankroll">Paper bankroll ($)</label><input id="bankroll" class="setting-input" type="number" min="10" max="10000000" step="10" value="1000">
