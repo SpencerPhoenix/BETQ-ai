@@ -90,7 +90,7 @@ export function assertSameContract(entry,close){
     fail('INVALID_CONTRACT','Entry and closing quotes are required.');
   for(const k of ['sport','eventId','market','selectionId','period']){
     if(!same(entry,close,k))
-      fail('CONTRACT_MISMATCH','Closing quote must match the same event, market, side and period.');
+      fail('CONTRACT_MISMATCH','Contract mismatch: closing quote must match the same event, market, side and period.');
   }
   if(!MARKET.has(entry.market)||!PERIOD.has(entry.period))
     fail('INVALID_CONTRACT','Unsupported or unrecognized market/period.');
