@@ -34,6 +34,20 @@ A private, durable raw-odds database is **not connected**. Render free web-servi
 
 To support genuine CLV and realistic after-vig ROI, provision a separate authenticated persistent database, capture source-time-aligned individual book prices within a defined pre-kickoff window, independently verify final scores and fill prices, and measure model calibration, closing prices, transaction costs, variance and drawdown. Never claim a model is profitable using only historical accuracy or the first prospective cohort.
 
+
+## Phase 4: prospective Elo vs EPA challenger comparison
+
+Beginning with BETQ.ai v0.4, any independently trained EPA challenger is recorded as an **additional immutable pregame observation**, rather than replacing the earlier Elo forecast. Captures require a real NFL game and a source-valid challenger generated before capture and kickoff. If an Elo-only observation already exists in the same UTC day and time window, the challenger receives a distinct deterministic observation ID. Older Elo snapshots remain unchanged.
+
+- The earliest genuine pregame challenger observation for a game is the challenger comparison cohort.
+- The Elo forecast recorded **at that same timestamp** is the paired baseline, avoiding a comparison between mismatched model vintages.
+- A challenger not available before kickoff cannot be reconstructed after the event, even if its historical feature file exists later.
+- The summary reports prospective challenger games and finalized paired challenger games immediately, but suppresses all challenger performance aggregates until at least **30** previously frozen predictions have independently verified non-tie outcomes.
+- After that threshold, paired Elo/challenger Brier, log loss, Brier difference, and deterministic 95% bootstrap uncertainty become available. This is outcome probability calibration, **not** sportsbook profitability, CLV, or automatic model promotion.
+- The untampered 2025 backtest and the post-v0.4 forward cohort are always labeled separately.
+
+This closes the evaluation loop for a challenger that performed modestly better on a historical 2025 holdout; it does not assume that historical improvement will continue. The current selected game probability remains the original Elo baseline pending multiple forward cohorts and independently verified market-edge evidence.
+
 ## Forward roadmap
 
 Add verified injury/starting quarterback feed; lagged EPA, success rate and opponent-strength features; weather/rest/travel provenance; season-forward validation; source freshness monitoring; and a model promotion process requiring holdout tests plus actual prospective market improvements. Real betting and autonomous execution remain disabled.
