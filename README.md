@@ -91,6 +91,14 @@ Read-only `/api/risk/nfl` provides 10,000-path **conditional week-block bootstra
 
 Reference results: at 1% stake per position, the historical-conditional simulator produced median −62.47% bankroll change, with 82.33% of paths touching the defined half-bankroll threshold. At 0.5% stake, median −37.46%, with 18.76% touching the same threshold. Smaller stakes do not correct an unprofitable selection model. Full assumptions and known limitations: [Central Decision and Risk Governance](docs/RISK_GOVERNANCE.md).
 
+## Pre-registered independent research — residual information and winner's curse
+
+Following an independent research review, BETQ ran a **frozen, retrospective** nested market-offset logistic regression, selected-side disagreement deciles and 400 efficient-market null simulations. The actual market-only benchmark remained stronger on pooled Brier/log loss. In the highest model–market disagreement decile the Elo-selected side was projected at **53.59%** but won **34.66%**, versus a **31.24%** historical closing-market reference. The residual did **not** pass the preregistered promotion-evidence gate.
+
+The efficient-market synthetic null produced **1 false approval in 400 simulated worlds (0.25%)** under its specified assumptions. This is not a universal false-positive rate, and it does not show that the gate has enough power to detect a real small edge.
+
+**No model was promoted, and no betting was enabled.** The historical records use untimestamped closing odds and repeatedly inspected seasons, so they cannot establish achievable entries, CLV or a new pristine holdout. See [pre-registration](docs/RESEARCH_PROTOCOL_RESIDUAL_2026_11_02.md) and [full results](docs/RESIDUAL_RESEARCH_FINDINGS.md). The research can be reproduced with `npm run research:residual`, which uses publicly attributed nflverse schedules and no paid Odds API credits.
+
 ## Deploy
 
 `render.yaml` describes an optional Render Node web service. Link the repository in Render, then enter `ODDS_API_KEY` in the service environment. Deployment is managed separately in Render; a GitHub commit does not guarantee that the service successfully redeployed. Verify the production version at `GET /api/health`.
