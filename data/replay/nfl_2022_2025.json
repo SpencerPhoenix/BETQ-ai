@@ -34805,8 +34805,8 @@
     "Tie games excluded from graded hypothetical bets; count disclosed",
     "Accuracy measures all games, not just filtered candidate picks"
   ],
-  "generatedAt": "2026-11-02T05:09:07.150Z",
-  "sourceSha256": "31517952f47f42b86e2956e55ff59d2480d0f72542cb74cb456c7c04bd7bab01",
+  "generatedAt": "2026-11-02T13:28:13.450Z",
+  "sourceSha256": "349e5e130f3d7c33c94aea0f559d4566b85e9810c0dd325a09b33658d98554db",
   "researchWarnings": [
     "This 2025 historical data and existing BETQ model variants have been repeatedly inspected; these are exploratory reconstructions, not a pristine untouched model trial.",
     "Historical closing odds from nflverse are source-retrospective, not pregame timestamped bet fills.",

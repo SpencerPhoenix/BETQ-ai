@@ -1,14 +1,14 @@
 {
   "schema": 1,
   "version": "nfl-replay-v2",
-  "generatedAt": "2026-11-02T05:09:07.150Z",
+  "generatedAt": "2026-11-02T13:28:13.450Z",
   "source": {
     "name": "nflverse/nflverse-data schedules",
     "credit": "nflverse / Lee Sharpe (CC BY 4.0)",
     "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
     "odds": "Recorded closing moneylines, no historical quote times/book fills"
   },
-  "sourceSha256": "31517952f47f42b86e2956e55ff59d2480d0f72542cb74cb456c7c04bd7bab01",
+  "sourceSha256": "349e5e130f3d7c33c94aea0f559d4566b85e9810c0dd325a09b33658d98554db",
   "model": "SEASON_PRE_FIT_ELO_DAY_FROZEN",
   "defaultThresholdEVPercent": 3,
   "verifiedBettingROI": null,
