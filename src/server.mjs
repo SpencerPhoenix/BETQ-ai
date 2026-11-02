@@ -10,6 +10,8 @@ import { predictNflEvent, MODEL_VERSION } from './nfl-elo.mjs';
 import { nflMoneylineConsensus } from './market-consensus.mjs';
 import { emptyJournal, summarizeEvidence } from './evidence.mjs';
 import { createEvidenceFeed } from './evidence-feed.mjs';
+import { challengerResearchForEvent } from './nfl-efficiency.mjs';
+import { injuryContextForGame } from './injuries.mjs';
 
 const PUBLIC_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../public');
 function loadModelArtifact() {
@@ -19,6 +21,18 @@ function loadModelArtifact() {
   } catch { return null; }
 }
 const NFL_ARTIFACT = loadModelArtifact();
+function loadResearchArtifact(path,validate){
+  try{
+    const file=resolve(dirname(fileURLToPath(import.meta.url)),'../data/'+path);
+    const a=JSON.parse(readFileSync(file,'utf8'));
+    return validate(a)?a:null;
+  }catch{return null;}
+}
+const NFL_EFFICIENCY=loadResearchArtifact('nfl_efficiency.json',a=>
+  a?.schema===1&&a?.version==='nfl-efficiency-1'&&
+  a?.sourceManifest?.project==='nflverse/nflverse-data'&&a?.readyForResearch);
+const NFL_INJURIES=loadResearchArtifact('nfl_injuries.json',a=>
+  a?.schema===1&&a?.source==='NFLVERSE_INJURIES');
 function loadEvidence() {
   try {
     const json=JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), '../data/evidence/nfl-2026.json'), 'utf8'));
@@ -61,6 +75,8 @@ export function createHandler({
   source = createOddsSource(),
   clock = Date.now,
   nflArtifact = NFL_ARTIFACT,
+  nflEfficiency = NFL_EFFICIENCY,
+  nflInjuries = NFL_INJURIES,
   nflEvidence = NFL_EVIDENCE,
   evidenceFeed = NFL_EVIDENCE_FEED,
   maxAgeMs = Number(process.env.ODDS_MAX_AGE_MS) || 600000
@@ -85,17 +101,28 @@ export function createHandler({
           return reply(res, 429, { error: { code: 'LOCAL_RATE_LIMIT', message: 'Too many requests. Try again shortly.' } });
         }
         if (url.pathname === '/api/health') return reply(res, 200, {
-          status: 'ok', app: 'BETQ.ai', version: '0.3.0',
+          status: 'ok', app: 'BETQ.ai', version: '0.4.0',
           serverTime: new Date(now).toISOString(), odds: source.status(),
           nflModel: { available: Boolean(nflArtifact?.readyForResearch), version: nflArtifact?.version || null },
           forwardEvidence: { status: nflEvidence.status, prospectiveGames: nflEvidence.prospectiveGames,
-            settledGames: nflEvidence.settledGames }
+            settledGames: nflEvidence.settledGames },
+          nflIntelligence: {
+            efficiencyChallengerAvailable:Boolean(nflEfficiency),
+            efficiencyChallengerPromoted:false,
+            injurySourceAvailable:Boolean(nflInjuries),
+            startingQuarterbacksVerified:false
+          }
         });
         if (url.pathname === '/api/config') return reply(res, 200, {
           sports: SPORTS, markets: MARKETS,
           maxAgeMs, refreshMs: null, autoRefresh: false,
           marketOnlySignals: true, nflResearchModel: Boolean(nflArtifact?.readyForResearch),
-          forwardEvidenceEnabled: true, realMoneyResultsVerified: false,
+          forwardEvidenceEnabled: true,
+          nflEfficiencyChallengerAvailable:Boolean(nflEfficiency),
+          injuryReportAvailable:Boolean(nflInjuries),
+          startingQuarterbacksVerified:false,
+          modelAutomaticallyPromoted:false,
+          realMoneyResultsVerified: false,
           closingLineValueVerified: false,
           wageringEnabled: false, injuryDataConnected: false, halftimeModelConnected: false
         });
@@ -116,6 +143,47 @@ export function createHandler({
             completed2026: nflArtifact.completed2026, params: nflArtifact.params,
             ratings: nflArtifact.ratings, limitations: nflArtifact.limitations,
             use: 'RESEARCH_ONLY'
+          });
+        }
+        if (url.pathname === '/api/model/efficiency') {
+          if(!nflEfficiency)return reply(res,200,{
+            available:false,reason:'CHALLENGER_ARTIFACT_NOT_AVAILABLE'
+          });
+          const sample=challengerResearchForEvent({
+            home_team:'Kansas City Chiefs',away_team:'Las Vegas Raiders',
+            commence_time:new Date(now+86400000).toISOString()
+          },0.5,nflEfficiency,now);
+          return reply(res,200,{
+            available:sample.available,
+            reason:sample.available?null:sample.reason,
+            version:nflEfficiency.version,generatedAt:nflEfficiency.generatedAt,
+            sourceManifest:nflEfficiency.sourceManifest,
+            training:nflEfficiency.training,
+            tuning:nflEfficiency.tuning,
+            calibration:nflEfficiency.calibration,
+            holdout:nflEfficiency.holdout,
+            coverage:nflEfficiency.coverage,
+            researchOnly:true,
+            promotableInHistoricalHoldout:nflEfficiency.promotable,
+            automaticallyPromoted:false,
+            independentProspectiveWinRate:null,
+            verifiedRealMoneyEdge:false,
+            caveats:nflEfficiency.limitations
+          });
+        }
+        if (url.pathname === '/api/injuries/nfl') {
+          if(!nflInjuries)return reply(res,200,{
+            available:false,reason:'REPORT_SOURCE_NOT_AVAILABLE'
+          });
+          const age=now-Date.parse(nflInjuries.sourceUpdatedAt);
+          return reply(res,200,{
+            available:age>=0&&age<=72*3600000,
+            source:nflInjuries.source,sourceUpdatedAt:nflInjuries.sourceUpdatedAt,
+            playerTimestampAvailable:nflInjuries.perPlayerTimestampsAvailable,
+            season:nflInjuries.season,reportCount:nflInjuries.reportCount,
+            upcomingFixtures:nflInjuries.fixtures?.length||0,
+            starterVerified:false,modelProbabilitiesAdjusted:false,
+            advisory:nflInjuries.advisory
           });
         }
         if (url.pathname === '/api/evidence/nfl') {
@@ -147,6 +215,10 @@ export function createHandler({
                     home_team: game.homeTeam, away_team: game.awayTeam
                   }, nflArtifact, now);
               game.independentModel = projection;
+              game.efficiencyChallenger = projection.available ?
+                challengerResearchForEvent(rawGame,projection.homeWinProbability,nflEfficiency,now) :
+                {available:false,reason:'ELO_BASELINE_NOT_AVAILABLE'};
+              game.injuryContext = injuryContextForGame(rawGame,nflInjuries,now);
               if (projection.available) {
                 for (const signal of game.opportunities) {
                   const p = signal.side === 'home' ? projection.homeWinProbability
@@ -167,6 +239,8 @@ export function createHandler({
               'Market consensus is not an independently validated win-probability model.',
               'NFL pregame Elo model is independently backtested on 2025 outcomes but is not injury or starter adjusted; compare with sportsbook market carefully.',
               'Forward evidence is prospectively recorded; reported performance appears only after enough games have final results.',
+              'NFL EPA/success/rest challenger is research-only and never auto-promoted from a historical test.',
+              'Injury reports are source-timestamped; starting QB decisions and injury probability effects remain unverified.',
               'Other sports and period/halftime bets do not have a trained model yet.',
               'No real wagers are placed. Demo events and prices are entirely synthetic.'
             ]
