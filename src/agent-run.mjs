@@ -42,6 +42,14 @@ export function assembleAgentRun(slate,replaySummary,{now=Date.now(),marketChall
   const allIndependentWeightsZero=nestedValidation&&gatedYears.every(y=>y.modelContributionWeight===0);
   const freshMarketGames=games.filter(g=>!g.started&&g.marketConsensus?.available===true).length;
   const favoritesBenchmark=marketChallenge?.pooledPolicy?.MARKET_FAVORITE_65||null;
+  const auditYears=Array.isArray(marketChallenge?.years)?marketChallenge.years:[];
+  const underdogCount=auditYears.reduce((n,y)=>n+(Number.isInteger(y.falseEdgeAudit?.marketUnderdogCandidates)?
+    y.falseEdgeAudit.marketUnderdogCandidates:0),0);
+  const priceSelections=auditYears.reduce((n,y)=>n+(Number.isInteger(y.falseEdgeAudit?.original3PercentCandidates)?
+    y.falseEdgeAudit.original3PercentCandidates:0),0);
+  const underdogShare=priceSelections>0?100*underdogCount/priceSelections:null;
+  const selectionBiasReady=auditYears.length>=4&&priceSelections>=500;
+  const selectionBiasFlag=selectionBiasReady&&underdogShare>=75;
   const yearDetails=bench.map(y=>({season:y.season,
     modelBrier:y.allGameForecast?.brier??null,
     marketBrier:y.closingMarketBenchmark?.brier??null}));
@@ -62,6 +70,15 @@ export function assembleAgentRun(slate,replaySummary,{now=Date.now(),marketChall
           'not approved for real-time price execution'):
         'No verified prior-year market-adjusted calibration artifact',
       source:'NESTED_YEARLY_MARKET_CHALLENGE'},
+    {id:'selection',name:'Selection Bias Guardian',
+      state:!selectionBiasReady?'INSUFFICIENT_REPLAY':
+        selectionBiasFlag?'UNDERDOG_CONCENTRATION':'HISTORICAL_SELECTION_REVIEW',
+      detail:selectionBiasReady?
+        underdogCount+' of '+priceSelections+
+        ' original positive-EV candidates were priced as market underdogs ('+
+        round(underdogShare,2)+'%). Old Elo selection optimism invalidates automatic promotion.':
+        'No complete source-attributed candidate-position distribution',
+      source:'HISTORICAL_CLOSING_REFERENCE_NOT_EXECUTABLE'},
     {id:'history',name:'Historical Audit Agent',state:validHistorical?'MARKET_BENCHMARK_READY':'NO_REPLAY',
       detail:validHistorical?bench.length+' historical seasons compared; market better on all '+bench.length+
         ': '+(marketWins?'yes':'no'):'No valid season-by-season closing-price replay',
@@ -97,6 +114,15 @@ export function assembleAgentRun(slate,replaySummary,{now=Date.now(),marketChall
     nestedCalibrationReady:Boolean(nestedValidation),
     allIndependentContributionsRejected:Boolean(allIndependentWeightsZero),
     freshThreeBookMarketGames:freshMarketGames,
+    historicalUnderdogSelectionAudit:{
+      available:selectionBiasReady,
+      candidateSelections:priceSelections||null,
+      marketUnderdogSelections:selectionBiasReady?underdogCount:null,
+      marketUnderdogSharePercent:selectionBiasReady?round(underdogShare,2):null,
+      riskFlag:selectionBiasFlag?'MODEL_OVERSELECTS_MARKET_UNDERDOGS':'NOT_ESTABLISHED',
+      source:'UNVERIFIED_HISTORICAL_CLOSING_REFERENCE',
+      noVerifiedROI:true
+    },
     marketFavorite65Historical:{
       graded:favoritesBenchmark?.graded??null,
       winRatePercent:favoritesBenchmark?.winRatePercent??null,
