@@ -4,7 +4,7 @@
   const $ = (id) => document.getElementById(id);
   const STORE = 'betq-terminal-v1';
   const LEDGER = 'betq-paper-v1';
-  const allowedTabs = ['overview', 'games', 'signals', 'model', 'execution', 'audit', 'settings'];
+  const allowedTabs = ['overview', 'games', 'signals', 'model', 'evidence', 'execution', 'audit', 'settings'];
   const marketLabels = { h2h: 'Moneyline', spreads: 'Spread', totals: 'Total' };
   const sportLabels = {
     americanfootball_nfl: 'NFL', basketball_nba: 'NBA', baseball_mlb: 'MLB',
@@ -21,7 +21,7 @@
     mode: prefs.mode === 'demo' ? 'demo' : 'live',
     bankroll: Number.isFinite(prefs.bankroll) && prefs.bankroll >= 10 ? prefs.bankroll : 1000,
     maxRisk: Number.isFinite(prefs.maxRisk) && prefs.maxRisk >= 0.1 && prefs.maxRisk <= 1 ? prefs.maxRisk : 1,
-    slate: null, error: null, sourceHealth: null, nflModel: null,
+    slate: null, error: null, sourceHealth: null, nflModel: null, evidence: null,
     selectedId: null, search: '', sort: 'ev', watchOnly: false,
     loading: false, ledger: Array.isArray(safeGet(LEDGER, [])) ? safeGet(LEDGER, []) : []
   };
@@ -83,13 +83,14 @@
     header.style.display = tab === 'overview' ? '' : 'none';
     $('breadcrumb-page').textContent = ({
       overview: 'COMMAND CENTER', games: 'GAME MONITOR', signals: 'SIGNAL SCANNER',
-      model: 'PREDICTION LAB', execution: 'PAPER EXECUTION', audit: 'AUDIT & QUALITY', settings: 'SETTINGS'
+      model: 'PREDICTION LAB', evidence: 'FORWARD EVIDENCE', execution: 'PAPER EXECUTION', audit: 'AUDIT & QUALITY', settings: 'SETTINGS'
     })[tab];
     $('sidebar').classList.remove('open');
     if (tab === 'settings') syncSettings();
     if (tab === 'execution') renderExecution();
     if (tab === 'audit') renderAudit();
     if (tab === 'model') renderModel();
+    if (tab === 'evidence') renderEvidence();
     if (tab === 'signals') renderSignals();
     if (tab === 'games') renderGames();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -466,6 +467,96 @@
       'the model found a profitable advantage.</p></div>';
   }
 
+
+  function renderEvidence() {
+    const root = $('evidence-view');
+    if (!root) return;
+    const e = state.evidence;
+    if (!e) {
+      root.innerHTML = empty('Loading forward validation', 'Checking prospectively frozen predictions and final results…');
+      return;
+    }
+    if (e.error || e.schema !== 1) {
+      root.innerHTML = empty('Evidence service unavailable', 'The evidence API has not finished deploying. Historical NFL Prediction Lab remains available.');
+      return;
+    }
+    const sample = Math.max(0, Number(e.settledGames) || 0);
+    const progress = Math.min(30, sample);
+    const qualified = Boolean(e.forwardMetrics);
+    const positive = e.marketComparison?.consensusMinusModelBrier > 0;
+    const stats = '<div class="metric-grid">' +
+      metric('PREGAME FORECASTS', String(e.prospectiveGames || 0), 'Unique frozen before kickoff', 'cyan', '◫') +
+      metric('FINALS MATCHED', String(sample), 'Later reconciled results · ties excluded', 'lime', '✓') +
+      metric('SAME-TIME MARKET PAIRS', String(e.pairedMarketGames || 0), 'Independent median no-vig comparisons', 'violet', '⌁') +
+      metric('FORWARD BRIER SCORE', qualified ? num(e.forwardMetrics.brier, 5) : '—',
+        qualified ? 'Newly observed games only' : 'Requires 30 completed games', '', '◇') +
+      '</div>';
+    const gate = '<section class="panel evidence-collection"><div class="panel-head"><div>' +
+      '<span class="panel-kicker">PROSPECTIVE EVIDENCE GATE</span><h3>' +
+      (qualified ? 'Forward results accumulating' : 'Collecting real outcomes') +
+      '</h3></div><span class="status-tag ' + (qualified ? 'watch' : 'pass') + '">' +
+      (qualified ? 'SAMPLE AVAILABLE' : 'NOT ENOUGH GAMES') + '</span></div>' +
+      '<div class="evidence-body"><p>Every forecast is timestamped before kickoff, retained without rewriting, then matched to a subsequent nflverse final score. ' +
+      'BETQ.ai does not backfill historical model probabilities and pass them off as past live forecasts.</p>' +
+      '<div class="evidence-progress-head"><b>' + sample + ' of 30 completed games</b>' +
+      '<span>' + e.pendingGames + ' still pending</span></div>' +
+      '<progress class="evidence-meter" max="30" value="' + progress + '"></progress>' +
+      (qualified ? '<div class="evidence-performance"><div><span>Forward winner accuracy</span><strong>' +
+        pct(e.forwardMetrics.winnerAccuracy, 2) + '</strong></div><div><span>Forward log loss</span><strong>' +
+        num(e.forwardMetrics.logLoss, 5) + '</strong></div></div>' :
+        '<p class="evidence-warning">Winner accuracy, model advantage and any performance claims stay withheld until at least 30 independently settled games are available. ' +
+        'Thirty games is an initial reporting threshold, not sufficient to prove statistical or financial superiority.</p>') +
+      '</div></section>';
+    const mc = e.marketComparison;
+    const benchmark = '<section class="panel"><div class="panel-head"><div>' +
+      '<span class="panel-kicker">PAIRED MARKET BENCHMARK</span><h3>Elo vs sportsbook consensus</h3></div>' +
+      '<span class="header-mini-icon">≋</span></div>' +
+      (mc ? '<div class="evidence-body"><p>Same pregame snapshot and same finalized games: <b>' +
+        mc.n + ' paired forecasts</b>.</p><div class="evidence-performance"><div><span>Model Brier</span><strong>' +
+        num(mc.modelBrier, 5) + '</strong></div><div><span>Market Brier</span><strong>' +
+        num(mc.consensusBrier, 5) + '</strong></div></div>' +
+        '<div class="evidence-performance"><div><span>Market minus model Brier</span><strong class="' +
+        (positive ? 'positive' : 'negative') + '">' + signed(mc.consensusMinusModelBrier, 5) +
+        '</strong></div><div><span>95% bootstrap interval</span><strong>' +
+        signed(mc.confidence95?.lower, 5) + ' to ' + signed(mc.confidence95?.upper, 5) +
+        '</strong></div></div><p>Lower Brier is better. A positive difference favors the model on this sample; ' +
+        'it is not proof of a profitable betting strategy or true closing-line value.</p></div>' :
+        empty('Market comparison not yet reportable',
+          'At least 30 finalized NFL games must contain both frozen model probabilities and the same-time, de-vigged multi-book market reference.')) +
+      '</section>';
+    const dates = (e.pendingPreview || []).map(x =>
+      '<div class="evidence-row"><div><strong>' + esc(x.away) + ' @ ' + esc(x.home) +
+      '</strong><small>' + esc(x.gameDate) + ' · frozen ' + esc(when(x.capturedAt)) +
+      '</small></div><div class="evidence-numbers"><b>' +
+      pct(x.modelHomeProbability) + '</b><small>Market: ' +
+      (Number.isFinite(x.marketHomeProbability) ? pct(x.marketHomeProbability) : 'unavailable') +
+      '</small></div></div>').join('');
+    const recent = (e.recentResults || []).map(x =>
+      '<div class="evidence-row"><div><strong>' + esc(x.away) + ' @ ' + esc(x.home) +
+      '</strong><small>' + esc(x.gameDate) + ' · final ' + esc(x.score) +
+      ' · ' + esc(x.result) + '</small></div><div class="evidence-numbers"><b>' +
+      pct(x.modelHomeProbability) + '</b><small>Brier: ' + num(x.brier, 4) +
+      '</small></div></div>').join('');
+    const ledger = '<section class="panel"><div class="panel-head"><div>' +
+      '<span class="panel-kicker">IMMUTABLE FORECAST JOURNAL</span><h3>Pending game evidence</h3></div>' +
+      '<span class="faint-caption">HOME TEAM MODEL P</span></div>' +
+      (dates ? '<div class="evidence-list">' + dates + '</div>' :
+        empty('No pending tracked games', 'The scheduled collector has not captured eligible future NFL games yet.')) +
+      '</section><section class="panel"><div class="panel-head"><div>' +
+      '<span class="panel-kicker">SOURCE-ALIGNED RESULTS</span><h3>Finalized forecast results</h3></div>' +
+      '<span class="faint-caption">HOME TEAM MODEL P</span></div>' +
+      (recent ? '<div class="evidence-list">' + recent + '</div>' :
+        empty('No completed forward forecasts yet', 'Results appear here after previously captured games are finalized in nflverse schedules.')) +
+      '</section>';
+    root.innerHTML = stats + '<div class="evidence-columns">' + gate + benchmark + '</div>' +
+      '<div class="evidence-columns evidence-lists">' + ledger + '</div>' +
+      '<div class="notice info evidence-footer"><span>◇</span><p><b>Auditable, not promotional.</b> ' +
+      'No verified closing-line value, no real-money ROI, no betting orders, and no presumed model advantage. ' +
+      'The historical 2025 backtest is not included in this prospective cohort. ' +
+      'Scores come from community-maintained nflverse schedules. Last evidence publication: ' +
+      esc(when(e.generatedAt)) + '.</p></div>';
+  }
+
   function renderAudit() {
     const s = state.slate;
     const q = s?.quota;
@@ -481,6 +572,12 @@
           num(state.nflModel.holdout.brier,5) + '; injury/starting QB adjustment unavailable' :
           'No current source-verified, backtested NFL model available',
         state.nflModel?.available ? 'RESEARCH' : 'UNAVAILABLE', Boolean(state.nflModel?.available)),
+      auditRow('Prospective outcome tracking',
+        state.evidence ? String(state.evidence.prospectiveGames) + ' games frozen pregame · ' +
+          String(state.evidence.settledGames) + ' scored against later results' :
+          'Evidence journal not yet available',
+        state.evidence?.settledGames >= 30 ? 'SAMPLE READY' : 'COLLECTING',
+        state.evidence?.settledGames >= 30),
       auditRow('Injuries and lineup verification', 'Not integrated. Must be verified independently.', 'NOT VERIFIED', false),
       auditRow('Weather and venue conditions', 'Not integrated. Must be verified independently.', 'NOT VERIFIED', false),
       auditRow('First half / halftime model', 'Not supplied by the three featured markets endpoint', 'NOT MODELED', false),
@@ -523,13 +620,18 @@
   function render() {
     renderFilters(); renderFeed(); renderBanner(); renderMetrics();
     renderOpportunities(); renderSpotlight(); renderChart();
-    renderGames(); renderSignals(); renderModel(); renderExecution(); renderAudit();
+    renderGames(); renderSignals(); renderModel(); renderEvidence(); renderExecution(); renderAudit();
   }
 
   async function loadModel() {
     try { state.nflModel = await requestJSON('/api/model/nfl'); }
     catch { state.nflModel = { available:false, reason:'MODEL_ENDPOINT_UNAVAILABLE' }; }
     renderModel(); renderAudit(); renderSpotlight();
+  }
+  async function loadEvidence() {
+    try { state.evidence = await requestJSON('/api/evidence/nfl'); }
+    catch { state.evidence = { error:'EVIDENCE_ENDPOINT_UNAVAILABLE' }; }
+    renderEvidence(); renderAudit();
   }
   async function loadHealth() {
     try { state.sourceHealth = await requestJSON('/api/health'); }
@@ -597,7 +699,7 @@
     const result = event.target.closest('[data-settle]');
     if (result) { settlePaper(result.dataset.settle, result.dataset.result); return; }
     const action = event.target.closest('[data-action]');
-    if (action?.dataset.action === 'refresh') { loadSlate(); loadHealth(); return; }
+    if (action?.dataset.action === 'refresh') { loadSlate(); loadHealth(); loadEvidence(); return; }
     if (action?.dataset.action === 'scores') { loadScores(); return; }
     if (action?.dataset.action === 'save-settings') { saveSettings(); return; }
   });
@@ -623,5 +725,6 @@
   render();
   loadHealth();
   loadModel();
+  loadEvidence();
   loadSlate();
 })();
