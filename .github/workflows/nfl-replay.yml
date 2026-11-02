@@ -1,0 +1,74 @@
+name: BETQ historical NFL as-of replay
+on:
+  push:
+    paths:
+      - 'src/historical-replay.mjs'
+      - 'scripts/generate-replay.mjs'
+      - '.github/workflows/nfl-replay.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: betq-historical-replay
+  cancel-in-progress: true
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Gate replay arithmetic, outcome chronology and UI integrity
+        run: |
+          npm run check
+          npm test
+      - name: Reconstruct four historical NFL seasons with frozen as-of models
+        run: node scripts/generate-replay.mjs
+      - name: Validate explicit no-hindsight and non-execution labels
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync('data/replay/nfl_2022_2025.json','utf8'));
+          const s=JSON.parse(readFileSync('data/replay/summary.json','utf8'));
+          if(r.version!=='nfl-replay-v1'||r.years.length!==4||
+             s.verifiedBettingROI!==null||s.verifiedCLV!==null||
+             r.verifiedCLV!==false||r.verifiedROI!==false)
+            throw Error('Research replay or source honesty gate failed');
+          for(const y of r.years){
+            if(y.fit.tunedYears[1]>=y.season-2||
+               y.fit.calibrationYears[1]>=y.season||
+               y.allGameForecast.n<240||
+               y.closingMoneylineCoverage.validGamesWithBothPrices<160)
+              throw Error('Inadequate independent season '+y.season);
+            if(y.decisions.some(d=>d.modelBuiltUsingTestOutcomes!==false||d.quoteTimeVerified!==false))
+              throw Error('Invalid future-knowledge / quote-time claim');
+            console.log('AUDIT '+y.season+' '+y.nonTieGames+' forecasts; market available '+
+              y.closingMoneylineCoverage.validGamesWithBothPrices+'/'+y.nonTieGames);
+          }
+          console.log('NO VERIFIED BOOKMAKER FILLS / ROI / CLV: PASS');
+          NODE
+      - name: Publish only derived decision research after validation
+        shell: bash
+        run: |
+          if [[ -n "$(git status --porcelain -- data/replay/)" ]]; then
+            git config user.name "betq-replay-research-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add data/replay/
+            git commit -m "data: publish season-frozen historical NFL replay and hypothetical closing-price decisions"
+            for n in 1 2 3; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then
+                echo "Replay published after passing no-hindsight gates."
+                exit 0
+              fi
+              sleep 3
+            done
+            echo "Could not safely update replay report due to concurrent commits" >&2
+            exit 1
+          else
+            echo "Historical source unchanged; no replay report update."
+          fi
