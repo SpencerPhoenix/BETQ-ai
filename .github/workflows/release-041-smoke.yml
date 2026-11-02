@@ -1,0 +1,59 @@
+name: BETQ 0.4.1 free production smoke
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/release-041-smoke.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify live release and safe research boundaries
+        shell: bash
+        run: |
+          mkdir -p audit-output
+          node --input-type=module <<'NODE'
+          import {writeFileSync} from 'node:fs';
+          const base='https://betq-ai.onrender.com';
+          const wait=ms=>new Promise(r=>setTimeout(r,ms));
+          async function read(path){
+            const r=await fetch(base+path,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(45000)});
+            if(!r.ok)throw Error(path+': HTTP '+r.status);
+            return r.json();
+          }
+          let health;
+          for(let i=0;i<24;i++){
+            try{health=await read('/api/health');if(health.version==='0.4.1')break;}catch{}
+            await wait(10000);
+          }
+          if(health?.version!=='0.4.1')throw Error('Release 0.4.1 not live');
+          const [config,model,injury,evidence,demo]=await Promise.all([
+            read('/api/config'),read('/api/model/efficiency'),read('/api/injuries/nfl'),
+            read('/api/evidence/nfl'),read('/api/slate?mode=demo&sport=americanfootball_nfl&market=h2h')
+          ]);
+          if(config.wageringEnabled!==false||config.autoRefresh!==false)throw Error('Unexpected execution/polling');
+          if(model.automaticallyPromoted!==false||model.verifiedRealMoneyEdge!==false)throw Error('Unsupported model claim');
+          if(injury.starterVerified!==false||injury.modelProbabilitiesAdjusted!==false)throw Error('Unsupported starter claim');
+          if(evidence.realizedROI!==null||evidence.verifiedCLV!==null||evidence.marketBeatingEdgeEstablished!==false)throw Error('Unsupported performance claim');
+          if(!demo.demo||demo.events.some(e=>e.efficiencyChallenger||e.injuryContext))throw Error('Synthetic/live mixing');
+          const page=await fetch(base+'/',{signal:AbortSignal.timeout(30000)});const html=await page.text();
+          if(!page.ok||!html.includes('v0.4.1'))throw Error('UI version mismatch');
+          const result={checkedAt:new Date().toISOString(),version:health.version,homepageStatus:page.status,
+            modelAvailable:model.available,automaticModelPromotion:model.automaticallyPromoted,
+            injuryStarterVerified:injury.starterVerified,evidenceGames:evidence.prospectiveGames,
+            completedForwardGames:evidence.settledGames,realizedROI:evidence.realizedROI,verifiedCLV:evidence.verifiedCLV,
+            paidOddsRequests:0,result:'PASS'};
+          console.log(JSON.stringify(result,null,2));writeFileSync('audit-output/production-smoke.json',JSON.stringify(result,null,2));
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: betq-041-production-verification
+          path: audit-output/
+          retention-days: 14
