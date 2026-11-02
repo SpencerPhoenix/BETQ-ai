@@ -1,0 +1,272 @@
+{
+  "schema": 1,
+  "version": "betq-promotion-power-v1",
+  "preregistered": true,
+  "protocol": "docs/RESEARCH_PROTOCOL_POWER_MARGIN_2026_11_02.md",
+  "modelPromoted": false,
+  "bettingAuthorized": false,
+  "verifiedROI": null,
+  "verifiedCLV": null,
+  "dataStatus": "SYNTHETIC_OUTCOMES_ON_SOURCE_DERIVED_GAME_FRAMES",
+  "realWorldFalsePositiveRateKnown": false,
+  "bootstrapDraws": 300,
+  "worldsPerCell": 2000,
+  "seed": 20261102,
+  "syntheticNullCheck": {
+    "scenario": "NULL_MARKET_IS_TRUE",
+    "isSingleCandidateOnly": true,
+    "estimatedFalseApprovalRatePercent": 0.25
+  },
+  "results": [
+    {
+      "id": "NULL_MARKET_IS_TRUE",
+      "signalLogitScale": 0,
+      "signalObservationCorrelation": 0.8,
+      "weekShockSd": 0,
+      "intendedSignalCoveragePercent": 100,
+      "observedSignalCoveragePercent": 100,
+      "worlds": 2000,
+      "originalStrictGate": {
+        "approved": 5,
+        "passRatePercent": 0.25,
+        "wilson95Percent": [
+          0.11,
+          0.58
+        ]
+      },
+      "diagnosticPooledGate": {
+        "approved": 8,
+        "passRatePercent": 0.4,
+        "wilson95Percent": [
+          0.2,
+          0.79
+        ],
+        "multiplicityControlled": false,
+        "productionReady": false
+      },
+      "threePositiveYearsRatePercent": 14.65,
+      "meanOracleExpectedLogLossGain": 0,
+      "meanFittedResidualLogLossGain": -0.000645,
+      "fittedResidualLogLossGainP05": -0.002595,
+      "fittedResidualLogLossGainMedian": -0.00049,
+      "fittedResidualLogLossGainP95": 0.000796
+    },
+    {
+      "id": "WEAK_SIGNAL",
+      "signalLogitScale": 0.05,
+      "signalObservationCorrelation": 0.8,
+      "weekShockSd": 0,
+      "intendedSignalCoveragePercent": 100,
+      "observedSignalCoveragePercent": 100,
+      "worlds": 2000,
+      "originalStrictGate": {
+        "approved": 9,
+        "passRatePercent": 0.45,
+        "wilson95Percent": [
+          0.24,
+          0.85
+        ]
+      },
+      "diagnosticPooledGate": {
+        "approved": 11,
+        "passRatePercent": 0.55,
+        "wilson95Percent": [
+          0.31,
+          0.98
+        ],
+        "multiplicityControlled": false,
+        "productionReady": false
+      },
+      "threePositiveYearsRatePercent": 19.8,
+      "meanOracleExpectedLogLossGain": 0.000266,
+      "meanFittedResidualLogLossGain": -0.00054,
+      "fittedResidualLogLossGainP05": -0.00256,
+      "fittedResidualLogLossGainMedian": -0.000433,
+      "fittedResidualLogLossGainP95": 0.001156
+    },
+    {
+      "id": "MODERATE_SIGNAL",
+      "signalLogitScale": 0.1,
+      "signalObservationCorrelation": 0.8,
+      "weekShockSd": 0,
+      "intendedSignalCoveragePercent": 100,
+      "observedSignalCoveragePercent": 100,
+      "worlds": 2000,
+      "originalStrictGate": {
+        "approved": 29,
+        "passRatePercent": 1.45,
+        "wilson95Percent": [
+          1.01,
+          2.07
+        ]
+      },
+      "diagnosticPooledGate": {
+        "approved": 37,
+        "passRatePercent": 1.85,
+        "wilson95Percent": [
+          1.35,
+          2.54
+        ],
+        "multiplicityControlled": false,
+        "productionReady": false
+      },
+      "threePositiveYearsRatePercent": 32.15,
+      "meanOracleExpectedLogLossGain": 0.001065,
+      "meanFittedResidualLogLossGain": -0.000017,
+      "fittedResidualLogLossGainP05": -0.002289,
+      "fittedResidualLogLossGainMedian": -0.000096,
+      "fittedResidualLogLossGainP95": 0.00245
+    },
+    {
+      "id": "STRONGER_SIGNAL",
+      "signalLogitScale": 0.2,
+      "signalObservationCorrelation": 0.8,
+      "weekShockSd": 0,
+      "intendedSignalCoveragePercent": 100,
+      "observedSignalCoveragePercent": 100,
+      "worlds": 2000,
+      "originalStrictGate": {
+        "approved": 248,
+        "passRatePercent": 12.4,
+        "wilson95Percent": [
+          11.03,
+          13.92
+        ]
+      },
+      "diagnosticPooledGate": {
+        "approved": 291,
+        "passRatePercent": 14.55,
+        "wilson95Percent": [
+          13.07,
+          16.16
+        ],
+        "multiplicityControlled": false,
+        "productionReady": false
+      },
+      "threePositiveYearsRatePercent": 66.8,
+      "meanOracleExpectedLogLossGain": 0.004226,
+      "meanFittedResidualLogLossGain": 0.002059,
+      "fittedResidualLogLossGainP05": -0.001289,
+      "fittedResidualLogLossGainMedian": 0.001798,
+      "fittedResidualLogLossGainP95": 0.006465
+    },
+    {
+      "id": "STRONGER_NOISY_SIGNAL",
+      "signalLogitScale": 0.2,
+      "signalObservationCorrelation": 0.5,
+      "weekShockSd": 0,
+      "intendedSignalCoveragePercent": 100,
+      "observedSignalCoveragePercent": 100,
+      "worlds": 2000,
+      "originalStrictGate": {
+        "approved": 69,
+        "passRatePercent": 3.45,
+        "wilson95Percent": [
+          2.74,
+          4.34
+        ]
+      },
+      "diagnosticPooledGate": {
+        "approved": 78,
+        "passRatePercent": 3.9,
+        "wilson95Percent": [
+          3.14,
+          4.84
+        ],
+        "multiplicityControlled": false,
+        "productionReady": false
+      },
+      "threePositiveYearsRatePercent": 40.25,
+      "meanOracleExpectedLogLossGain": 0.004225,
+      "meanFittedResidualLogLossGain": 0.000353,
+      "fittedResidualLogLossGainP05": -0.002172,
+      "fittedResidualLogLossGainMedian": 0.000217,
+      "fittedResidualLogLossGainP95": 0.003272
+    },
+    {
+      "id": "STRONGER_WITH_WEEK_DEPENDENCE",
+      "signalLogitScale": 0.2,
+      "signalObservationCorrelation": 0.8,
+      "weekShockSd": 0.15,
+      "intendedSignalCoveragePercent": 100,
+      "observedSignalCoveragePercent": 100,
+      "worlds": 2000,
+      "originalStrictGate": {
+        "approved": 268,
+        "passRatePercent": 13.4,
+        "wilson95Percent": [
+          11.98,
+          14.96
+        ]
+      },
+      "diagnosticPooledGate": {
+        "approved": 307,
+        "passRatePercent": 15.35,
+        "wilson95Percent": [
+          13.84,
+          17
+        ],
+        "multiplicityControlled": false,
+        "productionReady": false
+      },
+      "threePositiveYearsRatePercent": 67.6,
+      "meanOracleExpectedLogLossGain": 0.006576,
+      "meanFittedResidualLogLossGain": 0.001997,
+      "fittedResidualLogLossGainP05": -0.001174,
+      "fittedResidualLogLossGainMedian": 0.001726,
+      "fittedResidualLogLossGainP95": 0.006136
+    },
+    {
+      "id": "CONTEXT_SPARSE_20_PERCENT",
+      "signalLogitScale": 0.2,
+      "signalObservationCorrelation": 0.8,
+      "weekShockSd": 0,
+      "intendedSignalCoveragePercent": 20,
+      "observedSignalCoveragePercent": 19.98,
+      "worlds": 2000,
+      "originalStrictGate": {
+        "approved": 64,
+        "passRatePercent": 3.2,
+        "wilson95Percent": [
+          2.51,
+          4.07
+        ]
+      },
+      "diagnosticPooledGate": {
+        "approved": 74,
+        "passRatePercent": 3.7,
+        "wilson95Percent": [
+          2.96,
+          4.62
+        ],
+        "multiplicityControlled": false,
+        "productionReady": false
+      },
+      "threePositiveYearsRatePercent": 36.05,
+      "meanOracleExpectedLogLossGain": 0.000846,
+      "meanFittedResidualLogLossGain": 0.000188,
+      "fittedResidualLogLossGainP05": -0.001152,
+      "fittedResidualLogLossGainMedian": 0.000057,
+      "fittedResidualLogLossGainP95": 0.001881
+    }
+  ],
+  "limitations": [
+    "Original two-year ridge logistic fit and season gate are identical to residual research, but the bootstrap is reduced to 300 resamples per synthetic world.",
+    "Market has true Bernoulli probability by construction only in the efficient-market null cell.",
+    "A power estimate requires a declared signal strength and observation correlation, not an inferred actual NFL edge.",
+    "No correction for searching across the many models actually tried by BETQ in development.",
+    "The simpler pooled-only gate is a diagnostic, not an authorized release or staking criterion.",
+    "Marginal simulated success rates are not evidence that real-world pricing or execution is beatable."
+  ],
+  "generatedAt": "2026-11-02T18:13:23.350Z",
+  "sourceSha256": "7bf3e1d9bcf0805fd0fdd1b95a5f016798a3705beebfea9240689c14a0270f8c",
+  "source": {
+    "name": "nflverse / Lee Sharpe",
+    "license": "CC BY 4.0",
+    "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+    "type": "Historical market/time covariates; all simulated outcomes synthetic"
+  },
+  "sourceResearchVersion": "betq-residual-research-v1",
+  "protocolCommit": "3fd15fb1bfbf8cf874cb70c96ff088d46ee4ad46",
+  "notAValidatedModelOrRealWorldBettingEdge": true
+}
