@@ -422,3 +422,33 @@ progress.evidence-meter::-moz-progress-bar {background:var(--lime);border-radius
 .pricing-notes strong{color:#e0eaf3;}
 @media(max-width:1100px){.pricing-columns{grid-template-columns:1fr;}}
 @media(max-width:540px){.pricing-fields{grid-template-columns:1fr;}.pricing-result-grid strong{font-size:16px;}.pricing-form{padding:13px;}.pricing-notes{padding:7px 15px;}}
+
+/* v0.6 – quant agent operating state and walk-forward historical replay */
+.agent-run-panel{margin:0 0 18px;}
+.agent-status{padding:18px 20px;background:#172232;border-bottom:1px solid #2a3c48;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.agent-status strong{font-size:12px;color:#ecf2fa;line-height:1.65;flex:1;min-width:220px;}
+.agent-status small{width:100%;color:#87a0b2;font-size:10px;line-height:1.6;}
+.agent-stage-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;}
+.agent-stage{padding:16px;min-width:0;border-right:1px solid #243247;}
+.agent-stage:last-child{border:0;}
+.agent-stage span{display:block;font-size:10px;color:#8da4b7;margin-bottom:9px;}
+.agent-stage strong{display:block;font-size:11px;color:#d1ecb3;word-break:break-word;letter-spacing:.4px;}
+.agent-stage small{display:block;margin-top:10px;font-size:10px;line-height:1.65;color:#8094a8;}
+.agent-foot{padding:13px 17px;background:#151e2c;color:#92a4b4;font-size:11px;line-height:1.7;border-top:1px solid #263448;}
+.replay-control-bar{display:flex;align-items:flex-end;gap:13px;margin:17px 0 19px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;flex-wrap:wrap;}
+.replay-control-bar>div{display:flex;flex-direction:column;gap:7px;}
+.replay-control-bar label{color:#8da0b5;font-size:10px;font-weight:800;letter-spacing:.6px;}
+.replay-control-bar select{color:#e9f3fa;padding:10px 12px;background:#142032;border:1px solid #39495a;border-radius:8px;min-width:160px;}
+.replay-control-bar .faint-caption{align-self:center;max-width:300px;line-height:1.6;}
+.replay-season-panel{margin:19px 0 16px;}
+.replay-season-table{min-width:840px;}
+.replay-season-table td strong{font-size:12px;}
+.replay-season-table .text-link{font-size:13px;}
+.replay-picks-panel{margin-top:20px;}
+.replay-plays-table{min-width:900px;}
+.replay-pagination{padding:13px 20px;border-top:1px solid #293747;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+.replay-table-note{font-size:10px;line-height:1.7;color:#91a7b7;padding:0 17px 13px;margin:0;}
+.replay-warning{background:#26231c;border:1px solid #5e4f31;color:#edcd9d;}
+.replay-warning p{line-height:1.7;}
+@media(max-width:1280px){.agent-stage-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.agent-stage:nth-child(2){border-right:0}.agent-stage:nth-child(-n+2){border-bottom:1px solid #243247;}}
+@media(max-width:580px){.agent-stage-grid{grid-template-columns:1fr}.agent-stage{border:0;border-bottom:1px solid #243247}.agent-stage:nth-child(2){border-right:0}.agent-status{padding:14px}.replay-control-bar>div{flex:1;min-width:130px;}.replay-control-bar select{min-width:0;width:100%;}.replay-pagination{padding:12px;}}
