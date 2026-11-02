@@ -477,3 +477,15 @@ progress.evidence-meter::-moz-progress-bar {background:var(--lime);border-radius
 .agent-favorite-warning b{color:#f4dca9;}
 @media(max-width:900px){.market-compare-grid{grid-template-columns:1fr;}}
 @media(max-width:560px){.market-challenge-inner{padding:12px}.market-compare-card span{min-height:0;}}
+
+/* v0.8 explicit risk authority and honest conditional bankroll stress */
+.risk-stress-heading{margin-top:23px;}
+.risk-stress-inner{padding:15px 17px;}
+.risk-stress-scenarios{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:20px 0;}
+.risk-stress-card{min-width:0;padding:16px;background:#172435;border:1px solid #34465c;border-radius:9px;}
+.risk-stress-card>span{display:block;color:#9ab0be;font-size:9px;text-transform:uppercase;letter-spacing:.6px;line-height:1.6;min-height:36px;}
+.risk-stress-card>strong{font-size:23px;color:#eed4bf;font-variant-numeric:tabular-nums;display:block;margin:7px 0 15px;}
+.risk-stress-card small{display:block;color:#9eafc3;font-size:10px;line-height:1.8;}
+.risk-stress-note{margin:12px 0 0;padding:14px;border-left:3px solid #bb99d0;background:#25253a;color:#aebacc;font-size:12px;line-height:1.85;}
+.risk-stress-note b{color:#efe5f8;}
+@media(max-width:1050px){.risk-stress-scenarios{grid-template-columns:1fr;}.risk-stress-card>span{min-height:0;}}
