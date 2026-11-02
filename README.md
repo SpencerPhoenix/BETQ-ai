@@ -39,7 +39,7 @@ All demo events are fictitious and marked `DEMO`. User-created paper tickets rem
 
 ## Independent NFL Elo baseline (Phase 2)
 
-The reproducible runner `node scripts/train-nfl.mjs` reads nflverse/Lee Sharpe historical game schedules and results, never betting odds. It tunes Elo parameters on 2018–2022 games, calibrates on 2023–2024, and evaluates once against untouched 2025 games. Only completed games up to the training date advance current ratings. Ties are excluded from binary metrics. Model probabilities are shown **only** for actual upcoming NFL moneylines, never synthetic demo games. The `NFL historical model research refresh` GitHub Action checks for result changes daily and commits a small versioned JSON artifact. It does not use your Odds API key.
+The reproducible runner `node scripts/train-nfl.mjs` reads the CC BY 4.0 nflverse schedules release maintained by Lee Sharpe, including historical game results, never betting odds. It tunes Elo parameters on 2018–2022 games, calibrates on 2023–2024, and evaluates once against untouched 2025 games. Only completed games up to the training date advance current ratings. Ties are excluded from binary metrics. Model probabilities are shown **only** for actual upcoming NFL moneylines, never synthetic demo games. The `NFL historical model research refresh` GitHub Action checks for result changes daily and commits a small versioned JSON artifact. It does not use your Odds API key.
 
 The baseline's 2025 holdout performance, sources, parameter choices, last-game date and warnings are available through `GET /api/model/nfl` and the Prediction Lab. Treat these statistics as a backtest, not proof of a market-beating system. See `docs/MODEL.md`.
 
