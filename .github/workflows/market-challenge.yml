@@ -1,0 +1,67 @@
+name: BETQ nested market challenge
+on:
+  push:
+    paths:
+      - 'src/market-challenge.mjs'
+      - 'scripts/run-market-challenge.mjs'
+      - '.github/workflows/market-challenge.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: betq-nested-market-challenge
+  cancel-in-progress: true
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Enforce model/future-data isolation, correctness and arithmetic
+        run: |
+          npm run check
+          npm test
+      - name: Evaluate annual out-of-time market calibration and favorite-only sensitivity
+        run: node scripts/run-market-challenge.mjs
+      - name: Verify historical attribution and zero verified ROI/CLV claims
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const m=JSON.parse(readFileSync('data/market-challenge/summary.json','utf8'));
+          if(m.version!=='market-challenge-v1'||m.years?.length!==4||
+             m.verifiedCLV!==null||m.verifiedROI!==null||m.bettingAuthorized!==false||
+             m.confirmedExecutableEntry!==false)throw Error('Source trust or schema failed');
+          for(const year of m.years){
+            if(year.training.trainedOnYears[1]>=year.season||
+               year.training.eligibleHistoricalPairs<350||
+               year.pairedGames<220)throw Error('Future data leakage / insufficient sample');
+            if(year.modelContributionWeight>0&&!year.training.acceptedIndependentContribution)
+              throw Error('Unvalidated market model weight');
+            console.log('AUDIT '+year.season+' market Brier='+year.closingMarket.brier+
+              ' blend Brier='+year.conservativelyCalibrated.brier+
+              ' Elo Brier='+year.originalElo.brier);
+          }
+          console.log('CLV / REAL MONEY ROI STILL UNVERIFIED: PASS');
+          NODE
+      - name: Commit derived model selection research
+        shell: bash
+        run: |
+          if [[ -n "$(git status --porcelain -- data/market-challenge/)" ]]; then
+            git config user.name "betq-quant-research-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add data/market-challenge/
+            git commit -m "data: publish nested market/Elo validation and hit-rate versus ROI benchmarks"
+            for attempt in 1 2 3; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then exit 0; fi
+              sleep 3
+            done
+            echo "Could not safely publish nested research due to parallel commits" >&2
+            exit 1
+          else
+            echo "No new market research artifacts."
+          fi
