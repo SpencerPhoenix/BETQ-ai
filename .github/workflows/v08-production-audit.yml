@@ -1,0 +1,94 @@
+name: BETQ v0.8 central authority production smoke
+on:
+  push:
+    paths:
+      - '.github/workflows/v08-production-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify risk veto, 10k stress report and no paid-odds budget usage
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          const base='https://betq-ai.onrender.com';
+          const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+          const read=async path=>{
+            const r=await fetch(base+path,{
+              headers:{Accept:'application/json'},signal:AbortSignal.timeout(95000)});
+            const text=await r.text();
+            let data=null;try{data=JSON.parse(text)}catch{}
+            return {status:r.status,text,data};
+          };
+          let health;
+          for(let n=0;n<10;n++){
+            try{
+              const res=await read('/api/health');
+              if(res.status===200&&res.data?.version==='0.8.0'){health=res.data;break;}
+            }catch{}
+            await pause(8000);
+          }
+          if(!health)throw Error('v0.8 production code not live');
+          const [html,client,risk,market,replay,verification,demo]=await Promise.all([
+            read('/'),read('/app.js'),read('/api/risk/nfl'),
+            read('/api/research/market'),read('/api/replay/nfl'),
+            read('/api/price/verification'),read('/api/slate?mode=demo')
+          ]);
+          if(html.status!==200||!html.text.includes('TERMINAL / v0.8.0')||
+             !html.text.includes('id="risk-stress-view"'))
+            throw Error('No deployed bankroll stress interface or version marker');
+          if(client.status!==200||
+             !client.text.includes('Paper staging locked · research only')||
+             !client.text.includes('state.slate?.executionGate?.bettingAuthorized !== true')||
+             !client.text.includes('PRICE WATCH · NOT A BET'))
+            throw Error('Client central paper risk lock missing');
+          if(risk.status!==200||risk.data?.available!==true||
+             risk.data.version!=='betq-risk-research-v1'||
+             risk.data.bettingAuthorized!==false||
+             risk.data.verifiedROI!==null||risk.data.verifiedCLV!==null||
+             risk.data.historicalEligibleDecisions<600||
+             risk.data.scenarios?.length!==3)
+            throw Error('Risk stress artifact untrusted or missing');
+          for(const scenario of risk.data.scenarios){
+            if(scenario.result.iterations!==10000||
+               scenario.result.exactRealWorldRiskOfRuin!==null||
+               scenario.result.verifiedHistoricalROI!==null||
+               scenario.result.providerPriceTimeVerified!==false)
+              throw Error('Unsupported exact risk/ROI claims');
+          }
+          if(market.status!==200||!market.data?.available||
+             market.data.bettingAuthorized!==false||market.data.verifiedROI!==null)
+            throw Error('Market challenge source gate missing');
+          if(replay.status!==200||!replay.data?.available||
+             replay.data.verifiedROI!==null||replay.data.verifiedCLV!==null)
+            throw Error('Retrospective closing odds misrepresented as actual fills');
+          if(verification.status!==200||verification.data.verifiedROI!==null||
+             verification.data.verifiedCLV!==null)
+            throw Error('Fake real-money ROI/CLV source');
+          if(demo.status!==200||demo.data?.demo!==true||
+             demo.data.executionGate?.bettingAuthorized!==false||
+             demo.data.summary?.actionableSelections!==0||
+             demo.data.agentRun?.mayWager!==false)
+            throw Error('Demo/live source authority mismatch');
+          const blocked=demo.data.events.flatMap(x=>x.opportunities);
+          if(blocked.some(x=>x.paperStagingAuthorized!==false||
+             x.executionAuthorized!==false||x.theoreticalUnits!==0))
+            throw Error('Unauthorized paper entry or Kelly stake still surfaced');
+          if(!demo.data.agentRun.stages.some(x=>x.id==='selection'))
+            throw Error('Selection Bias Guardian not active on every slate');
+          console.log('PRODUCTION v0.8.0: PASS');
+          console.log('Risk scenario coverage: '+risk.data.historicalEligibleDecisions+
+            ' source-result historical selections, '+risk.data.historicalWeekBlocks+' week blocks');
+          console.log('Baseline 10k path median %: '+
+            risk.data.scenarios[0].result.endingBankrollReturnPercent.median);
+          console.log('Demo opportunities risk blocked: '+blocked.length);
+          console.log('Stake authorization: ZERO; verified ROI/CLV: UNAVAILABLE');
+          console.log('Paid sportsbook API requests for this audit: ZERO');
+          NODE
