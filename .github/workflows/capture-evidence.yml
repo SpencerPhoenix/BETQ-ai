@@ -4,6 +4,7 @@ on:
     paths:
       - '.github/workflows/capture-evidence.yml'
       - 'scripts/capture-evidence.mjs'
+      - 'src/evidence.mjs'
   workflow_dispatch:
   schedule:
     # One early research snapshot daily (UTC); pregame capture is source-timestamp gated.
@@ -66,12 +67,20 @@ jobs:
               ids.add(s.id);
               if(Date.parse(s.capturedAt)>=Date.parse(s.commenceTime))throw Error('Post-kickoff record');
               if(s.researchOnly!==true)throw Error('Evidence record incorrectly advertised');
+              if(s.challengerHomeProbability!==null&&s.challengerHomeProbability!==undefined){
+                if(!(s.challengerHomeProbability>0&&s.challengerHomeProbability<1)||
+                   s.challengerResearchOnly!==true||
+                   Date.parse(s.challengerBuiltAt)>Date.parse(s.capturedAt)+60000)
+                  throw Error('Challenger prediction lacks valid pregame research vintage');
+              }
             }
             const json=JSON.stringify(j);
             if(/americanOdds|decimalOdds|bookmakerKey|bookmakers|API_KEY|apiKey/.test(json))
               throw Error('Raw bookmaker data or secret risk in published journal');
             const report=summarizeEvidence(j);
             if(report.forwardMetrics&&report.settledGames<30)throw Error('Premature sample metrics');
+            if(report.challengerForwardComparison&&report.pairedChallengerSettled<30)
+              throw Error('Premature challenger performance disclosure');
             console.log('PASS '+name+' · '+report.prospectiveGames+' forecast games, '+report.settledGames+' finals');
           }
           NODE
