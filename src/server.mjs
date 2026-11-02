@@ -17,9 +17,11 @@ import { assembleAgentRun } from './agent-run.mjs';
 import { applyDecisionAuthority } from './decision-policy.mjs';
 import { configuredShadowStore } from './shadow-store.mjs';
 import { evaluateQBLatency, syntheticQBStudyFixture } from './shadow-study.mjs';
+import {createDerivedForwardMarketFeed} from './shadow-derived.mjs';
 
 const PUBLIC_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../public');
 const SHADOW_PRIVATE = configuredShadowStore();
+const SHADOW_DERIVED_FEED = createDerivedForwardMarketFeed();
 const SHADOW_SYNTHETIC_REPORT = evaluateQBLatency(syntheticQBStudyFixture());
 function loadModelArtifact() {
   try {
@@ -108,6 +110,7 @@ export function createHandler({
   marketChallenge = NFL_MARKET_CHALLENGE,
   riskReport = NFL_RISK_REPORT,
   shadowStore = SHADOW_PRIVATE,
+  derivedShadowFeed = SHADOW_DERIVED_FEED,
   maxAgeMs = Number(process.env.ODDS_MAX_AGE_MS) || 600000
 } = {}) {
   const access = new Map();
@@ -221,6 +224,11 @@ export function createHandler({
         if (url.pathname === '/api/shadow/status') {
           // Never returns bookmaker identities, prices, article URLs, or DB credentials.
           return reply(res,200,await shadowStore.status());
+        }
+        if (url.pathname === '/api/shadow/derived') {
+          // Current forward market movements from the existing public DERIVED
+          // evidence journal; no new Odds API calls or bookmaker identifiers.
+          return reply(res,200,await derivedShadowFeed.get());
         }
         if (url.pathname === '/api/shadow/study') {
           // When no private vetted database exists, there is no live study.
