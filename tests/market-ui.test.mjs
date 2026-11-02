@@ -6,7 +6,7 @@ const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 test('Historical Replay includes conservative, source-honest market comparison',async()=>{
   const html=await read('public/index.html');
   assert.ok(html.includes('id="market-challenge-view"'));
-  assert.ok(html.includes('TERMINAL / v0.8.0'));
+  assert.ok(html.includes('TERMINAL / v0.9.0'));
   assert.ok(html.includes('closing prices without a verified entry timestamp'));
 });
 test('Agent cockpit and challenge dashboard show past-year training and ROI separately',async()=>{
