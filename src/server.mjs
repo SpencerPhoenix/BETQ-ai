@@ -12,6 +12,7 @@ import { emptyJournal, summarizeEvidence } from './evidence.mjs';
 import { createEvidenceFeed } from './evidence-feed.mjs';
 import { challengerResearchForEvent } from './nfl-efficiency.mjs';
 import { injuryContextForGame } from './injuries.mjs';
+import { illustrativePrice, PriceAuditError } from './price-metrics.mjs';
 
 const PUBLIC_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../public');
 function loadModelArtifact() {
@@ -102,7 +103,7 @@ export function createHandler({
           return reply(res, 429, { error: { code: 'LOCAL_RATE_LIMIT', message: 'Too many requests. Try again shortly.' } });
         }
         if (url.pathname === '/api/health') return reply(res, 200, {
-          status: 'ok', app: 'BETQ.ai', version: '0.4.1',
+          status: 'ok', app: 'BETQ.ai', version: '0.5.0',
           serverTime: new Date(now).toISOString(), odds: source.status(),
           nflModel: { available: Boolean(nflArtifact?.readyForResearch), version: nflArtifact?.version || null },
           forwardEvidence: { status: nflEvidence.status, prospectiveGames: nflEvidence.prospectiveGames,
@@ -191,6 +192,62 @@ export function createHandler({
         }
         if (url.pathname === '/api/evidence/nfl') {
           return reply(res, 200, await evidenceFeed.get());
+        }
+        if (url.pathname === '/api/price/verification') {
+          return reply(res,200,{
+            version:'0.5.0',verifiedROI:null,verifiedCLV:null,
+            realMoneyTransactionsConnected:false,
+            verifiedBookmakerClosingQuotesConnected:false,
+            prospectivePriceLedgerConnected:false,
+            performanceClaimsAllowed:false,
+            requiredForVerifiedROI:[
+              'Confirmed entry stake and actual filled American odds',
+              'Transaction ID from an independently verified sportsbook source',
+              'Independently verified settlement, including pushes/voids'
+            ],
+            requiredForVerifiedCLV:[
+              'Frozen pregame entry quote with selection and line identity',
+              'Matching closing price and both sides of the same market',
+              'Source-verified closing time immediately before kickoff'
+            ],
+            reason:'BETQ has derived market probabilities, not a certified full-odds and real-wager ledger.'
+          });
+        }
+        if (url.pathname === '/api/price/illustration') {
+          if (url.search.length > 500) {
+            return reply(res,400,{error:{code:'INVALID_PRICING_INPUT',message:'Pricing inputs too long.'}});
+          }
+          const accepted=new Set(['entry','close','closingOpposite','stake','result']);
+          if([...url.searchParams.keys()].some(k=>!accepted.has(k))) {
+            return reply(res,400,{error:{code:'INVALID_PRICING_INPUT',message:'Unrecognized pricing input.'}});
+          }
+          const readInt=(key,optional=false)=>{
+            const v=url.searchParams.get(key);
+            if(optional&&(v===null||v===''))return null;
+            if(v===null||!/^[-+]?\d{3,6}$/.test(v))throw new PriceAuditError(
+              'INVALID_PRICING_INPUT','American price must be an explicit signed integer, e.g. -110 or +125.');
+            return Number(v);
+          };
+          const readStake=()=>{
+            const v=url.searchParams.get('stake');
+            if(v===null||!/^\d{1,7}(?:\.\d{1,2})?$/.test(v))throw new PriceAuditError(
+              'INVALID_STAKE','Stake must be an amount with at most two decimals.');
+            return Number(v);
+          };
+          try{
+            const result=illustrativePrice({
+              entryAmerican:readInt('entry'),
+              closingAmerican:readInt('close'),
+              closingOppositeAmerican:readInt('closingOpposite',true),
+              stake:readStake(),
+              result:url.searchParams.get('result')||'OPEN'
+            });
+            return reply(res,200,result);
+          }catch(error){
+            if(error instanceof PriceAuditError)
+              return reply(res,400,{error:{code:error.code,message:error.message}});
+            throw error;
+          }
         }
         if (url.pathname === '/api/slate') {
           const sport = url.searchParams.get('sport') || 'americanfootball_nfl';
