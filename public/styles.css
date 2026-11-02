@@ -340,3 +340,31 @@ progress.risk-progress { margin:15px 0 7px; }
   .model-match-sides strong{font-size:20px;}
   .model-spotlight{grid-template-columns:1fr;}
 }
+
+/* Phase 3 — prospective evidence lab. All meters are CSP-compatible. */
+.evidence-columns {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px;margin-bottom:17px;}
+.evidence-columns .panel {min-height:245px;}
+.evidence-body {padding:17px 20px 23px;}
+.evidence-body p {color:#9cafbc;font-size:12px;line-height:1.75;margin:0 0 17px;}
+.evidence-body b {color:#ecf3fc;}
+.evidence-progress-head {display:flex;align-items:center;justify-content:space-between;gap:11px;font-size:11px;color:#b4c8d7;}
+.evidence-progress-head span {color:#8397ab;}
+progress.evidence-meter {display:block;width:100%;height:13px;margin:12px 0 18px;border:0;border-radius:8px;overflow:hidden;background:#2b3847;appearance:none;-webkit-appearance:none;}
+progress.evidence-meter::-webkit-progress-bar {background:#2b3847;border-radius:8px;}
+progress.evidence-meter::-webkit-progress-value {background:linear-gradient(90deg,#6d9977,var(--lime));border-radius:8px;}
+progress.evidence-meter::-moz-progress-bar {background:var(--lime);border-radius:8px;}
+.evidence-warning {border-left:2px solid #b79b6f;padding:10px 13px;background:#232526;margin:0!important;}
+.evidence-performance {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0 15px;}
+.evidence-performance>div {background:#1b2637;border:1px solid #2b3a4c;padding:13px;border-radius:8px;}
+.evidence-performance span {font-size:10px;color:#839aad;display:block;line-height:1.5;}
+.evidence-performance strong {display:block;font-size:20px;letter-spacing:-.4px;margin-top:9px;font-variant-numeric:tabular-nums;}
+.evidence-list {padding:6px 19px;}
+.evidence-row {padding:15px 0;border-bottom:1px solid #253144;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.evidence-row:last-child {border-bottom:0;}
+.evidence-row strong {display:block;font-size:12px;color:#dce9f7;}
+.evidence-row small {display:block;color:#869caf;font-size:10px;margin-top:6px;}
+.evidence-numbers {text-align:right;}
+.evidence-numbers b {display:block;font-variant-numeric:tabular-nums;color:#ccf0a7;font-size:15px;}
+.evidence-footer {margin-top:16px;}
+@media(max-width:1100px) {.evidence-columns{grid-template-columns:1fr;}}
+@media(max-width:550px) {.evidence-body{padding:14px;}.evidence-row{align-items:flex-start;}.evidence-performance strong{font-size:17px;}}
