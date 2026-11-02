@@ -7,6 +7,8 @@ import { createOddsSource, OddsError } from './odds.mjs';
 import { analyzeEvents, SPORTS, MARKETS } from './engine.mjs';
 import { demoEvents } from './demo.mjs';
 import { predictNflEvent, MODEL_VERSION } from './nfl-elo.mjs';
+import { nflMoneylineConsensus } from './market-consensus.mjs';
+import { emptyJournal, summarizeEvidence } from './evidence.mjs';
 
 const PUBLIC_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../public');
 function loadModelArtifact() {
@@ -16,6 +18,15 @@ function loadModelArtifact() {
   } catch { return null; }
 }
 const NFL_ARTIFACT = loadModelArtifact();
+function loadEvidence() {
+  try {
+    const json=JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), '../data/evidence/nfl-2026.json'), 'utf8'));
+    return summarizeEvidence(json);
+  } catch {
+    return summarizeEvidence(emptyJournal(2026));
+  }
+}
+const NFL_EVIDENCE=loadEvidence();
 const roundModel = (n, digits = 2) => Number.isFinite(n) ? Number(n.toFixed(digits)) : null;
 const ASSETS = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
@@ -48,6 +59,7 @@ export function createHandler({
   source = createOddsSource(),
   clock = Date.now,
   nflArtifact = NFL_ARTIFACT,
+  nflEvidence = NFL_EVIDENCE,
   maxAgeMs = Number(process.env.ODDS_MAX_AGE_MS) || 600000
 } = {}) {
   const access = new Map();
@@ -70,14 +82,18 @@ export function createHandler({
           return reply(res, 429, { error: { code: 'LOCAL_RATE_LIMIT', message: 'Too many requests. Try again shortly.' } });
         }
         if (url.pathname === '/api/health') return reply(res, 200, {
-          status: 'ok', app: 'BETQ.ai', version: '0.2.0',
+          status: 'ok', app: 'BETQ.ai', version: '0.3.0',
           serverTime: new Date(now).toISOString(), odds: source.status(),
-          nflModel: { available: Boolean(nflArtifact?.readyForResearch), version: nflArtifact?.version || null }
+          nflModel: { available: Boolean(nflArtifact?.readyForResearch), version: nflArtifact?.version || null },
+          forwardEvidence: { status: nflEvidence.status, prospectiveGames: nflEvidence.prospectiveGames,
+            settledGames: nflEvidence.settledGames }
         });
         if (url.pathname === '/api/config') return reply(res, 200, {
           sports: SPORTS, markets: MARKETS,
           maxAgeMs, refreshMs: null, autoRefresh: false,
           marketOnlySignals: true, nflResearchModel: Boolean(nflArtifact?.readyForResearch),
+          forwardEvidenceEnabled: true, realMoneyResultsVerified: false,
+          closingLineValueVerified: false,
           wageringEnabled: false, injuryDataConnected: false, halftimeModelConnected: false
         });
         if (url.pathname === '/api/model/nfl') {
@@ -99,6 +115,9 @@ export function createHandler({
             use: 'RESEARCH_ONLY'
           });
         }
+        if (url.pathname === '/api/evidence/nfl') {
+          return reply(res, 200, nflEvidence);
+        }
         if (url.pathname === '/api/slate') {
           const sport = url.searchParams.get('sport') || 'americanfootball_nfl';
           const market = url.searchParams.get('market') || 'h2h';
@@ -115,7 +134,10 @@ export function createHandler({
             sport, market, asOf: now, maxAgeMs, demo
           });
           if (!demo && sport === 'americanfootball_nfl' && market === 'h2h') {
+            const rawById = new Map(snapshot.events.map(e => [String(e.id), e]));
             for (const game of analysis.events) {
+              const rawGame = rawById.get(game.id);
+              game.marketConsensus = nflMoneylineConsensus(rawGame, { asOf: now, maxAgeMs });
               const projection = game.started
                 ? { available: false, reason: 'GAME_ALREADY_STARTED' }
                 : predictNflEvent({
@@ -141,6 +163,7 @@ export function createHandler({
             quota: snapshot.quota, warnings: [
               'Market consensus is not an independently validated win-probability model.',
               'NFL pregame Elo model is independently backtested on 2025 outcomes but is not injury or starter adjusted; compare with sportsbook market carefully.',
+              'Forward evidence is prospectively recorded; reported performance appears only after enough games have final results.',
               'Other sports and period/halftime bets do not have a trained model yet.',
               'No real wagers are placed. Demo events and prices are entirely synthetic.'
             ]
