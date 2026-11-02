@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "season": 2026,
-  "generatedAt": "2026-11-02T01:06:46.390Z",
+  "generatedAt": "2026-11-02T01:07:26.025Z",
   "provenance": {
     "model": "BETQ_NFL_ELO",
     "market": "THE_ODDS_API_V4_DERIVED",
@@ -14,10 +14,10 @@
   "realizedROI": null,
   "verifiedCLV": null,
   "minimumScoredSample": 30,
-  "totalSnapshots": 0,
-  "prospectiveGames": 0,
+  "totalSnapshots": 17,
+  "prospectiveGames": 17,
   "settledGames": 0,
-  "pendingGames": 0,
+  "pendingGames": 17,
   "pairedMarketGames": 0,
   "nearKickoffConsensusPairs": 0,
   "tiesExcluded": 0,
@@ -25,7 +25,116 @@
   "marketComparison": null,
   "consensusMovementPoints": null,
   "recentResults": [],
-  "pendingPreview": [],
+  "pendingPreview": [
+    {
+      "gameId": "2026_09_GB_NE",
+      "home": "NE",
+      "away": "GB",
+      "gameDate": "2026-11-08",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelHomeProbability": 0.622501,
+      "marketHomeProbability": 0.555446
+    },
+    {
+      "gameId": "2026_09_NYJ_KC",
+      "home": "KC",
+      "away": "NYJ",
+      "gameDate": "2026-11-08",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelHomeProbability": 0.807551,
+      "marketHomeProbability": 0.804293
+    },
+    {
+      "gameId": "2026_09_JAX_BAL",
+      "home": "BAL",
+      "away": "JAX",
+      "gameDate": "2026-11-05",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelHomeProbability": 0.401566,
+      "marketHomeProbability": 0.239418
+    },
+    {
+      "gameId": "2026_08_CHI_SEA",
+      "home": "SEA",
+      "away": "CHI",
+      "gameDate": "2026-11-02",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelHomeProbability": 0.610222,
+      "marketHomeProbability": 0.607672
+    },
+    {
+      "gameId": "2026_09_BUF_MIN",
+      "home": "MIN",
+      "away": "BUF",
+      "gameDate": "2026-11-09",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelHomeProbability": 0.469159,
+      "marketHomeProbability": 0.41959
+    },
+    {
+      "gameId": "2026_09_LV_SF",
+      "home": "SF",
+      "away": "LV",
+      "gameDate": "2026-11-08",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelHomeProbability": 0.808528,
+      "marketHomeProbability": 0.800826
+    },
+    {
+      "gameId": "2026_09_LA_WAS",
+      "home": "WAS",
+      "away": "LA",
+      "gameDate": "2026-11-08",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelHomeProbability": 0.35465,
+      "marketHomeProbability": 0.32515
+    },
+    {
+      "gameId": "2026_09_NYG_PHI",
+      "home": "PHI",
+      "away": "NYG",
+      "gameDate": "2026-11-08",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelHomeProbability": 0.572526,
+      "marketHomeProbability": 0.440833
+    },
+    {
+      "gameId": "2026_09_CLE_NO",
+      "home": "NO",
+      "away": "CLE",
+      "gameDate": "2026-11-08",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelHomeProbability": 0.4334,
+      "marketHomeProbability": 0.567101
+    },
+    {
+      "gameId": "2026_09_DET_MIA",
+      "home": "MIA",
+      "away": "DET",
+      "gameDate": "2026-11-08",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelHomeProbability": 0.284464,
+      "marketHomeProbability": 0.259779
+    },
+    {
+      "gameId": "2026_09_DEN_CAR",
+      "home": "CAR",
+      "away": "DEN",
+      "gameDate": "2026-11-08",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelHomeProbability": 0.262051,
+      "marketHomeProbability": 0.424887
+    },
+    {
+      "gameId": "2026_09_HOU_LAC",
+      "home": "LAC",
+      "away": "HOU",
+      "gameDate": "2026-11-08",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelHomeProbability": 0.41394,
+      "marketHomeProbability": 0.378998
+    }
+  ],
   "safeguards": [
     "Only pregame forecasts captured before outcomes, never reconstructed after games",
     "Original forecasts are append-only; corrected results retain settlement revisions",
