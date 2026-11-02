@@ -163,7 +163,16 @@ export function postgresShadowStore(pool){
 export function configuredShadowStore({
   env=process.env,clientFactory=null
 }={}){
-  const allowed=env.BETQ_SHADOW_CAPTURE_ENABLED==='true'&&
+  // Refuse connection to the workspace's unrelated Trading Agent database.
+  // Dedicated DB names must start betq_ and never be borrowed from other apps.
+  let dedicatedName=false;
+  try{
+    const u=new URL(env.BETQ_SHADOW_DATABASE_URL||'');
+    const name=decodeURIComponent(u.pathname.replace(/^\//,''));
+    dedicatedName=['postgres:','postgresql:'].includes(u.protocol)&&
+      /^betq_[a-z0-9_]{2,60}$/.test(name);
+  }catch{}
+  const allowed=dedicatedName&&env.BETQ_SHADOW_CAPTURE_ENABLED==='true'&&
     env.BETQ_SHADOW_LICENSE_REVIEWED==='true'&&
     typeof env.BETQ_SHADOW_DATABASE_URL==='string'&&
     env.BETQ_SHADOW_DATABASE_URL.length>=24;
