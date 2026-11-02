@@ -26,7 +26,7 @@
     replaySummary: null, replayPlays: null, replayError: null,
     marketChallenge: null,
     riskStress: null,
-    shadowStatus: null, shadowStudy: null, shadowDemo: null, shadowView: 'live', shadowError: null,
+    shadowStatus: null, shadowStudy: null, shadowDemo: null, shadowDerived: null, shadowView: 'live', shadowError: null,
     replaySeason: 2025, replayThreshold: 3, replayPage: 0, replayLoading: false,
     selectedId: null, search: '', sort: 'ev', watchOnly: false,
     loading: false, ledger: Array.isArray(safeGet(LEDGER, [])) ? safeGet(LEDGER, []) : []
@@ -101,7 +101,7 @@
     if (tab === 'execution') renderExecution();
     if (tab === 'pricing') renderPricing();
     if (tab === 'replay') renderReplay();
-    if (tab === 'latency') renderShadow();
+    if (tab === 'latency') { renderShadow(); renderShadowForward(); }
     if (tab === 'audit') renderAudit();
     if (tab === 'model') { renderModel(); renderIntelligence(); }
     if (tab === 'evidence') renderEvidence();
@@ -267,6 +267,49 @@
       '</div></section>';
   }
 
+
+
+  function renderShadowForward(){
+    const root=$('shadow-forward-view');if(!root)return;
+    const r=state.shadowDerived;
+    if(!r){
+      root.innerHTML=empty('Forward derived market history not loaded',
+        'A free read-only summary is being checked; no bookmaker API polling is started.');
+      return;
+    }
+    if(r.available!==true){
+      root.innerHTML=empty('No source-dated forward market movement available',
+        String(r.reason||'The existing derived journal has not provided eligible observations.'));
+      return;
+    }
+    const shift=r.gamesWithMultipleSeparatedSnapshots;
+    const cards='<div class="metric-grid">'+
+      metric('FORWARD MARKET OBSERVATIONS',String(r.snapshotMarketAvailable),
+        'Historical source-frozen derived probability snapshots','cyan','◉')+
+      metric('PRICE-OBSERVED GAMES',String(r.pricedGames),
+        'Tracked games · no private bookmaker quotes exposed','', '▤')+
+      metric('GAMES WITH SEPARATED QUOTES',String(shift),
+        'At least 10 minutes between own capture timestamps','violet','◷')+
+      metric('MEDIAN ABSOLUTE MOVE',r.medianObservedAbsoluteMovementPoints===null?'—':
+        String(r.medianObservedAbsoluteMovementPoints)+' pp',
+        'Observed aggregate probability change · not attributed to QB news','', '⌁')+
+      '</div>';
+    const moves=(r.preview||[]).map(m=>
+      '<tr><td><strong>'+esc(m.matchup)+'</strong><small>Real previously recorded derived snapshots</small></td>'+
+      '<td>'+num(m.elapsedMinutes,1)+' min</td>'+
+      '<td class="'+(m.observedChangePoints>=0?'positive':'negative')+'">'+
+      signed(m.observedChangePoints,2)+' pp</td>'+
+      '<td>NOT LINKED TO QB SOURCE</td></tr>').join('');
+    root.innerHTML=cards+
+      (moves?'<div class="table-scroll"><table class="data-table shadow-forward-table">'+
+        '<thead><tr><th>GAME</th><th>OBSERVATION SPAN</th><th>HOME P CHANGE</th><th>NEWS LINKAGE</th></tr></thead>'+
+        '<tbody>'+moves+'</tbody></table></div>':
+        '<p class="shadow-diagnostic">Multiple observations at least 10 minutes apart are not yet available for a per-game movement comparison.</p>')+
+      '<p class="shadow-live-notice"><b>Actual source-derived forward history, not a trading signal.</b> '+
+      'These snapshots contain only aggregate no-vig market probabilities already collected by BETQ. '+
+      'They do not identify an accepted bookmaker offer, first publication of quarterback news, '+
+      'a matched price movement event, closing-line value, or a real-money return.</p>';
+  }
 
   function renderShadow(){
     const readiness=$('shadow-readiness'),study=$('shadow-study-view');
@@ -1222,7 +1265,7 @@
   function render() {
     renderFilters(); renderFeed(); renderBanner(); renderMetrics(); renderAgentRun();
     renderOpportunities(); renderSpotlight(); renderChart();
-    renderGames(); renderSignals(); renderModel(); renderIntelligence(); renderEvidence(); renderShadow(); renderReplay(); renderMarketChallenge(); renderRiskStress(); renderPricing(); renderExecution(); renderAudit();
+    renderGames(); renderSignals(); renderModel(); renderIntelligence(); renderEvidence(); renderShadow(); renderShadowForward(); renderReplay(); renderMarketChallenge(); renderRiskStress(); renderPricing(); renderExecution(); renderAudit();
   }
 
   async function loadIntelligence() {
@@ -1244,17 +1287,19 @@
     renderModel(); renderAudit(); renderSpotlight();
   }
   async function loadShadow(){
-    const [status,study,demo]=await Promise.all([
+    const [status,study,demo,forward]=await Promise.all([
       requestJSON('/api/shadow/status').catch(()=>null),
       requestJSON('/api/shadow/study').catch(()=>null),
-      requestJSON('/api/shadow/demo').catch(()=>null)
+      requestJSON('/api/shadow/demo').catch(()=>null),
+      requestJSON('/api/shadow/derived').catch(()=>null)
     ]);
     state.shadowStatus=status;
     state.shadowStudy=study;
     state.shadowDemo=demo;
-    state.shadowError=(!status||!study||!demo)?
+    state.shadowDerived=forward;
+    state.shadowError=(!status||!study||!demo||!forward)?
       'One or more local shadow research endpoints are unavailable.':null;
-    renderShadow();
+    renderShadow();renderShadowForward();
   }
   async function loadRiskStress(){
     try{state.riskStress=await requestJSON('/api/risk/nfl');}
