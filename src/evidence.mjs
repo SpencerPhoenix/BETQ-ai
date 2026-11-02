@@ -66,8 +66,21 @@ export function observationsFromSlate(slate,rows,now=Date.now(),season=new Date(
       Number.isFinite(c.homeProbability)&&c.homeProbability>0&&c.homeProbability<1&&
       c.oldestQuoteAgeSeconds<=600&&parsed(c.latestQuoteAt)<=now+60000&&
       parsed(c.latestQuoteAt)<kick;
+    const cModel=event.efficiencyChallenger;
+    const validChallenger=cModel?.available===true &&
+      cModel.independentOfOdds===true && cModel.researchOnly===true &&
+      cModel.automaticSelection===false &&
+      typeof cModel.modelVersion==='string' && cModel.modelVersion.length<60 &&
+      Number.isFinite(cModel.homeWinProbability) &&
+      cModel.homeWinProbability>0 && cModel.homeWinProbability<1 &&
+      Number.isFinite(parsed(cModel.generatedAt)) &&
+      parsed(cModel.generatedAt)<=now+60000 &&
+      parsed(cModel.generatedAt)<kick;
     const window=kick-now<=90*60000?'NEAR_KICKOFF':'DAILY';
-    const id=hash([season,row.game_id,new Date(now).toISOString().slice(0,10),window].join('|'));
+    // A new independent model may enter the research journal later on the
+    // same day without rewriting previously frozen Elo-only observations.
+    const id=hash([season,row.game_id,new Date(now).toISOString().slice(0,10),
+      window,validChallenger?'CHALLENGER:'+cModel.modelVersion:'ELO_ONLY'].join('|'));
     accepted.push({
       id,gameId:row.game_id,providerEventId:String(event.id),
       season,home:canonicalTeam(row.home_team),away:canonicalTeam(row.away_team),
@@ -77,6 +90,11 @@ export function observationsFromSlate(slate,rows,now=Date.now(),season=new Date(
       modelVersion:String(m.modelVersion),modelBuiltAt:m.modelBuiltAt,
       modelLastResultDate:m.throughGameDate,
       modelHomeProbability:round(m.homeWinProbability,6),
+      challengerHomeProbability:validChallenger?
+        round(cModel.homeWinProbability,6):null,
+      challengerModelVersion:validChallenger?cModel.modelVersion:null,
+      challengerBuiltAt:validChallenger?cModel.generatedAt:null,
+      challengerResearchOnly:true,
       marketHomeProbability:validMarket?round(c.homeProbability,6):null,
       marketBookCount:validMarket?c.books:0,
       marketDisagreementPoints:validMarket?c.disagreementPoints:null,
@@ -113,7 +131,13 @@ export function updateJournal(existing,captures,results,now=Date.now()) {
   for(const s of captures){
     if(s.season!==journal.season||!s.id||!s.gameId||!Number.isFinite(s.modelHomeProbability)||
        s.modelHomeProbability<=0||s.modelHomeProbability>=1||
-       parsed(s.capturedAt)>=parsed(s.commenceTime))throw Error('Invalid/post-kickoff forecast');
+       parsed(s.capturedAt)>=parsed(s.commenceTime)||
+       (s.challengerHomeProbability!==undefined&&s.challengerHomeProbability!==null&&
+         (!Number.isFinite(s.challengerHomeProbability)||
+          s.challengerHomeProbability<=0||s.challengerHomeProbability>=1||
+          s.challengerResearchOnly!==true||
+          parsed(s.challengerBuiltAt)>parsed(s.capturedAt)+60000)))
+      throw Error('Invalid/post-kickoff forecast');
     if(!ids.has(s.id)){journal.snapshots.push(structuredClone(s));ids.add(s.id);added++;}
   }
   const tracked=new Set(journal.snapshots.map(x=>x.gameId));
@@ -167,6 +191,21 @@ export function summarizeEvidence(journal,now=Date.now()) {
       return {s,final,y,model:loss(s.modelHomeProbability,y),
         market:Number.isFinite(s.marketHomeProbability)?loss(s.marketHomeProbability,y):null};});
   const paired=observed.filter(x=>x.market);
+  const challengerPaired=[];
+  for(const [gameId,shots] of byGame){
+    const result=settled.get(gameId);
+    if(!result||result.outcome==='TIE')continue;
+    const s=[...shots].filter(x=>Number.isFinite(x.challengerHomeProbability)&&
+      parsed(x.capturedAt)<parsed(x.commenceTime))
+      .sort((a,b)=>a.capturedAt.localeCompare(b.capturedAt))[0];
+    if(!s)continue;
+    const y=result.outcome==='HOME'?1:0;
+    challengerPaired.push({
+      gameId,modelVersion:s.challengerModelVersion,
+      baseline:loss(s.modelHomeProbability,y),
+      challenger:loss(s.challengerHomeProbability,y)
+    });
+  }
   const minMet=observed.length>=MIN_SAMPLE,pairedMet=paired.length>=MIN_SAMPLE;
   const differences=paired.map(x=>x.market.brier-x.model.brier);
   const movement=[];
@@ -187,6 +226,21 @@ export function summarizeEvidence(journal,now=Date.now()) {
     totalSnapshots:journal.snapshots.length,prospectiveGames:first.size,
     settledGames:observed.length,pendingGames:pending.length,
     pairedMarketGames:paired.length,nearKickoffConsensusPairs:movement.length,
+    prospectiveChallengerGames:[...byGame.values()].filter(shots=>
+      shots.some(s=>Number.isFinite(s.challengerHomeProbability))).length,
+    pairedChallengerSettled:challengerPaired.length,
+    challengerForwardComparison:challengerPaired.length>=MIN_SAMPLE?{
+      n:challengerPaired.length,
+      baselineBrier:round(avg(challengerPaired.map(x=>x.baseline.brier))),
+      challengerBrier:round(avg(challengerPaired.map(x=>x.challenger.brier))),
+      baselineLogLoss:round(avg(challengerPaired.map(x=>x.baseline.logLoss))),
+      challengerLogLoss:round(avg(challengerPaired.map(x=>x.challenger.logLoss))),
+      baselineMinusChallengerBrier:round(avg(challengerPaired.map(x=>
+        x.baseline.brier-x.challenger.brier))),
+      confidence95:ciPaired(challengerPaired.map(x=>
+        x.baseline.brier-x.challenger.brier)),
+      interpretation:'PAIRED_PROSPECTIVE_PREGAME_NOT_PROFIT_VALIDATION'
+    }:null,
     tiesExcluded:[...first.keys()].filter(id=>settled.get(id)?.outcome==='TIE').length,
     forwardMetrics:minMet?{
       n:observed.length,brier:round(avg(observed.map(x=>x.model.brier))),
