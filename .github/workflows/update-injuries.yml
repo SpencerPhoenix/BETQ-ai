@@ -1,0 +1,57 @@
+name: NFL injury report provenance refresh
+on:
+  push:
+    paths:
+      - '.github/workflows/update-injuries.yml'
+      - 'scripts/update-injuries.mjs'
+      - 'src/injuries.mjs'
+  workflow_dispatch:
+  schedule:
+    - cron: '24 10 * * *'
+permissions:
+  contents: write
+concurrency:
+  group: betq-injury-report-refresh
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify report parsing and source timestamp controls
+        run: |
+          npm run check
+          npm test
+      - name: Compile fresh public weekly injury report context
+        run: node scripts/update-injuries.mjs
+      - name: Assert never-verified starting QB and public source provenance
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const a=JSON.parse(readFileSync('data/nfl_injuries.json','utf8'));
+          if(a.schema!==1||a.source!=='NFLVERSE_INJURIES'||!a.sourceUpdatedAt||a.reportCount<5)
+            throw Error('Current injury source unavailable/unverified');
+          if(!a.advisory?.includes('not confirmed quarterback starter'))throw Error('Unverified starter caveat missing');
+          console.log('Report source:',a.source);
+          console.log('As-of:',a.sourceUpdatedAt);
+          console.log('Team/week reports:',a.reportCount);
+          console.log('Confirmed starter decisions: NONE');
+          NODE
+      - name: Commit source-vintage report without modifying model probabilities
+        shell: bash
+        run: |
+          if [[ -n "$(git status --porcelain -- data/nfl_injuries.json)" ]]; then
+            git config user.name "betq-injury-report-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add data/nfl_injuries.json
+            git commit -m "data: refresh sourced NFL injury statuses without starter assumptions"
+            git fetch origin main
+            git rebase origin/main
+            git push origin HEAD:main
+          else
+            echo "No new injury report vintage."
+          fi
