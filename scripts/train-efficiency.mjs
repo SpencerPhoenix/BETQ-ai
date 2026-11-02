@@ -63,7 +63,7 @@ artifact.dataFingerprint=createHash('sha256').update(
     Object.entries(allPbp).sort(([a],[b])=>a.localeCompare(b))])
 ).digest('hex');
 const prior=await readFile(TARGET,'utf8').then(JSON.parse).catch(()=>null);
-if(prior?.dataFingerprint===artifact.dataFingerprint&&prior?.version===artifact.version){
+if(prior?.dataFingerprint===artifact.dataFingerprint&&prior?.version===artifact.version&&prior?.evaluationVersion===artifact.evaluationVersion){
   console.log('No new completed data: existing challenger unchanged');
   console.log(JSON.stringify({promotable:prior.promotable,holdout:prior.holdout},null,2));
   process.exit(0);

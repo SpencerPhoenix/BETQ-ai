@@ -17,12 +17,12 @@ export function nflMoneylineConsensus(event, { asOf = Date.now(), maxAgeMs = 600
   for (const book of event.bookmakers) {
     const id = typeof book?.key === 'string' ? book.key : null;
     if (!id) continue;
-    const market = book.markets?.find(m => m?.key === 'h2h');
+    const market = Array.isArray(book.markets) ? book.markets.find(m => m?.key === 'h2h') : null;
     if (!market || !Array.isArray(market.outcomes) || market.outcomes.length !== 2) continue;
     const at = Date.parse(market.last_update || book.last_update || '');
     if (!Number.isFinite(at) || at > now + 60000 || now - at > maxAgeMs) continue;
-    const home = market.outcomes.find(o => o.name === event.home_team);
-    const away = market.outcomes.find(o => o.name === event.away_team);
+    const home = market.outcomes.find(o => o && o.name === event.home_team);
+    const away = market.outcomes.find(o => o && o.name === event.away_team);
     if (!home || !away || toDecimal(home.price) === null || toDecimal(away.price) === null) continue;
     const norm = noVigPair(home.price, away.price);
     if (!norm || !norm.every(finite)) continue;

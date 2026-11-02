@@ -1,4 +1,5 @@
 import { SPORTS, MARKETS } from './engine.mjs';
+import {readBoundedText} from './integrity.mjs';
 
 export class OddsError extends Error {
   constructor(code, status, message) {
@@ -19,14 +20,17 @@ export function createOddsSource({
   dailyCreditCap = Number(process.env.ODDS_DAILY_CREDIT_LIMIT) || 12,
   reserveCredits = Number(process.env.ODDS_MIN_CREDITS_RESERVE) || 50
 } = {}) {
+  apiKey = typeof apiKey==='string' ? apiKey.trim() : '';
+  ttlMs = Number.isFinite(ttlMs) && ttlMs>0 ? ttlMs : 300000;
   const cache = new Map();
   const inflight = new Map();
   let lastSuccess = null;
   let lastError = null;
   const configured = Boolean(apiKey.trim());
   const headersSnapshot = { remaining: null, used: null, last: null };
-  const safeDailyCap = Math.max(1,Math.min(100,Math.floor(dailyCreditCap)));
-  const safeReserve = Math.max(0,Math.min(5000,Math.floor(reserveCredits)));
+  const safeDailyCap = Number.isFinite(dailyCreditCap) ? Math.max(1,Math.min(100,Math.floor(dailyCreditCap))) : 12;
+  const safeReserve = Number.isFinite(reserveCredits) ? Math.max(0,Math.min(5000,Math.floor(reserveCredits))) : 50;
+  let pendingProviderCredits = 0;
   const budget = { day: '', used: 0 };
   function budgetStatus() {
     const day = new Date(clock()).toISOString().slice(0,10);
@@ -47,7 +51,7 @@ export function createOddsSource({
     }
     if (inflight.has(cacheId)) return inflight.get(cacheId);
     budgetStatus();
-    if (headersSnapshot.remaining !== null && headersSnapshot.remaining <= safeReserve) {
+    if (headersSnapshot.remaining !== null && headersSnapshot.remaining - pendingProviderCredits - estimatedCredits < safeReserve) {
       throw new OddsError('PROVIDER_CREDIT_RESERVE',429,
         'Remaining provider credits are at the reserved minimum. Raise budget settings only after reviewing available credits.');
     }
@@ -56,6 +60,7 @@ export function createOddsSource({
         'Daily provider request budget reached. No new paid data requests until the next UTC day.');
     }
     budget.used += estimatedCredits;
+    pendingProviderCredits += estimatedCredits;
     const pending = (async () => {
       const url = new URL('https://api.the-odds-api.com/v4/sports/' + path);
       url.searchParams.set('apiKey', apiKey);
@@ -77,8 +82,9 @@ export function createOddsSource({
         throw new OddsError(code, 502, 'Odds provider returned an error (' + response.status + ').');
       }
       // JSON size is bounded to avoid memory pressure from unexpectedly large upstream payloads.
-      const raw = await response.text();
-      if (raw.length > 5000000) throw new OddsError('OVERSIZE_PAYLOAD', 502, 'Provider payload exceeded safety limit.');
+      let raw;
+      try { raw = await readBoundedText(response,5000000); }
+      catch (e) { throw new OddsError(e.message==='BODY_TOO_LARGE'?'OVERSIZE_PAYLOAD':'INVALID_PROVIDER_BODY',502,'Provider response was too large or unreadable.'); }
       let data;
       try { data = JSON.parse(raw); } catch { throw new OddsError('INVALID_PROVIDER_JSON', 502, 'Odds provider returned invalid data.'); }
       if (!Array.isArray(data)) throw new OddsError('INVALID_PROVIDER_DATA', 502, 'Odds provider returned an unexpected schema.');
@@ -98,7 +104,7 @@ export function createOddsSource({
       const payload = { events: data, receivedAt, cacheHit: false, quota };
       cache.set(cacheId, { storedAt: clock(), payload });
       return payload;
-    })().finally(() => inflight.delete(cacheId));
+    })().finally(() => { inflight.delete(cacheId); pendingProviderCredits-=estimatedCredits; });
     inflight.set(cacheId, pending);
     return pending;
   }

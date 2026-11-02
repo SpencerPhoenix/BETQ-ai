@@ -42,10 +42,11 @@ export function median(values) {
   return valid.length % 2 ? valid[mid] : (valid[mid - 1] + valid[mid]) / 2;
 }
 const round = (n, digits = 2) => Number.isFinite(n) ? Number(n.toFixed(digits)) : null;
-const norm = (n) => Math.round(n * 1000) / 1000;
+const norm = n => Object.is(n,-0) ? 0 : n; // Never merge different point lines through rounding.
 const iso = (time) => new Date(time).toISOString();
 
 function toPair(event, bookmaker, marketKey, now, maxAgeMs) {
+  if (!bookmaker || typeof bookmaker !== 'object') return null;
   const market = Array.isArray(bookmaker.markets)
     ? bookmaker.markets.find(m => m && m.key === marketKey) : null;
   if (!market || !Array.isArray(market.outcomes) || market.outcomes.length !== 2) return null;
@@ -54,6 +55,7 @@ function toPair(event, bookmaker, marketKey, now, maxAgeMs) {
   const ageMs = Math.max(0, now - updatedAt);
   if (ageMs > maxAgeMs) return null;
   const [one, two] = market.outcomes;
+  if (!one || !two || typeof one !== 'object' || typeof two !== 'object' || one.name === two.name) return null;
   if (toDecimal(one.price) === null || toDecimal(two.price) === null) return null;
   let sides, contractId, contractLabel;
   if (marketKey === 'h2h') {
@@ -120,6 +122,7 @@ function analyzeContract(event, market, contractId, quotes, now) {
     if (started) reasons.push('KICKOFF_STARTED');
     else if (close) reasons.push('KICKOFF_IMMINENT');
     if (comparators.length < 2) reasons.push('INSUFFICIENT_COMPARATORS');
+    if (market !== 'h2h' && Number.isInteger(candidate.sides[side].point)) reasons.push('PUSH_PROBABILITY_NOT_MODELED');
     if (range !== null && range > 0.045) reasons.push('MODEL_DISAGREEMENT');
     if (quality < 65) reasons.push('LOW_QUALITY');
     if (ev === null || ev < 0.015) reasons.push('EDGE_BELOW_THRESHOLD');
@@ -148,6 +151,7 @@ function analyzeContract(event, market, contractId, quotes, now) {
       status: watch ? 'WATCH' : 'PASS',
       reasons,
       basis: 'MARKET_CONSENSUS_ONLY',
+      settlementAssumption: market !== 'h2h' && Number.isInteger(selection.point) ? 'PUSH_NOT_MODELED' : 'TWO_WAY_CONDITIONAL_ON_NON_VOID',
       independentModelValidated: false,
       injuryVerified: false,
       weatherVerified: false,
@@ -160,10 +164,12 @@ function analyzeContract(event, market, contractId, quotes, now) {
 export function analyzeEvents(events, { sport, market = 'h2h', asOf = Date.now(), maxAgeMs = 600000, demo = false } = {}) {
   if (!Object.hasOwn(MARKETS, market)) throw new Error('Unsupported market');
   const now = Number(asOf);
+  if (!Number.isFinite(now) || !Number.isFinite(maxAgeMs) || maxAgeMs<=0) throw new Error('Invalid analysis time policy');
   const analyzed = [];
   for (const event of Array.isArray(events) ? events : []) {
     if (!event || !event.id || !event.home_team || !event.away_team
-        || !Array.isArray(event.bookmakers)) continue;
+        || !Array.isArray(event.bookmakers) || event.home_team === event.away_team
+        || !Number.isFinite(Date.parse(event.commence_time || ''))) continue;
     const groups = new Map();
     for (const book of event.bookmakers) {
       const quote = toPair(event, book, market, now, maxAgeMs);
@@ -184,7 +190,7 @@ export function analyzeEvents(events, { sport, market = 'h2h', asOf = Date.now()
       homeTeam: event.home_team, awayTeam: event.away_team,
       commenceTime: event.commence_time,
       started: Date.parse(event.commence_time) <= now,
-      bookmakerCount: new Set(event.bookmakers.map(b => b.key).filter(Boolean)).size,
+      bookmakerCount: new Set(event.bookmakers.filter(b=>b && typeof b==='object').map(b => b.key).filter(Boolean)).size,
       totalMarkets: groups.size, opportunities: opportunities.slice(0, 20),
       topSignal: opportunities.find(o => o.status === 'WATCH') || opportunities[0] || null,
       demo

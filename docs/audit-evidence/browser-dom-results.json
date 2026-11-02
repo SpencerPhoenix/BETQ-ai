@@ -1,0 +1,34 @@
+{
+  "mode": "DOM-mounted exact source; browser network navigation unavailable; API mocked locally",
+  "mockOnly": true,
+  "liveProviderRequests": 0,
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 1000,
+      "navigationAndControlChecks": 31,
+      "javascriptErrors": [],
+      "consoleErrors": [],
+      "pageOverflow": false,
+      "staleWatchSuppression": true
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "navigationAndControlChecks": 31,
+      "javascriptErrors": [],
+      "consoleErrors": [],
+      "pageOverflow": false,
+      "staleWatchSuppression": true
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "navigationAndControlChecks": 31,
+      "javascriptErrors": [],
+      "consoleErrors": [],
+      "pageOverflow": false,
+      "staleWatchSuppression": true
+    }
+  ]
+}

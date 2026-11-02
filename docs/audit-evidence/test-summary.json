@@ -1,0 +1,16 @@
+{
+  "baselineCommit": "0499176b30e4be703dc3073f616627610bb669dd",
+  "candidateVersion": "0.4.1",
+  "baselineTestsPassed": 59,
+  "newAdversarialProbesFailedBeforeFix": 4,
+  "candidateTestsPassed": 81,
+  "candidateTestsFailed": 0,
+  "pricePairs": 50000,
+  "malformedEventCases": 10000,
+  "concurrentCoalescedRequests": 1000,
+  "localHttpBurstRequests": 500,
+  "browserChecks": 93,
+  "browserMode": "DOM-mounted exact source with local mocked API; production browser navigation unavailable",
+  "paidProviderCallsInStressTests": 0,
+  "improvedWinRateEstablished": false
+}

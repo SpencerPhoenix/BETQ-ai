@@ -6,6 +6,8 @@
  * aggregate is added only AFTER its prediction is recorded. Historical
  * calibration/holdout windows remain disjoint.
  */
+import {pairedWeekBootstrap} from './statistical-audit.mjs';
+import {timestamp, sourceDateFresh, nflGameDate, isProbability} from './integrity.mjs';
 import { walkForward, eloProbability, calibrate, NFL_TEAMS, canonicalTeam } from './nfl-elo.mjs';
 
 const rounded=(n,d=6)=>Number.isFinite(n)?Number(n.toFixed(d)):null;
@@ -145,9 +147,14 @@ export function fitEfficiencyChallenger(games,pbpById,eloParams,{
   const baseline2025=scoring(holdout,baseline);
   const challenger2025=scoring(holdout,calibrated.coefs);
   const ci=pairedBootstrap(holdout,calibrated.coefs);
+  const weekSensitivity=pairedWeekBootstrap(holdout.map(r=>({
+    id:r.id,date:r.date,outcome:r.actual,baseline:r.eloProbability,
+    challenger:predictOne(r,calibrated.coefs)
+  })));
   // Requiring both proper scoring improvements AND positive lower CI is a strong gate.
   const promotable=challenger2025.brier+0.002<baseline2025.brier &&
-    challenger2025.logLoss<baseline2025.logLoss && ci.lower>0;
+    challenger2025.logLoss<baseline2025.logLoss && ci.lower>0 &&
+    weekSensitivity.available && weekSensitivity.lower>0;
   const teamFeatures={};
   for(const [team,h] of histories) {
     const t=trend(h);
@@ -156,7 +163,7 @@ export function fitEfficiencyChallenger(games,pbpById,eloParams,{
     );
   }
   return {
-    schema:1,version:'nfl-efficiency-1',generatedAt:asOf,
+    schema:1,version:'nfl-efficiency-1',evaluationVersion:2,generatedAt:asOf,
     source:'NFLVERSE_PBP_CC_BY_4_0',type:'INDEPENDENT_CHALLENGER_RESEARCH',
     training:{
       tune:'2018-2022',calibrate:'2023-2024',untouchedHoldout:'2025',
@@ -165,7 +172,8 @@ export function fitEfficiencyChallenger(games,pbpById,eloParams,{
     tuning:best.score,calibration:calibrated.score,holdout:{
       elo:baseline2025,challenger:challenger2025,
       deltaBrier:rounded(baseline2025.brier-challenger2025.brier,5),
-      confidence95:ci
+      confidence95:ci,weekSensitivity,
+      referenceSeasonPreviouslyInspected:true
     },
     coefficients:calibrated.coefs,coefficientScale:calibrated.factor,
     readyForResearch:true,promotable,
@@ -186,13 +194,19 @@ export function challengerResearchForEvent(event,eloHomeProbability,artifact,now
   const at=Date.parse(artifact.generatedAt);
   if(!Number.isFinite(at)||at>now+60000||now-at>7*86400000)
     return {available:false,reason:'FEATURE_SOURCE_STALE'};
-  const home=NFL_TEAMS[event.home_team],away=NFL_TEAMS[event.away_team];
-  if(!home||!away||!Number.isFinite(eloHomeProbability))
+  const kick=timestamp(event?.commence_time);
+  if(!Number.isFinite(now)||!Number.isFinite(kick)||kick<=now) return {available:false,reason:'INVALID_OR_STARTED_EVENT'};
+  const home=NFL_TEAMS[event?.home_team],away=NFL_TEAMS[event?.away_team];
+  if(!home||!away||home===away||!isProbability(eloHomeProbability)||!artifact.teamFeatures)
     return {available:false,reason:'UNMAPPED_NFL_EVENT'};
   const ht=artifact.teamFeatures[home],atTeam=artifact.teamFeatures[away];
-  const gameDate=new Date(event.commence_time).toISOString().slice(0,10);
+  const gameDate=nflGameDate(event);
   if(!ht||!atTeam||ht.n<4||atTeam.n<4)
     return {available:false,reason:'TEAM_EPA_HISTORY_INSUFFICIENT'};
+  if (![ht,atTeam].every(t=>sourceDateFresh(t.latestGameDate,now,28) &&
+      ['netEPA','netSuccess','offEPA','defEPA'].every(k=>Number.isFinite(t[k]))) ||
+      !artifact.coefficients || !['epa','success','rest'].every(k=>Number.isFinite(artifact.coefficients[k])))
+    return {available:false,reason:'TEAM_FEATURES_STALE_OR_INVALID'};
   const restDiff=clamp(
     clamp(Math.round((seasonTime(gameDate)-seasonTime(ht.latestGameDate))/HOURS),0,18)-
     clamp(Math.round((seasonTime(gameDate)-seasonTime(atTeam.latestGameDate))/HOURS),0,18),-10,10);
