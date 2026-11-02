@@ -43,3 +43,14 @@ test('Provenance UI and mobile CSS never advertise genuine CLV or app account ex
   assert.ok(!html.includes('onclick='));
   assert.ok(!html.includes('onchange='));
 });
+
+test('Actual forward-derived market movement panel never claims QB attribution or accepted bookmaker prices',async()=>{
+  const [html,js]=await Promise.all([
+    path('public/index.html'),path('public/app.js')
+  ]);
+  assert.match(html,/id="shadow-forward-view"/);
+  assert.match(js,/requestJSON\('\/api\/shadow\/derived'\)/);
+  assert.match(js,/renderShadowForward\(\)/);
+  assert.match(js,/QB ASSOCIATION UNVERIFIED|NOT LINKED TO QB SOURCE/);
+  assert.match(js,/not a trading signal/);
+});
