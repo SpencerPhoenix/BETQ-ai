@@ -24,6 +24,7 @@
     slate: null, error: null, sourceHealth: null, nflModel: null, evidence: null, efficiency: null, injurySource: null,
     pricingResult: null, pricingError: null, priceVerification: null,
     replaySummary: null, replayPlays: null, replayError: null,
+    marketChallenge: null,
     replaySeason: 2025, replayThreshold: 3, replayPage: 0, replayLoading: false,
     selectedId: null, search: '', sort: 'ev', watchOnly: false,
     loading: false, ledger: Array.isArray(safeGet(LEDGER, [])) ? safeGet(LEDGER, []) : []
@@ -188,13 +189,87 @@
       ' · '+a.observedOffers+' price observations · '+a.modelEligibleGames+
       ' eligible NFL projections · '+a.modelPriceCandidatesReviewed+
       ' unapproved research candidates</small></div>';
+    const benchmark=a.marketFavorite65Historical;
+    const favoriteNote=benchmark?.graded ?
+      '<div class="agent-favorite-warning"><b>High accuracy is not a profitable edge.</b> '+
+      esc(String(benchmark.graded))+' historical market favorites ≥65% won '+
+      num(benchmark.winRatePercent,2)+'%, but their hypothetical closing-price ROI was '+
+      signed(benchmark.hypotheticalClosingPriceROIPercent,2)+'%. BETQ has no validated executable advantage.</div>' : '';
     const stages=(a.stages||[]).map(stage=>
       '<article class="agent-stage"><span>'+esc(stage.name)+'</span>'+
       '<strong>'+esc(stage.state)+'</strong>'+
       '<small>'+esc(stage.detail)+'</small></article>').join('');
-    root.innerHTML=status+'<div class="agent-stage-grid">'+stages+'</div>'+
+    root.innerHTML=status+'<div class="agent-stage-grid">'+stages+'</div>'+favoriteNote+
       '<div class="agent-foot">Historical return is evaluated against recorded closing prices, not verified executable entries. '+
       '<button class="text-link" type="button" data-tab="replay">See seasons &amp; win/loss records ↗</button></div>';
+  }
+
+
+  function renderMarketChallenge(){
+    const root=$('market-challenge-view');if(!root)return;
+    const report=state.marketChallenge;
+    if(!report){root.innerHTML=empty('Loading market calibration challenge',
+      'Reading independent historical market-quality and hit-rate research…');return;}
+    if(!report.available){
+      root.innerHTML=empty('Market benchmark not available',
+        'No completed, source-attributed prior-season blend analysis is published.');return;
+    }
+    const fave60=report.pooledPolicy?.MARKET_FAVORITE_60;
+    const fave65=report.pooledPolicy?.MARKET_FAVORITE_65;
+    const fave70=report.pooledPolicy?.MARKET_FAVORITE_70;
+    const weights=report.years||[];
+    const allZero=weights.length>=4&&weights.every(x=>x.modelContributionWeight===0);
+    const tiles='<div class="metric-grid">'+
+      metric('INDEPENDENT ELO WEIGHT',
+        allZero?'0%':'NOT APPROVED',
+        'Weight selected by strictly prior-season error tests','', '◇')+
+      metric('HISTORICAL FAVORITE HIT RATE',
+        fave65?num(fave65.winRatePercent,2)+'%':'—',
+        'Favorite with market win probability ≥65%, research only','lime','◉')+
+      metric('HYPOTHETICAL FAVORITE ROI',
+        fave65?signed(fave65.hypotheticalClosingPriceROIPercent,2)+'%':'—',
+        'Unverified closing-price fills, flat risk units','', '∑')+
+      metric('REAL MONEY EDGE','NOT VERIFIED',
+        'Prospective filled entry and real CLV still required','violet','⌁')+
+      '</div>';
+    const years=weights.map(y=>{
+      const fav=y.favoriteScenarios.find(r=>r.ruleId==='MARKET_FAVORITE_65');
+      return '<tr><td><b>'+esc(y.season)+'</b></td>'+
+        '<td>'+num(y.originalElo.brier,5)+'</td>'+
+        '<td>'+num(y.closingMarket.brier,5)+'</td>'+
+        '<td>'+num(y.conservativelyCalibrated.brier,5)+'</td>'+
+        '<td>'+num(y.modelContributionWeight*100,0)+'%</td>'+
+        '<td>'+fav.wins+'–'+fav.losses+'</td>'+
+        '<td>'+num(fav.winRatePercent,2)+'%</td>'+
+        '<td class="'+(fav.hypotheticalClosingPriceROIPercent>=0?'positive':'negative')+'">'+
+        signed(fav.hypotheticalClosingPriceROIPercent,2)+'%</td></tr>';
+    }).join('');
+    const candidates=[['60%',fave60],['65%',fave65],['70%',fave70]]
+      .map(([name,x])=>x?'<article class="market-compare-card"><span>FAVORITE ≥'+name+
+      ' MARKET PROBABILITY</span><strong>'+num(x.winRatePercent,2)+'% win rate</strong>'+
+      '<small>'+x.wins+'–'+x.losses+' historical games · '+
+      signed(x.hypotheticalClosingPriceROIPercent,2)+
+      '% hypothetical ROI</small></article>':'').join('');
+    root.innerHTML='<section class="panel market-challenge-panel">'+
+      '<div class="panel-head"><div><span class="panel-kicker">NESTED PAST-ONLY TESTING</span>'+
+      '<h3>Can BETQ actually improve the market?</h3></div>'+
+      '<span class="status-tag pass">INDEPENDENT EDGE NOT VERIFIED</span></div>'+
+      '<div class="market-challenge-inner">'+tiles+
+      '<p class="market-diagnostic"><b>Outcome:</b> '+
+      (allZero?'Past-year calibration rejected every attempted Elo contribution.' :
+      'No statistically defensible model advantage has been promoted.')+
+      ' We use fresh multi-book market probabilities as a reference, not as an independently generated BETQ edge. '+
+      'Higher winner accuracy alone is not enough: expensive favorites can win often and still lose money.</p>'+
+      '<div class="market-compare-grid">'+candidates+'</div>'+
+      '<div class="table-scroll"><table class="data-table market-challenge-table">'+
+      '<thead><tr><th>SEASON</th><th>ELO BRIER</th><th>MARKET BRIER</th>'+
+      '<th>GATED BLEND BRIER</th><th>MODEL WEIGHT</th><th>FAVORITE W–L</th>'+
+      '<th>FAVORITE WIN %</th><th>HYP. ROI</th></tr></thead>'+
+      '<tbody>'+years+'</tbody></table></div>'+
+      '<p class="market-challenge-note">All market-favorite strategies are <b>retrospective research only</b>. '+
+      'Bookmaker closing moneylines lack verified historical entry timestamps, and no strategy here is live-bet authorized. '+
+      'Past-year parameter decisions do not know future outcomes, but the broader modeling project has already inspected these seasons.</p>'+
+      '</div></section>';
   }
 
   function renderReplay(){
@@ -993,7 +1068,7 @@
   function render() {
     renderFilters(); renderFeed(); renderBanner(); renderMetrics(); renderAgentRun();
     renderOpportunities(); renderSpotlight(); renderChart();
-    renderGames(); renderSignals(); renderModel(); renderIntelligence(); renderEvidence(); renderReplay(); renderPricing(); renderExecution(); renderAudit();
+    renderGames(); renderSignals(); renderModel(); renderIntelligence(); renderEvidence(); renderReplay(); renderMarketChallenge(); renderPricing(); renderExecution(); renderAudit();
   }
 
   async function loadIntelligence() {
@@ -1013,6 +1088,13 @@
     try { state.nflModel = await requestJSON('/api/model/nfl'); }
     catch { state.nflModel = { available:false, reason:'MODEL_ENDPOINT_UNAVAILABLE' }; }
     renderModel(); renderAudit(); renderSpotlight();
+  }
+  async function loadMarketChallenge(){
+    try{
+      const research=await requestJSON('/api/research/market');
+      state.marketChallenge=research;
+    }catch{state.marketChallenge={available:false,reason:'CHALLENGE_ENDPOINT_UNAVAILABLE'};}
+    renderMarketChallenge();renderAgentRun();
   }
   async function loadReplay() {
     state.replayLoading = true;
@@ -1182,6 +1264,7 @@
   loadIntelligence();
   loadEvidence();
   loadReplay();
+  loadMarketChallenge();
   loadPriceVerification();
   loadSlate();
 })();
