@@ -4,7 +4,7 @@
   const $ = (id) => document.getElementById(id);
   const STORE = 'betq-terminal-v1';
   const LEDGER = 'betq-paper-v1';
-  const allowedTabs = ['overview', 'games', 'signals', 'execution', 'audit', 'settings'];
+  const allowedTabs = ['overview', 'games', 'signals', 'model', 'execution', 'audit', 'settings'];
   const marketLabels = { h2h: 'Moneyline', spreads: 'Spread', totals: 'Total' };
   const sportLabels = {
     americanfootball_nfl: 'NFL', basketball_nba: 'NBA', baseball_mlb: 'MLB',
@@ -21,7 +21,7 @@
     mode: prefs.mode === 'demo' ? 'demo' : 'live',
     bankroll: Number.isFinite(prefs.bankroll) && prefs.bankroll >= 10 ? prefs.bankroll : 1000,
     maxRisk: Number.isFinite(prefs.maxRisk) && prefs.maxRisk >= 0.1 && prefs.maxRisk <= 1 ? prefs.maxRisk : 1,
-    slate: null, error: null, sourceHealth: null,
+    slate: null, error: null, sourceHealth: null, nflModel: null,
     selectedId: null, search: '', sort: 'ev', watchOnly: false,
     loading: false, ledger: Array.isArray(safeGet(LEDGER, [])) ? safeGet(LEDGER, []) : []
   };
@@ -83,12 +83,13 @@
     header.style.display = tab === 'overview' ? '' : 'none';
     $('breadcrumb-page').textContent = ({
       overview: 'COMMAND CENTER', games: 'GAME MONITOR', signals: 'SIGNAL SCANNER',
-      execution: 'PAPER EXECUTION', audit: 'AUDIT & QUALITY', settings: 'SETTINGS'
+      model: 'PREDICTION LAB', execution: 'PAPER EXECUTION', audit: 'AUDIT & QUALITY', settings: 'SETTINGS'
     })[tab];
     $('sidebar').classList.remove('open');
     if (tab === 'settings') syncSettings();
     if (tab === 'execution') renderExecution();
     if (tab === 'audit') renderAudit();
+    if (tab === 'model') renderModel();
     if (tab === 'signals') renderSignals();
     if (tab === 'games') renderGames();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -198,6 +199,15 @@
     }
     state.selectedId = signal.id;
     const issue = signal.reasons.length ? signal.reasons.join(' · ').replaceAll('_', ' ') : 'Minimum quantitative price gates passed';
+    const model = signal.event.independentModel;
+    const hasIndependent = model?.available === true && Number.isFinite(signal.eloBaselineProbability);
+    const modelCompare = hasIndependent
+      ? '<div class="model-spotlight"><div><span class="panel-kicker">INDEPENDENT NFL ELO</span><strong>' +
+        pct(signal.eloBaselineProbability) + ' win probability</strong></div><div><span class="panel-kicker">MODEL vs OFFERED PRICE</span><strong>' +
+        signed(signal.eloPriceEdgePoints) + ' pp · ' + signed(signal.eloIndicativeEvPercent) + '% theoretical EV</strong></div>' +
+        '<p>2025 untouched holdout: ' + model.holdoutN + ' games · Brier ' + num(model.holdoutBrier,5) +
+        '. No injury, confirmed-starter, weather or player-status adjustment. Research only.</p></div>'
+      : '';
     $('spotlight').innerHTML = '<div class="spotlight-body"><div class="spotlight-head">' +
       statusTag(signal.status) + '<span class="faint-caption">QUALITY ' + signal.qualityScore + '/100</span></div>' +
       '<div class="spotlight-match">' + esc(eventLabel(signal.event)) + ' · ' + esc(when(signal.event.commenceTime)) + '</div>' +
@@ -210,10 +220,10 @@
       '">' + signed(signal.edgePoints) + ' pp</strong></div>' +
       '<div class="spotlight-stat"><label>Indicative EV</label><strong class="' + (signal.evPercent > 0 ? 'positive' : 'negative') +
       '">' + signed(signal.evPercent) + '%</strong></div></div>' +
-      '<div class="spotlight-explain"><b>Quant assessment:</b> ' + esc(issue) +
+      modelCompare + '<div class="spotlight-explain"><b>Market-only quant assessment:</b> ' + esc(issue) +
       '. Baseline derived from ' + signal.comparatorBooks + ' other book(s) at the identical line. ' +
       'Reference quote age: ' + signal.quoteAgeSeconds + 's. ' +
-      'Injury, weather and independent model verification: unavailable. ' +
+      'Injury, weather and starting-lineup verification: unavailable. ' +
       'Half-time lean: not modeled.</div><div class="spotlight-actions">' +
       '<button type="button" class="outline-button" data-watch="' + esc(signal.id) + '">☆ ' +
       (isWatched(signal.id) ? 'Watching' : 'Add to watchlist') + '</button>' +
@@ -243,12 +253,18 @@
     const events = state.slate?.events || [];
     $('game-grid').innerHTML = events.map(event => {
       const top = event.topSignal;
+      const projection = event.independentModel;
       return '<article class="game-card"><div class="game-head"><span>' + esc(sportLabels[state.sport]) +
         ' · ' + esc(when(event.commenceTime)) + '</span><span>' +
         (state.mode === 'demo' ? statusTag('DEMO') : (event.started ? 'IN PROGRESS / STARTED' : 'UPCOMING')) +
         '</span></div><div class="game-teams"><div class="game-team">' + esc(event.awayTeam) +
         '</div><span class="versus">VS</span><div class="game-team">' + esc(event.homeTeam) +
-        '</div></div><div class="game-bottom"><span>' + event.bookmakerCount + ' sportsbooks · ' +
+        '</div></div>' +
+        (projection?.available ? '<div class="game-model"><span>INDEPENDENT ELO BASELINE</span><b>' +
+          esc(event.homeTeam) + ' ' + pct(projection.homeWinProbability) +
+          ' · ' + esc(event.awayTeam) + ' ' + pct(projection.awayWinProbability) +
+          '</b><small>2025 holdout Brier ' + num(projection.holdoutBrier,5) + ' · no injury updates</small></div>' : '') +
+        '<div class="game-bottom"><span>' + event.bookmakerCount + ' sportsbooks · '
         event.totalMarkets + ' matched contract(s)</span>' +
         (top ? '<button type="button" class="text-link" data-pick="' + esc(top.id) + '">Inspect ' +
           esc(signed(top.evPercent)) + '% EV ↗</button>' : '<span>No qualifying quotes</span>') + '</div></article>';
@@ -386,6 +402,70 @@
       esc(detail) + '</small></div><span class="status-tag ' + (good ? 'watch' : 'pass') +
       '">' + esc(status) + '</span></div>';
   }
+
+  function renderModel() {
+    const root = $('model-view');
+    if (!root) return;
+    const report = state.nflModel;
+    if (!report) { root.innerHTML = empty('Loading independent model', 'Reading NFL outcome model provenance and 2025 holdout evaluation…'); return; }
+    if (!report.available) {
+      root.innerHTML = empty('NFL model not available', 'The training artifact is missing, too old, or did not satisfy validation thresholds. Reason: ' +
+        (report.reason || 'unknown') + '. Market-only odds scanning remains available.');
+      return;
+    }
+    const h = report.holdout, c = report.calibration, t = report.tuning;
+    const stats = '<div class="metric-grid">' +
+      metric('2025 HOLDOUT GAMES', String(h.n), 'Untouched test set', '', '◇') +
+      metric('WINNER ACCURACY', num(h.accuracy * 100, 2) + '%', '2025 pregame outcomes', 'lime', '⌁') +
+      metric('2025 BRIER', num(h.brier, 5), 'Lower is better · 0.25 coin flip', 'violet', '∑') +
+      metric('CALIBRATION ERROR', num(h.ece * 100, 2) + '%', '2025 10-bin ECE', 'cyan', '◌') + '</div>';
+    const protocol = '<section class="panel"><div class="panel-head"><div><span class="panel-kicker">NO FUTURE DATA LEAKAGE</span>' +
+      '<h3>Training & backtest</h3></div><span class="status-tag watch">BASELINE BACKTESTED</span></div>' +
+      '<div class="model-audit"><div><span>Parameter tuning</span><strong>2018–2022</strong></div>' +
+      '<div><span>Calibration</span><strong>2023–2024</strong></div>' +
+      '<div><span>Untouched evaluation</span><strong>2025</strong></div>' +
+      '<div><span>2018–22 tuning Brier</span><strong>' + num(t.brier,5) + '</strong></div>' +
+      '<div><span>2023–24 calibration Brier</span><strong>' + num(c.brier,5) + '</strong></div>' +
+      '<div><span>2025 test Brier</span><strong>' + num(h.brier,5) + '</strong></div>' +
+      '<div><span>2025 log loss</span><strong>' + num(h.logLoss,5) + '</strong></div>' +
+      '<div><span>2025 calibration ECE</span><strong>' + pct(h.ece,2) + '</strong></div>' +
+      '<div><span>Completed historical games</span><strong>' + report.completedGames + '</strong></div>' +
+      '<div><span>Results processed through</span><strong>' + esc(report.lastGameDate) + '</strong></div></div>' +
+      '<p class="model-disclaimer">Source: nflverse/nfldata (CC BY 4.0). Elo estimates are independent of sportsbook prices ' +
+      'and use only prior game outcomes. They do not incorporate live injuries, starting quarterbacks, ' +
+      'travel, weather or play-by-play analytics. Backtested accuracy does not prove a positive betting ROI.</p></section>';
+    const matches = (state.slate?.events || []).filter(x => x.independentModel?.available);
+    const display = matches.map(ev => {
+      const m = ev.independentModel;
+      const priced = ev.opportunities.filter(x => Number.isFinite(x.eloIndicativeEvPercent));
+      const candidate = [...priced].sort((a,b) => b.eloIndicativeEvPercent - a.eloIndicativeEvPercent)[0];
+      return '<article class="model-match"><div class="model-match-top"><b>' + esc(eventLabel(ev)) +
+        '</b><span>' + esc(when(ev.commenceTime)) + '</span></div>' +
+        '<div class="model-match-sides"><div><span>' + esc(ev.homeTeam) + ' · HOME</span><strong>' +
+        pct(m.homeWinProbability) + '</strong><progress max="100" value="' +
+        (m.homeWinProbability * 100).toFixed(2) + '"></progress></div><div><span>' +
+        esc(ev.awayTeam) + ' · AWAY</span><strong>' + pct(m.awayWinProbability) +
+        '</strong><progress max="100" value="' + (m.awayWinProbability * 100).toFixed(2) +
+        '"></progress></div></div>' +
+        (candidate ? '<div class="model-match-footer"><span>Largest Elo vs book discrepancy</span><b>' +
+          esc(candidate.selection) + ' · ' + esc(candidate.bookmaker) + ' ' +
+          esc(odds(candidate.americanOdds)) + ' · ' + signed(candidate.eloIndicativeEvPercent) +
+          '% hypothetical EV</b></div>' : '') +
+        '<p>Research-only baseline. Confirm injuries, starting lineups and current availability independently.</p></article>';
+    }).join('');
+    const forecastPanel = '<section class="panel"><div class="panel-head"><div><span class="panel-kicker">CURRENT NFL SLATE</span>' +
+      '<h3>Elo projections vs live markets</h3></div><span class="header-mini-icon">⌁</span></div>' +
+      ((state.sport !== 'americanfootball_nfl' || state.market !== 'h2h' || state.mode === 'demo')
+        ? empty('Select NFL · Moneyline · Live', 'Independent NFL Elo predictions are restricted to current, real NFL moneyline games. No other league or demo probability is invented.')
+        : display ? '<div class="model-game-list">' + display + '</div>' :
+          empty('No eligible upcoming NFL games', 'If there are no listed pregame games or quotes, no projections are issued.')) +
+      '</section>';
+    root.innerHTML = stats + '<div class="model-columns">' + forecastPanel + protocol + '</div>' +
+      '<div class="notice info model-caution"><span>◇</span><p>Model forecasts are a separately backtested prior, ' +
+      'not the consensus price scanner and not verified betting picks. MARKET WATCH/PASS labels do not mean ' +
+      'the model found a profitable advantage.</p></div>';
+  }
+
   function renderAudit() {
     const s = state.slate;
     const q = s?.quota;
@@ -396,7 +476,11 @@
       auditRow('Leave-one-book-out baseline', 'Candidate book excluded from fair-price estimate', 'ACTIVE', true),
       auditRow('Exact line matching', 'Spreads and totals compared only at identical points', 'ACTIVE', true),
       auditRow('Quote freshness gate', 'Old quotes excluded; no stale execution labels', 'ACTIVE', true),
-      auditRow('Independent model calibration', 'No calibrated Elo, EPA, injury-adjusted or other win model connected', 'NOT READY', false),
+      auditRow('NFL independent outcome model',
+        state.nflModel?.available ? 'NFL Elo historical outcomes; 2025 holdout Brier ' +
+          num(state.nflModel.holdout.brier,5) + '; injury/starting QB adjustment unavailable' :
+          'No current source-verified, backtested NFL model available',
+        state.nflModel?.available ? 'RESEARCH' : 'UNAVAILABLE', Boolean(state.nflModel?.available)),
       auditRow('Injuries and lineup verification', 'Not integrated. Must be verified independently.', 'NOT VERIFIED', false),
       auditRow('Weather and venue conditions', 'Not integrated. Must be verified independently.', 'NOT VERIFIED', false),
       auditRow('First half / halftime model', 'Not supplied by the three featured markets endpoint', 'NOT MODELED', false),
@@ -439,9 +523,14 @@
   function render() {
     renderFilters(); renderFeed(); renderBanner(); renderMetrics();
     renderOpportunities(); renderSpotlight(); renderChart();
-    renderGames(); renderSignals(); renderExecution(); renderAudit();
+    renderGames(); renderSignals(); renderModel(); renderExecution(); renderAudit();
   }
 
+  async function loadModel() {
+    try { state.nflModel = await requestJSON('/api/model/nfl'); }
+    catch { state.nflModel = { available:false, reason:'MODEL_ENDPOINT_UNAVAILABLE' }; }
+    renderModel(); renderAudit(); renderSpotlight();
+  }
   async function loadHealth() {
     try { state.sourceHealth = await requestJSON('/api/health'); }
     catch { state.sourceHealth = null; }
@@ -532,5 +621,6 @@
   syncSettings();
   render();
   loadHealth();
+  loadModel();
   loadSlate();
 })();
