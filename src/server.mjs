@@ -94,14 +94,15 @@ export function createHandler({
         const now = clock();
         const bucket = access.get(ip) || { resetAt: now + 600000, count: 0 };
         if (bucket.resetAt < now) { bucket.resetAt = now + 600000; bucket.count = 0; }
-        bucket.count++;
+        // Health checks must not be throttled by user odds traffic behind a shared proxy.
+        if(url.pathname!=='/api/health' && url.pathname!=='/api/config') bucket.count++;
         access.set(ip, bucket);
         if (access.size > 10000) access.clear();
-        if (bucket.count > 180) {
+        if (bucket.count > 180 && !['/api/health','/api/config'].includes(url.pathname)) {
           return reply(res, 429, { error: { code: 'LOCAL_RATE_LIMIT', message: 'Too many requests. Try again shortly.' } });
         }
         if (url.pathname === '/api/health') return reply(res, 200, {
-          status: 'ok', app: 'BETQ.ai', version: '0.4.0',
+          status: 'ok', app: 'BETQ.ai', version: '0.4.1',
           serverTime: new Date(now).toISOString(), odds: source.status(),
           nflModel: { available: Boolean(nflArtifact?.readyForResearch), version: nflArtifact?.version || null },
           forwardEvidence: { status: nflEvidence.status, prospectiveGames: nflEvidence.prospectiveGames,
@@ -166,6 +167,8 @@ export function createHandler({
             researchOnly:true,
             promotableInHistoricalHoldout:nflEfficiency.promotable,
             automaticallyPromoted:false,
+            evaluationVersion:nflEfficiency.evaluationVersion||1,
+            statisticalCaveat:'Individual-game bootstrap can overstate confidence; require week-block sensitivity and fresh prospective validation before promotion.',
             independentProspectiveWinRate:null,
             verifiedRealMoneyEdge:false,
             caveats:nflEfficiency.limitations
@@ -201,24 +204,25 @@ export function createHandler({
           const snapshot = demo
             ? { events: demoEvents(sport, now), receivedAt: new Date(now).toISOString(), cacheHit: false, quota: null }
             : await source.getOdds(sport, market);
+          const analysisNow=clock(); // Upstream fetch can cross kickoff or the freshness boundary.
           const analysis = analyzeEvents(snapshot.events, {
-            sport, market, asOf: now, maxAgeMs, demo
+            sport, market, asOf: analysisNow, maxAgeMs, demo
           });
           if (!demo && sport === 'americanfootball_nfl' && market === 'h2h') {
-            const rawById = new Map(snapshot.events.map(e => [String(e.id), e]));
+            const rawById = new Map(snapshot.events.filter(e=>e && typeof e==='object').map(e => [String(e.id), e]));
             for (const game of analysis.events) {
               const rawGame = rawById.get(game.id);
-              game.marketConsensus = nflMoneylineConsensus(rawGame, { asOf: now, maxAgeMs });
+              game.marketConsensus = nflMoneylineConsensus(rawGame, { asOf: analysisNow, maxAgeMs });
               const projection = game.started
                 ? { available: false, reason: 'GAME_ALREADY_STARTED' }
                 : predictNflEvent({
                     home_team: game.homeTeam, away_team: game.awayTeam
-                  }, nflArtifact, now);
+                  }, nflArtifact, analysisNow);
               game.independentModel = projection;
               game.efficiencyChallenger = projection.available ?
-                challengerResearchForEvent(rawGame,projection.homeWinProbability,nflEfficiency,now) :
+                challengerResearchForEvent(rawGame,projection.homeWinProbability,nflEfficiency,analysisNow) :
                 {available:false,reason:'ELO_BASELINE_NOT_AVAILABLE'};
-              game.injuryContext = injuryContextForGame(rawGame,nflInjuries,now);
+              game.injuryContext = injuryContextForGame(rawGame,nflInjuries,analysisNow);
               if (projection.available) {
                 for (const signal of game.opportunities) {
                   const p = signal.side === 'home' ? projection.homeWinProbability

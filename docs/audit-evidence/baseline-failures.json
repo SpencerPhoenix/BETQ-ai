@@ -1,0 +1,25 @@
+{
+  "baselineCommit": "0499176b30e4be703dc3073f616627610bb669dd",
+  "observations": [
+    {
+      "name": "Malformed bookmaker must not crash scanner",
+      "passed": false,
+      "error": "Cannot read properties of null (reading 'markets')"
+    },
+    {
+      "name": "Malformed timestamp must not enter evidence journal",
+      "passed": false,
+      "details": false
+    },
+    {
+      "name": "Newly packaged but 10-month-old results must not be fresh NFL forecast",
+      "passed": false,
+      "details": false
+    },
+    {
+      "name": "Invalid kickoff must not crash challenger API",
+      "passed": false,
+      "error": "Invalid time value"
+    }
+  ]
+}

@@ -3,6 +3,8 @@
  * no-vig consensus are stored. Raw odds/bookmaker identities are never stored.
  * Forecast snapshots are immutable; verified results have revision history.
  */
+import {pairedWeekBootstrap} from './statistical-audit.mjs';
+import {timestamp, isProbability, validDay} from './integrity.mjs';
 import { createHash } from 'node:crypto';
 import { NFL_TEAMS, canonicalTeam } from './nfl-elo.mjs';
 
@@ -25,13 +27,36 @@ export function validateJournal(j) {
   if (!j||j.schema!==1||j.sport!=='americanfootball_nfl'||!Number.isInteger(j.season)||
       !Array.isArray(j.snapshots)||!Array.isArray(j.settlements)||
       j.snapshots.length>10000||j.settlements.length>1000) throw Error('Invalid journal');
+  const ids=new Set();
+  for(const s of j.snapshots){
+    if(!validObservation(s,j.season)||ids.has(s.id))throw Error('Invalid journal observation');
+    ids.add(s.id);
+  }
+  for(const r of j.settlements)if(!validResult(r))throw Error('Invalid journal result');
   return j;
+}
+function validObservation(s,season){
+  if(!s||typeof s.id!=='string'||typeof s.gameId!=='string'||s.season!==season||!isProbability(s.modelHomeProbability))return false;
+  const at=timestamp(s.capturedAt),kick=timestamp(s.commenceTime);
+  if(!Number.isFinite(at)||!Number.isFinite(kick)||at>=kick)return false;
+  for(const key of ['modelBuiltAt','sourceReceivedAt'])
+    if(s[key]!==undefined&&(!Number.isFinite(timestamp(s[key]))||timestamp(s[key])>at+60000||timestamp(s[key])>=kick))return false;
+  if(s.marketHomeProbability!=null&&!isProbability(s.marketHomeProbability))return false;
+  if(s.challengerHomeProbability!=null&&(!isProbability(s.challengerHomeProbability)||s.challengerResearchOnly!==true||
+     !Number.isFinite(timestamp(s.challengerBuiltAt))||timestamp(s.challengerBuiltAt)>at+60000||timestamp(s.challengerBuiltAt)>=kick))return false;
+  return true;
+}
+function validResult(r){
+  return Boolean(r&&typeof r.gameId==='string'&&
+    [r.homeScore,r.awayScore].every(n=>Number.isInteger(n)&&n>=0&&n<=100)&&
+    r.outcome===(r.homeScore===r.awayScore?'TIE':r.homeScore>r.awayScore?'HOME':'AWAY'));
 }
 
 export function matchSchedule(event,rows,season) {
+  if (!event || !Array.isArray(rows)) return null;
   const home=NFL_TEAMS[event.homeTeam],away=NFL_TEAMS[event.awayTeam],kick=parsed(event.commenceTime);
   if (!home||!away||!Number.isFinite(kick)||home===away) return null;
-  const matches=rows.filter(r => Number(r.season)===season&&gameTypes.has(r.game_type)&&
+  const matches=rows.filter(r => r && Number(r.season)===season&&gameTypes.has(r.game_type)&&
     canonicalTeam(r.home_team)===home&&canonicalTeam(r.away_team)===away&&
     r.game_id&&/^\d{4}-\d{2}-\d{2}$/.test(r.gameday)&&
     Math.abs(kick-parsed(r.gameday+'T12:00:00Z'))<=36*3600000
@@ -50,6 +75,7 @@ export function observationsFromSlate(slate,rows,now=Date.now(),season=new Date(
     throw Error('Provider snapshot timestamp stale');
   const accepted=[],skipped=[];
   for(const event of slate.events) {
+    if(!event || typeof event!=='object') { skipped.push({reason:'INVALID_EVENT'});continue; }
     const kick=parsed(event.commenceTime),m=event.independentModel;
     if (!Number.isFinite(kick)||kick-now<5*60000||kick-now>14*86400000||
         !m?.available||m.method!=='NFL_ELO_HISTORICAL_OUTCOMES'||
@@ -112,7 +138,7 @@ export function resultsFromSchedule(journal,rows,now=Date.now()) {
   const tracked=new Set(journal.snapshots.map(s=>s.gameId));
   const today=new Date(now).toISOString().slice(0,10),results=[];
   for(const row of rows) {
-    if(!tracked.has(row.game_id)||Number(row.season)!==journal.season||
+    if(!row || !tracked.has(row.game_id)||Number(row.season)!==journal.season||
        !gameTypes.has(row.game_type)||!/^\d{4}-\d{2}-\d{2}$/.test(row.gameday)||
        row.gameday>=today||row.home_score===''||row.away_score==='')continue;
     const homeScore=Number(row.home_score),awayScore=Number(row.away_score);
@@ -130,6 +156,7 @@ export function updateJournal(existing,captures,results,now=Date.now()) {
   const ids=new Set(journal.snapshots.map(x=>x.id));
   let added=0,revisions=0;
   for(const s of captures){
+    if(!validObservation(s,journal.season))throw Error('Invalid/post-kickoff forecast');
     if(s.season!==journal.season||!s.id||!s.gameId||!Number.isFinite(s.modelHomeProbability)||
        s.modelHomeProbability<=0||s.modelHomeProbability>=1||
        parsed(s.capturedAt)>=parsed(s.commenceTime)||
@@ -145,6 +172,7 @@ export function updateJournal(existing,captures,results,now=Date.now()) {
   const tracked=new Set(journal.snapshots.map(x=>x.gameId));
   const latest=new Map(journal.settlements.map(s=>[s.gameId,s]));
   for(const result of results){
+    if(!validResult(result))throw Error('Invalid result outcome / score');
     if(!tracked.has(result.gameId)||latest.get(result.gameId)?.resultHash===result.resultHash)continue;
     const revised={...structuredClone(result),verifiedAt:new Date(now).toISOString(),
       revision:(latest.get(result.gameId)?.revision||0)+1};
@@ -203,7 +231,8 @@ export function summarizeEvidence(journal,now=Date.now()) {
     if(!s)continue;
     const y=result.outcome==='HOME'?1:0;
     challengerPaired.push({
-      gameId,modelVersion:s.challengerModelVersion,
+      gameId,gameDate:s.gameDate,modelVersion:s.challengerModelVersion,
+      baselineProbability:s.modelHomeProbability,challengerProbability:s.challengerHomeProbability,outcome:y,
       baseline:loss(s.modelHomeProbability,y),
       challenger:loss(s.challengerHomeProbability,y)
     });
@@ -241,6 +270,8 @@ export function summarizeEvidence(journal,now=Date.now()) {
         x.baseline.brier-x.challenger.brier))),
       confidence95:ciPaired(challengerPaired.map(x=>
         x.baseline.brier-x.challenger.brier)),
+      weekSensitivity:pairedWeekBootstrap(challengerPaired.map(x=>({id:x.gameId,date:x.gameDate,
+        baseline:x.baselineProbability,challenger:x.challengerProbability,outcome:x.outcome}))),
       interpretation:'PAIRED_PROSPECTIVE_PREGAME_NOT_PROFIT_VALIDATION'
     }:null,
     tiesExcluded:[...first.keys()].filter(id=>settled.get(id)?.outcome==='TIE').length,

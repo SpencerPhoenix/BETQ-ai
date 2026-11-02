@@ -3,6 +3,7 @@
  * raw content URL; no arbitrary URL input and no third-party odds API credits.
  * This avoids requiring a Render redeploy on every evidence journal commit.
  */
+import {readBoundedText} from './integrity.mjs';
 const FIXED_SUMMARY_URL =
   'https://raw.githubusercontent.com/SpencerPhoenix/BETQ-ai/main/data/evidence/summary.json';
 
@@ -14,7 +15,13 @@ export function isValidEvidenceSummary(s) {
     s.status && s.researchOnly===true && s.noWagering===true &&
     s.realizedROI===null && s.verifiedCLV===null &&
     s.marketBeatingEdgeEstablished===false &&
-    (!s.forwardMetrics || s.settledGames>=30));
+    s.settledGames<=s.prospectiveGames &&
+    (!s.forwardMetrics || (s.settledGames>=30 && s.forwardMetrics.n===s.settledGames &&
+      Number.isFinite(s.forwardMetrics.brier) && s.forwardMetrics.brier>=0 && s.forwardMetrics.brier<=1)) &&
+    (!s.marketComparison || (s.pairedMarketGames>=30 && s.marketComparison.n===s.pairedMarketGames &&
+      s.pairedMarketGames<=s.settledGames)) &&
+    (!s.challengerForwardComparison || (s.pairedChallengerSettled>=30 && s.challengerForwardComparison.n===s.pairedChallengerSettled &&
+      s.pairedChallengerSettled<=s.settledGames))); 
 }
 
 export function createEvidenceFeed({
@@ -32,8 +39,7 @@ export function createEvidenceFeed({
           headers:{Accept:'application/json'},signal:AbortSignal.timeout(7000)
         });
         if(!response.ok)throw Error('Upstream publication unavailable');
-        const raw=await response.text();
-        if(raw.length>150000)throw Error('Evidence summary too large');
+        const raw=await readBoundedText(response,150000);
         const payload=JSON.parse(raw);
         if(!isValidEvidenceSummary(payload))throw Error('Invalid summary schema / unsafe claims');
         data=payload;

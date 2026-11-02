@@ -54,6 +54,7 @@ test('Unknown, stale and unavailable model probabilities fail closed',()=>{
     ratings:{KC:1550,LV:1450},lastGameDate:'2026-10-01',holdout:{n:280,brier:0.23,ece:0.04}};
   assert.equal(predictNflEvent(event,artifact,now).reason,'MODEL_SNAPSHOT_STALE');
   artifact.generatedAt='2026-11-01T19:00:00Z';
+  artifact.lastGameDate='2026-10-25';
   const predicted=predictNflEvent(event,artifact,now);
   assert.equal(predicted.available,true);
   assert.equal(predicted.independentOfOdds,true);

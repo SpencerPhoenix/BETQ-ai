@@ -59,7 +59,12 @@
     toastHandle = setTimeout(() => el.classList.remove('show'), 3500);
   };
   const all = () => (state.slate?.events || []).flatMap((event) =>
-    (event.opportunities || []).map((signal) => ({ ...signal, event })));
+    (event.opportunities || []).map((signal) => {
+      const now=Date.now(), at=Date.parse(signal.lastUpdated),kick=Date.parse(event.commenceTime);
+      const blocked=!Number.isFinite(at)||at>now+60000||now-at>600000||!Number.isFinite(kick)||kick-now<300000;
+      return {...signal,event,quoteAgeSeconds:Number.isFinite(at)?Math.max(0,Math.floor((now-at)/1000)):null,...(blocked?{status:'PASS',theoreticalUnits:0,
+        reasons:[...(signal.reasons||[]),'CLIENT_FRESHNESS_GATE']}:{} )};
+    }));
   const findSignal = (id) => all().find(s => s.id === id);
   const eventLabel = (event) => event.awayTeam + ' @ ' + event.homeTeam;
   const statusTag = (status) => '<span class="status-tag ' +
@@ -144,6 +149,10 @@
       badge.innerHTML = '<span class="pulse-dot warning"></span> LIVE UNAVAILABLE';
       dot.classList.add('warning');
       sidebar.textContent = 'Live feed not ready';
+    } else if (!Number.isFinite(Date.parse(state.slate.receivedAt)) || Date.now()-Date.parse(state.slate.receivedAt)>600000) {
+      badge.classList.add('offline');
+      badge.innerHTML='<span class="pulse-dot warning"></span> SNAPSHOT EXPIRED';
+      dot.classList.add('warning');sidebar.textContent='Refresh required / expired';
     } else {
       badge.innerHTML = '<span class="pulse-dot"></span> LIVE API SNAPSHOT';
       sidebar.textContent = 'The Odds API / active';
@@ -165,7 +174,7 @@
     const quota = state.slate?.quota?.remaining;
     $('metric-grid').innerHTML =
       metric('GAMES TRACKED', s ? String(s.games) : '—', sportLabels[state.sport] + ' / ' + marketLabels[state.market], '', '◉') +
-      metric('WATCH SIGNALS', s ? String(s.watch) : '—', 'Market-derived only', 'lime', '⌁') +
+      metric('WATCH SIGNALS', s ? String(watch.length) : '—', 'Market-derived only', 'lime', '⌁') +
       metric('BEST INDICATIVE EV', best === null ? '—' : signed(best) + '%', 'Not calibrated to future outcomes', 'violet', '↗') +
       metric('QUALITY / 100', quality === null ? '—' : String(quality), quota === null || quota === undefined ? 'Quota not reported' : 'API credits left: ' + quota, 'cyan', '◇');
     $('last-refreshed').textContent = state.slate ? 'Data received ' + when(state.slate.receivedAt) +
@@ -322,6 +331,8 @@
 
   function stagePaper(id) {
     const signal = findSignal(id);
+    if(state.loading || state.slate?.sport!==state.sport || state.slate?.market!==state.market)
+      return toast('Paper staging blocked: snapshot does not match current filters.');
     if (!signal || signal.status !== 'WATCH') return toast('Paper staging blocked: signal is not WATCH.');
     if (signal.event.started || Date.parse(signal.event.commenceTime) - Date.now() < 300000)
       return toast('Paper staging blocked: game started or kickoff imminent.');
@@ -498,7 +509,7 @@
         ' The paired 95% bootstrap interval for baseline minus challenger Brier is '+
         signed(holdout.confidence95?.lower,5)+' to '+
         signed(holdout.confidence95?.upper,5)+
-        '. This is not a forward betting ROI or proof of execution edge.</p>'+
+        '. Games can be correlated within weeks; an individual-game interval may overstate confidence. This is not forward betting ROI or proof of an execution edge.</p>'+ 
         '<p>Feature source: nflverse play-by-play, '+esc(r.sourceManifest?.sourceLastCompletedGame||'date unknown')+
         ' through the most recent processed game · '+esc(String(r.coverage?.featureReadyGames||0))+
         ' lagged games evaluated. Current model selection is still Elo.</p>'+
@@ -560,7 +571,7 @@
       '<div class="nfl4-columns"><section class="panel">'+
         '<div class="panel-head"><div><span class="panel-kicker">LAGGED EPA / SUCCESS / REST</span>'+
         '<h3>Independent challenger evaluation</h3></div><span class="status-tag '+
-        (good?'watch':'pass')+'">'+(good?'HOLDOUT GATE PASSED':'UNPROMOTED')+
+        (good?'watch':'pass')+'">'+(good?'HISTORICAL CHECK ONLY':'UNPROMOTED')+
         '</span></div>'+model+'</section>'+
       '<section class="panel"><div class="panel-head"><div><span class="panel-kicker">REPORT SOURCE GOVERNANCE</span>'+
       '<h3>Reported injuries ≠ confirmed starters</h3></div></div>'+
@@ -803,7 +814,8 @@
   async function loadSlate() {
     const serial = ++loadSerial;
     state.loading = true; state.error = null;
-    renderBanner();
+    state.slate=null;state.selectedId=null;
+    render();
     try {
       const path = '/api/slate?sport=' + encodeURIComponent(state.sport) +
         '&market=' + encodeURIComponent(state.market) + '&mode=' + encodeURIComponent(state.mode);
@@ -878,6 +890,7 @@
   $('clock').textContent = new Date().toLocaleTimeString();
   setInterval(() => {
     $('clock').textContent = new Date().toLocaleTimeString();
+    if (state.slate) {renderFeed();renderMetrics();renderOpportunities();renderSpotlight();renderSignals();}
     if (state.slate) $('last-refreshed').textContent = 'Received ' + relativeAge(state.slate.receivedAt) +
       (state.slate.cacheHit ? ' · Cached' : '');
   }, 15000);

@@ -1,0 +1,40 @@
+name: BETQ independent reliability audit
+on:
+  push:
+    branches: [main, 'audit/reliability-2026-11-02']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: reliability-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and complete regression suite including seeded stress cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p audit-output
+          npm run check | tee audit-output/syntax.log
+          npm test | tee audit-output/tests.log
+      - name: Preserve audit provenance without generating wagering claims
+        run: |
+          git rev-parse HEAD > audit-output/source-commit.txt
+          cp docs/audit-evidence/*.json audit-output/
+          echo 'Browser results are recorded local Chromium fixture tests, not a production browser certificate.' > audit-output/scope.txt
+          echo 'Stress tests use mocks and local HTTP, not paid sportsbook API calls.' >> audit-output/scope.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: betq-reliability-${{ github.run_id }}
+          path: audit-output/
+          retention-days: 14

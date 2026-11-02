@@ -1,10 +1,8 @@
 name: NFL injury report provenance refresh
 on:
   push:
-    paths:
-      - '.github/workflows/update-injuries.yml'
-      - 'scripts/update-injuries.mjs'
-      - 'src/injuries.mjs'
+    branches: [main]
+    paths: ['.github/workflows/update-injuries.yml', 'scripts/update-injuries.mjs', 'src/injuries.mjs']
   workflow_dispatch:
   schedule:
     - cron: '24 10 * * *'
@@ -15,6 +13,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   refresh:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -22,36 +21,32 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Verify report parsing and source timestamp controls
+      - name: Test source timestamp controls
         run: |
           npm run check
           npm test
-      - name: Compile fresh public weekly injury report context
+      - name: Compile weekly public reports
         run: node scripts/update-injuries.mjs
-      - name: Assert never-verified starting QB and public source provenance
+      - name: Assert no unsupported starter claim
         run: |
           node --input-type=module <<'NODE'
           import {readFileSync} from 'node:fs';
           const a=JSON.parse(readFileSync('data/nfl_injuries.json','utf8'));
-          if(a.schema!==1||a.source!=='NFLVERSE_INJURIES'||!a.sourceUpdatedAt||a.reportCount<5)
-            throw Error('Current injury source unavailable/unverified');
-          if(!a.advisory?.includes('not confirmed quarterback starter'))throw Error('Unverified starter caveat missing');
-          console.log('Report source:',a.source);
-          console.log('As-of:',a.sourceUpdatedAt);
-          console.log('Team/week reports:',a.reportCount);
-          console.log('Confirmed starter decisions: NONE');
+          if(a.schema!==1||a.source!=='NFLVERSE_INJURIES'||!a.sourceUpdatedAt||a.reportCount<5)throw Error('Source unavailable');
+          if(!a.advisory?.includes('not confirmed quarterback starter'))throw Error('Starter caveat missing');
+          console.log('File vintage:',a.sourceUpdatedAt,'Reports:',a.reportCount);
           NODE
-      - name: Commit source-vintage report without modifying model probabilities
+      - name: Publish source-vintage changes only
         shell: bash
         run: |
           if [[ -n "$(git status --porcelain -- data/nfl_injuries.json)" ]]; then
-            git config user.name "betq-injury-report-bot"
-            git config user.email "actions@users.noreply.github.com"
+            git config user.name 'betq-injury-report-bot'
+            git config user.email 'actions@users.noreply.github.com'
             git add data/nfl_injuries.json
-            git commit -m "data: refresh sourced NFL injury statuses without starter assumptions"
+            git commit -m 'data: refresh sourced injury designations without starter assumptions'
             git fetch origin main
             git rebase origin/main
             git push origin HEAD:main
           else
-            echo "No new injury report vintage."
+            echo 'No new source vintage.'
           fi

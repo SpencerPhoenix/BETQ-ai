@@ -397,3 +397,6 @@ progress.evidence-meter::-moz-progress-bar {background:var(--lime);border-radius
 .nfl4-warning{font-size:11px;line-height:1.6;color:#e7bea1;background:#332922;border-left:2px solid #d9aa6b;padding:10px;margin:12px 0 0;}
 @media(max-width:1160px){.nfl4-columns,.nfl4-game-grid{grid-template-columns:1fr;}}
 @media(max-width:550px){.nfl4-three-metrics strong{font-size:16px}.nfl4-prob-row{grid-template-columns:repeat(2,1fr)}.nfl4-injury-row{grid-template-columns:1fr}.nfl4-intel-body{padding:13px;}}
+
+/* Expired/blocked research tickets must look disabled on touch devices. */
+.small-button:disabled {cursor:not-allowed;opacity:.45;color:var(--muted);border-color:var(--border);}

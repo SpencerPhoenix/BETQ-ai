@@ -3,6 +3,7 @@
  * Source: nflverse/nflverse-data schedules release (CC BY 4.0); maintained by Lee Sharpe.
  * This module does not use betting prices, future outcomes, injuries, or weather.
  */
+import {sourceDateFresh, validDay, timestamp} from './integrity.mjs';
 export const MODEL_VERSION = 'nfl-elo-1';
 export const NFL_TEAMS = Object.freeze({
   'Arizona Cardinals':'ARI','Atlanta Falcons':'ATL','Baltimore Ravens':'BAL',
@@ -56,11 +57,11 @@ export function cleanGames(rows,{today='9999-12-31'}={}){
   const seen=new Set();
   const games=[];
   for(const row of rows){
-    if(!stages.has(row.game_type))continue;
+    if(!row || !stages.has(row.game_type))continue;
     const season=Number(row.season),hs=Number(row.home_score),as=Number(row.away_score);
     if(!Number.isInteger(season)||season<1999||season>2099||
-       !/^\d{4}-\d{2}-\d{2}$/.test(row.gameday)||row.gameday>today||
-       row.home_score===''||row.away_score===''||
+       !validDay(row.gameday)||row.gameday>today||
+       row.home_score===null||row.away_score===null||String(row.home_score??'').trim()===''||String(row.away_score??'').trim()===''||
        !Number.isInteger(hs)||!Number.isInteger(as)||hs<0||as<0||hs>100||as>100)continue;
     const home=canonicalTeam(row.home_team),away=canonicalTeam(row.away_team);
     if(!home||!away||home===away||!row.game_id||seen.has(row.game_id))continue;
@@ -168,12 +169,18 @@ export function predictNflEvent(event,artifact,now=Date.now()){
      !artifact.readyForResearch||!artifact.params||!artifact.ratings){
     return {available:false,reason:'NO_VALIDATED_BASELINE'};
   }
+  if (!Number.isFinite(now)) return {available:false,reason:'INVALID_ASOF'};
+  if (event?.commence_time !== undefined && (!Number.isFinite(timestamp(event.commence_time)) || timestamp(event.commence_time)<=now))
+    return {available:false,reason:'INVALID_OR_STARTED_EVENT'};
   const generated=Date.parse(artifact.generatedAt);
   if(!Number.isFinite(generated)||generated>now+60000||now-generated>14*86400000){
     return {available:false,reason:'MODEL_SNAPSHOT_STALE'};
   }
-  const home=NFL_TEAMS[event.home_team],away=NFL_TEAMS[event.away_team];
-  if(!home||!away||!Number.isFinite(artifact.ratings[home])||!Number.isFinite(artifact.ratings[away]))
+  if (!sourceDateFresh(artifact.lastGameDate,now,28)) return {available:false,reason:'MODEL_RESULTS_STALE'};
+  if (![artifact.params.homeAdv,artifact.params.scale].every(Number.isFinite) || artifact.params.scale<=0 || !artifact.holdout)
+    return {available:false,reason:'MODEL_SCHEMA_INVALID'};
+  const home=NFL_TEAMS[event?.home_team],away=NFL_TEAMS[event?.away_team];
+  if(!home||!away||home===away||!Number.isFinite(artifact.ratings[home])||!Number.isFinite(artifact.ratings[away]))
     return {available:false,reason:'TEAM_MAPPING_UNAVAILABLE'};
   const p=calibrate(eloProbability(artifact.ratings[home],artifact.ratings[away],artifact.params.homeAdv,
     Boolean(event.neutralSite)),artifact.params.scale);

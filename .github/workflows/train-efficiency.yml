@@ -1,14 +1,10 @@
 name: NFL EPA efficiency challenger backtest
 on:
   push:
-    paths:
-      - '.github/workflows/train-efficiency.yml'
-      - 'scripts/train-efficiency.mjs'
-      - 'src/pbp.mjs'
-      - 'src/nfl-efficiency.mjs'
+    branches: [main]
+    paths: ['.github/workflows/train-efficiency.yml', 'scripts/train-efficiency.mjs', 'src/pbp.mjs', 'src/nfl-efficiency.mjs', 'src/statistical-audit.mjs']
   workflow_dispatch:
   schedule:
-    # Weekly after the NFL Monday games and nflverse 09:00 UTC PBP refresh.
     - cron: '37 10 * * 2'
 permissions:
   contents: write
@@ -17,6 +13,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   fit:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -30,36 +27,30 @@ jobs:
         run: |
           npm run check
           npm test
-      - name: Stream nflverse seasonal PBP into lagged game features and evaluate 2025 holdout
+      - name: Train from public NFL data and evaluate historical reference season
         run: node scripts/train-efficiency.mjs
-      - name: Verify independently tested challenger and source provenance
+      - name: Verify source, sample and dependence-aware research gates
         run: |
           node --input-type=module <<'NODE'
           import {readFileSync} from 'node:fs';
           const m=JSON.parse(readFileSync('data/nfl_efficiency.json','utf8'));
-          if(m.version!=='nfl-efficiency-1'||m.sourceManifest?.project!=='nflverse/nflverse-data'||
-             m.holdout?.challenger?.n<230||m.calibration?.n<400||m.tuning?.n<850||
-             Object.keys(m.teamFeatures||{}).length<30)throw Error('Independent evaluation/integrity threshold not met');
-          if(m.holdout.confidence95===null||typeof m.promotable!=='boolean')
-            throw Error('Missing uncertainty gate');
-          if(m.promotable&&!(m.holdout.confidence95.lower>0&&m.holdout.deltaBrier>0.002))
-            throw Error('Unsafe model promotion status');
-          console.log('Holdout baseline:',m.holdout.elo);
-          console.log('Holdout challenger:',m.holdout.challenger);
-          console.log('Paired Brier difference CI:',m.holdout.confidence95);
+          if(m.version!=='nfl-efficiency-1'||m.evaluationVersion!==2||m.sourceManifest?.project!=='nflverse/nflverse-data'||m.holdout?.challenger?.n<230||m.calibration?.n<400||m.tuning?.n<850||Object.keys(m.teamFeatures||{}).length<30)throw Error('Source/evaluation integrity threshold not met');
+          if(typeof m.promotable!=='boolean'||!m.holdout.weekSensitivity)throw Error('Missing week sensitivity');
+          if(m.promotable&&!(m.holdout.confidence95.lower>0&&m.holdout.deltaBrier>0.002&&m.holdout.weekSensitivity.available&&m.holdout.weekSensitivity.lower>0))throw Error('Unsafe research gate');
+          console.log('Historical reference:',JSON.stringify(m.holdout));
           console.log('Automatic production promotion: DISABLED');
           NODE
-      - name: Publish derived research artifact if results changed
+      - name: Publish only changed derived research
         shell: bash
         run: |
           if [[ -n "$(git status --porcelain -- data/nfl_efficiency.json)" ]]; then
-            git config user.name "betq-nfl-model-bot"
-            git config user.email "actions@users.noreply.github.com"
+            git config user.name 'betq-nfl-model-bot'
+            git config user.email 'actions@users.noreply.github.com'
             git add data/nfl_efficiency.json
-            git commit -m "data: publish versioned lagged NFL efficiency challenger holdout"
+            git commit -m 'data: publish dependence-audited NFL efficiency research'
             git fetch origin main
             git rebase origin/main
             git push origin HEAD:main
           else
-            echo "Completed-game source unchanged; no artifact update."
+            echo 'Derived data unchanged.'
           fi
