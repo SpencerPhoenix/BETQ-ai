@@ -7,14 +7,14 @@ const years=[2022,2023,2024,2025].map(season=>({
   season,allGameForecast:{n:280,brier:.23},
   closingMarketBenchmark:{brier:.21,pairedModelBrier:.23}
 }));
-const summary={schema:1,version:'nfl-replay-v1',years,
+const summary={schema:1,version:'nfl-replay-v2',years,
   verifiedBettingROI:null,verifiedCLV:null,defaultThresholdEVPercent:3};
 const decision={gameId:'2025_01_LV_KC',season:2025,date:'2025-09-07',week:1,
   home:'KC',away:'LV',modelHomeProbability:.61,
   priceAvailable:true,selectedSide:'home',selectedOdds:-110,
   selectedProbability:.61,estimatedEV:.16,closeMarketHomeProbability:.52,
   actual:'home',finalScore:'10-21',quoteTimeVerified:false};
-const replayFull={schema:1,version:'nfl-replay-v1',
+const replayFull={schema:1,version:'nfl-replay-v2',
   years:[{season:2025,decisions:[decision,{...decision,gameId:'2025_02_LV_KC',
     actual:'away',finalScore:'21-10',estimatedEV:.01}]}]};
 async function withLocal(fn){
