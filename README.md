@@ -71,6 +71,16 @@ The terminal now includes an **ROI & CLV Lab**. It illustrates how American pric
 
 The calculator is a read-only, rate-limited same-origin endpoint; it does not consume Odds API credits or record user entries. The underlying engine validates identical event/market/side/period/handicap and chronological quotes before even labeling a closing-price proxy. Details and worked examples: [Price Validation contract](docs/PRICE_VALIDATION.md).
 
+## v0.7 — Industry-style conservative market calibration
+
+BETQ.ai now runs a **strictly earlier-season calibrated market-versus-Elo competition** using the nflverse historical closing moneyline references. It does not blindly promote the independent Elo win probabilities or false-positive model EV selections. See [full nested annual analysis](docs/MARKET_CALIBRATION.md).
+
+On 2022–2025 historical tests the closing market had lower Brier loss in all four years; the prior-year-calibrated model residual therefore received **0% weight** each season. The independent model has not established incremental profitability. BETQ's live research-only market reference uses at least **three fresh two-sided sportsbooks** and a no-vig median; this is a market-derived estimate, **not** independent BETQ predictive accuracy.
+
+Higher winner rates were possible by selecting obvious favorites: market favorites rated ≥65% had a **75.29%** historical hit rate, but **−3.32%** conditional hypothetical stake ROI at closing prices. Favorites rated ≥70% hit **79.56%**, but still had **−1.67%** hypothetical ROI. These prices are not verified accessible entries. A high win ratio is not itself a valid gambling edge.
+
+The session-level Market, Probability, Market Calibration, Historical Audit, and Risk agents evaluate the shared live snapshot without extra paid odds calls. The system displays a PASS/no-proven-edge decision when the independently tested model has not outperformed the closing market. **No real wagers, historical CLV, or audited real-money ROI are claimed.**
+
 ## Deploy
 
 `render.yaml` describes an optional Render Node web service. Link the repository in Render, then enter `ODDS_API_KEY` in the service environment. Deployment is managed separately in Render; a GitHub commit does not guarantee that the service successfully redeployed. Verify the production version at `GET /api/health`.
