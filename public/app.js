@@ -196,11 +196,19 @@
       esc(String(benchmark.graded))+' historical market favorites ≥65% won '+
       num(benchmark.winRatePercent,2)+'%, but their hypothetical closing-price ROI was '+
       signed(benchmark.hypotheticalClosingPriceROIPercent,2)+'%. BETQ has no validated executable advantage.</div>' : '';
+    const selectionBias=a.historicalUnderdogSelectionAudit;
+    const biasNote=selectionBias?.available?
+      '<div class="agent-bias-warning"><b>Selection bias warning:</b> '+
+      esc(String(selectionBias.marketUnderdogSelections))+' of '+
+      esc(String(selectionBias.candidateSelections))+' historical positive-EV choices ('+
+      num(selectionBias.marketUnderdogSharePercent,2)+
+      '%) were market underdogs. The model consistently overestimated its favored sides. '+
+      'No automatic bet is authorized.</div>' : '';
     const stages=(a.stages||[]).map(stage=>
       '<article class="agent-stage"><span>'+esc(stage.name)+'</span>'+
       '<strong>'+esc(stage.state)+'</strong>'+
       '<small>'+esc(stage.detail)+'</small></article>').join('');
-    root.innerHTML=status+'<div class="agent-stage-grid">'+stages+'</div>'+favoriteNote+
+    root.innerHTML=status+'<div class="agent-stage-grid">'+stages+'</div>'+favoriteNote+biasNote+
       '<div class="agent-foot">Historical return is evaluated against recorded closing prices, not verified executable entries. '+
       '<button class="text-link" type="button" data-tab="replay">See seasons &amp; win/loss records ↗</button></div>';
   }
