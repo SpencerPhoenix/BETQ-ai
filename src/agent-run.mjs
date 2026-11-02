@@ -7,7 +7,7 @@
 const finite=Number.isFinite;
 const round=(n,d=2)=>finite(n)?Number(n.toFixed(d)):null;
 
-export function assembleAgentRun(slate,replaySummary,{now=Date.now()}={}){
+export function assembleAgentRun(slate,replaySummary,{now=Date.now(),marketChallenge=null}={}){
   if(!slate||!Array.isArray(slate.events))throw Error('Invalid slate for agent analysis');
   const demo=slate.demo===true;
   const nfl=slate.sport==='americanfootball_nfl';
@@ -34,6 +34,14 @@ export function assembleAgentRun(slate,replaySummary,{now=Date.now()}={}){
     finite(y.allGameForecast?.brier)&&finite(y.closingMarketBenchmark?.brier));
   const marketWins=validHistorical&&bench.every(y=>
     y.closingMarketBenchmark.brier<y.closingMarketBenchmark.pairedModelBrier);
+  const gatedYears=Array.isArray(marketChallenge?.years)?marketChallenge.years:[];
+  const nestedValidation=gatedYears.length>=4&&gatedYears.every(y=>
+    y.training?.trainedOnYears?.[1]<y.season&&
+    Number.isFinite(y.modelContributionWeight)&&
+    Number.isFinite(y.closingMarket?.brier));
+  const allIndependentWeightsZero=nestedValidation&&gatedYears.every(y=>y.modelContributionWeight===0);
+  const freshMarketGames=games.filter(g=>!g.started&&g.marketConsensus?.available===true).length;
+  const favoritesBenchmark=marketChallenge?.pooledPolicy?.MARKET_FAVORITE_65||null;
   const yearDetails=bench.map(y=>({season:y.season,
     modelBrier:y.allGameForecast?.brier??null,
     marketBrier:y.closingMarketBenchmark?.brier??null}));
@@ -45,6 +53,15 @@ export function assembleAgentRun(slate,replaySummary,{now=Date.now()}={}){
     {id:'quant',name:'Probability Agent',state:liveModel.length?'ELO_RESEARCH':'INSUFFICIENT_MODEL',
       detail:liveModel.length+' eligible pregame Elo projections; challenger not automatically promoted',
       source:'NFL_ELO_HISTORICAL_OUTCOMES'},
+    {id:'calibration',name:'Market Calibration Agent',
+      state:!nestedValidation?'AWAITING_NESTED_VALIDATION':
+        allIndependentWeightsZero?'MODEL_WEIGHT_REJECTED':'RESEARCH_WEIGHT_NOT_PROMOTED',
+      detail:nestedValidation?gatedYears.length+
+        ' prior-year-fitted model/market comparisons; independent residual contribution '+
+        (allIndependentWeightsZero?'failed robust improvement gates':
+          'not approved for real-time price execution'):
+        'No verified prior-year market-adjusted calibration artifact',
+      source:'NESTED_YEARLY_MARKET_CHALLENGE'},
     {id:'history',name:'Historical Audit Agent',state:validHistorical?'MARKET_BENCHMARK_READY':'NO_REPLAY',
       detail:validHistorical?bench.length+' historical seasons compared; market better on all '+bench.length+
         ': '+(marketWins?'yes':'no'):'No valid season-by-season closing-price replay',
@@ -58,12 +75,16 @@ export function assembleAgentRun(slate,replaySummary,{now=Date.now()}={}){
   else if(!nfl||!moneyline){decision='PASS_UNMODELED_MARKET';reason='No independent, validated model for this sport or contract.';}
   else if(!liveModel.length){decision='PASS_MISSING_MODEL';reason='No eligible fresh pregame model projections.';}
   else if(!validHistorical){decision='PASS_NO_HISTORY';reason='Historical market benchmark has not been audited.';}
+  else if(nestedValidation && allIndependentWeightsZero){
+    decision='PASS_NO_PROVEN_MARKET_EDGE';
+    reason='Prior-year calibration rejected an independent Elo contribution in all four seasons. Market-only probability may be the better research reference but does not establish a bet.';
+  }
   else if(marketWins){decision='PASS_NO_PROVEN_MARKET_EDGE';
     reason='The historical closing-market reference had lower Brier error in every evaluated season; apparent positive model EV is not reliable evidence of value.';}
   else {decision='RESEARCH_ONLY_UNPROMOTED';
     reason='Historical market comparisons are mixed, but pricing, injuries, calibrated forward validation and true fills are not verified.';}
   return {
-    schema:1,version:'quant-agent-run-1',evaluatedAt:new Date(now).toISOString(),
+    schema:1,version:'quant-agent-run-2',evaluatedAt:new Date(now).toISOString(),
     dataMode:demo?'DEMO':'LIVE',sport:slate.sport,market:slate.market,
     decision,reason,stages,
     sourceModel:'SEPARATE_ELO_BASELINE',
@@ -73,11 +94,23 @@ export function assembleAgentRun(slate,replaySummary,{now=Date.now()}={}){
     historicalMarketYears:yearDetails,
     marketBenchmarkConsistentlyBetter:Boolean(marketWins),
     modelPriceCandidatesReviewed:candidate.length,
+    nestedCalibrationReady:Boolean(nestedValidation),
+    allIndependentContributionsRejected:Boolean(allIndependentWeightsZero),
+    freshThreeBookMarketGames:freshMarketGames,
+    marketFavorite65Historical:{
+      graded:favoritesBenchmark?.graded??null,
+      winRatePercent:favoritesBenchmark?.winRatePercent??null,
+      hypotheticalClosingPriceROIPercent:favoritesBenchmark?.hypotheticalClosingPriceROIPercent??null,
+      verifiedROI:null,
+      interpretation:'HIGH_HIT_RATE_DOES_NOT_MEAN_PROFIT'
+    },
+    marketAnchorUse:'FRESH_MULTI_BOOK_RESEARCH_ONLY_NOT_INDEPENDENT',
     researchCandidates:candidate.slice(0,6),
     presentation:[
       'Market-price discrepancies are not automatically expected profit.',
       'Win/loss of filtered selections is distinct from all-game forecast accuracy.',
       'Historical closing prices are not authenticated earlier fills.',
+      'Historical favorites with a high winning percentage still lost stake return under the illustrated closing-price assumption.',
       'A PASS does not become a BET when a model-generated probability is large.'
     ]
   };
