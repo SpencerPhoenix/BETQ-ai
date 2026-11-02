@@ -21,7 +21,7 @@ const event={
 };
 const artifact={
   schema:1,version:MODEL_VERSION,readyForResearch:true,generatedAt:date(now-3600000),
-  lastGameDate:'2026-11-01',source:{project:'nflverse/nfldata',license:'CC BY 4.0'},
+  lastGameDate:'2026-11-01',source:{project:'nflverse/nflverse-data',license:'CC BY 4.0'},
   trainingProtocol:{'parameterTuning':'2018-2022'},
   tuning:{n:1365,brier:0.225},
   calibration:{n:570,brier:0.222},
@@ -72,7 +72,7 @@ test('Model report exposes training lineage without odds API key',async()=>{
   await withServer(async base=>{
     const r=await fetch(base+'/api/model/nfl');const payload=await r.json();
     assert.equal(payload.available,true);
-    assert.equal(payload.source.project,'nflverse/nfldata');
+    assert.equal(payload.source.project,'nflverse/nflverse-data');
     assert.equal(payload.holdout.n,284);
     assert.equal(payload.use,'RESEARCH_ONLY');
     assert.equal(JSON.stringify(payload).includes('apiKey'),false);
