@@ -653,7 +653,36 @@
       (recent ? '<div class="evidence-list">' + recent + '</div>' :
         empty('No completed forward forecasts yet', 'Results appear here after previously captured games are finalized in nflverse schedules.')) +
       '</section>';
+    const cf=e.challengerForwardComparison;
+    const challengerBlock='<section class="panel evidence-challenger"><div class="panel-head">'+
+      '<div><span class="panel-kicker">EPA CHALLENGER / FROZEN PREGAME</span>'+
+      '<h3>Prospective Elo vs EPA comparison</h3></div>'+
+      '<span class="status-tag '+(cf?'watch':'pass')+'">'+
+      (cf?'30+ FINALS':'COLLECTING')+'</span></div>'+
+      '<div class="evidence-body"><p><b>'+
+      esc(String(e.prospectiveChallengerGames||0))+
+      ' future games with an independent EPA challenger frozen before kickoff.</b> '+
+      esc(String(e.pairedChallengerSettled||0))+
+      ' matching games have subsequently reached a finalized, non-tied outcome. '+
+      'These forecasts are separate from the historical 2025 backtest.</p>'+
+      (cf?'<div class="evidence-performance"><div><span>Prospective Elo Brier</span><strong>'+
+        num(cf.baselineBrier,5)+'</strong></div><div><span>Prospective EPA Brier</span>'+
+        '<strong>'+num(cf.challengerBrier,5)+'</strong></div></div>'+
+        '<p>Paired improvement (Elo minus challenger): '+
+        signed(cf.baselineMinusChallengerBrier,5)+
+        ' · 95% interval '+signed(cf.confidence95?.lower,5)+' to '+
+        signed(cf.confidence95?.upper,5)+
+        '. This is probability scoring only, not a verified betting return.</p>' :
+        '<div class="evidence-progress-head"><b>'+
+        esc(String(e.pairedChallengerSettled||0))+
+        ' / 30 finished paired games</b><span>No retrospective backfill</span></div>'+
+        '<progress class="evidence-meter" max="30" value="'+
+        Math.min(30,Math.max(0,Number(e.pairedChallengerSettled)||0))+
+        '"></progress><p>Scores remain hidden until a minimum 30 challenger '+
+        'forecasts were frozen and their games subsequently completed.</p>')+
+      '</div></section>';
     root.innerHTML = stats + '<div class="evidence-columns">' + gate + benchmark + '</div>' +
+      challengerBlock +
       '<div class="evidence-columns evidence-lists">' + ledger + '</div>' +
       '<div class="notice info evidence-footer"><span>◇</span><p><b>Auditable, not promotional.</b> ' +
       'No verified closing-line value, no real-money ROI, no betting orders, and no presumed model advantage. ' +
