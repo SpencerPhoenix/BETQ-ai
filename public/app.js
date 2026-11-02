@@ -215,11 +215,13 @@
       const chosen=y.selectionRules.find(r=>r.thresholdEVPercent===state.replayThreshold);
       return '<tr><td><button type="button" class="text-link" data-replay-season="'+y.season+
         '">'+y.season+'</button></td><td>'+num(y.allGameForecast.accuracyPercent,2)+
+        '%</td><td>'+num(y.closingMarketBenchmark?.favoriteWinnerAccuracyPercent,2)+
         '%</td><td>'+num(y.allGameForecast.brier,5)+
         '</td><td class="positive">'+num(y.closingMarketBenchmark?.brier,5)+
         '</td><td>'+y.closingMoneylineCoverage.coveragePercent+
         '%</td><td><strong>'+chosen.wins+'–'+chosen.losses+
         '</strong><small>'+chosen.graded+' graded</small></td>'+
+        '<td>'+num(chosen.expectedSelectionWinRatePercent,2)+'%</td>'+ 
         '<td>'+num(chosen.winRatePercent,2)+'%</td>'+
         '<td class="'+(chosen.hypotheticalClosingPriceROI>=0?'positive':'negative')+'">'+
         signed(chosen.hypotheticalClosingPriceROI,2)+'%</td></tr>';
@@ -234,17 +236,20 @@
         signed(combined.hypotheticalClosingPriceROI,2)+'%',
         'Closing-price assumption · not fill verified',
         '','∑')+
-      metric('MARKET BENCHMARK','4 seasons',
-        'Compare Elo vs no-vig closing-market Brier','cyan','◇')+
+      metric('PICK CALIBRATION GAP',
+        combined?.actualMinusForecastWinPoints===null?'—':
+          signed(combined.actualMinusForecastWinPoints,2)+' pp',
+        'Actual win rate minus model prediction on selected sides','cyan','◇')+
       '</div>';
     root.innerHTML=summary+
+      '<p class="replay-calibration-note">A correct all-game winner is not automatically a profitable price. The model\'s average predicted win rate on <b>its selected sides</b> must be compared with actual selection wins. A large negative gap signals overconfidence or poor selection.</p>'+
       '<section class="panel replay-season-panel"><div class="panel-head"><div>'+
       '<span class="panel-kicker">ALL GAMES VS FILTERED SELECTIONS</span>'+
       '<h3>Season-by-season results</h3></div>'+
       '<span class="faint-caption">LOWER BRIER IS BETTER</span></div>'+
       '<div class="table-scroll"><table class="data-table replay-season-table">'+
-      '<thead><tr><th>SEASON</th><th>ALL-GAME WIN %</th><th>BETQ BRIER</th>'+
-      '<th>MARKET BRIER</th><th>PRICE COVERAGE</th><th>PLAY W–L</th>'+
+      '<thead><tr><th>SEASON</th><th>ALL-GAME WIN %</th><th>MARKET WIN %</th><th>BETQ BRIER</th>'+
+      '<th>MARKET BRIER</th><th>PRICE COVERAGE</th><th>PLAY W–L</th><th>MODEL PICK WIN %</th>'+
       '<th>PICK WIN %</th><th>HYP. ROI</th></tr></thead>'+
       '<tbody>'+rows+'</tbody></table></div></section>'+
       '<div class="notice replay-warning"><span>!</span><p>'+
