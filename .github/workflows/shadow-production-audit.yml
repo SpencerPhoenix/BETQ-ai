@@ -1,0 +1,93 @@
+name: BETQ v0.9 source-dated QB shadow production audit (no paid odds)
+on:
+  push:
+    paths:
+      - '.github/workflows/shadow-production-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check production version, private disabled mode and no-cost study endpoints
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          const base='https://betq-ai.onrender.com';
+          const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+          async function get(path,method='GET'){
+            const r=await fetch(base+path,{
+              method,signal:AbortSignal.timeout(60000),
+              headers:{Accept:'application/json'}
+            });
+            const text=await r.text();
+            let data=null;try{data=JSON.parse(text)}catch{}
+            return {status:r.status,data,text};
+          }
+          let health;
+          for(let attempt=0;attempt<15;attempt++){
+            try{
+              const h=await get('/api/health');
+              if(h.status===200&&h.data?.version==='0.9.0'){
+                health=h.data;break;
+              }
+            }catch{}
+            await sleep(10000);
+          }
+          if(!health)throw Error('BETQ 0.9 production release not live');
+          if(health.app!=='BETQ.ai'||health.status!=='ok')
+            throw Error('Unexpected live service');
+          const status=await get('/api/shadow/status');
+          if(status.status!==200||status.data?.captureEnabled!==false||
+             status.data?.durableStorage!==false||status.data?.available!==false||
+             status.data?.rawBookmakerQuotesExposed!==false||
+             status.data?.verifiedCLV!==null||status.data?.realMoneyROI!==null)
+            throw Error('Unsafe or unexpectedly active live private archive');
+          const study=await get('/api/shadow/study');
+          if(study.status!==200||study.data?.available!==false||
+             study.data?.verifiedCLV!==null)
+            throw Error('Unverified source events are presented as live effect');
+          const demo=await get('/api/shadow/demo');
+          if(demo.status!==200||demo.data?.synthetic!==true||
+             demo.data?.nQBEventsEligible!==1||
+             !(demo.data?.outcome?.median60mQBTeamMovementPoints>0)||
+             demo.data?.verifiedCLV!==null||
+             demo.data?.privateBookmakerQuotesIncluded!==false)
+            throw Error('Synthetic source benchmark failed');
+          const derived=await get('/api/shadow/derived');
+          if(derived.status!==200||
+             derived.data?.version!=='betq-forward-market-observer-v1'||
+             derived.data?.verifiedCLV!==null||
+             derived.data?.realMoneyROI!==null)
+            throw Error('Forward derived-only source gate failed');
+          if(derived.data.available &&
+             (derived.data.licensedRawBookmakerQuotesIncluded!==false||
+              derived.data.qbTimingLinked!==false))
+            throw Error('Derived market observations presented as raw odds or QB news');
+          const site=await get('/');
+          if(site.status!==200||
+             !site.text.includes('TERMINAL / v0.9.0')||
+             !site.text.includes('id="page-latency"')||
+             !site.text.includes('id="shadow-forward-view"'))
+            throw Error('Latency UI does not match backend release');
+          const safeDemo=await get('/api/slate?mode=demo');
+          if(safeDemo.status!==200||safeDemo.data.demo!==true||
+             safeDemo.data.shadowCapture?.captured!==false||
+             safeDemo.data.executionGate?.bettingAuthorized!==false)
+            throw Error('Synthetic and market study isolation failed');
+          const post=await get('/api/shadow/status','POST');
+          if(post.status!==405)throw Error('Unauthenticated shadow write is exposed');
+          console.log('PASS — BETQ version '+health.version+' on Render');
+          console.log('PASS — private raw sportsbook collection OFF');
+          console.log('PASS — synthetic QB study unmistakably fictional');
+          console.log('PASS — existing prospective derived market feed read-only');
+          console.log('PASS — QB and CLV verified results still UNAVAILABLE');
+          console.log('PASS — public POST ingestion rejected');
+          console.log('EXTRA ODDS API REQUESTS BY AUDIT: 0');
+          console.log('VALIDATED PRODUCTION SHADOW PHASE: 1');
+          NODE
