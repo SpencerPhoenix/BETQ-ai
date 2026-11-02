@@ -13,7 +13,7 @@ import {
   resultsFromSchedule, updateJournal, summarizeEvidence
 } from '../src/evidence.mjs';
 
-const URL = 'https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv';
+const SCHEDULES_URL = 'https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv';
 const API = process.env.BETQ_PRODUCTION_URL || 'https://betq-ai.onrender.com';
 const now=Date.now();
 const date=new Date(now);
@@ -26,7 +26,7 @@ async function loadJson(path,fallback) {
   catch(err){if(err?.code==='ENOENT')return fallback;throw err;}
 }
 async function getCsv() {
-  const response=await fetch(URL,{signal:AbortSignal.timeout(30000),
+  const response=await fetch(SCHEDULES_URL,{signal:AbortSignal.timeout(30000),
     headers:{Accept:'text/csv,text/plain'}});
   if(!response.ok)throw Error('nflverse schedules unavailable HTTP '+response.status);
   const text=await response.text();
