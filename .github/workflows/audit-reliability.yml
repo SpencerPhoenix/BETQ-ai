@@ -1,10 +1,15 @@
 name: BETQ independent reliability audit
 on:
   push:
-    branches: ['audit/reliability-2026-11-02']
+    branches: [main, 'audit/reliability-2026-11-02']
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: reliability-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   audit:
     runs-on: ubuntu-latest
@@ -14,41 +19,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Baseline syntax and test results
-        run: |
-          mkdir -p audit-output
-          npm run check > audit-output/syntax.log 2>&1
-          npm test > audit-output/baseline.log 2>&1
-      - name: Independent adversarial probes (no paid network requests)
+      - name: Syntax and complete regression suite including seeded stress cases
         shell: bash
         run: |
-          node --input-type=module <<'NODE'
-          import {writeFileSync} from 'node:fs';
-          import {analyzeEvents} from './src/engine.mjs';
-          import {emptyJournal,updateJournal} from './src/evidence.mjs';
-          import {predictNflEvent} from './src/nfl-elo.mjs';
-          import {challengerResearchForEvent} from './src/nfl-efficiency.mjs';
-          const now=Date.parse('2026-11-02T02:00:00Z');
-          const observations=[];
-          const probe=(name,test)=>{try{const details=test(); observations.push({name,passed:details===true,details});}catch(e){observations.push({name,passed:false,error:e.message});}};
-          const game={id:'test',home_team:'Kansas City Chiefs',away_team:'Las Vegas Raiders',commence_time:new Date(now+86400000).toISOString(),bookmakers:[null]};
-          probe('Malformed bookmaker must not crash scanner',()=>{const x=analyzeEvents([game],{sport:'americanfootball_nfl',asOf:now});return x.summary.signals===0;});
-          probe('Malformed timestamp must not enter evidence journal',()=>{const item={id:'bad-date',gameId:'bad-date',season:2026,modelHomeProbability:0.6,capturedAt:'not-a-date',commenceTime:'not-a-date'};try{updateJournal(emptyJournal(2026),[item],[],now);return false;}catch{return true;}});
-          const model={schema:1,version:'nfl-elo-1',readyForResearch:true,generatedAt:new Date(now-1000).toISOString(),lastGameDate:'2026-01-01',params:{homeAdv:25,scale:1},ratings:{KC:1500,LV:1500},holdout:{n:284,brier:.22,ece:.05}};
-          probe('Newly packaged but 10-month-old results must not be fresh NFL forecast',()=>predictNflEvent(game,model,now).available===false);
-          const cf={version:'nfl-efficiency-1',readyForResearch:true,generatedAt:new Date(now-1000).toISOString(),teamFeatures:{KC:{n:8,netEPA:.1,netSuccess:.02,latestGameDate:'2026-10-25'},LV:{n:8,netEPA:.1,netSuccess:.02,latestGameDate:'2026-10-25'}},coefficients:{epa:1,success:1,rest:0},holdout:{}};
-          probe('Invalid kickoff must not crash challenger API',()=>challengerResearchForEvent({...game,commence_time:'broken'},.5,cf,now).available===false);
-          console.log(JSON.stringify(observations,null,2));
-          writeFileSync('audit-output/initial-probes.json',JSON.stringify({baselineCommit:'0499176b30e4be703dc3073f616627610bb669dd',observations},null,2));
-          NODE
-      - name: Package exact source for offline audit
-        if: always()
+          set -euo pipefail
+          mkdir -p audit-output
+          npm run check | tee audit-output/syntax.log
+          npm test | tee audit-output/tests.log
+      - name: Preserve audit provenance without generating wagering claims
         run: |
           git rev-parse HEAD > audit-output/source-commit.txt
-          tar -czf audit-output/source-snapshot.tar.gz src tests public scripts data docs .github package.json README.md .env.example render.yaml
+          cp docs/audit-evidence/*.json audit-output/
+          echo 'Browser results are recorded local Chromium fixture tests, not a production browser certificate.' > audit-output/scope.txt
+          echo 'Stress tests use mocks and local HTTP, not paid sportsbook API calls.' >> audit-output/scope.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: betq-audit-source-and-results
+          name: betq-reliability-${{ github.run_id }}
           path: audit-output/
-          retention-days: 7
+          retention-days: 14

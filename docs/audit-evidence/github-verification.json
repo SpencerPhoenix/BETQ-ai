@@ -1,0 +1,22 @@
+{
+  "workflowRun": 41381332315,
+  "sourceCommit": "d25f1a86f932693685a3ef7e94656026668f3ad1",
+  "originalPatchSha256": "fef27476c53b7c21a2a3a282840e1528efa8d64a76dec32eb6e2b26812ae15c6",
+  "tests": 81,
+  "passed": 81,
+  "failed": 0,
+  "sourceMatchesLocalTestedFiles": true,
+  "weekGroupedSensitivity": {
+    "method": "PAIRED_WEEK_BLOCK_BOOTSTRAP",
+    "games": 284,
+    "weeks": 22,
+    "resamples": 2000,
+    "meanBrierImprovement": 0.002995,
+    "lower": 0.000082,
+    "upper": 0.006022,
+    "previouslyInspectedReferenceSeason": true,
+    "limitation": "Within-week grouping only; recurring-team and cross-week dependence remain. Not profitable-betting validation."
+  },
+  "automaticModelPromotion": false,
+  "newWinningProbabilityClaim": false
+}

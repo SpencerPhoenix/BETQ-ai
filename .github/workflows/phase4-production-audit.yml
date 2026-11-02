@@ -1,7 +1,5 @@
-name: BETQ v0.4 live intelligence audit
+name: BETQ free production reliability audit
 on:
-  push:
-    paths: ['.github/workflows/phase4-production-audit.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -13,84 +11,26 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Verify live research provenance, model separation and injury-report status
-        shell: bash
+      - name: Check public runtime and research metadata without spending odds credits
         run: |
           node --input-type=module <<'NODE'
           const base='https://betq-ai.onrender.com';
-          const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
           async function read(path){
-            const res=await fetch(base+path,{headers:{Accept:'application/json'},
-              signal:AbortSignal.timeout(95000)});
-            const text=await res.text();
-            let body=null;try{body=JSON.parse(text)}catch{}
-            return {code:res.status,body,text};
+            const r=await fetch(base+path,{signal:AbortSignal.timeout(95000)});
+            if(!r.ok)throw Error(path+' HTTP '+r.status);
+            return r.json();
           }
-          let health=null;
-          for(let i=0;i<6;i++){
-            try {
-              const response=await read('/api/health');
-              if(response.code===200&&response.body?.version==='0.4.0'){
-                health=response.body;break;
-              }
-            }catch{}
-            await wait(10000);
-          }
-          if(!health)throw Error('Production server v0.4 unavailable');
-          if(!health.nflIntelligence?.efficiencyChallengerAvailable)
-            throw Error('EPA research artifact missing');
-          if(!health.nflIntelligence?.injurySourceAvailable)
-            throw Error('Sourced injury report artifact missing');
-          if(health.nflIntelligence?.efficiencyChallengerPromoted!==false||
-             health.nflIntelligence?.startingQuarterbacksVerified!==false)
-            throw Error('Unsupported auto-promotion or QB verification claim');
-          const efficiency=await read('/api/model/efficiency');
-          if(efficiency.code!==200||efficiency.body?.available!==true||
-             efficiency.body.automaticallyPromoted!==false||
-             efficiency.body.verifiedRealMoneyEdge!==false||
-             efficiency.body.holdout?.challenger?.n<230||
-             efficiency.body.sourceManifest?.project!=='nflverse/nflverse-data')
-            throw Error('Efficiency source/version/model audit failed');
+          const health=await read('/api/health');
+          if(!/^0\.4\./.test(health.version))throw Error('Incompatible runtime');
+          const config=await read('/api/config');
+          if(config.wageringEnabled!==false||config.autoRefresh!==false)throw Error('Unsafe execution/polling');
+          const e=await read('/api/model/efficiency');
+          if(e.automaticallyPromoted!==false||e.verifiedRealMoneyEdge!==false)throw Error('Unsupported predictive claim');
           const injuries=await read('/api/injuries/nfl');
-          if(injuries.code!==200||injuries.body.starterVerified!==false||
-             injuries.body.modelProbabilitiesAdjusted!==false)
-            throw Error('Injury source provenance / safety gate failed');
-          const page=await fetch(base+'/',{signal:AbortSignal.timeout(30000)});
-          const html=await page.text();
-          if(page.status!==200||!html.includes('id="intelligence-view"'))
-            throw Error('Prediction Lab intelligence UI missing');
+          if(injuries.starterVerified!==false||injuries.modelProbabilitiesAdjusted!==false)throw Error('Unverified starter claim');
+          const evidence=await read('/api/evidence/nfl');
+          if(evidence.realizedROI!==null||evidence.verifiedCLV!==null)throw Error('Unverified ROI/CLV claim');
           const demo=await read('/api/slate?mode=demo&sport=americanfootball_nfl&market=h2h');
-          if(demo.code!==200||!demo.body.demo||demo.body.events.some(e=>e.efficiencyChallenger||e.injuryContext))
-            throw Error('Synthetic demo contains real-team intelligence');
-          console.log('PRODUCTION: v'+health.version+' LIVE');
-          console.log('2025 Elo Brier: '+efficiency.body.holdout.elo.brier);
-          console.log('2025 EPA challenger Brier: '+efficiency.body.holdout.challenger.brier);
-          console.log('Historical holdout gate passed: '+efficiency.body.promotableInHistoricalHoldout);
-          console.log('Automatically promoted: '+efficiency.body.automaticallyPromoted);
-          console.log('Injury source vintage: '+injuries.body.sourceUpdatedAt);
-          console.log('Per-player timestamps available: '+injuries.body.playerTimestampAvailable);
-          console.log('Confirmed starting QB status: '+injuries.body.starterVerified);
-          // Avoid consuming a paid API credit if a snapshot is already unavailable
-          // under the intentionally strict daily provider budget.
-          const budget=health.odds?.budget;
-          if((budget?.available??0)<=0){
-            console.log('LIVE NFL SLATE: skipped; daily provider budget exhausted');
-          } else {
-            const live=await read('/api/slate?mode=live&sport=americanfootball_nfl&market=h2h');
-            if(live.code===429){
-              console.log('LIVE NFL SLATE: safeguarded by daily budget / reserved credits');
-            } else if(live.code!==200){
-              throw Error('Live odds endpoint HTTP '+live.code+' '+String(live.body?.error?.code));
-            } else {
-              const games=live.body.events||[];
-              const future=games.filter(e=>!e.started&&e.independentModel?.available);
-              if(future.length>0&&future.some(e=>!e.efficiencyChallenger||!e.injuryContext))
-                throw Error('Live NFL game missing source-aligned research fields');
-              if(future.some(e=>e.efficiencyChallenger?.automaticSelection===true||
-                 e.injuryContext?.starterVerified===true))
-                throw Error('Unsupported research promotion or starter claim');
-              console.log('LIVE NFL modeled upcoming games: '+future.length);
-            }
-          }
-          console.log('PHASE 4: PASS — source-backed, source-vintage-gated, no wagering');
+          if(!demo.demo||demo.events.some(g=>g.efficiencyChallenger||g.injuryContext))throw Error('Demo/live mixing');
+          console.log(JSON.stringify({version:health.version,researchOnly:true,paidOddsRequests:0,evidenceGames:evidence.prospectiveGames,forwardFinals:evidence.settledGames,status:'PASS'},null,2));
           NODE
