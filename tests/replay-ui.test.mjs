@@ -30,8 +30,8 @@ test('Replay summary separates all-game accuracy from filtered pick win-rate, wi
   assert.match(js,/y\.allGameForecast\.accuracyPercent/);
   assert.match(js,/chosen\.winRatePercent/);
   assert.match(js,/hypotheticalClosingPriceROI/);
-  assert.match(js,/CLOSING REFERENCE/);
-  assert.match(js,/verified entry/);
+  assert.match(js,/Historical closing odds are not verified offered entry prices/);
+  assert.match(js,/not fill verified/);
 });
 test('Mobile scoreboard and agent stages have responsive layout and no inline scripts',async()=>{
   const [html,css]=await Promise.all([path('public/index.html'),path('public/styles.css')]);
