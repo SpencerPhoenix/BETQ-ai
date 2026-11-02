@@ -1,0 +1,1089 @@
+{
+  "schema": 1,
+  "version": "betq-residual-research-v1",
+  "preregisteredProtocol": "docs/RESEARCH_PROTOCOL_RESIDUAL_2026_11_02.md",
+  "testYears": [
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "type": "RETROSPECTIVE_CLOSING_REFERENCE_RESEARCH",
+  "experimentalModel": "RIDGE_LOGISTIC_MARKET_OFFSET_RESIDUAL",
+  "dataScope": "HISTORICAL_CLOSING_NO_KNOWN_ENTRY_TIME",
+  "modelPromoted": false,
+  "realBettingAuthorized": false,
+  "verifiedCLV": null,
+  "verifiedROI": null,
+  "verifiedIncrementalProfitability": false,
+  "dataUsedForPriorModelDevelopment": true,
+  "historicalIncrementalInformationFlag": false,
+  "perSeason": [
+    {
+      "season": 2022,
+      "trainedSeasons": [
+        2020,
+        2021
+      ],
+      "originalElo": {
+        "n": 282,
+        "brier": 0.226035,
+        "logLoss": 0.642246,
+        "accuracyPercent": 62.41,
+        "averagePredictedHome": 0.55108,
+        "observedHomeRate": 0.56738
+      },
+      "closingMarket": {
+        "n": 282,
+        "brier": 0.209287,
+        "logLoss": 0.604963,
+        "accuracyPercent": 65.6,
+        "averagePredictedHome": 0.55633,
+        "observedHomeRate": 0.56738
+      },
+      "calibratedMarket": {
+        "n": 282,
+        "brier": 0.21062,
+        "logLoss": 0.608884,
+        "accuracyPercent": 67.73,
+        "averagePredictedHome": 0.52206,
+        "observedHomeRate": 0.56738
+      },
+      "incrementalResidual": {
+        "n": 282,
+        "brier": 0.210347,
+        "logLoss": 0.608351,
+        "accuracyPercent": 68.09,
+        "averagePredictedHome": 0.52335,
+        "observedHomeRate": 0.56738
+      },
+      "coefficients": {
+        "marketOnly": {
+          "intercept": -0.16531773,
+          "marketLogitWeight": 1.03523925,
+          "modelResidualWeight": 0,
+          "featureMode": "MARKET_CALIBRATION_ONLY",
+          "trainingN": 551,
+          "lambda": 20,
+          "interceptPenalty": 2
+        },
+        "residualModel": {
+          "intercept": -0.15667692,
+          "marketLogitWeight": 1.01768845,
+          "modelResidualWeight": -0.05521146,
+          "featureMode": "MARKET_LOGIT_PLUS_ELO_RESIDUAL",
+          "trainingN": 551,
+          "lambda": 20,
+          "interceptPenalty": 2
+        }
+      },
+      "calibratedMarketMinusResidualBrier": 0.000273,
+      "calibratedMarketMinusResidualLogLoss": 0.000533,
+      "confidence95": {
+        "method": "WEEK_CLUSTERED_PAIRED_PERCENTILE",
+        "resamples": 2000,
+        "clusters": 22,
+        "brier": {
+          "lower": -0.000193,
+          "upper": 0.000725
+        },
+        "logLoss": {
+          "lower": -0.000553,
+          "upper": 0.001553
+        }
+      },
+      "disagreementAudit": {
+        "priorYearCutoffProbabilityPoints": [
+          1.606,
+          3.021,
+          4.465,
+          6.161,
+          7.774,
+          9.238,
+          11.475,
+          14.023,
+          18.268
+        ],
+        "bins": [
+          {
+            "decile": 1,
+            "n": 34,
+            "averageDisagreementPoints": 0.75,
+            "modelFavoredSideForecastPercent": 50.85,
+            "marketFavoredSideReferencePercent": 50.1,
+            "actualModelSideWinPercent": 44.12,
+            "modelOverconfidencePoints": 6.73,
+            "marketOverconfidencePoints": 5.98,
+            "modelBrier": 0.203839,
+            "marketBrier": 0.202623,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 2,
+            "n": 21,
+            "averageDisagreementPoints": 2.333,
+            "modelFavoredSideForecastPercent": 53.37,
+            "marketFavoredSideReferencePercent": 51.04,
+            "actualModelSideWinPercent": 33.33,
+            "modelOverconfidencePoints": 20.04,
+            "marketOverconfidencePoints": 17.7,
+            "modelBrier": 0.212991,
+            "marketBrier": 0.204914,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 3,
+            "n": 29,
+            "averageDisagreementPoints": 3.762,
+            "modelFavoredSideForecastPercent": 45.02,
+            "marketFavoredSideReferencePercent": 41.26,
+            "actualModelSideWinPercent": 31.03,
+            "modelOverconfidencePoints": 13.99,
+            "marketOverconfidencePoints": 10.23,
+            "modelBrier": 0.219607,
+            "marketBrier": 0.210646,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 4,
+            "n": 33,
+            "averageDisagreementPoints": 5.357,
+            "modelFavoredSideForecastPercent": 52.55,
+            "marketFavoredSideReferencePercent": 47.19,
+            "actualModelSideWinPercent": 45.45,
+            "modelOverconfidencePoints": 7.09,
+            "marketOverconfidencePoints": 1.74,
+            "modelBrier": 0.205187,
+            "marketBrier": 0.200651,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 5,
+            "n": 27,
+            "averageDisagreementPoints": 6.959,
+            "modelFavoredSideForecastPercent": 48.45,
+            "marketFavoredSideReferencePercent": 41.49,
+            "actualModelSideWinPercent": 44.44,
+            "modelOverconfidencePoints": 4.01,
+            "marketOverconfidencePoints": -2.95,
+            "modelBrier": 0.212051,
+            "marketBrier": 0.211455,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 6,
+            "n": 20,
+            "averageDisagreementPoints": 8.462,
+            "modelFavoredSideForecastPercent": 48.7,
+            "marketFavoredSideReferencePercent": 40.24,
+            "actualModelSideWinPercent": 30,
+            "modelOverconfidencePoints": 18.7,
+            "marketOverconfidencePoints": 10.24,
+            "modelBrier": 0.282693,
+            "marketBrier": 0.259025,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 7,
+            "n": 33,
+            "averageDisagreementPoints": 10.336,
+            "modelFavoredSideForecastPercent": 47.14,
+            "marketFavoredSideReferencePercent": 36.8,
+            "actualModelSideWinPercent": 27.27,
+            "modelOverconfidencePoints": 19.87,
+            "marketOverconfidencePoints": 9.53,
+            "modelBrier": 0.217585,
+            "marketBrier": 0.186441,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 8,
+            "n": 38,
+            "averageDisagreementPoints": 12.717,
+            "modelFavoredSideForecastPercent": 47.03,
+            "marketFavoredSideReferencePercent": 34.32,
+            "actualModelSideWinPercent": 34.21,
+            "modelOverconfidencePoints": 12.82,
+            "marketOverconfidencePoints": 0.1,
+            "modelBrier": 0.229101,
+            "marketBrier": 0.212124,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 9,
+            "n": 29,
+            "averageDisagreementPoints": 16.43,
+            "modelFavoredSideForecastPercent": 51.97,
+            "marketFavoredSideReferencePercent": 35.54,
+            "actualModelSideWinPercent": 27.59,
+            "modelOverconfidencePoints": 24.38,
+            "marketOverconfidencePoints": 7.95,
+            "modelBrier": 0.268334,
+            "marketBrier": 0.212586,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 10,
+            "n": 18,
+            "averageDisagreementPoints": 24.383,
+            "modelFavoredSideForecastPercent": 54.08,
+            "marketFavoredSideReferencePercent": 29.7,
+            "actualModelSideWinPercent": 38.89,
+            "modelOverconfidencePoints": 15.19,
+            "marketOverconfidencePoints": -9.19,
+            "modelBrier": 0.230659,
+            "marketBrier": 0.212681,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          }
+        ]
+      }
+    },
+    {
+      "season": 2023,
+      "trainedSeasons": [
+        2021,
+        2022
+      ],
+      "originalElo": {
+        "n": 285,
+        "brier": 0.23529,
+        "logLoss": 0.663803,
+        "accuracyPercent": 60,
+        "averagePredictedHome": 0.54197,
+        "observedHomeRate": 0.56491
+      },
+      "closingMarket": {
+        "n": 285,
+        "brier": 0.218638,
+        "logLoss": 0.62697,
+        "accuracyPercent": 67.02,
+        "averagePredictedHome": 0.55495,
+        "observedHomeRate": 0.56491
+      },
+      "calibratedMarket": {
+        "n": 285,
+        "brier": 0.219111,
+        "logLoss": 0.627984,
+        "accuracyPercent": 67.72,
+        "averagePredictedHome": 0.54255,
+        "observedHomeRate": 0.56491
+      },
+      "incrementalResidual": {
+        "n": 285,
+        "brier": 0.218398,
+        "logLoss": 0.626331,
+        "accuracyPercent": 67.72,
+        "averagePredictedHome": 0.54422,
+        "observedHomeRate": 0.56491
+      },
+      "coefficients": {
+        "marketOnly": {
+          "intercept": -0.0597429,
+          "marketLogitWeight": 1.01277232,
+          "modelResidualWeight": 0,
+          "featureMode": "MARKET_CALIBRATION_ONLY",
+          "trainingN": 566,
+          "lambda": 20,
+          "interceptPenalty": 2
+        },
+        "residualModel": {
+          "intercept": -0.05006138,
+          "marketLogitWeight": 0.97916437,
+          "modelResidualWeight": -0.10419033,
+          "featureMode": "MARKET_LOGIT_PLUS_ELO_RESIDUAL",
+          "trainingN": 566,
+          "lambda": 20,
+          "interceptPenalty": 2
+        }
+      },
+      "calibratedMarketMinusResidualBrier": 0.000713,
+      "calibratedMarketMinusResidualLogLoss": 0.001653,
+      "confidence95": {
+        "method": "WEEK_CLUSTERED_PAIRED_PERCENTILE",
+        "resamples": 2000,
+        "clusters": 22,
+        "brier": {
+          "lower": 0.000096,
+          "upper": 0.001288
+        },
+        "logLoss": {
+          "lower": 0.000347,
+          "upper": 0.002898
+        }
+      },
+      "disagreementAudit": {
+        "priorYearCutoffProbabilityPoints": [
+          1.489,
+          3.221,
+          4.809,
+          6.432,
+          7.86,
+          9.515,
+          11.61,
+          13.538,
+          17.855
+        ],
+        "bins": [
+          {
+            "decile": 1,
+            "n": 24,
+            "averageDisagreementPoints": 0.795,
+            "modelFavoredSideForecastPercent": 50.74,
+            "marketFavoredSideReferencePercent": 49.95,
+            "actualModelSideWinPercent": 58.33,
+            "modelOverconfidencePoints": -7.59,
+            "marketOverconfidencePoints": -8.39,
+            "modelBrier": 0.197559,
+            "marketBrier": 0.198797,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 2,
+            "n": 38,
+            "averageDisagreementPoints": 2.443,
+            "modelFavoredSideForecastPercent": 50.03,
+            "marketFavoredSideReferencePercent": 47.59,
+            "actualModelSideWinPercent": 44.74,
+            "modelOverconfidencePoints": 5.3,
+            "marketOverconfidencePoints": 2.85,
+            "modelBrier": 0.243178,
+            "marketBrier": 0.240271,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 3,
+            "n": 35,
+            "averageDisagreementPoints": 3.947,
+            "modelFavoredSideForecastPercent": 51.1,
+            "marketFavoredSideReferencePercent": 47.15,
+            "actualModelSideWinPercent": 45.71,
+            "modelOverconfidencePoints": 5.38,
+            "marketOverconfidencePoints": 1.44,
+            "modelBrier": 0.257897,
+            "marketBrier": 0.254663,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 4,
+            "n": 31,
+            "averageDisagreementPoints": 5.554,
+            "modelFavoredSideForecastPercent": 47.88,
+            "marketFavoredSideReferencePercent": 42.32,
+            "actualModelSideWinPercent": 38.71,
+            "modelOverconfidencePoints": 9.17,
+            "marketOverconfidencePoints": 3.61,
+            "modelBrier": 0.250036,
+            "marketBrier": 0.24273,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 5,
+            "n": 22,
+            "averageDisagreementPoints": 7.136,
+            "modelFavoredSideForecastPercent": 45.29,
+            "marketFavoredSideReferencePercent": 38.16,
+            "actualModelSideWinPercent": 50,
+            "modelOverconfidencePoints": -4.71,
+            "marketOverconfidencePoints": -11.84,
+            "modelBrier": 0.279154,
+            "marketBrier": 0.291087,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 6,
+            "n": 21,
+            "averageDisagreementPoints": 8.773,
+            "modelFavoredSideForecastPercent": 44.82,
+            "marketFavoredSideReferencePercent": 36.05,
+            "actualModelSideWinPercent": 19.05,
+            "modelOverconfidencePoints": 25.77,
+            "marketOverconfidencePoints": 17,
+            "modelBrier": 0.221894,
+            "marketBrier": 0.185754,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 7,
+            "n": 45,
+            "averageDisagreementPoints": 10.481,
+            "modelFavoredSideForecastPercent": 45.28,
+            "marketFavoredSideReferencePercent": 34.8,
+            "actualModelSideWinPercent": 28.89,
+            "modelOverconfidencePoints": 16.39,
+            "marketOverconfidencePoints": 5.91,
+            "modelBrier": 0.2454,
+            "marketBrier": 0.222946,
+            "note": "RETROSPECTIVE_ONLY"
+          },
+          {
+            "decile": 8,
+            "n": 21,
+            "averageDisagreementPoints": 12.571,
+            "modelFavoredSideForecastPercent": 42.55,
+            "marketFavoredSideReferencePercent": 29.98,
+            "actualModelSideWinPercent": 9.52,
+            "modelOverconfidencePoints": 33.02,
+            "marketOverconfidencePoints": 20.45,
+            "modelBrier": 0.210939,
+            "marketBrier": 0.143155,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 9,
+            "n": 29,
+            "averageDisagreementPoints": 15.238,
+            "modelFavoredSideForecastPercent": 46.16,
+            "marketFavoredSideReferencePercent": 30.92,
+            "actualModelSideWinPercent": 24.14,
+            "modelOverconfidencePoints": 22.02,
+            "marketOverconfidencePoints": 6.79,
+            "modelBrier": 0.208181,
+            "marketBrier": 0.162766,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 10,
+            "n": 19,
+            "averageDisagreementPoints": 21.947,
+            "modelFavoredSideForecastPercent": 49.51,
+            "marketFavoredSideReferencePercent": 27.56,
+            "actualModelSideWinPercent": 36.84,
+            "modelOverconfidencePoints": 12.67,
+            "marketOverconfidencePoints": -9.28,
+            "modelBrier": 0.209829,
+            "marketBrier": 0.205727,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          }
+        ]
+      }
+    },
+    {
+      "season": 2024,
+      "trainedSeasons": [
+        2022,
+        2023
+      ],
+      "originalElo": {
+        "n": 285,
+        "brier": 0.211632,
+        "logLoss": 0.612714,
+        "accuracyPercent": 69.47,
+        "averagePredictedHome": 0.53228,
+        "observedHomeRate": 0.54737
+      },
+      "closingMarket": {
+        "n": 285,
+        "brier": 0.200975,
+        "logLoss": 0.589214,
+        "accuracyPercent": 70.88,
+        "averagePredictedHome": 0.54787,
+        "observedHomeRate": 0.54737
+      },
+      "calibratedMarket": {
+        "n": 285,
+        "brier": 0.200552,
+        "logLoss": 0.588202,
+        "accuracyPercent": 71.58,
+        "averagePredictedHome": 0.55797,
+        "observedHomeRate": 0.54737
+      },
+      "incrementalResidual": {
+        "n": 285,
+        "brier": 0.201853,
+        "logLoss": 0.591133,
+        "accuracyPercent": 70.88,
+        "averagePredictedHome": 0.55954,
+        "observedHomeRate": 0.54737
+      },
+      "coefficients": {
+        "marketOnly": {
+          "intercept": 0.04057327,
+          "marketLogitWeight": 1.0377675,
+          "modelResidualWeight": 0,
+          "featureMode": "MARKET_CALIBRATION_ONLY",
+          "trainingN": 567,
+          "lambda": 20,
+          "interceptPenalty": 2
+        },
+        "residualModel": {
+          "intercept": 0.04651018,
+          "marketLogitWeight": 0.98595883,
+          "modelResidualWeight": -0.16666981,
+          "featureMode": "MARKET_LOGIT_PLUS_ELO_RESIDUAL",
+          "trainingN": 567,
+          "lambda": 20,
+          "interceptPenalty": 2
+        }
+      },
+      "calibratedMarketMinusResidualBrier": -0.001301,
+      "calibratedMarketMinusResidualLogLoss": -0.002931,
+      "confidence95": {
+        "method": "WEEK_CLUSTERED_PAIRED_PERCENTILE",
+        "resamples": 2000,
+        "clusters": 22,
+        "brier": {
+          "lower": -0.002601,
+          "upper": 0.000023
+        },
+        "logLoss": {
+          "lower": -0.005963,
+          "upper": 0.000233
+        }
+      },
+      "disagreementAudit": {
+        "priorYearCutoffProbabilityPoints": [
+          1.532,
+          3.026,
+          4.363,
+          5.766,
+          7.518,
+          9.589,
+          11.005,
+          13.14,
+          16.403
+        ],
+        "bins": [
+          {
+            "decile": 1,
+            "n": 31,
+            "averageDisagreementPoints": 0.766,
+            "modelFavoredSideForecastPercent": 45.34,
+            "marketFavoredSideReferencePercent": 44.58,
+            "actualModelSideWinPercent": 41.94,
+            "modelOverconfidencePoints": 3.41,
+            "marketOverconfidencePoints": 2.64,
+            "modelBrier": 0.166196,
+            "marketBrier": 0.165761,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 2,
+            "n": 31,
+            "averageDisagreementPoints": 2.345,
+            "modelFavoredSideForecastPercent": 48.88,
+            "marketFavoredSideReferencePercent": 46.53,
+            "actualModelSideWinPercent": 48.39,
+            "modelOverconfidencePoints": 0.49,
+            "marketOverconfidencePoints": -1.85,
+            "modelBrier": 0.213736,
+            "marketBrier": 0.213081,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 3,
+            "n": 25,
+            "averageDisagreementPoints": 3.605,
+            "modelFavoredSideForecastPercent": 51.66,
+            "marketFavoredSideReferencePercent": 48.05,
+            "actualModelSideWinPercent": 40,
+            "modelOverconfidencePoints": 11.66,
+            "marketOverconfidencePoints": 8.05,
+            "modelBrier": 0.216153,
+            "marketBrier": 0.209235,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 4,
+            "n": 28,
+            "averageDisagreementPoints": 5.076,
+            "modelFavoredSideForecastPercent": 43.36,
+            "marketFavoredSideReferencePercent": 38.28,
+            "actualModelSideWinPercent": 46.43,
+            "modelOverconfidencePoints": -3.07,
+            "marketOverconfidencePoints": -8.14,
+            "modelBrier": 0.176049,
+            "marketBrier": 0.181683,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 5,
+            "n": 37,
+            "averageDisagreementPoints": 6.628,
+            "modelFavoredSideForecastPercent": 51.38,
+            "marketFavoredSideReferencePercent": 44.75,
+            "actualModelSideWinPercent": 51.35,
+            "modelOverconfidencePoints": 0.03,
+            "marketOverconfidencePoints": -6.6,
+            "modelBrier": 0.218802,
+            "marketBrier": 0.222724,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 6,
+            "n": 32,
+            "averageDisagreementPoints": 8.45,
+            "modelFavoredSideForecastPercent": 47.35,
+            "marketFavoredSideReferencePercent": 38.9,
+            "actualModelSideWinPercent": 34.38,
+            "modelOverconfidencePoints": 12.98,
+            "marketOverconfidencePoints": 4.53,
+            "modelBrier": 0.21329,
+            "marketBrier": 0.199309,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 7,
+            "n": 14,
+            "averageDisagreementPoints": 9.969,
+            "modelFavoredSideForecastPercent": 45.02,
+            "marketFavoredSideReferencePercent": 35.05,
+            "actualModelSideWinPercent": 42.86,
+            "modelOverconfidencePoints": 2.16,
+            "marketOverconfidencePoints": -7.81,
+            "modelBrier": 0.231058,
+            "marketBrier": 0.236982,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 8,
+            "n": 29,
+            "averageDisagreementPoints": 11.921,
+            "modelFavoredSideForecastPercent": 46.14,
+            "marketFavoredSideReferencePercent": 34.22,
+            "actualModelSideWinPercent": 24.14,
+            "modelOverconfidencePoints": 22,
+            "marketOverconfidencePoints": 10.08,
+            "modelBrier": 0.217246,
+            "marketBrier": 0.178369,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 9,
+            "n": 24,
+            "averageDisagreementPoints": 14.379,
+            "modelFavoredSideForecastPercent": 47.73,
+            "marketFavoredSideReferencePercent": 33.35,
+            "actualModelSideWinPercent": 33.33,
+            "modelOverconfidencePoints": 14.39,
+            "marketOverconfidencePoints": 0.02,
+            "modelBrier": 0.219738,
+            "marketBrier": 0.198124,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 10,
+            "n": 34,
+            "averageDisagreementPoints": 22.276,
+            "modelFavoredSideForecastPercent": 55.46,
+            "marketFavoredSideReferencePercent": 33.18,
+            "actualModelSideWinPercent": 38.24,
+            "modelOverconfidencePoints": 17.23,
+            "marketOverconfidencePoints": -5.05,
+            "modelBrier": 0.249249,
+            "marketBrier": 0.216225,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          }
+        ]
+      }
+    },
+    {
+      "season": 2025,
+      "trainedSeasons": [
+        2023,
+        2024
+      ],
+      "originalElo": {
+        "n": 284,
+        "brier": 0.222347,
+        "logLoss": 0.635962,
+        "accuracyPercent": 65.85,
+        "averagePredictedHome": 0.53248,
+        "observedHomeRate": 0.53521
+      },
+      "closingMarket": {
+        "n": 284,
+        "brier": 0.210906,
+        "logLoss": 0.606989,
+        "accuracyPercent": 65.85,
+        "averagePredictedHome": 0.54293,
+        "observedHomeRate": 0.53521
+      },
+      "calibratedMarket": {
+        "n": 284,
+        "brier": 0.211454,
+        "logLoss": 0.607784,
+        "accuracyPercent": 65.85,
+        "averagePredictedHome": 0.54648,
+        "observedHomeRate": 0.53521
+      },
+      "incrementalResidual": {
+        "n": 284,
+        "brier": 0.21142,
+        "logLoss": 0.607706,
+        "accuracyPercent": 65.85,
+        "averagePredictedHome": 0.54649,
+        "observedHomeRate": 0.53521
+      },
+      "coefficients": {
+        "marketOnly": {
+          "intercept": 0.00294536,
+          "marketLogitWeight": 1.10660002,
+          "modelResidualWeight": 0,
+          "featureMode": "MARKET_CALIBRATION_ONLY",
+          "trainingN": 570,
+          "lambda": 20,
+          "interceptPenalty": 2
+        },
+        "residualModel": {
+          "intercept": 0.00297454,
+          "marketLogitWeight": 1.10317565,
+          "modelResidualWeight": -0.01133691,
+          "featureMode": "MARKET_LOGIT_PLUS_ELO_RESIDUAL",
+          "trainingN": 570,
+          "lambda": 20,
+          "interceptPenalty": 2
+        }
+      },
+      "calibratedMarketMinusResidualBrier": 0.000034,
+      "calibratedMarketMinusResidualLogLoss": 0.000078,
+      "confidence95": {
+        "method": "WEEK_CLUSTERED_PAIRED_PERCENTILE",
+        "resamples": 2000,
+        "clusters": 22,
+        "brier": {
+          "lower": -0.000068,
+          "upper": 0.000141
+        },
+        "logLoss": {
+          "lower": -0.000163,
+          "upper": 0.000339
+        }
+      },
+      "disagreementAudit": {
+        "priorYearCutoffProbabilityPoints": [
+          1.553,
+          2.931,
+          4.263,
+          5.664,
+          7.24,
+          9.27,
+          10.743,
+          12.968,
+          16.485
+        ],
+        "bins": [
+          {
+            "decile": 1,
+            "n": 35,
+            "averageDisagreementPoints": 0.855,
+            "modelFavoredSideForecastPercent": 48.83,
+            "marketFavoredSideReferencePercent": 47.98,
+            "actualModelSideWinPercent": 51.43,
+            "modelOverconfidencePoints": -2.59,
+            "marketOverconfidencePoints": -3.45,
+            "modelBrier": 0.182937,
+            "marketBrier": 0.183693,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 2,
+            "n": 27,
+            "averageDisagreementPoints": 2.291,
+            "modelFavoredSideForecastPercent": 49.28,
+            "marketFavoredSideReferencePercent": 46.99,
+            "actualModelSideWinPercent": 48.15,
+            "modelOverconfidencePoints": 1.13,
+            "marketOverconfidencePoints": -1.16,
+            "modelBrier": 0.183797,
+            "marketBrier": 0.183747,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 3,
+            "n": 38,
+            "averageDisagreementPoints": 3.502,
+            "modelFavoredSideForecastPercent": 50.36,
+            "marketFavoredSideReferencePercent": 46.86,
+            "actualModelSideWinPercent": 52.63,
+            "modelOverconfidencePoints": -2.27,
+            "marketOverconfidencePoints": -5.77,
+            "modelBrier": 0.190507,
+            "marketBrier": 0.193742,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 4,
+            "n": 29,
+            "averageDisagreementPoints": 4.963,
+            "modelFavoredSideForecastPercent": 50.14,
+            "marketFavoredSideReferencePercent": 45.18,
+            "actualModelSideWinPercent": 37.93,
+            "modelOverconfidencePoints": 12.21,
+            "marketOverconfidencePoints": 7.25,
+            "modelBrier": 0.210615,
+            "marketBrier": 0.200557,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 5,
+            "n": 32,
+            "averageDisagreementPoints": 6.354,
+            "modelFavoredSideForecastPercent": 51.19,
+            "marketFavoredSideReferencePercent": 44.83,
+            "actualModelSideWinPercent": 53.13,
+            "modelOverconfidencePoints": -1.94,
+            "marketOverconfidencePoints": -8.29,
+            "modelBrier": 0.218565,
+            "marketBrier": 0.224463,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 6,
+            "n": 28,
+            "averageDisagreementPoints": 8.165,
+            "modelFavoredSideForecastPercent": 48.22,
+            "marketFavoredSideReferencePercent": 40.06,
+            "actualModelSideWinPercent": 50,
+            "modelOverconfidencePoints": -1.78,
+            "marketOverconfidencePoints": -9.94,
+            "modelBrier": 0.243072,
+            "marketBrier": 0.254383,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 7,
+            "n": 25,
+            "averageDisagreementPoints": 10.019,
+            "modelFavoredSideForecastPercent": 52.41,
+            "marketFavoredSideReferencePercent": 42.39,
+            "actualModelSideWinPercent": 44,
+            "modelOverconfidencePoints": 8.41,
+            "marketOverconfidencePoints": -1.61,
+            "modelBrier": 0.256588,
+            "marketBrier": 0.249991,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 8,
+            "n": 21,
+            "averageDisagreementPoints": 11.7,
+            "modelFavoredSideForecastPercent": 48.02,
+            "marketFavoredSideReferencePercent": 36.32,
+            "actualModelSideWinPercent": 23.81,
+            "modelOverconfidencePoints": 24.21,
+            "marketOverconfidencePoints": 12.51,
+            "modelBrier": 0.215613,
+            "marketBrier": 0.17218,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 9,
+            "n": 19,
+            "averageDisagreementPoints": 14.554,
+            "modelFavoredSideForecastPercent": 52.48,
+            "marketFavoredSideReferencePercent": 37.92,
+            "actualModelSideWinPercent": 42.11,
+            "modelOverconfidencePoints": 10.37,
+            "marketOverconfidencePoints": -4.18,
+            "modelBrier": 0.293554,
+            "marketBrier": 0.287569,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          },
+          {
+            "decile": 10,
+            "n": 30,
+            "averageDisagreementPoints": 21.459,
+            "modelFavoredSideForecastPercent": 53.76,
+            "marketFavoredSideReferencePercent": 32.3,
+            "actualModelSideWinPercent": 26.67,
+            "modelOverconfidencePoints": 27.1,
+            "marketOverconfidencePoints": 5.64,
+            "modelBrier": 0.270464,
+            "marketBrier": 0.189792,
+            "note": "LOW_BIN_SAMPLE_INTERPRET_CAUTIOUSLY"
+          }
+        ]
+      }
+    }
+  ],
+  "pooled": {
+    "closingMarket": {
+      "n": 1136,
+      "brier": 0.209953,
+      "logLoss": 0.60704,
+      "accuracyPercent": 67.34,
+      "averagePredictedHome": 0.55051,
+      "observedHomeRate": 0.5537
+    },
+    "calibratedMarket": {
+      "n": 1136,
+      "brier": 0.210433,
+      "logLoss": 0.608212,
+      "accuracyPercent": 68.22,
+      "averagePredictedHome": 0.54231,
+      "observedHomeRate": 0.5537
+    },
+    "incrementalResidual": {
+      "n": 1136,
+      "brier": 0.210504,
+      "logLoss": 0.608381,
+      "accuracyPercent": 68.13,
+      "averagePredictedHome": 0.54345,
+      "observedHomeRate": 0.5537
+    },
+    "improvementBrier": -0.000071,
+    "improvementLogLoss": -0.000169,
+    "pairedWeek95": {
+      "method": "WEEK_CLUSTERED_PAIRED_PERCENTILE",
+      "resamples": 2000,
+      "clusters": 88,
+      "brier": {
+        "lower": -0.000512,
+        "upper": 0.000355
+      },
+      "logLoss": {
+        "lower": -0.001165,
+        "upper": 0.000828
+      }
+    },
+    "positiveSeasonCount": 3
+  },
+  "evidenceFlagPassed": false,
+  "pooledDisagreement": [
+    {
+      "decile": 1,
+      "n": 124,
+      "modelFavoredSideForecastPercent": 48.88,
+      "marketReferencePercent": 48.09,
+      "observedWinPercent": 48.39,
+      "modelOverconfidencePoints": 0.49,
+      "marketOverconfidencePoints": -0.3
+    },
+    {
+      "decile": 2,
+      "n": 117,
+      "modelFavoredSideForecastPercent": 50.15,
+      "marketReferencePercent": 47.79,
+      "observedWinPercent": 44.45,
+      "modelOverconfidencePoints": 5.71,
+      "marketOverconfidencePoints": 3.34
+    },
+    {
+      "decile": 3,
+      "n": 127,
+      "modelFavoredSideForecastPercent": 49.6,
+      "marketReferencePercent": 45.9,
+      "observedWinPercent": 43.3,
+      "modelOverconfidencePoints": 6.3,
+      "marketOverconfidencePoints": 2.59
+    },
+    {
+      "decile": 4,
+      "n": 121,
+      "modelFavoredSideForecastPercent": 48.65,
+      "marketReferencePercent": 43.4,
+      "observedWinPercent": 42.15,
+      "modelOverconfidencePoints": 6.5,
+      "marketOverconfidencePoints": 1.25
+    },
+    {
+      "decile": 5,
+      "n": 118,
+      "modelFavoredSideForecastPercent": 49.52,
+      "marketReferencePercent": 42.8,
+      "observedWinPercent": 50,
+      "modelOverconfidencePoints": -0.48,
+      "marketOverconfidencePoints": -7.2
+    },
+    {
+      "decile": 6,
+      "n": 101,
+      "modelFavoredSideForecastPercent": 47.33,
+      "marketReferencePercent": 38.89,
+      "observedWinPercent": 34.66,
+      "modelOverconfidencePoints": 12.68,
+      "marketOverconfidencePoints": 4.24
+    },
+    {
+      "decile": 7,
+      "n": 117,
+      "modelFavoredSideForecastPercent": 47.3,
+      "marketReferencePercent": 37.02,
+      "observedWinPercent": 33.33,
+      "modelOverconfidencePoints": 13.96,
+      "marketOverconfidencePoints": 3.68
+    },
+    {
+      "decile": 8,
+      "n": 109,
+      "modelFavoredSideForecastPercent": 46.12,
+      "marketReferencePercent": 33.84,
+      "observedWinPercent": 24.77,
+      "modelOverconfidencePoints": 21.35,
+      "marketOverconfidencePoints": 9.07
+    },
+    {
+      "decile": 9,
+      "n": 101,
+      "modelFavoredSideForecastPercent": 49.39,
+      "marketReferencePercent": 34.14,
+      "observedWinPercent": 30.69,
+      "modelOverconfidencePoints": 18.7,
+      "marketOverconfidencePoints": 3.45
+    },
+    {
+      "decile": 10,
+      "n": 101,
+      "modelFavoredSideForecastPercent": 53.59,
+      "marketReferencePercent": 31.24,
+      "observedWinPercent": 34.66,
+      "modelOverconfidencePoints": 18.93,
+      "marketOverconfidencePoints": -3.41
+    }
+  ],
+  "zeroEdgeSyntheticNull": {
+    "assumption": "TRUE_P_HOME_EQUALS_RETROSPECTIVE_DE_VIGGED_CLOSING_MARKET",
+    "generatedOutcomesAreSynthetic": true,
+    "iterations": 400,
+    "seed": 20261102,
+    "falseApprovalCount": 1,
+    "estimatedFalseApprovalRatePercent": 0.25,
+    "positiveSeasonCount3OrMore": 72,
+    "sampleWorlds": [
+      {
+        "nullWorld": 0,
+        "gatePassed": false,
+        "pooledBrierGain": 0.000055,
+        "pooledLogLossGain": 0.000229
+      },
+      {
+        "nullWorld": 1,
+        "gatePassed": false,
+        "pooledBrierGain": 0.000108,
+        "pooledLogLossGain": 0.000249
+      },
+      {
+        "nullWorld": 2,
+        "gatePassed": false,
+        "pooledBrierGain": 0.000023,
+        "pooledLogLossGain": 0.000044
+      },
+      {
+        "nullWorld": 3,
+        "gatePassed": false,
+        "pooledBrierGain": -0.000351,
+        "pooledLogLossGain": -0.000958
+      }
+    ],
+    "interpretation": "Source-conditional rate under a synthetic efficient market, not a universal actual error probability."
+  },
+  "caveats": [
+    "Closing market data are a research reference, not authenticated historical decision-time prices.",
+    "2025 and earlier test seasons have been inspected previously; this is not genuinely new forward evidence.",
+    "Market-derived residual models are not independent sportsbook forecasting models.",
+    "Fewer than 40 games per seasonal disagreement bin should not be interpreted as stable statistical evidence.",
+    "The null false-approval estimate is specific to Bernoulli(closing-market) synthetic worlds, not every real-world failure mode.",
+    "No automatic bet, CLV, live return or model promotion follows from retrospective statistical scores."
+  ],
+  "generatedAt": "2026-11-02T14:34:59.485Z",
+  "sourceSha256": "deff36dd02444aede71027b06469fc428dbec0159468a8acb8298a332ac08f01",
+  "source": {
+    "name": "nflverse / Lee Sharpe schedules",
+    "license": "CC BY 4.0",
+    "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+    "usage": "2020–2025 completed games and retrospective untimestamped closing moneylines"
+  },
+  "protocolCommit": "c6069bb7f309be3861f8f733dc8dbfd690bfea2d",
+  "automaticModelPromotionAllowed": false,
+  "wageringAuthorized": false
+}
