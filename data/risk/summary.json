@@ -1,0 +1,160 @@
+{
+  "schema": 1,
+  "version": "betq-risk-research-v1",
+  "generatedAt": "2026-11-02T14:04:50.044Z",
+  "sourceSha256": "a667447d5364006c23eb60bb233a65d32395059dca4ee88f4f62d58991c09e53",
+  "sourceVersion": "nfl-replay-v2",
+  "marketDataSource": "NFLVERSE_HISTORICAL_CLOSING_REFERENCE",
+  "statement": "Hypothetical bankroll stress. NOT verified future ruin probability or an actual portfolio.",
+  "model": "ORIGINAL_FROZEN_ELO_3PCT_EV_GATE",
+  "historicalSeasonRange": [
+    2022,
+    2025
+  ],
+  "historicalEligibleDecisions": 879,
+  "historicalWeekBlocks": 86,
+  "historicalPriceTimeVerified": false,
+  "verifiedROI": null,
+  "verifiedCLV": null,
+  "bettingAuthorized": false,
+  "scenarioAssumptions": {
+    "sample": "Resample complete NFL season-week groups with replacement.",
+    "pathsPerScenario": 10000,
+    "initialBankrollUnits": 100,
+    "practicalRuin": "Balance touches 50 units (half starting bankroll) at any time",
+    "stakeSizing": "Fraction of current bankroll per historical hypothetical selection; no leverage",
+    "source": "Historical closing odds, not actual bet execution",
+    "adverseCase": "Declared 2% independent per-winning-selection conversion to a loss, not an observed real-world probability"
+  },
+  "scenarios": [
+    {
+      "label": "BASELINE_CONDITIONAL_RESAMPLE_1_PERCENT_RISK",
+      "result": {
+        "type": "CONDITIONAL_WEEK_BLOCK_BOOTSTRAP",
+        "version": "betq-risk-stress-1",
+        "iterations": 10000,
+        "seed": 440391,
+        "historicalWeeksResampled": 86,
+        "historicalSelectionCount": 879,
+        "approximateBetsPerPath": 878.05,
+        "startingBankroll": 100,
+        "stakeFraction": 0.01,
+        "stakePercent": 1,
+        "practicalRuinThreshold": 50,
+        "practicalRuinDefinition": "TOUCH_STARTING_BANKROLL_THRESHOLD_AT_ANY_TIME",
+        "adverseWinFlipRate": 0,
+        "endingBankrollReturnPercent": {
+          "p05": -81.02,
+          "median": -62.47,
+          "p95": -24.57
+        },
+        "pathMaxDrawdownPercent": {
+          "median": 67.87,
+          "p95": 82.8
+        },
+        "frequencyEndingBelowStartPercent": 98.94,
+        "frequencyCrossingPracticalRuinPercent": 82.33,
+        "frequencyDrawdownOver50Percent": 89.06,
+        "exactRealWorldRiskOfRuin": null,
+        "verifiedHistoricalROI": null,
+        "verifiedCLV": null,
+        "providerPriceTimeVerified": false,
+        "bettingAuthorized": false,
+        "limitations": [
+          "Conditional resampling of historical, closing-price-only hypothetical decisions.",
+          "Historical win rates, odds and selection rules are assumed to remain informative; this is not established.",
+          "Week-block resampling only approximates within-week dependence and ignores changing opponent strength or sportsbook restrictions.",
+          "A 50% bankroll threshold is a practical stress trigger, not literal financial ruin.",
+          "Adverse win flips are a stated hypothetical assumption, not measured probabilities.",
+          "Paths are simulation outcomes under assumptions, never guaranteed future performance or actual account returns."
+        ]
+      }
+    },
+    {
+      "label": "ADVERSE_2_PERCENT_WINS_FLIPPED",
+      "result": {
+        "type": "CONDITIONAL_WEEK_BLOCK_BOOTSTRAP",
+        "version": "betq-risk-stress-1",
+        "iterations": 10000,
+        "seed": 440391,
+        "historicalWeeksResampled": 86,
+        "historicalSelectionCount": 879,
+        "approximateBetsPerPath": 878.05,
+        "startingBankroll": 100,
+        "stakeFraction": 0.01,
+        "stakePercent": 1,
+        "practicalRuinThreshold": 50,
+        "practicalRuinDefinition": "TOUCH_STARTING_BANKROLL_THRESHOLD_AT_ANY_TIME",
+        "adverseWinFlipRate": 0.02,
+        "endingBankrollReturnPercent": {
+          "p05": -83.76,
+          "median": -67.9,
+          "p95": -36.2
+        },
+        "pathMaxDrawdownPercent": {
+          "median": 71.88,
+          "p95": 85.17
+        },
+        "frequencyEndingBelowStartPercent": 99.69,
+        "frequencyCrossingPracticalRuinPercent": 90.51,
+        "frequencyDrawdownOver50Percent": 94.45,
+        "exactRealWorldRiskOfRuin": null,
+        "verifiedHistoricalROI": null,
+        "verifiedCLV": null,
+        "providerPriceTimeVerified": false,
+        "bettingAuthorized": false,
+        "limitations": [
+          "Conditional resampling of historical, closing-price-only hypothetical decisions.",
+          "Historical win rates, odds and selection rules are assumed to remain informative; this is not established.",
+          "Week-block resampling only approximates within-week dependence and ignores changing opponent strength or sportsbook restrictions.",
+          "A 50% bankroll threshold is a practical stress trigger, not literal financial ruin.",
+          "Adverse win flips are a stated hypothetical assumption, not measured probabilities.",
+          "Paths are simulation outcomes under assumptions, never guaranteed future performance or actual account returns."
+        ]
+      }
+    },
+    {
+      "label": "HALF_STAKE_CONDITIONAL_RESAMPLE",
+      "result": {
+        "type": "CONDITIONAL_WEEK_BLOCK_BOOTSTRAP",
+        "version": "betq-risk-stress-1",
+        "iterations": 10000,
+        "seed": 440391,
+        "historicalWeeksResampled": 86,
+        "historicalSelectionCount": 879,
+        "approximateBetsPerPath": 878.05,
+        "startingBankroll": 100,
+        "stakeFraction": 0.005,
+        "stakePercent": 0.5,
+        "practicalRuinThreshold": 50,
+        "practicalRuinDefinition": "TOUCH_STARTING_BANKROLL_THRESHOLD_AT_ANY_TIME",
+        "adverseWinFlipRate": 0,
+        "endingBankrollReturnPercent": {
+          "p05": -55.58,
+          "median": -37.46,
+          "p95": -11.21
+        },
+        "pathMaxDrawdownPercent": {
+          "median": 42.33,
+          "p95": 57.79
+        },
+        "frequencyEndingBelowStartPercent": 98.54,
+        "frequencyCrossingPracticalRuinPercent": 18.76,
+        "frequencyDrawdownOver50Percent": 23.11,
+        "exactRealWorldRiskOfRuin": null,
+        "verifiedHistoricalROI": null,
+        "verifiedCLV": null,
+        "providerPriceTimeVerified": false,
+        "bettingAuthorized": false,
+        "limitations": [
+          "Conditional resampling of historical, closing-price-only hypothetical decisions.",
+          "Historical win rates, odds and selection rules are assumed to remain informative; this is not established.",
+          "Week-block resampling only approximates within-week dependence and ignores changing opponent strength or sportsbook restrictions.",
+          "A 50% bankroll threshold is a practical stress trigger, not literal financial ruin.",
+          "Adverse win flips are a stated hypothetical assumption, not measured probabilities.",
+          "Paths are simulation outcomes under assumptions, never guaranteed future performance or actual account returns."
+        ]
+      }
+    }
+  ]
+}
