@@ -35,6 +35,7 @@ if(!asset||!asset.updated_at||Date.parse(asset.updated_at)>now+60000)
 const [injuriesText,scheduleText]=await Promise.all([
   getCsv(injuriesUrl,8000000),getCsv(schedulesUrl,12000000)
 ]);
+console.log('Current nflverse injury source column names:',injuriesText.split(/\r?\n/)[0]);
 const rows=parseGenericCsv(injuriesText);
 const data=compileInjuryReports(rows,{season,sourceUpdatedAt:asset.updated_at,now});
 const schedule=parseCsv(scheduleText);
