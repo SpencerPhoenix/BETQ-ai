@@ -81,6 +81,16 @@ Higher winner rates were possible by selecting obvious favorites: market favorit
 
 The session-level Market, Probability, Market Calibration, Historical Audit, and Risk agents evaluate the shared live snapshot without extra paid odds calls. The system displays a PASS/no-proven-edge decision when the independently tested model has not outperformed the closing market. **No real wagers, historical CLV, or audited real-money ROI are claimed.**
 
+## v0.8 — One risk authority across agents, pricing, and paper actions
+
+Before v0.8, a market-only WATCH price discrepancy could offer automatic paper staking even while the model risk agent said PASS_NO_PROVEN_MARKET_EDGE. This was misleading. The server now applies a **central post-analysis risk veto** to every live or demo opportunity: raw market WATCH remains audit-visible as PRICE WATCH · NOT A BET, while recommended units and automatic paper staging are disabled until a genuinely verified predictive edge and execution source exist. Existing locally saved paper histories remain manually auditable, but no new automatically sized positions are authorized.
+
+Every `/api/slate` activation now reports Market Data, Probability, Market Calibration, **Selection Bias Guardian**, Historical Audit and Risk & Execution stages using one shared odds request. The historical bias warning reports that 720/879 original modeled 3% EV selections (81.91%) were closing-market underdogs, with material selected-side overconfidence. These retrospective closing prices were not verified actual entry offers.
+
+Read-only `/api/risk/nfl` provides 10,000-path **conditional week-block bootstrap** stress scenarios for the original losing strategy, including median, 5th/95th outcome percentiles, drawdowns, and frequency of touching a user-understandable 50%-of-starting-bankroll threshold. This is **not** a true risk-of-ruin estimate or a forecast of real betting performance; it relies on hypothetical closing-price decisions. The dashboard loads the risk report on activation without another Odds API request.
+
+Reference results: at 1% stake per position, the historical-conditional simulator produced median −62.47% bankroll change, with 82.33% of paths touching the defined half-bankroll threshold. At 0.5% stake, median −37.46%, with 18.76% touching the same threshold. Smaller stakes do not correct an unprofitable selection model. Full assumptions and known limitations: [Central Decision and Risk Governance](docs/RISK_GOVERNANCE.md).
+
 ## Deploy
 
 `render.yaml` describes an optional Render Node web service. Link the repository in Render, then enter `ODDS_API_KEY` in the service environment. Deployment is managed separately in Render; a GitHub commit does not guarantee that the service successfully redeployed. Verify the production version at `GET /api/health`.
