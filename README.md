@@ -43,6 +43,14 @@ The reproducible runner `node scripts/train-nfl.mjs` reads the CC BY 4.0 nflvers
 
 The baseline's 2025 holdout performance, sources, parameter choices, last-game date and warnings are available through `GET /api/model/nfl` and the Prediction Lab. Treat these statistics as a backtest, not proof of a market-beating system. See `docs/MODEL.md`.
 
+## Prospective forward evidence (Phase 3)
+
+BETQ.ai now separates the historical backtest from *new forecasts frozen before kickoff*. A scheduled GitHub Actions collector calls the existing public, read-only NFL odds endpoint at a controlled cadence, reads nflverse schedule results, and appends derived-only observations to the current NFL season journal. It **never** stores raw bookmaker odds, prices, books, or API keys in the public repository.
+
+After the game, a later nflverse final score is joined to the locked model forecast; corrections are recorded separately, without changing the prediction. An independent multi-book no-vig **median market probability** is stored only when at least three independent fresh books support it. After a minimum of 30 finalized games, the Evidence Lab reports pregame accuracy and proper scoring rules, with paired same-time comparisons and bootstrap uncertainty. Before that, it shows a transparent collecting status. The 30-game threshold is a minimum disclosure gate, **not proof of superiority or profit**.
+
+Important: a same-time market-consensus baseline is **not closing-line value**, and there are no verified real-money betting results, CLV, ROI, or automated orders. The journal cannot establish profitability without full price-time-aligned odds archival, settlement verification, and prospective testing. GitHub serves a derived research journal; durable raw-odds archival requires a separate authenticated database, not the expiring free Render database allocated to another project. See `docs/EVIDENCE.md`.
+
 ## Deploy
 
 `render.yaml` describes an optional Render Node web service. Link the repository in Render, then enter `ODDS_API_KEY` in the service environment. Deployment is managed separately in Render; a GitHub commit does not guarantee that the service successfully redeployed. Verify the production version at `GET /api/health`.
