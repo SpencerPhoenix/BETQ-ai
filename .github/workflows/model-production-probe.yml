@@ -1,4 +1,4 @@
-name: BETQ v0.2 production model audit
+name: BETQ v0.3 production model audit
 on:
   push:
     paths:
@@ -27,7 +27,7 @@ jobs:
             return j;
           };
           const health=await request('/api/health');
-          if(health.version!=='0.2.0')throw Error('Backend is not deployed at v0.2; version='+health.version);
+          if(health.version!=='0.3.0')throw Error('Backend is not deployed at v0.3; version='+health.version);
           if(health.nflModel?.available!==true)throw Error('NFL model artifact missing from production runtime');
           if(health.odds?.budget?.limit!==12)throw Error('Daily provider credit governor is not enabled');
           console.log('DEPLOYMENT VERSION: '+health.version);
@@ -56,5 +56,5 @@ jobs:
             throw Error('Research projections mislabeled as executable');
           console.log('LIVE NFL GAMES: '+live.summary.games+' · priced signals '+live.summary.signals);
           console.log('ELIGIBLE UPCOMING: '+pending.length+' · independently modeled '+modeled.length);
-          console.log('RESULT: PASS — v0.2 live, model source valid, guarded, research-only');
+          console.log('RESULT: PASS — v0.3 live, model source valid, guarded, research-only');
           NODE
