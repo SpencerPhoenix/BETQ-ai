@@ -144,9 +144,14 @@ test('Private database adapters use transactions and idempotent parameterized in
       commands.push({sql,params});
       if(sql==='BEGIN'||sql==='COMMIT'||sql==='ROLLBACK')return {rowCount:0};
       if(sql.includes('quote_observations')&&sql.includes('INSERT INTO')){
-        const key=params[0];
-        if(inserted.has(key))return{rowCount:0};
-        inserted.add(key);rows.push(params);return{rowCount:1};
+        let added=0;
+        assert.equal(params.length%15,0);
+        for(let i=0;i<params.length;i+=15){
+          const values=params.slice(i,i+15),key=values[0];
+          if(inserted.has(key))continue;
+          inserted.add(key);rows.push(values);added++;
+        }
+        return{rowCount:added};
       }
       return{rowCount:0};
     },
