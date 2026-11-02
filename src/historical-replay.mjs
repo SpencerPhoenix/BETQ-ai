@@ -12,7 +12,7 @@
 import { noVigPair, toDecimal } from './engine.mjs';
 import { calibrate, eloProbability, canonicalTeam } from './nfl-elo.mjs';
 
-export const REPLAY_VERSION='nfl-replay-v1';
+export const REPLAY_VERSION='nfl-replay-v2';
 export const DEFAULT_THRESHOLDS=Object.freeze([0,0.03,0.05]);
 const K_GRID=[12,20,28,40,52], HFA_GRID=[25,40,55,70,85], REGRESSION=[0.25,0.35];
 const SCALES=[0.6,0.75,0.9,1,1.1,1.25];
@@ -175,7 +175,8 @@ function wilson(w,n){
 export function summarizeSelections(games,threshold=0.03,{examples=15}={}){
   const candidates=games.filter(g=>g.priceAvailable&&g.estimatedEV>=threshold);
   let wins=0,losses=0,ties=0,net=0,stake=0,peak=0,maxDD=0,
-      streak=0,maxStreak=0;
+      streak=0,maxStreak=0,modelProbTotal=0,marketProbTotal=0,
+      impliedProbTotal=0,predictedEVTotal=0,probN=0;
   const reviewed=[];
   for(const g of candidates){
     if(g.actual==='TIE'){ties++;continue;}
@@ -185,6 +186,16 @@ export function summarizeSelections(games,threshold=0.03,{examples=15}={}){
     const d=toDecimal(g.selectedOdds);
     const pnl=won?(d-1):-1;
     net+=pnl;stake++;
+    if(finite(g.selectedProbability)&&finite(g.closeMarketHomeProbability)&&
+       finite(g.estimatedEV)&&finite(d)){
+      const marketP=g.selectedSide==='home'?
+        g.closeMarketHomeProbability:1-g.closeMarketHomeProbability;
+      modelProbTotal+=g.selectedProbability;
+      marketProbTotal+=marketP;
+      impliedProbTotal+=1/d;
+      predictedEVTotal+=g.estimatedEV;
+      probN++;
+    }
     peak=Math.max(peak,net);
     maxDD=Math.max(maxDD,peak-net);
     reviewed.push({...g,grade:won?'WIN':'LOSS',pnlUnits:round(pnl)});
@@ -196,6 +207,12 @@ export function summarizeSelections(games,threshold=0.03,{examples=15}={}){
     pricedCandidates:candidates.length,
     graded:n,wins,losses,tiesExcluded:ties,
     winRatePercent:percentage(wins,n),
+    expectedSelectionWinRatePercent:probN?percentage(modelProbTotal,probN):null,
+    referenceMarketWinProbabilityPercent:probN?percentage(marketProbTotal,probN):null,
+    averageOfferedImpliedProbabilityPercent:probN?percentage(impliedProbTotal,probN):null,
+    meanEstimatedEVPercent:probN?percentage(predictedEVTotal,probN):null,
+    actualMinusForecastWinPoints:probN?
+      round(100*(wins/n-modelProbTotal/probN),2):null,
     wilson95: wilson(wins,n),
     hypotheticalNetUnits:round(net,2),
     hypotheticalRiskedUnits:stake,
@@ -226,7 +243,7 @@ export function replaySeason(games,closingIndex,testSeason,{
   const replay=walkForwardByDay(games.filter(g=>g.season<=testSeason),fit.params);
   const tested=replay.history.filter(g=>g.season===testSeason);
   let valid=0,compared=0,modelBrier=0,marketBrier=0,
-      modelLL=0,marketLL=0,correct=0;
+      modelLL=0,marketLL=0,correct=0,marketFavoriteCorrect=0;
   const decisions=[];
   for(const game of tested){
     const tie=game.actual===0.5;
@@ -242,6 +259,7 @@ export function replaySeason(games,closingIndex,testSeason,{
         compared++;
         marketBrier+=(closing.homeMarketProbability-game.actual)**2;
         marketLL+=logLoss(closing.homeMarketProbability,game.actual);
+        marketFavoriteCorrect+=Number((closing.homeMarketProbability>=0.5)===(game.actual===1));
       }
     }
     const decision={
@@ -278,6 +296,7 @@ export function replaySeason(games,closingIndex,testSeason,{
       logLoss:valid?round(modelLL/valid,5):null},
     closingMarketBenchmark:compared?{
       n:compared,brier:round(marketBrier/compared,5),
+      favoriteWinnerAccuracyPercent:percentage(marketFavoriteCorrect,compared),
       logLoss:round(marketLL/compared,5),
       // Model score must use precisely the paired subset, computed separately.
       pairedModelBrier:round(decisions.filter(d=>d.priceAvailable&&d.actual!=='TIE')
