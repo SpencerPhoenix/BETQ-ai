@@ -121,7 +121,7 @@
         ' <button type="button" class="text-link" data-mode="demo">Explore demo ↗</button></p>';
     } else if (state.slate) {
       element.classList.add('info');
-      element.innerHTML = '<span>◇</span><p><b>MARKET-ONLY ANALYSIS.</b> Reported EV is inferred from other books, not an independently tested prediction model. Injuries, weather and lineup changes remain unverified. <button type="button" class="text-link" data-tab="audit">Review audit ↗</button></p>';
+      element.innerHTML = '<span>◇</span><p><b>LIVE MARKET SNAPSHOT · MANUAL REFRESH.</b> ↻ updates on demand to conserve API credits. Market consensus is not an independent prediction. The NFL Elo research model is in <button type="button" class="text-link" data-tab="model">Prediction Lab ↗</button>; injuries and starters remain unverified.</p>';
     } else {
       element.classList.add('info');
       element.innerHTML = '<span>◈</span><p>Connecting to the odds provider…</p>';
@@ -617,7 +617,8 @@
     if (state.slate) $('last-refreshed').textContent = 'Received ' + relativeAge(state.slate.receivedAt) +
       (state.slate.cacheHit ? ' · Cached' : '');
   }, 15000);
-  setInterval(() => { if (state.mode === 'live' && !document.hidden) loadSlate(); }, 120000);
+  // Paid odds requests are manual-only to protect the limited API credit allowance.
+  // Users may click ↻ or change leagues/markets to request a fresh cached snapshot.
   syncSettings();
   render();
   loadHealth();
