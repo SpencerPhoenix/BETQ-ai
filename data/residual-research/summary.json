@@ -1075,8 +1075,8 @@
     "The null false-approval estimate is specific to Bernoulli(closing-market) synthetic worlds, not every real-world failure mode.",
     "No automatic bet, CLV, live return or model promotion follows from retrospective statistical scores."
   ],
-  "generatedAt": "2026-11-02T14:34:59.485Z",
-  "sourceSha256": "deff36dd02444aede71027b06469fc428dbec0159468a8acb8298a332ac08f01",
+  "generatedAt": "2026-11-02T18:05:24.517Z",
+  "sourceSha256": "7bf3e1d9bcf0805fd0fdd1b95a5f016798a3705beebfea9240689c14a0270f8c",
   "source": {
     "name": "nflverse / Lee Sharpe schedules",
     "license": "CC BY 4.0",
