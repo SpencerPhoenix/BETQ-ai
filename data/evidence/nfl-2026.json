@@ -931,5 +931,17 @@
       "verifiedInjuryAdjustment": false
     }
   ],
-  "settlements": []
+  "settlements": [
+    {
+      "gameId": "2026_08_PHI_WAS",
+      "gameDate": "2026-11-01",
+      "homeScore": 27,
+      "awayScore": 10,
+      "outcome": "HOME",
+      "source": "NFLVERSE_SCHEDULES",
+      "resultHash": "8888fe4fc6bc95477fb87427",
+      "verifiedAt": "2026-11-02T20:52:50.140Z",
+      "revision": 1
+    }
+  ]
 }

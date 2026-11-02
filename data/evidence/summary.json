@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "season": 2026,
-  "generatedAt": "2026-11-02T01:38:02.089Z",
+  "generatedAt": "2026-11-02T20:52:50.140Z",
   "provenance": {
     "model": "BETQ_NFL_ELO",
     "market": "THE_ODDS_API_V4_DERIVED",
@@ -16,9 +16,9 @@
   "minimumScoredSample": 30,
   "totalSnapshots": 33,
   "prospectiveGames": 17,
-  "settledGames": 0,
-  "pendingGames": 17,
-  "pairedMarketGames": 0,
+  "settledGames": 1,
+  "pendingGames": 16,
+  "pairedMarketGames": 1,
   "nearKickoffConsensusPairs": 0,
   "prospectiveChallengerGames": 16,
   "pairedChallengerSettled": 0,
@@ -27,7 +27,20 @@
   "forwardMetrics": null,
   "marketComparison": null,
   "consensusMovementPoints": null,
-  "recentResults": [],
+  "recentResults": [
+    {
+      "gameId": "2026_08_PHI_WAS",
+      "home": "WAS",
+      "away": "PHI",
+      "gameDate": "2026-11-01",
+      "score": "10-27",
+      "result": "HOME",
+      "modelHomeProbability": 0.471092,
+      "marketHomeProbability": 0.688889,
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "brier": 0.27974
+    }
+  ],
   "pendingPreview": [
     {
       "gameId": "2026_09_GB_NE",
