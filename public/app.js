@@ -326,7 +326,35 @@
         '</div>';
       return proof;
     })():'<p class="shadow-diagnostic">Source-frozen model-vs-later-market audit is not available.</p>';
-    root.innerHTML=cards+leadEvidence+
+    const sequential=r.sequentialMarketEvidence;
+    const sequentialBox=sequential?.version==='betq-market-sequential-v1'?(()=>{
+      const settled=sequential.eligibleSettledNonTieGames||0,
+        readable=sequential.properScores!==null&&settled>=30;
+      const evidence=sequential.candidateEvidence;
+      const score=sequential.properScores;
+      return '<div class="shadow-lead-box">'+
+        '<div class="shadow-lead-heading"><strong>Forward outcome evidence versus the market</strong>'+
+        '<span class="status-tag pass">'+(readable?'RESEARCH ONLY':'AWAITING 30 FINAL GAMES')+'</span></div>'+
+        '<div class="metric-grid">'+
+        metric('QUALIFIED FINAL GAMES',String(settled),
+          'One first, source-checked pregame snapshot per settled NFL game','cyan','▤')+
+        metric('REMAINING TO REPORT',String(sequential.gamesNeededForDescriptiveScore),
+          '30-game minimum is a display gate, not proof of an advantage','','◷')+
+        metric('MARKET VS ELO BRIER',readable?
+          num(score.marketBrier,5)+' / '+num(score.eloBrier,5):'WITHHELD',
+          'Matched game outcomes · smaller score is better','violet','◇')+
+        metric('CONDITIONAL MODEL EVIDENCE',readable?
+          num(evidence.fixedMixtureEvidence,3)+'×':'WITHHELD',
+          'Requires an unproven efficient-market probability assumption','','⌁')+
+        '</div><p class="shadow-live-notice"><b>No verified profitability.</b> '+
+        'A precommitted 50/50 Elo/efficiency likelihood comparison uses the first '+
+        'eligible forecast and a later finalized game result. If no efficiency '+
+        'forecast was present initially, its contribution is neutral. '+
+        'This diagnostic assumes the market probability is the true conditional '+
+        'outcome probability, which is not established, and cannot demonstrate '+
+        'tradable mispricing, actual sportsbook fills, real CLV or ROI.</p></div>';
+    })():'';
+    root.innerHTML=cards+leadEvidence+sequentialBox+
       (moves?'<div class="table-scroll"><table class="data-table shadow-forward-table">'+
         '<thead><tr><th>GAME</th><th>OBSERVATION SPAN</th><th>HOME P CHANGE</th><th>NEWS LINKAGE</th></tr></thead>'+
         '<tbody>'+moves+'</tbody></table></div>':
