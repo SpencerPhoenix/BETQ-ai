@@ -300,7 +300,33 @@
       '<td class="'+(m.observedChangePoints>=0?'positive':'negative')+'">'+
       signed(m.observedChangePoints,2)+' pp</td>'+
       '<td>NOT LINKED TO QB SOURCE</td></tr>').join('');
-    root.innerHTML=cards+
+    const lead=r.prospectiveModelLeadDiagnostic;
+    const leadEvidence=lead?.schema===1?(()=>{
+      const observed=lead.candidateMarketMovements||0;
+      const scored=lead.directionMatchPercent!==null&&lead.directionMatchPercent!==undefined;
+      const proof='<div class="shadow-lead-box">'+
+        '<div class="shadow-lead-heading"><strong>Does BETQ predict later market movement?</strong>'+
+        '<span class="status-tag pass">'+(scored?'DESCRIPTIVE RESEARCH':'INSUFFICIENT FORWARD SAMPLE')+'</span></div>'+
+        '<div class="metric-grid">'+
+        metric('TIMESTAMP-PAIRED GAMES',String(lead.gamesWithEligiblePairedObservations||0),
+          'First forecast and later derived quote at least 15 min apart','cyan','◷')+
+        metric('MATERIAL MARKET MOVES',String(observed),
+          'Requires first model gap ≥3 pp and later price move ≥0.5 pp','','◉')+
+        metric('DIRECTION MATCHES',String(lead.qualifyingDirectionMatches||0)+' / '+observed,
+          'Matches not proof of an executable price or a causal effect','violet','⌁')+
+        metric('DIRECTION HIT RATE',scored?num(lead.directionMatchPercent,2)+'%':'WITHHELD',
+          scored?'Descriptive only · not economically validated':
+            String(lead.missingToReport)+' additional distinct games needed','', '◇')+
+        '</div>'+
+        '<p class="shadow-live-notice"><b>Evidence standard:</b> This tests whether the earliest '+
+        'already-recorded Elo disagreement points in the direction of a later market consensus shift. '+
+        'It uses the same free prospective journal and counts each game once. '+
+        'It cannot establish sportsbook entry prices, real CLV, profitability, or QB-news causation. '+
+        'The minimum reporting sample is 30 distinct qualified games, which still is not proof of a predictive edge.</p>'+
+        '</div>';
+      return proof;
+    })():'<p class="shadow-diagnostic">Source-frozen model-vs-later-market audit is not available.</p>';
+    root.innerHTML=cards+leadEvidence+
       (moves?'<div class="table-scroll"><table class="data-table shadow-forward-table">'+
         '<thead><tr><th>GAME</th><th>OBSERVATION SPAN</th><th>HOME P CHANGE</th><th>NEWS LINKAGE</th></tr></thead>'+
         '<tbody>'+moves+'</tbody></table></div>':
