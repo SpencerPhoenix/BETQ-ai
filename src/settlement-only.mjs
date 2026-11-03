@@ -143,14 +143,16 @@ export function reconcileSettlements(journal, rows, {
 
   const updated=structuredClone(journal);
   const added=[];
-  let uncorroborated=0,upgraded=0;
+  let uncorroborated=0,upgraded=0,alreadyVerified=0;
   for (const result of candidates) {
-    const attestation=attestations[result.gameId];
-    if(!isAttestedFinal(result,attestation,{now})){uncorroborated++;continue;}
     const old=latest.get(result.gameId);
     if(old?.homeScore===result.homeScore && old?.awayScore===result.awayScore &&
-       isCorroboratedSettlement(old))
+       isCorroboratedSettlement(old)){
+      alreadyVerified++;
       continue;
+    }
+    const attestation=attestations[result.gameId];
+    if(!isAttestedFinal(result,attestation,{now})){uncorroborated++;continue;}
     if(old?.homeScore===result.homeScore && old?.awayScore===result.awayScore)upgraded++;
     const revision=(old?.revision ?? 0)+1;
     const sourceVintage={
@@ -169,5 +171,6 @@ export function reconcileSettlements(journal, rows, {
     added.push({gameId:result.gameId,revision,outcome:result.outcome});
   }
   return {journal:updated,appended:added.length,added,sourceFinalScoreCandidates:candidates.length,
-    uncorroboratedCandidates:uncorroborated,upgradedLegacySettlements:upgraded};
+    uncorroboratedCandidates:uncorroborated,alreadyVerifiedCandidates:alreadyVerified,
+    upgradedLegacySettlements:upgraded};
 }
