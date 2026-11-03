@@ -9,6 +9,9 @@ on:
       - 'tests/settlement-corroboration.test.mjs'
       - 'src/evidence.mjs'
       - 'scripts/capture-evidence.mjs'
+      - 'src/evidence-transition.mjs'
+      - 'scripts/verify-evidence-append-only.mjs'
+      - 'tests/evidence-transition.test.mjs'
       - '.github/workflows/settlement-only.yml'
       - 'package.json'
   workflow_dispatch:
@@ -69,20 +72,9 @@ jobs:
       - name: Enforce original forecasts and settlements are append-only
         shell: bash
         run: |
+          node scripts/verify-evidence-append-only.mjs --settlement-only
           node --input-type=module <<'NODE'
           import {readFileSync} from 'node:fs';
-          import {execFileSync} from 'node:child_process';
-          import {nflSeasonAt} from './src/settlement-only.mjs';
-          const season=nflSeasonAt(Date.now());
-          const file='data/evidence/nfl-'+season+'.json';
-          const previous=JSON.parse(execFileSync('git',['show','HEAD:'+file],{encoding:'utf8'}));
-          const current=JSON.parse(readFileSync(file,'utf8'));
-          if(JSON.stringify(previous.snapshots)!==JSON.stringify(current.snapshots))
-            throw Error('Reconciliation modified frozen forecast snapshots');
-          if(current.settlements.length<previous.settlements.length||
-             JSON.stringify(current.settlements.slice(0,previous.settlements.length))!==
-             JSON.stringify(previous.settlements))
-            throw Error('Reconciliation rewrote or deleted historic settlements');
           const source=readFileSync('scripts/reconcile-settlements.mjs','utf8');
           if(/api\.the-odds-api\.com|\/api\/slate|ODDS_API_KEY/.test(source))
             throw Error('Settlement-only command would access sportsbook data');

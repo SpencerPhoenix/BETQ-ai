@@ -75,6 +75,16 @@ loss, no-result, or evidence of a model advantage.
 
 ## Operations and operational limitations
 
+- Both draft writer workflows run the same offline comparison against the
+  checked-out Git HEAD before staging a publication. Existing forecast and
+  settlement arrays must remain exact ordered prefixes, and journal metadata
+  cannot change. New settlement revisions must be consecutive, belong to a
+  frozen game, and pass the existing complete source-corroboration gate.
+  The verifier also rejects deleted season journals. It makes no source requests
+  and changes no files. Run `node scripts/verify-evidence-append-only.mjs`.
+  The settlement writer supplies `--settlement-only`, preserving its stronger
+  rule that no forecast or new season journal may be added by reconciliation.
+
 - \`npm run evidence:settle -- --dry-run\` uses only the two fixed public
   sources. Dry-run prints verification counters and changes **no files**.
 - The scheduled settlement-only writer may persist appended results only
