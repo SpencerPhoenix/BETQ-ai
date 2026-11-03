@@ -97,9 +97,28 @@ export function selectFinalizedResults(journal, rows, {now=Date.now()}={}) {
   return [...finalized.values()];
 }
 
+/** Only explicit, independently matched final-status attestations may settle.
+ * This gate also upgrades legacy same-score entries without changing their
+ * historical records; missing/mismatched corroboration is never inferred.
+ */
+export function isAttestedFinal(result,attestation,{now=Date.now()}={}){
+  if(!attestation||attestation.status!=='CROSS_SOURCE_FINAL'||
+     attestation.corroborator!=='ESPN_SITE_SCOREBOARD_UNOFFICIAL'||
+     attestation.officialLeagueCertification!==false||
+     attestation.gameId!==result.gameId||attestation.gameDate!==result.gameDate||
+     attestation.homeScore!==result.homeScore||attestation.awayScore!==result.awayScore||
+     typeof attestation.eventId!=='string'||!/^[0-9]{6,20}$/.test(attestation.eventId)||
+     typeof attestation.sourceSha256!=='string'||
+     !/^[0-9a-f]{64}$/.test(attestation.sourceSha256))return false;
+  const at=Date.parse(attestation.observedAt);
+  return Number.isFinite(now)&&Number.isFinite(at)&&at<=now+120000&&at>=now-3600000;
+}
+
 /** Appends corrections exactly once, retaining every prior revision. */
-export function reconcileSettlements(journal, rows, {now=Date.now()}={}) {
+export function reconcileSettlements(journal, rows, {now=Date.now(),attestations={}}={}) {
   const candidates=selectFinalizedResults(journal,rows,{now});
+  if(!attestations||typeof attestations!=='object'||Array.isArray(attestations))
+    throw Error('INVALID_FINALITY_ATTESTATIONS');
   const latest = new Map();
   for (const s of journal.settlements) {
     if (!s || typeof s.gameId !== 'string' || !Number.isInteger(s.revision) ||
@@ -113,14 +132,22 @@ export function reconcileSettlements(journal, rows, {now=Date.now()}={}) {
 
   const updated=structuredClone(journal);
   const added=[];
+  let uncorroborated=0,upgraded=0;
   for (const result of candidates) {
+    const attestation=attestations[result.gameId];
+    if(!isAttestedFinal(result,attestation,{now})){uncorroborated++;continue;}
     const old=latest.get(result.gameId);
-    if (old?.homeScore===result.homeScore && old?.awayScore===result.awayScore) continue;
+    if(old?.homeScore===result.homeScore && old?.awayScore===result.awayScore &&
+       isAttestedFinal(result,old.finalityAttestation,{now:Date.parse(old.finalityAttestation?.observedAt)}))
+      continue;
+    if(old?.homeScore===result.homeScore && old?.awayScore===result.awayScore)upgraded++;
     const revision=(old?.revision ?? 0)+1;
-    const record={...result,verifiedAt:asDate(now),revision};
+    const record={...result,finalityBasis:'TWO_SOURCE_FINAL_STATUS_NOT_LEAGUE_CERTIFIED',
+      finalityAttestation:structuredClone(attestation),verifiedAt:asDate(now),revision};
     updated.settlements.push(record);
     latest.set(result.gameId,record);
     added.push({gameId:result.gameId,revision,outcome:result.outcome});
   }
-  return {journal:updated,appended:added.length,added,sourceFinalScoreCandidates:candidates.length};
+  return {journal:updated,appended:added.length,added,sourceFinalScoreCandidates:candidates.length,
+    uncorroboratedCandidates:uncorroborated,upgradedLegacySettlements:upgraded};
 }
