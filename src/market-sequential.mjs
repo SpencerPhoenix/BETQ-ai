@@ -126,6 +126,7 @@ export function calculateSequentialEvidence(journal){
     schema:1,version:SEQUENTIAL_PROTOCOL.version,protocol:SEQUENTIAL_PROTOCOL,
     study:'PROSPECTIVE_CONDITIONAL_MARKET_LIKELIHOOD_COMPARISON',
     source:'BETQ_IMMUTABLE_FORWARD_DERIVED_JOURNAL',
+    predictionsFrozenBeforeLaterPrice:true,
     season:journal.season,
     allTrackedGames,firstQualifyingPregameGames:firstEligibleGames,
     eligibleSettledNonTieGames:n,eligibleChallengerGames:challengerGames,
