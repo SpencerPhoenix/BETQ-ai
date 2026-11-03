@@ -140,13 +140,24 @@ test('Prospective 30+ finalized games unlock performance without claiming ROI or
       modelHomeProbability:0.65,marketHomeProbability:0.57
     };
     j.snapshots.push(obs);
+    const homeScore=i%2===0?27:14,awayScore=i%2===0?14:27;
     j.settlements.push({
       gameId:obs.gameId,gameDate:obs.gameDate,
-      homeScore:i%2===0?27:14,awayScore:i%2===0?14:27,
-      outcome:i%2===0?'HOME':'AWAY',revision:1
+      homeScore,awayScore,
+      outcome:i%2===0?'HOME':'AWAY',revision:1,
+      source:'NFLVERSE_SCHEDULES',
+      finalityBasis:'TWO_SOURCE_FINAL_STATUS_NOT_LEAGUE_CERTIFIED',
+      finalityAttestation:{status:'CROSS_SOURCE_FINAL',
+        corroborator:'ESPN_SITE_SCOREBOARD_UNOFFICIAL',
+        gameId:obs.gameId,gameDate:obs.gameDate,
+        homeScore,awayScore,eventId:'401123456',
+        observedAt:ISO(NOW+2*86400000),
+        sourceSha256:'e'.repeat(64),officialLeagueCertification:false}
     });
   }
   const report=summarizeEvidence(j,NOW+86400000);
+  assert.equal(report.sourceCorroboratedSettledGames,31);
+  assert.equal(report.sourceUncorroboratedSettledGames,0);
   assert.equal(report.forwardMetrics.n,31);
   assert.equal(report.marketComparison.n,31);
   assert.ok(report.marketComparison.confidence95);
@@ -206,4 +217,22 @@ test('highest corrected settlement is used once even if revisions are out of ord
   const bad=structuredClone(journal);
   bad.settlements.push({...corrected,homeScore:21,outcome:'AWAY'});
   assert.throws(()=>summarizeEvidence(bad),/CONTRADICTORY_SETTLEMENT_REVISION/);
+});
+
+test('thirty uncorroborated community scores cannot publish proper scores or calibration',()=>{
+  const j=emptyJournal(2026);
+  for(let i=0;i<30;i++){
+    j.snapshots.push({id:'legacy-'+i,gameId:'legacy-'+i,
+      season:2026,home:'KC',away:'LV',gameDate:'2026-11-01',
+      commenceTime:ISO(NOW+7*3600000),capturedAt:ISO(NOW+i),
+      modelHomeProbability:0.6,marketHomeProbability:0.55});
+    j.settlements.push({gameId:'legacy-'+i,gameDate:'2026-11-01',
+      homeScore:27,awayScore:17,outcome:'HOME',revision:1});
+  }
+  const report=summarizeEvidence(j,NOW+3*86400000);
+  assert.equal(report.settledGames,30);
+  assert.equal(report.sourceCorroboratedSettledGames,0);
+  assert.equal(report.forwardMetrics,null);
+  assert.equal(report.marketComparison,null);
+  assert.equal(report.status,'COLLECTING_FORWARD_EVIDENCE');
 });
