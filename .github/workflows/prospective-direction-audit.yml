@@ -7,6 +7,7 @@ on:
       - 'src/prospective-direction.mjs'
       - 'src/shadow-derived.mjs'
       - 'scripts/audit-prospective-direction.mjs'
+      - 'tests/prospective-direction.test.mjs'
       - '.github/workflows/prospective-direction-audit.yml'
   workflow_dispatch:
 permissions:
