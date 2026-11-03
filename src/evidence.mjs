@@ -47,6 +47,22 @@ function validObservation(s,season){
      !Number.isFinite(timestamp(s.challengerBuiltAt))||timestamp(s.challengerBuiltAt)>at+60000||timestamp(s.challengerBuiltAt)>=kick))return false;
   return true;
 }
+/** Highest unambiguous revision, independent of source array ordering. */
+function latestSettlementsByRevision(records) {
+  const latest=new Map();
+  for(const row of records){
+    const revision=Number.isInteger(row.revision)&&row.revision>0?row.revision:0;
+    const previous=latest.get(row.gameId);
+    const prevRevision=Number.isInteger(previous?.revision)&&previous.revision>0
+      ?previous.revision:0;
+    if(!previous||revision>prevRevision)latest.set(row.gameId,row);
+    else if(revision===prevRevision &&
+      (row.homeScore!==previous.homeScore||row.awayScore!==previous.awayScore||
+       row.outcome!==previous.outcome))
+      throw Error('CONTRADICTORY_SETTLEMENT_REVISION: '+row.gameId);
+  }
+  return latest;
+}
 function validResult(r){
   return Boolean(r&&typeof r.gameId==='string'&&
     [r.homeScore,r.awayScore].every(n=>Number.isInteger(n)&&n>=0&&n<=100)&&
@@ -159,7 +175,7 @@ export function updateJournal(existing,captures,results,now=Date.now()) {
     if(!ids.has(s.id)){journal.snapshots.push(structuredClone(s));ids.add(s.id);added++;}
   }
   const tracked=new Set(journal.snapshots.map(x=>x.gameId));
-  const latest=new Map(journal.settlements.map(s=>[s.gameId,s]));
+  const latest=latestSettlementsByRevision(journal.settlements);
   for(const result of results){
     if(!validResult(result))throw Error('Invalid result outcome / score');
     if(!tracked.has(result.gameId)||latest.get(result.gameId)?.resultHash===result.resultHash)continue;
@@ -204,7 +220,7 @@ export function summarizeEvidence(journal,now=Date.now()) {
     if(!byGame.has(shot.gameId))byGame.set(shot.gameId,[]);
     byGame.get(shot.gameId).push(shot);
   }
-  const settled=new Map(journal.settlements.map(s=>[s.gameId,s]));
+  const settled=latestSettlementsByRevision(journal.settlements);
   const observed=[...first.values()].filter(s=>settled.has(s.gameId)&&settled.get(s.gameId).outcome!=='TIE')
     .map(s=>{const final=settled.get(s.gameId),y=final.outcome==='HOME'?1:0;
       return {s,final,y,model:loss(s.modelHomeProbability,y),
