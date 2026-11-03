@@ -185,8 +185,10 @@ test('legacy and zero-credit pipelines refuse the same premature partial final',
   assert.equal(fromZeroCredit.appended,1);
   const legacy=updateJournal(journal,[],fromLegacy,ready).journal;
   const a=legacy.settlements[0],b=fromZeroCredit.journal.settlements[0];
-  for(const key of ['gameId','outcome','homeScore','awayScore','resultHash','finalityBasis'])
+  for(const key of ['gameId','outcome','homeScore','awayScore','resultHash'])
     assert.deepEqual(a[key],b[key]);
+  assert.equal(a.finalityBasis,'COMMUNITY_SCORE_24H_AFTER_KICKOFF_NOT_LEAGUE_CERTIFIED');
+  assert.equal(b.finalityBasis,'TWO_SOURCE_FINAL_STATUS_NOT_LEAGUE_CERTIFIED');
 });
 
 
