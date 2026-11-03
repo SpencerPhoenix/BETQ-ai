@@ -69,6 +69,18 @@ jobs:
              (derived.data.licensedRawBookmakerQuotesIncluded!==false||
               derived.data.qbTimingLinked!==false))
             throw Error('Derived market observations presented as raw odds or QB news');
+          if(derived.data.available){
+            const seq=derived.data.sequentialMarketEvidence;
+            if(seq?.version!=='betq-market-sequential-v1'||
+               seq.verifiedROI!==null||seq.verifiedCLV!==null||
+               seq.bettingAuthorized!==false||seq.modelPromoted!==false||
+               seq.sequentialNullProvenCorrect!==false)
+              throw Error('Market-relative sequential research missing or claiming unsupported edge');
+            if(seq.eligibleSettledNonTieGames<30 &&
+               (seq.properScores!==null||
+                seq.candidateEvidence?.fixedMixtureEvidence!==null))
+              throw Error('Insufficient 2026 games presented as statistical model victory');
+          }
           const site=await get('/');
           if(site.status!==200||
              !site.text.includes('TERMINAL / v0.11.0')||
