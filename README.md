@@ -107,6 +107,16 @@ The initial forward audit used 33 pregame snapshots across 17 games. Only 9 game
 
 See [source-audited v0.10 forward results](docs/PROSPECTIVE_DIRECTION_AUDIT.md). Reproduce with `npm run audit:direction`; the `BETQ prospective model versus market movement audit` GitHub workflow also checks new source-journal commits. All server-side wagering and automatic paper-staking locks remain active.
 
+## v0.11 — Prospective market-relative evidence (no executable-edge claim)
+
+BETQ's forward journal now supports a **preregistered, market-relative sequential likelihood monitor** alongside the previously built prospective market-movement direction audit. It compares the *first independently timestamped* eligible pregame Elo and efficiency projections to the same-time 3+ bookmaker derived market probability, then scores the eventual final game once. A fixed 50/50 model mixture and a research-only likelihood threshold are used. No model weight, threshold or betting decision is tuned based on observed results.
+
+**The proper score comparison and likelihood evidence are withheld until 30 independent settled qualifying games.** Early samples cannot be marketed as forecasting superiority. The mathematical e-process interpretation assumes market probabilities are the true conditional win probabilities, which is unverified for real sportsbook prices.
+
+A deterministic synthetic check over 1,000 null worlds and 1,000 injected-signal worlds (150 games per world) crossed the illustrative likelihood threshold in **3.2% of null worlds** and **51.6% with a genuine synthetic probability signal**. These are simulation results, not measured BETQ NFL skill or real returns. See [methodology and limitations](docs/MARKET_SEQUENTIAL_EVIDENCE.md).
+
+Only existing forward-derived journal data are read; **no additional Odds API requests**, new private source purchases or stored raw bookmaker prices result from this feature. Full research audit: `npm run audit:sequential`; automatically rechecked with each prospective journal update. No sportsbook execution, actual CLV, or realized ROI is established. The central server-side no-wagering and automatic-paper-staking veto remains in force.
+
 ## Deploy
 
 `render.yaml` describes an optional Render Node web service. Link the repository in Render, then enter `ODDS_API_KEY` in the service environment. Deployment is managed separately in Render; a GitHub commit does not guarantee that the service successfully redeployed. Verify the production version at `GET /api/health`.
