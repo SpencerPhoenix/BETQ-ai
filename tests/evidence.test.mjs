@@ -180,3 +180,20 @@ test('legacy and zero-credit pipelines refuse the same premature partial final',
   for(const key of ['gameId','outcome','homeScore','awayScore','resultHash','finalityBasis'])
     assert.deepEqual(a[key],b[key]);
 });
+
+
+test('highest corrected settlement is used once even if revisions are out of order',()=>{
+  const obs=observationsFromSlate(slate(),schedule(),NOW,2026).accepted;
+  const journal=updateJournal(emptyJournal(2026),obs,[],NOW).journal;
+  const earlier={gameId:'2026_09_LV_KC',gameDate:'2026-11-01',homeScore:27,awayScore:17,
+    outcome:'HOME',revision:1};
+  const corrected={...earlier,homeScore:14,awayScore:27,outcome:'AWAY',revision:2};
+  journal.settlements=[corrected,earlier];
+  const report=summarizeEvidence(journal,NOW+3*86400000);
+  assert.equal(report.settledGames,1);
+  assert.equal(report.recentResults[0].score,'27-14');
+  assert.equal(report.recentResults[0].result,'AWAY');
+  const bad=structuredClone(journal);
+  bad.settlements.push({...corrected,homeScore:21,outcome:'AWAY'});
+  assert.throws(()=>summarizeEvidence(bad),/CONTRADICTORY_SETTLEMENT_REVISION/);
+});
