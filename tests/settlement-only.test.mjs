@@ -114,7 +114,8 @@ test('same revision with conflicting previous settlement is rejected',()=>{
 
 test('UTC NFL season selection is shared across the CLI and workflow',()=>{
   assert.equal(nflSeasonAt(Date.parse('2027-01-31T23:59:59Z')),2026);
-  assert.equal(nflSeasonAt(Date.parse('2027-02-01T00:00:00Z')),2027);
+  assert.equal(nflSeasonAt(Date.parse('2027-02-01T00:00:00Z')),2026);
+  assert.equal(nflSeasonAt(Date.parse('2027-03-01T00:00:00Z')),2027);
   assert.equal(nflSeasonAt(Date.parse('2026-11-03T10:00:00Z')),2026);
   assert.throws(()=>nflSeasonAt(NaN),/INVALID_SEASON_TIMESTAMP/);
 });
