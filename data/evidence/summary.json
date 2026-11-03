@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "season": 2026,
-  "generatedAt": "2026-11-02T20:52:50.140Z",
+  "generatedAt": "2026-11-03T18:38:46.126Z",
   "provenance": {
     "model": "BETQ_NFL_ELO",
     "market": "THE_ODDS_API_V4_DERIVED",
@@ -14,14 +14,14 @@
   "realizedROI": null,
   "verifiedCLV": null,
   "minimumScoredSample": 30,
-  "totalSnapshots": 33,
+  "totalSnapshots": 48,
   "prospectiveGames": 17,
-  "settledGames": 1,
-  "pendingGames": 16,
-  "pairedMarketGames": 1,
+  "settledGames": 2,
+  "pendingGames": 15,
+  "pairedMarketGames": 2,
   "nearKickoffConsensusPairs": 0,
   "prospectiveChallengerGames": 16,
-  "pairedChallengerSettled": 0,
+  "pairedChallengerSettled": 1,
   "challengerForwardComparison": null,
   "tiesExcluded": 0,
   "forwardMetrics": null,
@@ -39,6 +39,18 @@
       "marketHomeProbability": 0.688889,
       "capturedAt": "2026-11-02T01:07:26.939Z",
       "brier": 0.27974
+    },
+    {
+      "gameId": "2026_08_CHI_SEA",
+      "home": "SEA",
+      "away": "CHI",
+      "gameDate": "2026-11-02",
+      "score": "34-17",
+      "result": "AWAY",
+      "modelHomeProbability": 0.610222,
+      "marketHomeProbability": 0.607672,
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "brier": 0.37237
     }
   ],
   "pendingPreview": [
@@ -68,15 +80,6 @@
       "capturedAt": "2026-11-02T01:07:26.939Z",
       "modelHomeProbability": 0.401566,
       "marketHomeProbability": 0.239418
-    },
-    {
-      "gameId": "2026_08_CHI_SEA",
-      "home": "SEA",
-      "away": "CHI",
-      "gameDate": "2026-11-02",
-      "capturedAt": "2026-11-02T01:07:26.939Z",
-      "modelHomeProbability": 0.610222,
-      "marketHomeProbability": 0.607672
     },
     {
       "gameId": "2026_09_BUF_MIN",
@@ -149,6 +152,15 @@
       "capturedAt": "2026-11-02T01:07:26.939Z",
       "modelHomeProbability": 0.41394,
       "marketHomeProbability": 0.378998
+    },
+    {
+      "gameId": "2026_09_CIN_ATL",
+      "home": "ATL",
+      "away": "CIN",
+      "gameDate": "2026-11-08",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelHomeProbability": 0.442978,
+      "marketHomeProbability": 0.380086
     }
   ],
   "safeguards": [
