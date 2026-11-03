@@ -34,6 +34,12 @@ jobs:
         run: |
           npm run check
           npm test
+      - name: Optional free-source end-to-end dry run (no bookmaker requests or writes)
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          ODDS_API_KEY: ''
+        run: npm run evidence:settle -- --dry-run
   settlement:
     # PR validation is read-only. Only scheduled/manual main branch can write.
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
