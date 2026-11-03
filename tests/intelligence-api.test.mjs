@@ -92,7 +92,7 @@ test('Model endpoint reports historical validation without claiming automatic se
     assert.equal(x.verifiedRealMoneyEdge,false);
     assert.equal(x.holdout.challenger.brier,0.21935);
     const s=await (await fetch(base+'/api/health')).json();
-    assert.equal(s.version,'0.9.0');
+    assert.equal(s.version,'0.10.0');
     assert.equal(s.nflIntelligence.efficiencyChallengerPromoted,false);
     assert.equal(s.nflIntelligence.startingQuarterbacksVerified,false);
   });
