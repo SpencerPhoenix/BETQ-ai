@@ -19,6 +19,7 @@ concurrency:
   # GitHub may replace a pending run, so no-cost daily reconciliation still retries.
   group: betq-evidence-journal-writers
   cancel-in-progress: false
+  queue: max
 jobs:
   collect:
     if: github.ref == 'refs/heads/main'
@@ -28,6 +29,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          persist-credentials: true # required for guarded evidence-only push
+      - name: Start from latest origin/main after entering writer queue
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -73,12 +79,26 @@ jobs:
             git config user.name 'betq-evidence-bot'
             git config user.email 'actions@users.noreply.github.com'
             git add data/evidence/
-            git commit -m 'data: append prospective evidence and reconcile final scores'
-            for attempt in 1 2 3; do
-              git fetch origin main
-              git rebase origin/main
-              if git push origin HEAD:main; then exit 0; fi
-              sleep 3
-            done
-            exit 1
-          fi
+            git commit -m 'data: append prospective evidence and reconcile final scores [skip render]'
+            # The shared writer queue prevents bot-vs-bot conflict.
+            # Concurrent external main edits must fail closed, NOT rebase
+            # previously observed, immutable capture timestamps over fresh data.
+            git fetch origin main
+            if ! git merge-base --is-ancestor origin/main HEAD; then
+              echo 'Main changed outside the writer queue; preserve candidate artifact for manual merge.' >&2
+              exit 1
+            fi
+            git push origin HEAD:main || {
+              echo 'Fast-forward evidence push rejected; candidate artifact retained for review.' >&2
+              exit 1
+            }
+      - name: Preserve public-derived candidate if publication fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: betq-unpublished-capture-${{ github.run_id }}
+          path: |
+            data/evidence/nfl-2026.json
+            data/evidence/summary.json
+          retention-days: 30
+          if-no-files-found: warn
