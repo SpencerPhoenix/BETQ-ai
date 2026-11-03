@@ -172,7 +172,15 @@ test('legacy and zero-credit pipelines refuse the same premature partial final',
   assert.deepEqual(resultsFromSchedule(journal,schedule(true),early),[]);
   const ready=NOW+2*86400000;
   const fromLegacy=resultsFromSchedule(journal,schedule(true),ready);
-  const fromZeroCredit=reconcileSettlements(journal,schedule(true),{now:ready});
+  const resultRow=schedule(true)[0];
+  const attestation={status:'CROSS_SOURCE_FINAL',
+    corroborator:'ESPN_SITE_SCOREBOARD_UNOFFICIAL',gameId:resultRow.game_id,
+    gameDate:resultRow.gameday,homeScore:27,awayScore:17,
+    eventId:'401123456',observedAt:ISO(ready),
+    sourceSha256:'b'.repeat(64),officialLeagueCertification:false};
+  const fromZeroCredit=reconcileSettlements(journal,schedule(true),{
+    now:ready,attestations:{[resultRow.game_id]:attestation}
+  });
   assert.equal(fromLegacy.length,1);
   assert.equal(fromZeroCredit.appended,1);
   const legacy=updateJournal(journal,[],fromLegacy,ready).journal;
