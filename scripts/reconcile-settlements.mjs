@@ -3,14 +3,13 @@
 import {readFile,writeFile,rename} from 'node:fs/promises';
 import {parseCsv} from '../src/nfl-elo.mjs';
 import {validateJournal,summarizeEvidence} from '../src/evidence.mjs';
-import {fetchNflverseScheduleCsv,reconcileSettlements} from '../src/settlement-only.mjs';
+import {fetchNflverseScheduleCsv,reconcileSettlements,nflSeasonAt} from '../src/settlement-only.mjs';
 
 const args=process.argv.slice(2);
 if (args.some(a=>a!=='--dry-run')) throw Error('SUPPORTED_OPTION_ONLY_--dry-run');
 const dryRun=args.includes('--dry-run');
 const now=Date.now();
-const utc=new Date(now);
-const season=utc.getUTCMonth()<2?utc.getUTCFullYear()-1:utc.getUTCFullYear();
+const season=nflSeasonAt(now);
 const journalPath='data/evidence/nfl-'+season+'.json';
 const summaryPath='data/evidence/summary.json';
 
