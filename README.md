@@ -51,6 +51,15 @@ After the game, a later nflverse final score is joined to the locked model forec
 
 Important: a same-time market-consensus baseline is **not closing-line value**, and there are no verified real-money betting results, CLV, ROI, or automated orders. The journal cannot establish profitability without full price-time-aligned odds archival, settlement verification, and prospective testing. The server reads the latest derived summary from a fixed public GitHub URL with a five-minute cache, so newly committed evidence can appear without a fresh Render deployment. GitHub serves a derived research journal; durable raw-odds archival requires a separate authenticated database, not the expiring free Render database allocated to another project. See `docs/EVIDENCE.md`.
 
+An offline, research-only selected-side calibration report is available with
+`npm run audit:calibration`. It uses only existing qualified first forecasts and
+corroborated non-tie results, with fixed probability bands, distinct-game counts,
+nominal Wilson intervals and calendar-week sensitivity. Every cohort below 30
+games withholds performance and reports insufficient data. This is descriptive
+analysis, not a confidence tier, calibration certification or profitability
+claim. It makes no live calls and changes no promotion or wagering gates. See
+[Selected-side calibration](docs/SELECTED_SIDE_CALIBRATION.md).
+
 ## Phase 4: Independent NFL EPA challenger and sourced injury reports
 
 The Prediction Lab includes a **separately backtested, unpromoted challenger** using lagged offensive/defensive EPA, success rates, and rest days. nflverse PBP data is processed as a streaming source, retaining only complete-game derived statistics. Source-vintage reporting and a 2025 untouched holdout are visible in the read-only API.

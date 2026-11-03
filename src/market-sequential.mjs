@@ -57,20 +57,27 @@ function challengerAtSameFirstSnapshot(s){
     built<=captured+60000&&built<kick? s.challengerHomeProbability:s.marketHomeProbability;
 }
 function latestSettlements(j){
-  const latest=new Map();
+  const latest=new Map(),byRevision=new Map();
   for(const r of j.settlements){
     const revision=Number.isInteger(r.revision)&&r.revision>0?r.revision:0;
-    const previous=latest.get(r.gameId);
-    if(!previous||revision>previous.revision){
-      latest.set(r.gameId,{...r,revision});
-    }else if(revision===previous.revision&&
-      (r.homeScore!==previous.homeScore||r.awayScore!==previous.awayScore)){
+    if(!byRevision.has(r.gameId))byRevision.set(r.gameId,new Map());
+    const revisions=byRevision.get(r.gameId),sameRevision=revisions.get(revision);
+    if(sameRevision&&
+      (r.homeScore!==sameRevision.homeScore||r.awayScore!==sameRevision.awayScore)){
       throw Error('Contradictory finalized results with same settlement revision');
+    }else if(sameRevision&&
+      isCorroboratedSettlement(r)!==isCorroboratedSettlement(sameRevision)){
+      throw Error('Ambiguous provenance for same settlement revision');
     }
+    revisions.set(revision,r);
+    const previous=latest.get(r.gameId);
+    if(!previous||revision>previous.revision)latest.set(r.gameId,{...r,revision});
   }
   return latest;
 }
-function eligible(j){
+/** Shared read-only cohort: one first qualified snapshot and latest final per game. */
+export function selectQualifiedForwardObservations(j){
+  validateJournal(j);
   const first=new Map();
   const exclusions={noEligiblePregameQuote:0,noSettlement:0,
     uncorroboratedSettlement:0,tie:0};
@@ -78,8 +85,8 @@ function eligible(j){
   for(const s of j.snapshots){
     if(!isEligibleFirstSnapshot(s))continue;
     const current=first.get(s.gameId);
-    if(!current||s.capturedAt<current.capturedAt||
-      (s.capturedAt===current.capturedAt&&s.id<current.id))first.set(s.gameId,s);
+    if(!current||time(s.capturedAt)<time(current.capturedAt)||
+      (time(s.capturedAt)===time(current.capturedAt)&&s.id<current.id))first.set(s.gameId,s);
   }
   exclusions.noEligiblePregameQuote=games.size-first.size;
   const final=latestSettlements(j);
@@ -94,13 +101,14 @@ function eligible(j){
     const y=r.outcome==='HOME'?1:0,p=s.marketHomeProbability;
     observations.push({
       gameId:id,gameDate:s.gameDate,scheduledAt:s.commenceTime,
+      modelVersion:s.modelVersion,
       market:p,elo:s.modelHomeProbability,
       efficiency:challengerAtSameFirstSnapshot(s),
       challengerPresent:challengerAtSameFirstSnapshot(s)!==p,
       y
     });
   }
-  observations.sort((a,b)=>a.scheduledAt.localeCompare(b.scheduledAt)||
+  observations.sort((a,b)=>time(a.scheduledAt)-time(b.scheduledAt)||
     a.gameId.localeCompare(b.gameId));
   return {observations,exclusions,firstEligibleGames:first.size,allTrackedGames:games.size};
 }
@@ -111,8 +119,7 @@ function eligible(j){
  * conditional outcome probability for each game, an unverified premise.
  */
 export function calculateSequentialEvidence(journal){
-  validateJournal(journal);
-  const {observations,exclusions,firstEligibleGames,allTrackedGames}=eligible(journal);
+  const {observations,exclusions,firstEligibleGames,allTrackedGames}=selectQualifiedForwardObservations(journal);
   let logElo=0,logEfficiency=0,marketBrier=0,eloBrier=0,
     efficiencyBrier=0,marketLoss=0,eloLoss=0,efficiencyLoss=0,
     maxMixture=0,everCrossed=false,challengerGames=0;
