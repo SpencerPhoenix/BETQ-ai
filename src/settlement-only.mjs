@@ -9,12 +9,18 @@ import {createHash} from 'node:crypto';
 export const NFLVERSE_SCHEDULES_URL =
   'https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv';
 const MAX_SCHEDULE_CHARS = 12_000_000;
-const POST_KICKOFF_GUARD_MS = 6 * 60 * 60 * 1000;
+const POST_KICKOFF_GUARD_MS = 24 * 60 * 60 * 1000;
 const allowedGameTypes = new Set(['REG', 'WC', 'DIV', 'CON', 'SB']);
 const aliases = Object.freeze({STL:'LA', OAK:'LV', SD:'LAC', JAC:'JAX', WSH:'WAS'});
 const canonical = code => aliases[code] ?? code;
 const fingerprint = text => createHash('sha256').update(text).digest('hex').slice(0,24);
 const asDate = n => new Date(n).toISOString();
+/** NFL season boundary, reused by the command and its GitHub audit. */
+export function nflSeasonAt(now=Date.now()){
+  if(!Number.isFinite(now)) throw Error('INVALID_SEASON_TIMESTAMP');
+  const date=new Date(now);
+  return date.getUTCFullYear()-(date.getUTCMonth()<2?1:0);
+}
 const completedScore = n => typeof n === 'string' && /^\d{1,3}$/.test(n.trim()) &&
   Number.isInteger(Number(n)) && Number(n) >= 0 && Number(n) <= 100;
 
@@ -35,9 +41,9 @@ export async function fetchNflverseScheduleCsv(fetchImpl = globalThis.fetch) {
 /**
  * Append-only settlement revisions; never touches or re-generates snapshots.
  * A game ID with conflicting team/date metadata fails closed (manual review).
- * We wait at least six hours after scheduled kickoff and until the next UTC
- * date to minimize accepting an in-progress score as a final result. This is
- * a conservative timing check, NOT an independent final-status attestation.
+ * Wait at least 24 hours after scheduled kickoff AND the following UTC date
+ * before accepting community scores. This decreases provisional-score risk
+ * but does NOT independently certify a game's final status.
  */
 export function reconcileSettlements(journal, rows, {now=Date.now()}={}) {
   if (!journal || journal.schema !== 1 || journal.sport !== 'americanfootball_nfl' ||
@@ -94,6 +100,7 @@ export function reconcileSettlements(journal, rows, {now=Date.now()}={}) {
       gameId:row.game_id, gameDate:row.gameday, homeScore, awayScore,
       outcome:homeScore===awayScore?'TIE':homeScore>awayScore?'HOME':'AWAY',
       source:'NFLVERSE_SCHEDULES',
+      finalityBasis:'COMMUNITY_SCORE_24H_AFTER_KICKOFF_NOT_LEAGUE_CERTIFIED',
       resultHash:fingerprint(row.game_id+'|'+homeScore+'|'+awayScore)
     });
   }
