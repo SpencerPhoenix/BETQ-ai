@@ -9,6 +9,7 @@
  * Version v1 is frozen; neither thresholds nor selection rules auto-adapt.
  */
 import {validateJournal} from './evidence.mjs';
+import {isCorroboratedSettlement} from './settlement-only.mjs';
 
 export const SEQUENTIAL_PROTOCOL=Object.freeze({
   version:'betq-market-sequential-v1',
@@ -69,7 +70,8 @@ function latestSettlements(j){
 }
 function eligible(j){
   const first=new Map();
-  const exclusions={noEligiblePregameQuote:0,noSettlement:0,tie:0};
+  const exclusions={noEligiblePregameQuote:0,noSettlement:0,
+    uncorroboratedSettlement:0,tie:0};
   const games=new Set(j.snapshots.map(x=>x.gameId));
   for(const s of j.snapshots){
     if(!isEligibleFirstSnapshot(s))continue;
@@ -83,6 +85,9 @@ function eligible(j){
   for(const [id,s] of first){
     const r=final.get(id);
     if(!r){exclusions.noSettlement++;continue;}
+    if(!isCorroboratedSettlement(r)){
+      exclusions.uncorroboratedSettlement++;continue;
+    }
     if(r.outcome==='TIE'){exclusions.tie++;continue;}
     const y=r.outcome==='HOME'?1:0,p=s.marketHomeProbability;
     observations.push({
