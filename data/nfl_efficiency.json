@@ -2,7 +2,7 @@
   "schema": 1,
   "version": "nfl-efficiency-1",
   "evaluationVersion": 2,
-  "generatedAt": "2026-11-02T03:13:39.863Z",
+  "generatedAt": "2026-11-03T18:00:26.065Z",
   "source": "NFLVERSE_PBP_CC_BY_4_0",
   "type": "INDEPENDENT_CHALLENGER_RESEARCH",
   "training": {
@@ -66,19 +66,19 @@
   "readyForResearch": true,
   "promotable": true,
   "coverage": {
-    "historicalGames": 2346,
-    "featureReadyGames": 2274
+    "historicalGames": 2348,
+    "featureReadyGames": 2276
   },
   "teamFeatures": {
     "PHI": {
       "n": 8,
-      "offEPA": -0.12654,
-      "defEPA": 0.10974,
-      "offSuccess": 0.37029,
-      "defSuccess": 0.4602,
-      "netEPA": -0.23628,
-      "netSuccess": -0.08991,
-      "latestGameDate": "2026-10-26"
+      "offEPA": -0.14481,
+      "defEPA": 0.09128,
+      "offSuccess": 0.37319,
+      "defSuccess": 0.4489,
+      "netEPA": -0.23609,
+      "netSuccess": -0.07571,
+      "latestGameDate": "2026-11-01"
     },
     "ATL": {
       "n": 8,
@@ -122,13 +122,13 @@
     },
     "CHI": {
       "n": 8,
-      "offEPA": 0.00119,
-      "defEPA": -0.01596,
-      "offSuccess": 0.45784,
-      "defSuccess": 0.40879,
-      "netEPA": 0.01715,
-      "netSuccess": 0.04904,
-      "latestGameDate": "2026-10-22"
+      "offEPA": 0.04069,
+      "defEPA": -0.05082,
+      "offSuccess": 0.46966,
+      "defSuccess": 0.39062,
+      "netEPA": 0.09151,
+      "netSuccess": 0.07905,
+      "latestGameDate": "2026-11-02"
     },
     "IND": {
       "n": 8,
@@ -262,13 +262,13 @@
     },
     "SEA": {
       "n": 8,
-      "offEPA": -0.05638,
-      "defEPA": -0.14139,
-      "offSuccess": 0.4104,
-      "defSuccess": 0.35947,
-      "netEPA": 0.08501,
-      "netSuccess": 0.05093,
-      "latestGameDate": "2026-10-25"
+      "offEPA": -0.08004,
+      "defEPA": -0.06435,
+      "offSuccess": 0.39322,
+      "defSuccess": 0.39158,
+      "netEPA": -0.01569,
+      "netSuccess": 0.00164,
+      "latestGameDate": "2026-11-02"
     },
     "MIN": {
       "n": 8,
@@ -342,13 +342,13 @@
     },
     "WAS": {
       "n": 8,
-      "offEPA": -0.01212,
-      "defEPA": 0.07368,
-      "offSuccess": 0.41288,
-      "defSuccess": 0.4755,
-      "netEPA": -0.08579,
-      "netSuccess": -0.06263,
-      "latestGameDate": "2026-10-19"
+      "offEPA": -0.01469,
+      "defEPA": 0.00883,
+      "offSuccess": 0.41248,
+      "defSuccess": 0.45793,
+      "netEPA": -0.02352,
+      "netSuccess": -0.04546,
+      "latestGameDate": "2026-11-01"
     },
     "LV": {
       "n": 8,
@@ -415,7 +415,7 @@
         "season": 2019,
         "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2019.csv.gz",
         "completeGames": 267,
-        "parsedBytes": 93850470
+        "parsedBytes": 93850474
       },
       {
         "season": 2020,
@@ -456,14 +456,14 @@
       {
         "season": 2026,
         "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2026.csv.gz",
-        "completeGames": 119,
-        "parsedBytes": 41771976
+        "completeGames": 121,
+        "parsedBytes": 42470054
       }
     ],
-    "sourceLastCompletedGame": "2026-11-01",
-    "playedGamesWithPbp": 2346,
-    "qualifyingPlays": 295837
+    "sourceLastCompletedGame": "2026-11-02",
+    "playedGamesWithPbp": 2348,
+    "qualifyingPlays": 296090
   },
   "eloBaselineVersion": "nfl-elo-1",
-  "dataFingerprint": "c7b2f01730f144c60c0c844ea0664fd06e50f2e2fc6a5964acd38beae17338fa"
+  "dataFingerprint": "527acf27618d2f37aab750719a880559b25c022ac331474a2c9334931128372a"
 }
