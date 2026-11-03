@@ -6,7 +6,7 @@ const sha40 = /^[0-9a-f]{40}$/i;
 const versionPattern = /^\d+\.\d+\.\d+$/;
 
 export const RELEASE_STATES = Object.freeze({
-  OK:'OK', STALE:'STALE', HTTP_ERROR:'HTTP_ERROR',
+  OK:'OK', STALE:'STALE', UNKNOWN:'UNKNOWN', HTTP_ERROR:'HTTP_ERROR',
   TIMEOUT:'TIMEOUT', SCHEMA:'SCHEMA', UNREACHABLE:'UNREACHABLE'
 });
 
@@ -38,8 +38,8 @@ export function classifyHealthResponse({httpStatus,body,expectedVersion,expected
     return state(RELEASE_STATES.STALE,{httpStatus,reason:'VERSION_MISMATCH',
       actualVersion,actualCommit,expectedVersion,expectedCommit});
   if(!actualCommit)
-    return state(RELEASE_STATES.SCHEMA,{httpStatus,reason:'MISSING_OR_INVALID_COMMIT',
-      actualVersion,actualCommit});
+    return state(RELEASE_STATES.UNKNOWN,{httpStatus,reason:'DEPLOYED_COMMIT_UNAVAILABLE',
+      actualVersion,actualCommit,expectedVersion,expectedCommit});
   if(actualCommit!==expectedCommit.toLowerCase())
     return state(RELEASE_STATES.STALE,{httpStatus,reason:'COMMIT_MISMATCH',
       actualVersion,actualCommit,expectedVersion,expectedCommit});
