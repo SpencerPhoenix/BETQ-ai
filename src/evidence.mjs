@@ -7,6 +7,7 @@ import {pairedWeekBootstrap} from './statistical-audit.mjs';
 import {timestamp, isProbability, validDay} from './integrity.mjs';
 import { createHash } from 'node:crypto';
 import { NFL_TEAMS, canonicalTeam } from './nfl-elo.mjs';
+import {selectFinalizedResults} from './settlement-only.mjs';
 
 export const MIN_SAMPLE = 30;
 const round = (n,d=5) => Number.isFinite(n)?Number(n.toFixed(d)):null;
@@ -133,22 +134,10 @@ export function observationsFromSlate(slate,rows,now=Date.now(),season=new Date(
   return {accepted,skipped};
 }
 
+/** Legacy public API now delegates to the same 24h+ community-source finality gate. */
 export function resultsFromSchedule(journal,rows,now=Date.now()) {
   validateJournal(journal);
-  const tracked=new Set(journal.snapshots.map(s=>s.gameId));
-  const today=new Date(now).toISOString().slice(0,10),results=[];
-  for(const row of rows) {
-    if(!row || !tracked.has(row.game_id)||Number(row.season)!==journal.season||
-       !gameTypes.has(row.game_type)||!/^\d{4}-\d{2}-\d{2}$/.test(row.gameday)||
-       row.gameday>=today||row.home_score===''||row.away_score==='')continue;
-    const homeScore=Number(row.home_score),awayScore=Number(row.away_score);
-    if(!Number.isInteger(homeScore)||!Number.isInteger(awayScore)||
-       homeScore<0||awayScore<0||homeScore>100||awayScore>100)continue;
-    results.push({gameId:row.game_id,gameDate:row.gameday,homeScore,awayScore,
-      outcome:homeScore===awayScore?'TIE':homeScore>awayScore?'HOME':'AWAY',
-      source:'NFLVERSE_SCHEDULES',resultHash:hash(row.game_id+'|'+homeScore+'|'+awayScore)});
-  }
-  return results;
+  return selectFinalizedResults(journal,rows,{now});
 }
 
 export function updateJournal(existing,captures,results,now=Date.now()) {
