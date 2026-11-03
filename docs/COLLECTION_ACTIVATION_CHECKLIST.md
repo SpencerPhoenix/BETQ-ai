@@ -7,7 +7,8 @@ to merge, deploy, buy data, call paid providers or write live outcomes.
 
 - Main is `b0f324b2ffbe86863cf7947a46aafa812ba10451` and does not contain the
   independent `settlement-only.yml` workflow. That workflow exists only in the
-  unmerged draft stack. PR validation intentionally skips the writer.
+  unmerged draft stack. The latest local safety revision makes settlement
+  preparation manual-only, with no publisher; PR validation is offline.
 - The immutable journal contains 33 snapshots of 17 distinct games. PR #5's
   calibration report finds zero qualified settled outcomes: one community-only
   result and 16 games with no settlement record. A successful dry run computes
@@ -34,10 +35,13 @@ to merge, deploy, buy data, call paid providers or write live outcomes.
 2. Review the settlement/writer changes in draft PRs #2 and #3 as an operational
    subset. The offline archive and calibration reports do not themselves start
    collection. Include the shared append-only guard before any activation.
-3. Only after approval, plan one controlled settlement-only run and inspect its
+3. Only after source-use and preparation approval, plan one controlled manual
+   preparation pinned to the reviewed main SHA. Inspect the hashed candidate and
    exact append-only diff before any authorized publication. Keep original
    forecasts and previous revisions unchanged. Independently verify the final
    status, both score receipts, hashes and resulting qualified-game count.
+   Publication is a separate, not-yet-implemented action requiring its own
+   approval; merging the preparation workflow does not publish or schedule it.
 4. Keep paid forecast collection separate. Confirm its actual run schedule,
    provider entitlement/budget and successful new-game captures before assuming
    the cohort is growing. Do not raise refresh frequency or purchase credits as
@@ -50,7 +54,8 @@ to merge, deploy, buy data, call paid providers or write live outcomes.
 ## Safe preparation completed without activation
 
 The shared `verify-evidence-append-only.mjs` command compares each season journal
-to the checked-out HEAD. Both draft writers invoke it before staging or pushing.
+to the checked-out HEAD. Capture invokes it before staging or pushing;
+settlement preparation invokes it before producing its candidate artifact.
 It rejects rewritten/deleted/reordered historical records, altered metadata,
 untracked game settlements, missing corroboration and nonconsecutive revisions.
 It checks final-result dates against the frozen game identity. Settlement-only
@@ -58,5 +63,7 @@ mode also forbids new forecasts and newly created season journals.
 It permits unchanged legacy records and valid append-only corrections. Tests
 exercise the pure validator and a temporary synthetic Git repository.
 
-No live result, source payload, workflow schedule, write permission, service or
-deployment configuration was changed by this preparation.
+The local settlement workflow now removes its proposed schedule, write token
+and publisher, and makes default dispatch validation-only. No live repository
+setting, live schedule, result, source payload, service or deployment was changed.
+The existing paid collector is outside this patch and is not disabled.

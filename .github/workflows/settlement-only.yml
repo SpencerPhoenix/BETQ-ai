@@ -13,11 +13,29 @@ on:
       - 'scripts/verify-evidence-append-only.mjs'
       - 'tests/evidence-transition.test.mjs'
       - '.github/workflows/settlement-only.yml'
+      - 'src/settlement-candidate.mjs'
+      - 'scripts/settlement-candidate.mjs'
+      - 'tests/settlement-candidate.test.mjs'
       - 'package.json'
   workflow_dispatch:
-  schedule:
-    # After late NFL games, and independently of the paid market collector.
-    - cron: '11 11 * * *'
+    inputs:
+      operation:
+        description: Validate offline, or explicitly prepare a review-only candidate
+        type: choice
+        options: [validate, prepare]
+        default: validate
+        required: true
+      expected_main_sha:
+        description: Full reviewed main commit SHA; required only for preparation
+        type: string
+        default: ''
+        required: false
+      source_use_confirmed:
+        description: I have authorization for the intended source use and this preparation
+        type: boolean
+        default: false
+        required: false
+# No schedule and no publisher. Merge or ordinary dispatch cannot publish outcomes.
 permissions:
   contents: read
 jobs:
@@ -31,82 +49,65 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install existing project dependencies
-        run: npm ci
-      - name: Syntax and regression tests (mocked source, zero paid calls)
+      - name: Install existing project dependencies without install scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Offline syntax and regression tests (mocked sources)
         run: |
           npm run check
           npm test
-      - name: Optional free-source end-to-end dry run (no bookmaker requests or writes)
-        if: github.event_name == 'pull_request'
-        continue-on-error: true
-        env:
-          ODDS_API_KEY: ''
-        run: npm run evidence:settle -- --dry-run
-  settlement:
-    # PR validation is read-only. Only scheduled/manual main branch can write.
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+  preparation:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.operation == 'prepare'
     needs: validation
     runs-on: ubuntu-latest
     timeout-minutes: 12
-    permissions:
-      contents: write
-    concurrency:
-      group: betq-evidence-journal-writers
-      cancel-in-progress: false
-      queue: max
+    env:
+      EXPECTED_SOURCE_SHA: ${{ inputs.expected_main_sha }}
+      SETTLEMENT_OPERATION: ${{ inputs.operation }}
+      SOURCE_USE_CONFIRMED: ${{ inputs.source_use_confirmed }}
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.sha }}
           fetch-depth: 1
-          persist-credentials: true # required for guarded evidence-only push
-      - name: Start from latest origin/main after entering writer queue
-        run: |
-          git fetch origin main
-          git reset --hard origin/main
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Reconcile finalized community results without market requests
+      - name: Require explicit source-use approval and exact current main revision
+        shell: bash
+        run: |
+          export CURRENT_MAIN_SHA="$(git ls-remote origin refs/heads/main | cut -f1)"
+          node scripts/settlement-candidate.mjs preflight
+      - name: Retest the actual pinned preparation checkout
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run check
+          npm test
+      - name: Recheck revision before explicitly approved source requests
+        shell: bash
+        run: |
+          export CURRENT_MAIN_SHA="$(git ls-remote origin refs/heads/main | cut -f1)"
+          node scripts/settlement-candidate.mjs preflight
+      - name: Prepare derived candidate in runner-local files only
+        env:
+          ODDS_API_KEY: ''
         run: npm run evidence:settle
-      - name: Enforce original forecasts and settlements are append-only
+      - name: Verify unchanged forecasts and append-only result revisions
+        run: node scripts/verify-evidence-append-only.mjs --settlement-only
+      - name: Package review-only candidate bound to the exact baseline
         shell: bash
         run: |
-          node scripts/verify-evidence-append-only.mjs --settlement-only
-          node --input-type=module <<'NODE'
-          import {readFileSync} from 'node:fs';
-          const source=readFileSync('scripts/reconcile-settlements.mjs','utf8');
-          if(/api\.the-odds-api\.com|\/api\/slate|ODDS_API_KEY/.test(source))
-            throw Error('Settlement-only command would access sportsbook data');
-          console.log('PASS append-only evidence; no paid sportsbook API path');
-          NODE
-      - name: Commit updated derived results only when changed
-        shell: bash
-        run: |
-          if [[ -z "$(git status --porcelain -- data/evidence/)" ]]; then
-            echo "No new finalized results; no commit and no redeploy."
-            exit 0
-          fi
-          git config user.name "betq-settlement-bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add data/evidence/
-          git commit -m "data: reconcile independent NFL final scores without odds request [skip render]"
-          git fetch origin main
-          if ! git merge-base --is-ancestor origin/main HEAD; then
-            echo "Concurrent main change: do not rebase results computed from an old journal." >&2
-            exit 1
-          fi
-          git push origin HEAD:main || {
-            echo "Fast-forward evidence push rejected; candidate artifact preserved for manual review." >&2
-            exit 1
-          }
-      - name: Preserve public-derived candidate if publication fails
-        if: failure()
+          export CURRENT_MAIN_SHA="$(git ls-remote origin refs/heads/main | cut -f1)"
+          mkdir -p audit-output
+          node scripts/settlement-candidate.mjs prepare > audit-output/settlement-candidate-report.json
+          echo '## Preparation only; no publication authorized or performed' >> "$GITHUB_STEP_SUMMARY"
+          cat audit-output/settlement-candidate-report.json >> "$GITHUB_STEP_SUMMARY"
+      - name: Retain only the explicitly approved derived candidate for review
         uses: actions/upload-artifact@v4
         with:
-          name: betq-unpublished-settlement-${{ github.run_id }}
+          name: betq-prepared-settlement-${{ github.run_id }}
           path: |
-            data/evidence/nfl-2026.json
-            data/evidence/summary.json
+            audit-output/settlement-candidate.json
+            audit-output/settlement-candidate-report.json
           retention-days: 30
-          if-no-files-found: warn
+          if-no-files-found: error
