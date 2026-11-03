@@ -37,7 +37,7 @@ jobs:
     permissions:
       contents: write
     concurrency:
-      group: betq-free-settlement-only
+      group: betq-evidence-journal-writers
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
