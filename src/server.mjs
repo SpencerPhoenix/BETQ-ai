@@ -134,7 +134,7 @@ export function createHandler({
           return reply(res, 429, { error: { code: 'LOCAL_RATE_LIMIT', message: 'Too many requests. Try again shortly.' } });
         }
         if (url.pathname === '/api/health') return reply(res, 200, {
-          status: 'ok', app: 'BETQ.ai', version: '0.10.0',
+          status: 'ok', app: 'BETQ.ai', version: '0.11.0',
           serverTime: new Date(now).toISOString(), odds: source.status(),
           nflModel: { available: Boolean(nflArtifact?.readyForResearch), version: nflArtifact?.version || null },
           forwardEvidence: { status: nflEvidence.status, prospectiveGames: nflEvidence.prospectiveGames,
@@ -318,7 +318,7 @@ export function createHandler({
         }
         if (url.pathname === '/api/price/verification') {
           return reply(res,200,{
-            version:'0.10.0',verifiedROI:null,verifiedCLV:null,
+            version:'0.11.0',verifiedROI:null,verifiedCLV:null,
             realMoneyTransactionsConnected:false,
             verifiedBookmakerClosingQuotesConnected:false,
             prospectivePriceLedgerConnected:false,
