@@ -10,6 +10,7 @@
  * No odds, wagering, bookmaker identity or private pricing is stored.
  */
 import {createHash} from 'node:crypto';
+import {isCorroboratedSettlement} from './settlement-only.mjs';
 
 export const FREE_SCOREBOARD_BASE =
   'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard';
@@ -94,8 +95,25 @@ export async function corroborateFinals(journal,candidates,{
       previous.day!==game.day))throw Error('CORROBORATOR_TRACKED_GAME_CONFLICT');
     games.set(s.gameId,game);
   }
-  const dates=[...new Set(candidates.map(c=>dateKey(c.gameDate)).filter(Boolean))].sort();
-  const checkedDates=dates.slice(0,MAX_DATES);
+  const latest=new Map();
+  for(const r of journal.settlements??[]){
+    if(!r||typeof r.gameId!=='string')continue;
+    const old=latest.get(r.gameId);
+    if(!old||Number(r.revision)>Number(old.revision))latest.set(r.gameId,r);
+  }
+  // Already corroborated, unchanged final results need no second network call.
+  // Keep revised outcomes eligible even when the previous revision was verified.
+  const needed=candidates.filter(c=>{
+    const old=latest.get(c.gameId);
+    return !old||old.homeScore!==c.homeScore||old.awayScore!==c.awayScore||
+      !isCorroboratedSettlement(old);
+  });
+  const dates=[...new Set(needed.map(c=>dateKey(c.gameDate)).filter(Boolean))].sort();
+  // Bounded rotating schedule prevents a permanently unavailable early game
+  // from starving later games when more than MAX_DATES need validation.
+  const offset=dates.length?Math.floor(clock()/86400000)%dates.length:0;
+  const checkedDates=Array.from({length:Math.min(MAX_DATES,dates.length)},
+    (_,i)=>dates[(offset+i)%dates.length]);
   const attestations={};
   const unavailable=[];
   let received=0;
@@ -114,7 +132,7 @@ export async function corroborateFinals(journal,candidates,{
       if(!payload||!Array.isArray(payload.events))throw Error('SECOND_SOURCE_INVALID_SCHEMA');
       const sourceSha256=digest(raw),observedAt=iso(clock());
       received++;
-      for(const candidate of candidates.filter(c=>dateKey(c.gameDate)===day)){
+      for(const candidate of needed.filter(c=>dateKey(c.gameDate)===day)){
         const match=matchFinalFromScoreboard(candidate,games.get(candidate.gameId),
           payload,{observedAt,sourceSha256});
         if(match)attestations[candidate.gameId]=match;
@@ -124,11 +142,13 @@ export async function corroborateFinals(journal,candidates,{
     }
   }
   return {
-    attestations,eligibleCandidates:candidates.length,
+    attestations,eligibleCandidates:needed.length,
+    alreadyCorroborated:candidates.length-needed.length,
     confirmed:Object.keys(attestations).length,
-    unconfirmed:candidates.length-Object.keys(attestations).length,
+    unconfirmed:needed.length-Object.keys(attestations).length,
     checkedDates,unavailableDates:unavailable,
-    deferredDates:dates.slice(MAX_DATES),source:'ESPN_SITE_SCOREBOARD_UNOFFICIAL',
+    deferredDates:dates.filter(d=>!checkedDates.includes(d)),
+    source:'ESPN_SITE_SCOREBOARD_UNOFFICIAL',
     paidOddsCalls:0
   };
 }
