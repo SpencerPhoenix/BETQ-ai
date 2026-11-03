@@ -6,7 +6,10 @@ on:
       - 'data/evidence/nfl-2026.json'
       - 'src/prospective-direction.mjs'
       - 'src/shadow-derived.mjs'
+      - 'src/market-sequential.mjs'
       - 'scripts/audit-prospective-direction.mjs'
+      - 'scripts/audit-market-sequential.mjs'
+      - 'tests/market-sequential.test.mjs'
       - 'tests/prospective-direction.test.mjs'
       - 'tests/replay-ui.test.mjs'
       - '.github/workflows/prospective-direction-audit.yml'
@@ -31,6 +34,8 @@ jobs:
           npm test
       - name: Analyze already captured forward market movements
         run: npm run audit:direction
+      - name: Compute conditional market-relative proper scores and likelihood evidence
+        run: npm run audit:sequential
       - name: Verify research cannot be interpreted as actual profit or bookmaker fill
         shell: bash
         run: |
@@ -47,11 +52,25 @@ jobs:
             throw Error('Forward profit evidence was fabricated or mislabelled');
           if(d.candidateMarketMovements<30&&d.directionMatchPercent!==null)
             throw Error('Insufficient sample was incorrectly displayed as a percentage');
+          const q=JSON.parse(readFileSync('audit-output/market-sequential.json','utf8'));
+          if(q.report.version!=='betq-market-sequential-v1'||
+             q.report.verifiedROI!==null||q.report.verifiedCLV!==null||
+             q.report.bettingAuthorized!==false||
+             q.report.sequentialNullProvenCorrect!==false||
+             q.profitabilityVerified!==false||
+             q.privateRawBookmakerQuotesIncluded!==false)
+            throw Error('Sequential evidence misrepresented as economic profit or a proven null');
+          if(q.report.eligibleSettledNonTieGames<30&&
+             (q.report.properScores!==null||
+              q.report.candidateEvidence.fixedMixtureEvidence!==null))
+            throw Error('Underpowered forward sample was published as validated evidence');
           console.log('FORWARD AUDIT: PASS; actual bookmaker fill/CLV/ROI unavailable');
           NODE
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: betq-forward-direction-proof
-          path: audit-output/prospective-direction.json
+          path: |
+            audit-output/prospective-direction.json
+            audit-output/market-sequential.json
           retention-days: 30
