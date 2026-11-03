@@ -75,22 +75,28 @@ loss, no-result, or evidence of a model advantage.
 
 ## Operations and operational limitations
 
-- Both draft writer workflows run the same offline comparison against the
-  checked-out Git HEAD before staging a publication. Existing forecast and
+- The capture writer and settlement preparation run the same offline comparison
+  against checked-out Git HEAD before their respective outputs. Existing forecast and
   settlement arrays must remain exact ordered prefixes, and journal metadata
   cannot change. New settlement revisions must be consecutive, belong to a
   frozen game, and pass the existing complete source-corroboration gate.
   The verifier also rejects deleted season journals. It makes no source requests
   and changes no files. Run `node scripts/verify-evidence-append-only.mjs`.
-  The settlement writer supplies `--settlement-only`, preserving its stronger
+  Settlement preparation supplies `--settlement-only`, preserving its stronger
   rule that no forecast or new season journal may be added by reconciliation.
 
 - \`npm run evidence:settle -- --dry-run\` uses only the two fixed public
   sources. Dry-run prints verification counters and changes **no files**.
-- The scheduled settlement-only writer may persist appended results only
-  after merge, as a main-only GitHub Actions writer; PR validations skip the
-  write job. The original paid-odds collector is not triggered by a mere
-  source-code push; its pre-existing schedule/manual behavior is separate.
+- The settlement workflow has no schedule, write permission or publisher.
+  PR runs and default manual dispatch perform offline validation only. Explicit
+  manual preparation requires a source-use confirmation and a full SHA matching
+  the dispatch checkout and freshly observed main. It retests that pinned code,
+  refuses a changed main instead of resetting, and retains only a hashed,
+  review-only derived candidate. A separate later publication action would need
+  its own approval and unchanged-baseline verification. See
+  [the preparation protocol](SETTLEMENT_PREPARATION_PROTOCOL.md).
+- This does not disable the pre-existing paid-odds collector. Its separate
+  schedule/manual behavior and publication permissions are unchanged.
 - Up to four unverified scoreboard dates are fetched per run. Dates rotate
   across invocations to avoid indefinitely starving older unresolved games.
   Already-corroborated unchanged results do not require repeat requests.

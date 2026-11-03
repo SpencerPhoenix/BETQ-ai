@@ -111,12 +111,18 @@ test('fixed-file CLI compares HEAD, rejects deleted files, and permits a valid n
     await unlink(path);assert.match(run().stderr,/TRACKED_EVIDENCE_JOURNAL_DELETED/);
   }finally{await rm(cwd,{recursive:true,force:true});}
 });
-test('both draft writer workflows run the same immutable-history check before git add or push',async()=>{
+test('capture writer and settlement preparation enforce immutable history before their respective outputs',async()=>{
   for(const file of ['capture-evidence.yml','settlement-only.yml']){
     const workflow=await readFile(new URL('../.github/workflows/'+file,import.meta.url),'utf8');
     const guard=workflow.indexOf('node scripts/verify-evidence-append-only.mjs');
-    assert.ok(guard>0,file);assert.ok(guard<workflow.indexOf('git add data/evidence/'),file);
-    assert.ok(guard<workflow.indexOf('git push origin HEAD:main'),file);
+    assert.ok(guard>0,file);
+    if(file==='capture-evidence.yml'){
+      assert.ok(guard<workflow.indexOf('git add data/evidence/'),file);
+      assert.ok(guard<workflow.indexOf('git push origin HEAD:main'),file);
+    }else{
+      assert.ok(guard<workflow.indexOf('node scripts/settlement-candidate.mjs prepare'),file);
+      assert.doesNotMatch(workflow,/git push|git commit|contents: write/);
+    }
     if(file==='settlement-only.yml'){
       assert.match(workflow,/verify-evidence-append-only\.mjs --settlement-only/);
       for(const path of ['src/evidence-transition.mjs','scripts/verify-evidence-append-only.mjs',
