@@ -8,48 +8,31 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Check production version, private disabled mode and no-cost study endpoints
+      - name: Classify observed deployment version and commit (GET health only)
+        id: release
+        run: node scripts/check-deployed-release.mjs
+      - name: Verify risk veto and research honesty on the matched deployment
+        if: steps.release.outputs.status == 'OK'
         shell: bash
         run: |
           node --input-type=module <<'NODE'
           import {readFileSync} from 'node:fs';
           const expectedVersion=JSON.parse(readFileSync('package.json','utf8')).version;
-          if(!/^\d+\.\d+\.\d+$/.test(expectedVersion))
-            throw Error('Invalid expected release metadata');
           const base='https://betq-ai.onrender.com';
-          const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-          async function get(path,method='GET'){
-            const r=await fetch(base+path,{
-              method,signal:AbortSignal.timeout(60000),
-              headers:{Accept:'application/json'}
-            });
+          async function get(path){
+            const r=await fetch(base+path,{method:'GET',
+              signal:AbortSignal.timeout(30000),
+              headers:{Accept:'application/json'}});
             const text=await r.text();
             let data=null;try{data=JSON.parse(text)}catch{}
             return {status:r.status,data,text};
           }
-          let health,lastHttp='unavailable',lastVersion='unknown',lastError='none';
-          for(let attempt=0;attempt<15;attempt++){
-            try{
-              const h=await get('/api/health');
-              lastHttp=String(h.status);
-              lastVersion=String(h.data?.version??'missing');
-              if(h.status===200&&h.data?.version===expectedVersion){
-                health=h.data;break;
-              }
-            }catch(error){ lastError=String(error?.message||error).slice(0,160); }
-            if(attempt<14)await sleep(10000);
-          }
-          if(!health)throw Error('BETQ release mismatch: expected v'+expectedVersion+
-            ', observed v'+lastVersion+', HTTP '+lastHttp+', network '+lastError+
-            '. An older healthy release is not application downtime.');
-          if(health.app!=='BETQ.ai'||health.status!=='ok')
-            throw Error('Unexpected live service');
           const status=await get('/api/shadow/status');
           if(status.status!==200||status.data?.captureEnabled!==false||
              status.data?.durableStorage!==false||status.data?.available!==false||
@@ -83,31 +66,29 @@ jobs:
                seq.verifiedROI!==null||seq.verifiedCLV!==null||
                seq.bettingAuthorized!==false||seq.modelPromoted!==false||
                seq.sequentialNullProvenCorrect!==false)
-              throw Error('Market-relative sequential research missing or claiming unsupported edge');
+              throw Error('Sequential research missing or falsely claiming an edge');
             if(seq.eligibleSettledNonTieGames<30 &&
                (seq.properScores!==null||
                 seq.candidateEvidence?.fixedMixtureEvidence!==null))
-              throw Error('Insufficient 2026 games presented as statistical model victory');
+              throw Error('Underpowered sample displayed as validated evidence');
           }
           const site=await get('/');
           if(site.status!==200||
              !site.text.includes('TERMINAL / v'+expectedVersion)||
              !site.text.includes('id="page-latency"')||
              !site.text.includes('id="shadow-forward-view"'))
-            throw Error('Latency UI does not match backend release');
+            throw Error('Latency UI does not match verified backend release');
           const safeDemo=await get('/api/slate?mode=demo');
-          if(safeDemo.status!==200||safeDemo.data.demo!==true||
-             safeDemo.data.shadowCapture?.captured!==false||
-             safeDemo.data.executionGate?.bettingAuthorized!==false)
+          if(safeDemo.status!==200||safeDemo.data?.demo!==true||
+             safeDemo.data?.shadowCapture?.captured!==false||
+             safeDemo.data?.executionGate?.bettingAuthorized!==false)
             throw Error('Synthetic and market study isolation failed');
-          const post=await get('/api/shadow/status','POST');
-          if(post.status!==405)throw Error('Unauthenticated shadow write is exposed');
-          console.log('PASS — BETQ version '+health.version+' on Render');
+          // Never POST to production, even for a method-denial test.
+          // The 405 write-lock is exercised in the local server regression suite.
+          console.log('PASS — matching production version/commit and no-wager risk veto');
           console.log('PASS — private raw sportsbook collection OFF');
-          console.log('PASS — synthetic QB study unmistakably fictional');
-          console.log('PASS — existing prospective derived market feed read-only');
+          console.log('PASS — synthetic QB study labeled fictional');
+          console.log('PASS — current prospective derived market research read-only');
           console.log('PASS — QB and CLV verified results still UNAVAILABLE');
-          console.log('PASS — public POST ingestion rejected');
-          console.log('EXTRA ODDS API REQUESTS BY AUDIT: 0');
-          console.log('VALIDATED PRODUCTION SHADOW PHASE: 1');
+          console.log('EXTRA PAID ODDS REQUESTS BY AUDIT: 0');
           NODE
