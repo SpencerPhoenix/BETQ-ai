@@ -45,7 +45,7 @@ export async function fetchNflverseScheduleCsv(fetchImpl = globalThis.fetch) {
  * before accepting community scores. This decreases provisional-score risk
  * but does NOT independently certify a game's final status.
  */
-export function reconcileSettlements(journal, rows, {now=Date.now()}={}) {
+export function selectFinalizedResults(journal, rows, {now=Date.now()}={}) {
   if (!journal || journal.schema !== 1 || journal.sport !== 'americanfootball_nfl' ||
       !Number.isInteger(journal.season) || !Array.isArray(journal.snapshots) ||
       !Array.isArray(journal.settlements) || !Array.isArray(rows) || rows.length > 30000 ||
@@ -65,17 +65,6 @@ export function reconcileSettlements(journal, rows, {now=Date.now()}={}) {
       old.season!==identity.season || old.date!==identity.date ||
       old.kickoff!==identity.kickoff)) throw Error('CONTRADICTORY_TRACKED_GAME_ID');
     tracked.set(s.gameId, identity);
-  }
-
-  const latest = new Map();
-  for (const s of journal.settlements) {
-    if (!s || typeof s.gameId !== 'string' || !Number.isInteger(s.revision) ||
-        s.revision<1) throw Error('INVALID_EXISTING_SETTLEMENT');
-    const previous=latest.get(s.gameId);
-    if (!previous || s.revision>previous.revision) latest.set(s.gameId,s);
-    else if (s.revision===previous.revision &&
-      (s.homeScore!==previous.homeScore || s.awayScore!==previous.awayScore))
-      throw Error('CONTRADICTORY_SETTLEMENT_REVISION');
   }
 
   const today=asDate(now).slice(0,10);
@@ -105,9 +94,26 @@ export function reconcileSettlements(journal, rows, {now=Date.now()}={}) {
     });
   }
 
+  return [...finalized.values()];
+}
+
+/** Appends corrections exactly once, retaining every prior revision. */
+export function reconcileSettlements(journal, rows, {now=Date.now()}={}) {
+  const candidates=selectFinalizedResults(journal,rows,{now});
+  const latest = new Map();
+  for (const s of journal.settlements) {
+    if (!s || typeof s.gameId !== 'string' || !Number.isInteger(s.revision) ||
+        s.revision<1) throw Error('INVALID_EXISTING_SETTLEMENT');
+    const previous=latest.get(s.gameId);
+    if (!previous || s.revision>previous.revision) latest.set(s.gameId,s);
+    else if (s.revision===previous.revision &&
+      (s.homeScore!==previous.homeScore || s.awayScore!==previous.awayScore))
+      throw Error('CONTRADICTORY_SETTLEMENT_REVISION');
+  }
+
   const updated=structuredClone(journal);
   const added=[];
-  for (const result of finalized.values()) {
+  for (const result of candidates) {
     const old=latest.get(result.gameId);
     if (old?.homeScore===result.homeScore && old?.awayScore===result.awayScore) continue;
     const revision=(old?.revision ?? 0)+1;
@@ -116,5 +122,5 @@ export function reconcileSettlements(journal, rows, {now=Date.now()}={}) {
     latest.set(result.gameId,record);
     added.push({gameId:result.gameId,revision,outcome:result.outcome});
   }
-  return {journal:updated,appended:added.length,added,sourceFinalScoreCandidates:finalized.size};
+  return {journal:updated,appended:added.length,added,sourceFinalScoreCandidates:candidates.length};
 }
