@@ -7,17 +7,17 @@
     "description": "NFL schedule release maintained by Lee Sharpe, published by nflverse",
     "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
     "license": "CC BY 4.0",
-    "extractedUTC": "2026-11-02T20:45:01.010Z"
+    "extractedUTC": "2026-11-03T18:24:59.595Z"
   },
-  "generatedAt": "2026-11-02T20:45:01.010Z",
-  "completedGamesSha256": "422a26b04d9f7ab3794e362ec6d010da222f7c100fff4f88c7f593f0c3bc6d81",
-  "lastGameDate": "2026-11-01",
+  "generatedAt": "2026-11-03T18:24:59.595Z",
+  "completedGamesSha256": "45c7a156b2a4b61a80e60005ca499f7ffc6a14f5d7d54965af2b78e540234008",
+  "lastGameDate": "2026-11-02",
   "seasons": [
     1999,
     2026
   ],
-  "completedGames": 7396,
-  "completed2026": 120,
+  "completedGames": 7397,
+  "completed2026": 121,
   "trainingProtocol": {
     "parameterTuning": "2018–2022 games (prior games only)",
     "calibration": "2023–2024 games (after hyperparameter selection)",
@@ -72,7 +72,7 @@
     "BAL": 1495.8737836390223,
     "BUF": 1648.432216069739,
     "CAR": 1446.6949181102452,
-    "CHI": 1576.5401285105943,
+    "CHI": 1600.5596051831594,
     "CIN": 1523.6823368836772,
     "CLE": 1481.0772475223118,
     "DAL": 1437.3228165144396,
@@ -94,7 +94,7 @@
     "NYJ": 1348.9051860370578,
     "PHI": 1452.7185443978808,
     "PIT": 1578.4046746845943,
-    "SEA": 1622.3291459150462,
+    "SEA": 1598.309669242481,
     "SF": 1621.2632964604015,
     "TB": 1456.8398718199926,
     "TEN": 1317.4862112861645,
