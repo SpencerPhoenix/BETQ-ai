@@ -15,8 +15,10 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: betq-nfl-forward-evidence
-  cancel-in-progress: true
+  # Shared writer lock with settlement-only.yml; prevents overlapping JSON updates.
+  # GitHub may replace a pending run, so no-cost daily reconciliation still retries.
+  group: betq-evidence-journal-writers
+  cancel-in-progress: false
 jobs:
   collect:
     if: github.ref == 'refs/heads/main'
