@@ -99,6 +99,14 @@ The efficient-market synthetic null produced **1 false approval in 400 simulated
 
 **No model was promoted, and no betting was enabled.** The historical records use untimestamped closing odds and repeatedly inspected seasons, so they cannot establish achievable entries, CLV or a new pristine holdout. See [pre-registration](docs/RESEARCH_PROTOCOL_RESIDUAL_2026_11_02.md) and [full results](docs/RESIDUAL_RESEARCH_FINDINGS.md). The research can be reproduced with `npm run research:residual`, which uses publicly attributed nflverse schedules and no paid Odds API credits.
 
+## v0.10 — Prospective evidence, not manufactured profitability
+
+The QB Latency Lab now includes a **model-vs-later-market movement diagnostic** computed from the existing append-only forward journal. It asks whether BETQ's **first independently dated pregame Elo disagreement** predicted the **direction of subsequently observed** derived market consensus changes. The protocol is fixed at a 3-percentage-point original model disagreement, 0.5-point later material market move, 15-minute separation and 30 independent qualifying games before reporting even a descriptive hit rate.
+
+The initial forward audit used 33 pregame snapshots across 17 games. Only 9 games had eligible timestamp-separated observations; 3 qualified for direction scoring, with 1 aligned and 2 opposed movements. **The sample is insufficient to claim a predictive advantage, CLV, profitable trading, or real-money ROI.** The audit does not invoke paid The Odds API calls or expose bookmaker-identifiable raw quotes. The separate true sportsbook-entry/CLV archive still requires dedicated private durable storage and evidence of actual executable quotes.
+
+See [source-audited v0.10 forward results](docs/PROSPECTIVE_DIRECTION_AUDIT.md). Reproduce with `npm run audit:direction`; the `BETQ prospective model versus market movement audit` GitHub workflow also checks new source-journal commits. All server-side wagering and automatic paper-staking locks remain active.
+
 ## Deploy
 
 `render.yaml` describes an optional Render Node web service. Link the repository in Render, then enter `ODDS_API_KEY` in the service environment. Deployment is managed separately in Render; a GitHub commit does not guarantee that the service successfully redeployed. Verify the production version at `GET /api/health`.
