@@ -21,6 +21,19 @@ const makeRow=(overrides={})=>({
   game_id:'2026_08_CHI_SEA',season:'2026',game_type:'REG',gameday:'2026-11-02',
   home_team:'SEA',away_team:'CHI',home_score:'17',away_score:'34',...overrides
 });
+// Deterministic synthetic second-source attestation; no network in tests.
+const attestationFor=(r,when)=>({
+  status:'CROSS_SOURCE_FINAL',corroborator:'ESPN_SITE_SCOREBOARD_UNOFFICIAL',
+  gameId:r.game_id,gameDate:r.gameday,
+  homeScore:Number(r.home_score),awayScore:Number(r.away_score),
+  eventId:'401123456',observedAt:new Date(when).toISOString(),
+  sourceSha256:'a'.repeat(64),officialLeagueCertification:false
+});
+const settle=(journal,rows,{now:clock=now,...other}={})=>{
+  const first=rows[0],attestations=first?{[first.game_id]:attestationFor(first,clock)}:{};
+  return reconcileSettlements(journal,rows,{now:clock,attestations,...other});
+};
+
 
 test('read-only schedule fetch is pinned to the community source and never a paid endpoint',async()=>{
   let calls=0;
@@ -42,21 +55,21 @@ test('read-only schedule fetch is pinned to the community source and never a pai
 test('new final is appended once with original forecast preserved exactly',()=>{
   const journal=makeJournal();
   const originalSnapshot=JSON.stringify(journal.snapshots);
-  const first=reconcileSettlements(journal,[makeRow()],{now});
+  const first=settle(journal,[makeRow()],{now});
   assert.equal(first.appended,1);
   assert.equal(first.journal.settlements[0].revision,1);
   assert.equal(first.journal.settlements[0].outcome,'AWAY');
   assert.equal(first.journal.settlements[0].source,'NFLVERSE_SCHEDULES');
   assert.equal(JSON.stringify(first.journal.snapshots),originalSnapshot);
   assert.deepEqual(journal.settlements,[]);
-  const repeat=reconcileSettlements(first.journal,[makeRow()],{now:now+86400000});
+  const repeat=settle(first.journal,[makeRow()],{now:now+86400000});
   assert.equal(repeat.appended,0);
   assert.deepEqual(repeat.journal.settlements,first.journal.settlements);
 });
 
 test('score correction is append-only and does not count as another game',()=>{
-  const first=reconcileSettlements(makeJournal(),[makeRow()],{now});
-  const second=reconcileSettlements(first.journal,[makeRow({home_score:'20'})],
+  const first=settle(makeJournal(),[makeRow()],{now});
+  const second=settle(first.journal,[makeRow({home_score:'20'})],
     {now:now+86400000});
   assert.equal(second.appended,1);
   assert.equal(second.journal.settlements.length,2);
@@ -76,39 +89,39 @@ test('score correction is append-only and does not count as another game',()=>{
 
 test('missing, premature and partial results cannot become a final settlement',()=>{
   for(const rows of [[],[makeRow({home_score:''})],[makeRow({away_score:'12x'})]]){
-    assert.equal(reconcileSettlements(makeJournal(),rows,{now}).appended,0);
+    assert.equal(settle(makeJournal(),rows,{now}).appended,0);
   }
   const tooEarly=Date.parse('2026-11-03T03:00:00Z');
-  assert.equal(reconcileSettlements(makeJournal(),[makeRow()],{now:tooEarly}).appended,0);
-  assert.equal(reconcileSettlements(makeJournal(),[makeRow()],
+  assert.equal(settle(makeJournal(),[makeRow()],{now:tooEarly}).appended,0);
+  assert.equal(settle(makeJournal(),[makeRow()],
     {now:Date.parse('2026-11-02T12:00:00Z')}).appended,0);
 });
 
 test('ties are recorded but are not counted twice',()=>{
-  const r=reconcileSettlements(makeJournal(),[makeRow({home_score:'17',away_score:'17'})],{now});
+  const r=settle(makeJournal(),[makeRow({home_score:'17',away_score:'17'})],{now});
   assert.equal(r.appended,1);
   assert.equal(r.journal.settlements[0].outcome,'TIE');
-  assert.equal(reconcileSettlements(r.journal,[makeRow({home_score:'17',away_score:'17'})],{now}).appended,0);
+  assert.equal(settle(r.journal,[makeRow({home_score:'17',away_score:'17'})],{now}).appended,0);
 });
 
 test('conflicting source IDs and duplicate source scores fail closed',()=>{
   const original=makeJournal();
   for(const row of [makeRow({home_team:'NYG'}),makeRow({gameday:'2026-11-01'}),
     makeRow({season:'2025'})]){
-    assert.throws(()=>reconcileSettlements(original,[row],{now}),/SOURCE_GAME_IDENTITY_MISMATCH/);
+    assert.throws(()=>settle(original,[row],{now}),/SOURCE_GAME_IDENTITY_MISMATCH/);
   }
-  assert.throws(()=>reconcileSettlements(original,[makeRow(),makeRow({home_score:'20'})],{now}),
+  assert.throws(()=>settle(original,[makeRow(),makeRow({home_score:'20'})],{now}),
     /CONTRADICTORY_SOURCE_SCORES/);
   const malformed=makeJournal();
   malformed.snapshots.push({...malformed.snapshots[0],id:'other',home:'NYG'});
-  assert.throws(()=>reconcileSettlements(malformed,[makeRow()],{now}),
+  assert.throws(()=>settle(malformed,[makeRow()],{now}),
     /CONTRADICTORY_TRACKED_GAME_ID/);
 });
 
 test('same revision with conflicting previous settlement is rejected',()=>{
-  const first=reconcileSettlements(makeJournal(),[makeRow()],{now});
+  const first=settle(makeJournal(),[makeRow()],{now});
   first.journal.settlements.push({...first.journal.settlements[0],homeScore:20});
-  assert.throws(()=>reconcileSettlements(first.journal,[makeRow()],{now}),
+  assert.throws(()=>settle(first.journal,[makeRow()],{now}),
     /CONTRADICTORY_SETTLEMENT_REVISION/);
 });
 
@@ -122,9 +135,9 @@ test('UTC NFL season selection is shared across the CLI and workflow',()=>{
 
 test('scores are not accepted before 24 hours from scheduled kickoff',()=>{
   const kick=Date.parse(makeJournal().snapshots[0].commenceTime);
-  const early=reconcileSettlements(makeJournal(),[makeRow()],{now:kick+24*3600000-1000});
+  const early=settle(makeJournal(),[makeRow()],{now:kick+24*3600000-1000});
   assert.equal(early.appended,0);
-  const late=reconcileSettlements(makeJournal(),[makeRow()],{now:kick+24*3600000+1000});
+  const late=settle(makeJournal(),[makeRow()],{now:kick+24*3600000+1000});
   assert.equal(late.appended,1);
   assert.match(late.journal.settlements[0].finalityBasis,/NOT_LEAGUE_CERTIFIED/);
 });
@@ -166,7 +179,7 @@ test('real frozen 2026 journal fixture retains summary schema and suppresses sco
   const original=JSON.parse(readFileSync(resolve(root,'data/evidence/nfl-2026.json'),'utf8'));
   const currentSummary=JSON.parse(readFileSync(resolve(root,'data/evidence/summary.json'),'utf8'));
   const frozen=JSON.stringify(original.snapshots);
-  const added=reconcileSettlements(original,[makeRow()],{now});
+  const added=settle(original,[makeRow()],{now});
   assert.equal(added.appended,1); // synthetic Chicago-Seattle fixture, never published
   const report=summarizeEvidence(added.journal,now);
   assert.deepEqual(Object.keys(report).sort(),Object.keys(currentSummary).sort());
@@ -178,4 +191,27 @@ test('real frozen 2026 journal fixture retains summary schema and suppresses sco
   assert.equal(report.realizedROI,null);
   assert.equal(JSON.stringify(added.journal.snapshots),frozen);
   assert.equal(added.journal.settlements[0].resultHash,original.settlements[0].resultHash);
+});
+
+test('unattested, mismatched and stale corroboration never appends results',()=>{
+  assert.equal(reconcileSettlements(makeJournal(),[makeRow()],{now}).appended,0);
+  const a=attestationFor(makeRow(),now);
+  assert.equal(reconcileSettlements(makeJournal(),[makeRow()],{
+    now,attestations:{'2026_08_CHI_SEA':{...a,awayScore:99}}}).appended,0);
+  assert.equal(reconcileSettlements(makeJournal(),[makeRow()],{
+    now,attestations:{'2026_08_CHI_SEA':{...a,observedAt:new Date(now-2*3600000).toISOString()}}}).appended,0);
+});
+
+test('legacy same-score settlement receives a separate corroboration revision, never duplicate outcome',()=>{
+  const original=makeJournal();
+  original.settlements.push({gameId:'2026_08_CHI_SEA',gameDate:'2026-11-02',
+    homeScore:17,awayScore:34,outcome:'AWAY',revision:1,resultHash:'legacy-record'});
+  const revised=settle(original,[makeRow()],{now});
+  assert.equal(revised.appended,1);
+  assert.equal(revised.upgradedLegacySettlements,1);
+  assert.equal(revised.journal.settlements.length,2);
+  assert.equal(revised.journal.settlements[1].revision,2);
+  assert.equal(revised.journal.settlements[1].finalityAttestation.status,'CROSS_SOURCE_FINAL');
+  const again=settle(revised.journal,[makeRow()],{now:now+86400000});
+  assert.equal(again.appended,0);
 });
