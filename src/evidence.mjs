@@ -7,7 +7,7 @@ import {pairedWeekBootstrap} from './statistical-audit.mjs';
 import {timestamp, isProbability, validDay} from './integrity.mjs';
 import { createHash } from 'node:crypto';
 import { NFL_TEAMS, canonicalTeam } from './nfl-elo.mjs';
-import {selectFinalizedResults} from './settlement-only.mjs';
+import {selectFinalizedResults,isCorroboratedSettlement} from './settlement-only.mjs';
 
 export const MIN_SAMPLE = 30;
 const round = (n,d=5) => Number.isFinite(n)?Number(n.toFixed(d)):null;
@@ -242,8 +242,14 @@ export function summarizeEvidence(journal,now=Date.now()) {
       challenger:loss(s.challengerHomeProbability,y)
     });
   }
-  const minMet=observed.length>=MIN_SAMPLE,pairedMet=paired.length>=MIN_SAMPLE;
-  const differences=paired.map(x=>x.market.brier-x.model.brier);
+  // Old community-score-only records remain visible for historical provenance,
+  // but cannot unlock publication of any model or market performance score.
+  const scored=observed.filter(x=>isCorroboratedSettlement(x.final));
+  const scoredPaired=scored.filter(x=>x.market);
+  const scoredChallenger=challengerPaired.filter(x=>
+    isCorroboratedSettlement(settled.get(x.gameId)));
+  const minMet=scored.length>=MIN_SAMPLE,pairedMet=scoredPaired.length>=MIN_SAMPLE;
+  const differences=scoredPaired.map(x=>x.market.brier-x.model.brier);
   const movement=[];
   for(const [gameId,shots] of byGame){
     const firstShot=first.get(gameId);
@@ -261,34 +267,36 @@ export function summarizeEvidence(journal,now=Date.now()) {
     realizedROI:null,verifiedCLV:null,minimumScoredSample:MIN_SAMPLE,
     totalSnapshots:journal.snapshots.length,prospectiveGames:first.size,
     settledGames:observed.length,pendingGames:pending.length,
+    sourceCorroboratedSettledGames:scored.length,
+    sourceUncorroboratedSettledGames:observed.length-scored.length,
     pairedMarketGames:paired.length,nearKickoffConsensusPairs:movement.length,
     prospectiveChallengerGames:[...byGame.values()].filter(shots=>
       shots.some(s=>Number.isFinite(s.challengerHomeProbability))).length,
-    pairedChallengerSettled:challengerPaired.length,
-    challengerForwardComparison:challengerPaired.length>=MIN_SAMPLE?{
-      n:challengerPaired.length,
-      baselineBrier:round(avg(challengerPaired.map(x=>x.baseline.brier))),
-      challengerBrier:round(avg(challengerPaired.map(x=>x.challenger.brier))),
-      baselineLogLoss:round(avg(challengerPaired.map(x=>x.baseline.logLoss))),
-      challengerLogLoss:round(avg(challengerPaired.map(x=>x.challenger.logLoss))),
-      baselineMinusChallengerBrier:round(avg(challengerPaired.map(x=>
+    pairedChallengerSettled:scoredChallenger.length,
+    challengerForwardComparison:scoredChallenger.length>=MIN_SAMPLE?{
+      n:scoredChallenger.length,
+      baselineBrier:round(avg(scoredChallenger.map(x=>x.baseline.brier))),
+      challengerBrier:round(avg(scoredChallenger.map(x=>x.challenger.brier))),
+      baselineLogLoss:round(avg(scoredChallenger.map(x=>x.baseline.logLoss))),
+      challengerLogLoss:round(avg(scoredChallenger.map(x=>x.challenger.logLoss))),
+      baselineMinusChallengerBrier:round(avg(scoredChallenger.map(x=>
         x.baseline.brier-x.challenger.brier))),
-      confidence95:ciPaired(challengerPaired.map(x=>
+      confidence95:ciPaired(scoredChallenger.map(x=>
         x.baseline.brier-x.challenger.brier)),
-      weekSensitivity:pairedWeekBootstrap(challengerPaired.map(x=>({id:x.gameId,date:x.gameDate,
+      weekSensitivity:pairedWeekBootstrap(scoredChallenger.map(x=>({id:x.gameId,date:x.gameDate,
         baseline:x.baselineProbability,challenger:x.challengerProbability,outcome:x.outcome}))),
       interpretation:'PAIRED_PROSPECTIVE_PREGAME_NOT_PROFIT_VALIDATION'
     }:null,
     tiesExcluded:[...first.keys()].filter(id=>settled.get(id)?.outcome==='TIE').length,
     forwardMetrics:minMet?{
-      n:observed.length,brier:round(avg(observed.map(x=>x.model.brier))),
-      logLoss:round(avg(observed.map(x=>x.model.logLoss))),
-      winnerAccuracy:round(avg(observed.map(x=>x.model.correct)),4),
-      calibration:bins(observed.map(x=>({p:x.s.modelHomeProbability,y:x.y})))
+      n:scored.length,brier:round(avg(scored.map(x=>x.model.brier))),
+      logLoss:round(avg(scored.map(x=>x.model.logLoss))),
+      winnerAccuracy:round(avg(scored.map(x=>x.model.correct)),4),
+      calibration:bins(scored.map(x=>({p:x.s.modelHomeProbability,y:x.y})))
     }:null,
     marketComparison:pairedMet?{
-      n:paired.length,modelBrier:round(avg(paired.map(x=>x.model.brier))),
-      consensusBrier:round(avg(paired.map(x=>x.market.brier))),
+      n:scoredPaired.length,modelBrier:round(avg(scoredPaired.map(x=>x.model.brier))),
+      consensusBrier:round(avg(scoredPaired.map(x=>x.market.brier))),
       consensusMinusModelBrier:round(avg(differences)),
       confidence95:ciPaired(differences),
       basis:'SAME_SNAPSHOT_NON_CLOSING_CONSENSUS'
@@ -299,7 +307,8 @@ export function summarizeEvidence(journal,now=Date.now()) {
       gameDate:x.s.gameDate,score:x.final.awayScore+'-'+x.final.homeScore,
       result:x.final.outcome,modelHomeProbability:x.s.modelHomeProbability,
       marketHomeProbability:x.s.marketHomeProbability,
-      capturedAt:x.s.capturedAt,brier:round(x.model.brier)
+      capturedAt:x.s.capturedAt,brier:round(x.model.brier),
+      sourceCorroborated:isCorroboratedSettlement(x.final)
     })),
     pendingPreview:pending.slice(0,12).map(x=>({
       gameId:x.gameId,home:x.home,away:x.away,gameDate:x.gameDate,
