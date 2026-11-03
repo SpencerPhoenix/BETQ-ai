@@ -1,0 +1,93 @@
+name: BETQ free-only NFL settlement reconciliation
+on:
+  pull_request:
+    paths:
+      - 'src/settlement-only.mjs'
+      - 'scripts/reconcile-settlements.mjs'
+      - 'tests/settlement-only.test.mjs'
+      - '.github/workflows/settlement-only.yml'
+      - 'package.json'
+  workflow_dispatch:
+  schedule:
+    # After late NFL games, and independently of the paid market collector.
+    - cron: '11 11 * * *'
+permissions:
+  contents: read
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install existing project dependencies
+        run: npm ci
+      - name: Syntax and regression tests (mocked source, zero paid calls)
+        run: |
+          npm run check
+          npm test
+  settlement:
+    # PR validation is read-only. Only scheduled/manual main branch can write.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: write
+    concurrency:
+      group: betq-free-settlement-only
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reconcile finalized community results without market requests
+        run: npm run evidence:settle
+      - name: Enforce original forecasts and settlements are append-only
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          import {execFileSync} from 'node:child_process';
+          const d=new Date(),season=d.getUTCMonth()<2?d.getUTCFullYear()-1:d.getUTCFullYear();
+          const file='data/evidence/nfl-'+season+'.json';
+          const previous=JSON.parse(execFileSync('git',['show','HEAD:'+file],{encoding:'utf8'}));
+          const current=JSON.parse(readFileSync(file,'utf8'));
+          if(JSON.stringify(previous.snapshots)!==JSON.stringify(current.snapshots))
+            throw Error('Reconciliation modified frozen forecast snapshots');
+          if(current.settlements.length<previous.settlements.length||
+             JSON.stringify(current.settlements.slice(0,previous.settlements.length))!==
+             JSON.stringify(previous.settlements))
+            throw Error('Reconciliation rewrote or deleted historic settlements');
+          const source=readFileSync('scripts/reconcile-settlements.mjs','utf8');
+          if(/api\.the-odds-api\.com|\/api\/slate|ODDS_API_KEY/.test(source))
+            throw Error('Settlement-only command would access sportsbook data');
+          console.log('PASS append-only evidence; no paid sportsbook API path');
+          NODE
+      - name: Commit updated derived results only when changed
+        shell: bash
+        run: |
+          if [[ -z "$(git status --porcelain -- data/evidence/)" ]]; then
+            echo "No new finalized results; no commit and no redeploy."
+            exit 0
+          fi
+          git config user.name "betq-settlement-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/evidence/
+          git commit -m "data: reconcile independent NFL final scores without odds request"
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git rebase origin/main || exit 1
+            if git push origin HEAD:main; then
+              echo "Committed append-only source-verified results."
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "Concurrent source update blocked publication; no history overwritten." >&2
+          exit 1
