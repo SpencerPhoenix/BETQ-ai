@@ -1,0 +1,97 @@
+{
+  "schema": "betq-synthetic-evidence-archive-v1",
+  "syntheticOnly": true,
+  "blobs": [
+    {
+      "sha256": "028111d909bf402099aad8613e5a3f0a1a56058e93c7883905df61a7ab5ce8ef",
+      "byteLength": 120,
+      "content": "{\"synthetic\":true,\"modelId\":\"fixture-logit-v1\",\"intercept\":-0.2,\"slope\":0.7,\"trainedThrough\":\"2025-12-31T23:00:00.000Z\"}"
+    },
+    {
+      "sha256": "33ce8aeff7c30e4f0377cacd86bb25ec63ac675af9c1b757eb5b043f5bdbbb27",
+      "byteLength": 252,
+      "content": "{\"synthetic\":true,\"source\":\"function fixtureProbability(signal,intercept,slope){\\n  const z=intercept+slope*signal;\\n  if(!Number.isFinite(z)||Math.abs(z)>20)throw Error('SYNTHETIC_MODEL_RANGE');\\n  return Number((1/(1+Math.exp(-z))).toFixed(12));\\n}\"}"
+    },
+    {
+      "sha256": "9e98702e7593157cb312ca763ddcb9c010b04ccddcbaf519112fcb5dbffd8cd3",
+      "byteLength": 134,
+      "content": "{\"synthetic\":true,\"gameId\":\"SYNTHETIC_GAME_001\",\"kickoffAt\":\"2026-01-01T12:00:00.000Z\",\"completed\":true,\"homeScore\":17,\"awayScore\":24}"
+    },
+    {
+      "sha256": "d6ec88b3734372fc6e823c311eb9a71872fe366c7f99d1b03c5e521b4b99a3d7",
+      "byteLength": 70,
+      "content": "{ \"synthetic\": true, \"gameId\": \"SYNTHETIC_GAME_001\", \"signal\": 0.25 }\n"
+    }
+  ],
+  "receipts": [
+    {
+      "receiptId": "0c6cb1498c411660dcd8586cbcbc862da653e9b867882ad1736108f2b2dd2efb",
+      "sourceKind": "SYNTHETIC_PRIMARY_FINAL",
+      "blobSha256": "9e98702e7593157cb312ca763ddcb9c010b04ccddcbaf519112fcb5dbffd8cd3",
+      "collectorReceivedAt": "2026-01-01T15:05:00.000Z",
+      "publisherPublishedAt": null,
+      "publicationTimeVerified": false
+    },
+    {
+      "receiptId": "6a5ffddc2fb85eefbd10809a2276c9c88d8e1e99f8b88d66d78b8f602b805adf",
+      "sourceKind": "SYNTHETIC_MODEL",
+      "blobSha256": "028111d909bf402099aad8613e5a3f0a1a56058e93c7883905df61a7ab5ce8ef",
+      "collectorReceivedAt": "2026-01-01T09:00:00.000Z",
+      "publisherPublishedAt": null,
+      "publicationTimeVerified": false
+    },
+    {
+      "receiptId": "9f96e36c709ab6236a9f097e2cacb8a845d5e49cbfd47ba84b4a0f6bafae827e",
+      "sourceKind": "SYNTHETIC_SECONDARY_FINAL",
+      "blobSha256": "9e98702e7593157cb312ca763ddcb9c010b04ccddcbaf519112fcb5dbffd8cd3",
+      "collectorReceivedAt": "2026-01-01T15:07:00.000Z",
+      "publisherPublishedAt": null,
+      "publicationTimeVerified": false
+    },
+    {
+      "receiptId": "b040837a253557bc26c3cfa86282557170c12eeada022cd200ee0574fdff3737",
+      "sourceKind": "SYNTHETIC_FEATURES",
+      "blobSha256": "d6ec88b3734372fc6e823c311eb9a71872fe366c7f99d1b03c5e521b4b99a3d7",
+      "collectorReceivedAt": "2026-01-01T09:05:00.000Z",
+      "publisherPublishedAt": null,
+      "publicationTimeVerified": false
+    },
+    {
+      "receiptId": "c545125b420ac7e4fc8b4f61b621d2749fd3cf3d209fb86ee6266856764b7e3d",
+      "sourceKind": "SYNTHETIC_FEATURES",
+      "blobSha256": "d6ec88b3734372fc6e823c311eb9a71872fe366c7f99d1b03c5e521b4b99a3d7",
+      "collectorReceivedAt": "2026-01-01T09:06:00.000Z",
+      "publisherPublishedAt": null,
+      "publicationTimeVerified": false
+    },
+    {
+      "receiptId": "f09f5bee984e06d31bd45f17035d263f92eb54c98ef3c86b9f2c46b8ec63919c",
+      "sourceKind": "SYNTHETIC_CODE",
+      "blobSha256": "33ce8aeff7c30e4f0377cacd86bb25ec63ac675af9c1b757eb5b043f5bdbbb27",
+      "collectorReceivedAt": "2026-01-01T09:01:00.000Z",
+      "publisherPublishedAt": null,
+      "publicationTimeVerified": false
+    }
+  ],
+  "forecast": {
+    "forecastId": "d08cb15c47625f6ade069943ad0eb707060b2964ae8f23f41dc944bc98c9d12e",
+    "gameId": "SYNTHETIC_GAME_001",
+    "frozenAt": "2026-01-01T09:10:00.000Z",
+    "kickoffAt": "2026-01-01T12:00:00.000Z",
+    "inputReceiptId": "b040837a253557bc26c3cfa86282557170c12eeada022cd200ee0574fdff3737",
+    "modelReceiptId": "6a5ffddc2fb85eefbd10809a2276c9c88d8e1e99f8b88d66d78b8f602b805adf",
+    "codeReceiptId": "f09f5bee984e06d31bd45f17035d263f92eb54c98ef3c86b9f2c46b8ec63919c",
+    "homeProbability": 0.4937503255
+  },
+  "settlement": {
+    "settlementId": "fb9d7a4acde6286377298fb20e3898e5a5b1f4c192851ac10285ba804e01aeea",
+    "forecastId": "d08cb15c47625f6ade069943ad0eb707060b2964ae8f23f41dc944bc98c9d12e",
+    "verifiedAt": "2026-01-01T15:10:00.000Z",
+    "primaryReceiptId": "0c6cb1498c411660dcd8586cbcbc862da653e9b867882ad1736108f2b2dd2efb",
+    "secondaryReceiptId": "9f96e36c709ab6236a9f097e2cacb8a845d5e49cbfd47ba84b4a0f6bafae827e",
+    "homeScore": 17,
+    "awayScore": 24,
+    "outcome": "AWAY"
+  },
+  "manifestSha256": "2a8b8da0cb3f61fc0cd03afb29fec2f17d02377afc4894f03874b2e943b34b9b"
+}
