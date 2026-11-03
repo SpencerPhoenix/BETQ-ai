@@ -5,6 +5,10 @@ on:
       - 'src/settlement-only.mjs'
       - 'scripts/reconcile-settlements.mjs'
       - 'tests/settlement-only.test.mjs'
+      - 'src/settlement-corroboration.mjs'
+      - 'tests/settlement-corroboration.test.mjs'
+      - 'src/evidence.mjs'
+      - 'scripts/capture-evidence.mjs'
       - '.github/workflows/settlement-only.yml'
       - 'package.json'
   workflow_dispatch:
