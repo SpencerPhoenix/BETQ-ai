@@ -3,10 +3,11 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {dirname,resolve} from 'node:path';
-import {fetchNflverseScheduleCsv,NFLVERSE_SCHEDULES_URL,reconcileSettlements}
+import {summarizeEvidence} from '../src/evidence.mjs';
+import {fetchNflverseScheduleCsv,NFLVERSE_SCHEDULES_URL,reconcileSettlements,nflSeasonAt}
   from '../src/settlement-only.mjs';
 
-const now=Date.parse('2026-11-03T12:30:00.000Z');
+const now=Date.parse('2026-11-04T12:30:00.000Z');
 const makeJournal=()=>({
   schema:1,season:2026,sport:'americanfootball_nfl',
   snapshots:[{
@@ -62,6 +63,15 @@ test('score correction is append-only and does not count as another game',()=>{
   assert.deepEqual(second.journal.settlements.map(x=>x.revision),[1,2]);
   assert.equal(new Set(second.journal.settlements.map(s=>s.gameId)).size,1);
   assert.equal(second.journal.snapshots[0].id,'first-source');
+  // Both reporting paths use the revised final and count the game once.
+  const oldSummary=summarizeEvidence(first.journal,now);
+  const revisedSummary=summarizeEvidence(second.journal,now+86400000);
+  assert.equal(oldSummary.settledGames,1);
+  assert.equal(revisedSummary.settledGames,1);
+  assert.equal(revisedSummary.pairedMarketGames,1);
+  assert.equal(revisedSummary.recentResults[0].score,'34-20');
+  assert.notEqual(revisedSummary.recentResults[0].score,oldSummary.recentResults[0].score);
+  assert.equal(revisedSummary.forwardMetrics,null);
 });
 
 test('missing, premature and partial results cannot become a final settlement',()=>{
@@ -102,24 +112,49 @@ test('same revision with conflicting previous settlement is rejected',()=>{
     /CONTRADICTORY_SETTLEMENT_REVISION/);
 });
 
+test('UTC NFL season selection is shared across the CLI and workflow',()=>{
+  assert.equal(nflSeasonAt(Date.parse('2027-01-31T23:59:59Z')),2026);
+  assert.equal(nflSeasonAt(Date.parse('2027-02-01T00:00:00Z')),2027);
+  assert.equal(nflSeasonAt(Date.parse('2026-11-03T10:00:00Z')),2026);
+  assert.throws(()=>nflSeasonAt(NaN),/INVALID_SEASON_TIMESTAMP/);
+});
+
+test('scores are not accepted before 24 hours from scheduled kickoff',()=>{
+  const kick=Date.parse(makeJournal().snapshots[0].commenceTime);
+  const early=reconcileSettlements(makeJournal(),[makeRow()],{now:kick+24*3600000-1000});
+  assert.equal(early.appended,0);
+  const late=reconcileSettlements(makeJournal(),[makeRow()],{now:kick+24*3600000+1000});
+  assert.equal(late.appended,1);
+  assert.match(late.journal.settlements[0].finalityBasis,/NOT_LEAGUE_CERTIFIED/);
+});
+
 test('settlement command and transitive import graph contain no live odds client',()=>{
   const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
   const explored=new Set();
+  const blocked=/(?:\/api\/slate|api\.the-odds-api\.com|ODDS_API_KEY|createOddsSource|\bgetOdds\s*\()/;
   const walk=file=>{
     if(explored.has(file))return;
     explored.add(file);
     const text=readFileSync(file,'utf8');
-    for(const match of text.matchAll(/(?:import|export)\s+(?:[^'";]+?\s+from\s*)?['"]([^'"]+)['"]/g)){
+    assert.doesNotMatch(text,blocked,'Paid source reachable in '+file);
+    const imports=[
+      ...text.matchAll(/(?:import|export)\s+(?:[^'";]+?\s+from\s*)?['"]([^'"]+)['"]/g),
+      ...text.matchAll(/import\s*\(\s*['"]([^'"]+)['"]\s*\)/g)
+    ];
+    // Reject unknown dynamic import expressions; require static, auditable modules.
+    assert.doesNotMatch(text,/\bimport\s*\(\s*[^'"\s]/,
+      'Dynamic import would bypass the static dependency audit');
+    for(const match of imports){
       const name=match[1];
       if(!name.startsWith('.'))continue;
       const target=resolve(dirname(file),name);
       assert.doesNotMatch(target,/\/(?:odds|server|engine|agent-run|shadow-store)\.mjs$/);
       walk(target);
     }
-    if(file.endsWith('/scripts/reconcile-settlements.mjs')){
-      assert.doesNotMatch(text,/\/api\/slate|api\.the-odds-api\.com|ODDS_API_KEY/);
-    }
   };
   walk(resolve(root,'scripts/reconcile-settlements.mjs'));
-  assert.ok(explored.size>=3);
+  assert.ok(explored.has(resolve(root,'src/settlement-only.mjs')));
+  assert.ok(explored.has(resolve(root,'src/evidence.mjs')));
+  assert.ok(explored.has(resolve(root,'src/nfl-elo.mjs')));
+  assert.ok(explored.size>=5);
 });
