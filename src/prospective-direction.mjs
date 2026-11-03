@@ -15,6 +15,7 @@
  *  - no threshold optimization, book prices, stake, or trading advice.
  */
 import {validateJournal} from './evidence.mjs';
+import {validModelResultCutoff} from './integrity.mjs';
 const isP=n=>Number.isFinite(n)&&n>0&&n<1;
 const at=s=>typeof s==='string'&&s.trim()?Date.parse(s):NaN;
 const round=(n,d=3)=>Number.isFinite(n)?Number(n.toFixed(d)):null;
@@ -37,11 +38,12 @@ function admissible(s){
      !Number.isFinite(at(s.sourceReceivedAt))||
      !Number.isFinite(at(s.marketNewestQuoteAt))||
      !Number.isFinite(at(s.modelBuiltAt))||
-     !Number.isFinite(at(s.commenceTime)))return false;
+     !Number.isFinite(at(s.commenceTime))||!validModelResultCutoff(s))return false;
   const capture=at(s.capturedAt),received=at(s.sourceReceivedAt),
     provider=at(s.marketNewestQuoteAt),model=at(s.modelBuiltAt),kick=at(s.commenceTime);
   return capture<kick&&received<=capture+60000&&received>=capture-600000&&
     provider<=received+60000&&provider<=capture+60000&&
+    provider>=received-600000&&provider>=capture-600000&&
     provider<kick&&model<=capture+60000&&model<kick&&
     s.independentModel===true&&s.researchOnly===true;
 }

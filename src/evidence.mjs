@@ -4,7 +4,7 @@
  * Forecast snapshots are immutable; verified results have revision history.
  */
 import {pairedWeekBootstrap} from './statistical-audit.mjs';
-import {timestamp, isProbability, validDay} from './integrity.mjs';
+import {timestamp, isProbability, validDay, validModelResultCutoff} from './integrity.mjs';
 import { createHash } from 'node:crypto';
 import { NFL_TEAMS, canonicalTeam } from './nfl-elo.mjs';
 import {selectFinalizedResults,isCorroboratedSettlement} from './settlement-only.mjs';
@@ -42,6 +42,9 @@ function validObservation(s,season){
   if(!Number.isFinite(at)||!Number.isFinite(kick)||at>=kick)return false;
   for(const key of ['modelBuiltAt','sourceReceivedAt'])
     if(s[key]!==undefined&&(!Number.isFinite(timestamp(s[key]))||timestamp(s[key])>at+60000||timestamp(s[key])>=kick))return false;
+  // Preserve old rows with absent metadata; reject contradictory supplied
+  // cutoffs rather than accepting results that postdate the frozen model.
+  if(s.modelLastResultDate!==undefined&&!validModelResultCutoff(s))return false;
   if(s.marketHomeProbability!=null&&!isProbability(s.marketHomeProbability))return false;
   if(s.challengerHomeProbability!=null&&(!isProbability(s.challengerHomeProbability)||s.challengerResearchOnly!==true||
      !Number.isFinite(timestamp(s.challengerBuiltAt))||timestamp(s.challengerBuiltAt)>at+60000||timestamp(s.challengerBuiltAt)>=kick))return false;
@@ -104,10 +107,16 @@ export function observationsFromSlate(slate,rows,now=Date.now(),season=new Date(
     }
     const row=matchSchedule(event,rows,season);
     if(!row){skipped.push({eventId:String(event.id||''),reason:'NO_UNIQUE_SCHEDULE_MATCH'});continue;}
+    if(!validModelResultCutoff({modelLastResultDate:m.throughGameDate,
+      modelBuiltAt:m.modelBuiltAt,capturedAt:new Date(now).toISOString()})){
+      skipped.push({eventId:String(event.id||''),reason:'MODEL_RESULT_CUTOFF_INVALID'});continue;
+    }
     const c=event.marketConsensus;
     const validMarket=c?.available&&c.method==='ALL_BOOKS_MEDIAN_DE_VIG'&&c.books>=3&&
       Number.isFinite(c.homeProbability)&&c.homeProbability>0&&c.homeProbability<1&&
       c.oldestQuoteAgeSeconds<=600&&parsed(c.latestQuoteAt)<=now+60000&&
+      parsed(c.latestQuoteAt)<=received+60000&&
+      parsed(c.latestQuoteAt)>=now-600000&&parsed(c.latestQuoteAt)>=received-600000&&
       parsed(c.latestQuoteAt)<kick;
     const cModel=event.efficiencyChallenger;
     const validChallenger=cModel?.available===true &&

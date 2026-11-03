@@ -17,6 +17,7 @@ function shot(game,num,market=.5,elo=.65,{at=NOW,challenger=null}={}){
     marketNewestQuoteAt:iso(captured-2500),
     marketBookCount:4,marketBasis:'NO_VIG_MULTI_BOOK_MEDIAN',
     modelHomeProbability:elo,modelBuiltAt:iso(NOW-60000),
+    modelLastResultDate:'2026-11-01',
     modelVersion:'nfl-elo-1',
     challengerHomeProbability:challenger,
     challengerBuiltAt:challenger===null?undefined:iso(NOW-30000),

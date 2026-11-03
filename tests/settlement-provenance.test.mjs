@@ -14,6 +14,7 @@ function fixture(){
     home:'SEA',away:'CHI',commenceTime:'2026-11-03T01:20:00.000Z',
     capturedAt:'2026-11-02T01:00:00.000Z',sourceReceivedAt:'2026-11-02T00:59:59.000Z',
     modelBuiltAt:'2026-11-01T12:00:00.000Z',modelHomeProbability:0.61,
+    modelLastResultDate:'2026-10-31',
     marketHomeProbability:0.60,marketBookCount:4,marketBasis:'NO_VIG_MULTI_BOOK_MEDIAN',
     marketNewestQuoteAt:'2026-11-02T00:59:58.000Z',
     independentModel:true,researchOnly:true

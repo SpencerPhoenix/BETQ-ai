@@ -5,6 +5,16 @@ export const isProbability = value => Number.isFinite(value) && value > 0 && val
 export const validDay = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) &&
   Number.isFinite(Date.parse(value + 'T00:00:00Z')) &&
   new Date(value + 'T00:00:00Z').toISOString().slice(0,10) === value;
+/** Reject a result cutoff later than model construction or capture. A date-only
+ * cutoff cannot establish within-day publication order or authenticate a model
+ * artifact, so this check makes neither claim. */
+export function validModelResultCutoff(snapshot){
+  const cutoff=snapshot?.modelLastResultDate;
+  const built=timestamp(snapshot?.modelBuiltAt),captured=timestamp(snapshot?.capturedAt);
+  return validDay(cutoff)&&Number.isFinite(built)&&Number.isFinite(captured)&&
+    cutoff<=new Date(built).toISOString().slice(0,10)&&
+    cutoff<=new Date(captured).toISOString().slice(0,10);
+}
 export function sourceDateFresh(day, now, maxAgeDays=28) {
   if (!validDay(day) || !Number.isFinite(now)) return false;
   const start=Date.parse(day+'T00:00:00Z');

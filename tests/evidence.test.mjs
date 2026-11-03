@@ -43,6 +43,37 @@ const slate=(time=NOW)=>{
   };
 };
 
+test('collector refuses missing, impossible and future model result cutoffs before append',()=>{
+  for(const cutoff of [undefined,'2027-01-01','2026-02-30']){
+    const source=slate();source.events[0].independentModel.throughGameDate=cutoff;
+    const report=observationsFromSlate(source,schedule(),NOW,2026);
+    assert.equal(report.accepted.length,0);
+    assert.equal(report.skipped[0].reason,'MODEL_RESULT_CUTOFF_INVALID');
+  }
+  assert.equal(observationsFromSlate(slate(),schedule(),NOW,2026).accepted.length,1);
+});
+
+test('collector cannot trust a fresh-age label when the actual newest quote timestamp is stale',()=>{
+  const source=slate();
+  source.events[0].marketConsensus.latestQuoteAt='2020-01-01T00:00:00.000Z';
+  source.events[0].marketConsensus.oldestQuoteAgeSeconds=1;
+  const report=observationsFromSlate(source,schedule(),NOW,2026);
+  assert.equal(report.accepted.length,1);
+  assert.equal(report.accepted[0].marketHomeProbability,null);
+  assert.equal(report.accepted[0].marketBasis,'UNAVAILABLE');
+});
+
+test('collector and read-side audits agree on the post-receipt quote clock-skew bound',()=>{
+  const source=slate();
+  const received=Date.parse(source.receivedAt);
+  source.events[0].marketConsensus.latestQuoteAt=ISO(received+60001);
+  assert.equal(observationsFromSlate(source,schedule(),NOW,2026)
+    .accepted[0].marketHomeProbability,null);
+  source.events[0].marketConsensus.latestQuoteAt=ISO(received+60000);
+  assert.ok(observationsFromSlate(source,schedule(),NOW,2026)
+    .accepted[0].marketHomeProbability>0);
+});
+
 test('Multi-book no-vig consensus excludes stale quotes and rejects thin lines',()=>{
   const original=mockEvent();
   const good=nflMoneylineConsensus(original,{asOf:NOW});
