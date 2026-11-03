@@ -10,6 +10,7 @@
  */
 import {readBoundedText} from './integrity.mjs';
 import {validateJournal} from './evidence.mjs';
+import {summarizeProspectiveDirection} from './prospective-direction.mjs';
 
 const FIXED_JOURNAL=
   'https://raw.githubusercontent.com/SpencerPhoenix/BETQ-ai/main/data/evidence/nfl-2026.json';
@@ -77,6 +78,7 @@ export function summarizeDerivedForwardMarkets(journal){
       qbEventAssociation:'NOT_MEASURED'
     })),
     qbNewsVerified:false,qbTimingLinked:false,
+    prospectiveModelLeadDiagnostic:summarizeProspectiveDirection(journal),
     oneBookQuotesAvailable:false,actualMarketOfferVerified:false,
     sourcePublicationTimeVerified:false,
     licensedRawBookmakerQuotesIncluded:false,
