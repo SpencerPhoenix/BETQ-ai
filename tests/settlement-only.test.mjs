@@ -182,7 +182,10 @@ test('real frozen 2026 journal fixture retains summary schema and suppresses sco
   const added=settle(original,[makeRow()],{now});
   assert.equal(added.appended,1); // synthetic Chicago-Seattle fixture, never published
   const report=summarizeEvidence(added.journal,now);
-  assert.deepEqual(Object.keys(report).sort(),Object.keys(currentSummary).sort());
+  // New release adds explicit corroboration counts without losing legacy fields.
+  assert.ok(Object.keys(currentSummary).every(key=>Object.hasOwn(report,key)));
+  assert.equal(report.sourceCorroboratedSettledGames,1);
+  assert.equal(report.sourceUncorroboratedSettledGames,1);
   assert.equal(report.prospectiveGames,currentSummary.prospectiveGames);
   assert.equal(report.settledGames,currentSummary.settledGames+1);
   assert.equal(report.forwardMetrics,null);
