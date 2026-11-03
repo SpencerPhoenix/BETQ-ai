@@ -1,9 +1,8 @@
-name: BETQ v0.11 source-dated QB shadow production audit (no paid odds)
+name: BETQ read-only deployed release verification (no paid odds)
 on:
-  push:
-    paths:
-      - '.github/workflows/shadow-production-audit.yml'
   workflow_dispatch:
+  schedule:
+    - cron: '17 */6 * * *'
 permissions:
   contents: read
 jobs:
@@ -11,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 9
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -18,6 +18,10 @@ jobs:
         shell: bash
         run: |
           node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const expectedVersion=JSON.parse(readFileSync('package.json','utf8')).version;
+          if(!/^\d+\.\d+\.\d+$/.test(expectedVersion))
+            throw Error('Invalid expected release metadata');
           const base='https://betq-ai.onrender.com';
           const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
           async function get(path,method='GET'){
@@ -29,17 +33,21 @@ jobs:
             let data=null;try{data=JSON.parse(text)}catch{}
             return {status:r.status,data,text};
           }
-          let health;
+          let health,lastHttp='unavailable',lastVersion='unknown',lastError='none';
           for(let attempt=0;attempt<15;attempt++){
             try{
               const h=await get('/api/health');
-              if(h.status===200&&h.data?.version==='0.11.0'){
+              lastHttp=String(h.status);
+              lastVersion=String(h.data?.version??'missing');
+              if(h.status===200&&h.data?.version===expectedVersion){
                 health=h.data;break;
               }
-            }catch{}
-            await sleep(10000);
+            }catch(error){ lastError=String(error?.message||error).slice(0,160); }
+            if(attempt<14)await sleep(10000);
           }
-          if(!health)throw Error('BETQ 0.10 production release not live');
+          if(!health)throw Error('BETQ release mismatch: expected v'+expectedVersion+
+            ', observed v'+lastVersion+', HTTP '+lastHttp+', network '+lastError+
+            '. An older healthy release is not application downtime.');
           if(health.app!=='BETQ.ai'||health.status!=='ok')
             throw Error('Unexpected live service');
           const status=await get('/api/shadow/status');
@@ -83,7 +91,7 @@ jobs:
           }
           const site=await get('/');
           if(site.status!==200||
-             !site.text.includes('TERMINAL / v0.11.0')||
+             !site.text.includes('TERMINAL / v'+expectedVersion)||
              !site.text.includes('id="page-latency"')||
              !site.text.includes('id="shadow-forward-view"'))
             throw Error('Latency UI does not match backend release');
