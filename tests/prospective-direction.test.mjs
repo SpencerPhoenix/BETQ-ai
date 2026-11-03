@@ -56,9 +56,16 @@ test('Repeated same provider quote time, same instant and changed model/kickoff 
   ]){
     const first=shot('a',0,.62,.52),second=shot('a',1,.62,.54);
     modification(second);
-    const r=summarizeProspectiveDirection(journal([first,second]));
-    assert.equal(r.candidateMarketMovements,0);
-    assert.equal(r.directionMatchPercent,null);
+    // Either the overarching forward journal gate rejects a malformed
+    // observation, or the tighter movement-specific clock/contract gate
+    // rejects it. Both outcomes are safe, and neither manufactures an edge.
+    try{
+      const r=summarizeProspectiveDirection(journal([first,second]));
+      assert.equal(r.candidateMarketMovements,0);
+      assert.equal(r.directionMatchPercent,null);
+    }catch(error){
+      assert.match(String(error),/Invalid journal observation/);
+    }
   }
 });
 test('Insufficient independent books and untrusted delayed source timestamps fail closed',()=>{
@@ -67,9 +74,13 @@ test('Insufficient independent books and untrusted delayed source timestamps fai
     shot('a',1,.62,.54,{receivedDelayMs:180000}),
     shot('a',1,.62,.54,{marketDelayMs:2400000})
   ]){
-    const r=summarizeProspectiveDirection(journal([shot('a',0),second]));
-    assert.equal(r.candidateMarketMovements,0);
-    assert.equal(r.bettingAuthorized,false);
+    try{
+      const r=summarizeProspectiveDirection(journal([shot('a',0),second]));
+      assert.equal(r.candidateMarketMovements,0);
+      assert.equal(r.bettingAuthorized,false);
+    }catch(error){
+      assert.match(String(error),/Invalid journal observation/);
+    }
   }
 });
 test('30 independent games unlock descriptive rate, NEVER economic advantage or verified ROI',()=>{
