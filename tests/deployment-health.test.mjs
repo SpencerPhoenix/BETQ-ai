@@ -36,11 +36,11 @@ test('same version at another commit is STALE, not verified current',()=>{
   assert.equal(r.actualCommit,shaB);
 });
 
-test('missing commit at requested version fails SCHEMA rather than passing',()=>{
+test('missing commit at requested version is UNKNOWN rather than fabricated match',()=>{
   for(const commit of [null,undefined,'deadbeef',24]){
     const r=classifyHealthResponse({httpStatus:200,body:{...good,commit},...expected});
-    assert.equal(r.status,RELEASE_STATES.SCHEMA);
-    assert.equal(r.reason,'MISSING_OR_INVALID_COMMIT');
+    assert.equal(r.status,RELEASE_STATES.UNKNOWN);
+    assert.equal(r.reason,'DEPLOYED_COMMIT_UNAVAILABLE');
   }
 });
 
