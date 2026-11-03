@@ -19,6 +19,8 @@ jobs:
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -39,10 +41,16 @@ jobs:
     concurrency:
       group: betq-evidence-journal-writers
       cancel-in-progress: false
+      queue: max
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          persist-credentials: true # required for guarded evidence-only push
+      - name: Start from latest origin/main after entering writer queue
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -80,15 +88,23 @@ jobs:
           git config user.name "betq-settlement-bot"
           git config user.email "actions@users.noreply.github.com"
           git add data/evidence/
-          git commit -m "data: reconcile independent NFL final scores without odds request"
-          for attempt in 1 2 3; do
-            git fetch origin main
-            git rebase origin/main || exit 1
-            if git push origin HEAD:main; then
-              echo "Committed append-only source-verified results."
-              exit 0
-            fi
-            sleep 3
-          done
-          echo "Concurrent source update blocked publication; no history overwritten." >&2
-          exit 1
+          git commit -m "data: reconcile independent NFL final scores without odds request [skip render]"
+          git fetch origin main
+          if ! git merge-base --is-ancestor origin/main HEAD; then
+            echo "Concurrent main change: do not rebase results computed from an old journal." >&2
+            exit 1
+          fi
+          git push origin HEAD:main || {
+            echo "Fast-forward evidence push rejected; candidate artifact preserved for manual review." >&2
+            exit 1
+          }
+      - name: Preserve public-derived candidate if publication fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: betq-unpublished-settlement-${{ github.run_id }}
+          path: |
+            data/evidence/nfl-2026.json
+            data/evidence/summary.json
+          retention-days: 30
+          if-no-files-found: warn
