@@ -115,7 +115,10 @@ export function isAttestedFinal(result,attestation,{now=Date.now()}={}){
 }
 
 /** Appends corrections exactly once, retaining every prior revision. */
-export function reconcileSettlements(journal, rows, {now=Date.now(),attestations={}}={}) {
+export function reconcileSettlements(journal, rows, {
+  now=Date.now(),attestations={},
+  communitySourceSha256=null,communitySourceObservedAt=null
+}={}) {
   const candidates=selectFinalizedResults(journal,rows,{now});
   if(!attestations||typeof attestations!=='object'||Array.isArray(attestations))
     throw Error('INVALID_FINALITY_ATTESTATIONS');
@@ -142,8 +145,17 @@ export function reconcileSettlements(journal, rows, {now=Date.now(),attestations
       continue;
     if(old?.homeScore===result.homeScore && old?.awayScore===result.awayScore)upgraded++;
     const revision=(old?.revision ?? 0)+1;
+    const sourceVintage={
+      sha256:typeof communitySourceSha256==='string'&&/^[a-f0-9]{64}$/.test(communitySourceSha256)
+        ?communitySourceSha256:null,
+      collectorObservedAt:typeof communitySourceObservedAt==='string'&&
+        Number.isFinite(Date.parse(communitySourceObservedAt))?
+        communitySourceObservedAt:null,
+      publicationTimeVerified:false
+    };
     const record={...result,finalityBasis:'TWO_SOURCE_FINAL_STATUS_NOT_LEAGUE_CERTIFIED',
-      finalityAttestation:structuredClone(attestation),verifiedAt:asDate(now),revision};
+      finalityAttestation:structuredClone(attestation),
+      communitySourceVintage:sourceVintage,verifiedAt:asDate(now),revision};
     updated.settlements.push(record);
     latest.set(result.gameId,record);
     added.push({gameId:result.gameId,revision,outcome:result.outcome});
