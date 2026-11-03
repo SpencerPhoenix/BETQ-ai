@@ -11,7 +11,7 @@ test('QB Latency Lab is a real navigation destination and is not silently a live
   assert.match(html,/data-shadow-view="live"/);
   assert.match(html,/data-shadow-view="demo"/);
   assert.match(html,/No new paid source polling or historical backfill/);
-  assert.match(html,/TERMINAL \/ v0\.10\.0/);
+  assert.match(html,/TERMINAL \/ v0\.11\.0/);
 });
 test('Shadow study is requested via free same-origin read-only APIs, not a new The Odds API fetch',async()=>{
   const js=await path('public/app.js');
