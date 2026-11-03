@@ -1,0 +1,42 @@
+#!/usr/bin/env node
+/** Dedicated free nflverse result-only execution path. */
+import {readFile,writeFile,rename} from 'node:fs/promises';
+import {parseCsv} from '../src/nfl-elo.mjs';
+import {validateJournal,summarizeEvidence} from '../src/evidence.mjs';
+import {fetchNflverseScheduleCsv,reconcileSettlements} from '../src/settlement-only.mjs';
+
+const args=process.argv.slice(2);
+if (args.some(a=>a!=='--dry-run')) throw Error('SUPPORTED_OPTION_ONLY_--dry-run');
+const dryRun=args.includes('--dry-run');
+const now=Date.now();
+const utc=new Date(now);
+const season=utc.getUTCMonth()<2?utc.getUTCFullYear()-1:utc.getUTCFullYear();
+const journalPath='data/evidence/nfl-'+season+'.json';
+const summaryPath='data/evidence/summary.json';
+
+// Validate existing local evidence before any network access.
+const original=validateJournal(JSON.parse(await readFile(journalPath,'utf8')));
+const scheduleCsv=await fetchNflverseScheduleCsv();
+const rows=parseCsv(scheduleCsv);
+const result=reconcileSettlements(original,rows,{now});
+validateJournal(result.journal);
+const report={season,source:'NFLVERSE_SCHEDULES_CC_BY_4_0',
+  appendedSettlementRevisions:result.appended,finalScoreCandidates:result.sourceFinalScoreCandidates,
+  trackedGames:new Set(original.snapshots.map(s=>s.gameId)).size,
+  originalSnapshots:original.snapshots.length,
+  resultingSettledGames:new Set(result.journal.settlements.map(s=>s.gameId)).size,
+  dryRun,paidOddsRequests:0};
+console.log(JSON.stringify(report,null,2));
+if (!result.appended || dryRun){
+  console.log('No evidence files modified.');
+  process.exit(0);
+}
+const summary=summarizeEvidence(result.journal,now);
+// The GitHub workflow commits these files only after all checks pass.
+// Temporary local writes plus rename prevent a partial JSON file on crash.
+const suffix='.settle-tmp-'+process.pid;
+await writeFile(journalPath+suffix,JSON.stringify(result.journal,null,2)+'\n','utf8');
+await writeFile(summaryPath+suffix,JSON.stringify(summary,null,2)+'\n','utf8');
+await rename(journalPath+suffix,journalPath);
+await rename(summaryPath+suffix,summaryPath);
+console.log('Appended independently matched settlements; original forecasts unchanged.');
