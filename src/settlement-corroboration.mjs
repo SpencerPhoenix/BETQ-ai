@@ -52,6 +52,8 @@ function verifiedEvent(candidate,game,event,rawHash,observedAt){
     status:'CROSS_SOURCE_FINAL',
     corroborator:'ESPN_SITE_SCOREBOARD_UNOFFICIAL',
     eventId:String(event.id),
+    gameId:candidate.gameId,gameDate:candidate.gameDate,
+    homeScore:candidate.homeScore,awayScore:candidate.awayScore,
     observedAt,sourceSha256:rawHash,
     officialLeagueCertification:false
   };
