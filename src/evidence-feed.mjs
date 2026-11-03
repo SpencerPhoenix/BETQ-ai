@@ -27,8 +27,10 @@ export function isValidEvidenceSummary(s) {
       s.marketComparison.n<=s.sourceCorroboratedSettledGames &&
       s.marketComparison.n<=s.pairedMarketGames &&
       s.marketComparison.n>=30)) &&
-    (!s.challengerForwardComparison || (s.pairedChallengerSettled>=30 && s.challengerForwardComparison.n===s.pairedChallengerSettled &&
-      s.pairedChallengerSettled<=s.settledGames))); 
+    (!s.challengerForwardComparison || ((s.sourceCorroboratedSettledGames??0)>=30 &&
+      Number.isInteger(s.pairedChallengerSettled) && s.pairedChallengerSettled>=30 &&
+      s.challengerForwardComparison.n===s.pairedChallengerSettled &&
+      s.pairedChallengerSettled<=s.sourceCorroboratedSettledGames)));
 }
 
 export function createEvidenceFeed({

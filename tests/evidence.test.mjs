@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {sourceProvenance} from './fixtures/source-provenance.mjs';
 import { nflMoneylineConsensus } from '../src/market-consensus.mjs';
 import {reconcileSettlements} from '../src/settlement-only.mjs';
 import {
@@ -147,6 +148,7 @@ test('Prospective 30+ finalized games unlock performance without claiming ROI or
       outcome:i%2===0?'HOME':'AWAY',revision:1,
       source:'NFLVERSE_SCHEDULES',
       finalityBasis:'TWO_SOURCE_FINAL_STATUS_NOT_LEAGUE_CERTIFIED',
+      ...sourceProvenance(ISO(NOW+2*86400000)),
       finalityAttestation:{status:'CROSS_SOURCE_FINAL',
         corroborator:'ESPN_SITE_SCOREBOARD_UNOFFICIAL',
         gameId:obs.gameId,gameDate:obs.gameDate,
@@ -190,7 +192,8 @@ test('legacy and zero-credit pipelines refuse the same premature partial final',
     eventId:'401123456',observedAt:ISO(ready),
     sourceSha256:'b'.repeat(64),officialLeagueCertification:false};
   const fromZeroCredit=reconcileSettlements(journal,schedule(true),{
-    now:ready,attestations:{[resultRow.game_id]:attestation}
+    now:ready,attestations:{[resultRow.game_id]:attestation},
+    communitySourceSha256:'a'.repeat(64),communitySourceObservedAt:ISO(ready)
   });
   assert.equal(fromLegacy.length,1);
   assert.equal(fromZeroCredit.appended,1);

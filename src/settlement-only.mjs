@@ -15,6 +15,23 @@ const aliases = Object.freeze({STL:'LA', OAK:'LV', SD:'LAC', JAC:'JAX', WSH:'WAS
 const canonical = code => aliases[code] ?? code;
 const fingerprint = text => createHash('sha256').update(text).digest('hex').slice(0,24);
 const asDate = n => new Date(n).toISOString();
+// Collectors emit canonical UTC timestamps. Do not let Date.parse silently
+// normalize impossible dates or invent a time/zone for an incomplete receipt.
+const observedAt = value => {
+  if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value))return NaN;
+  const at=Date.parse(value);
+  return Number.isFinite(at)&&new Date(at).toISOString()===value?at:NaN;
+};
+const validDigest = value => typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
+const freshReceipt = (value,now) => {
+  const at=observedAt(value);
+  return Number.isFinite(now)&&Number.isFinite(at)&&at<=now+120000&&at>=now-3600000;
+};
+function validCommunityVintage(vintage,now){
+  return Boolean(vintage&&validDigest(vintage.sha256)&&
+    vintage.publicationTimeVerified===false&&
+    freshReceipt(vintage.collectorObservedAt,now));
+}
 /** NFL season boundary, reused by the command and its GitHub audit. */
 export function nflSeasonAt(now=Date.now()){
   if(!Number.isFinite(now)) throw Error('INVALID_SEASON_TIMESTAMP');
@@ -102,25 +119,26 @@ export function selectFinalizedResults(journal, rows, {now=Date.now()}={}) {
  * historical records; missing/mismatched corroboration is never inferred.
  */
 export function isAttestedFinal(result,attestation,{now=Date.now()}={}){
-  if(!attestation||attestation.status!=='CROSS_SOURCE_FINAL'||
+  if(!result||!attestation||attestation.status!=='CROSS_SOURCE_FINAL'||
      attestation.corroborator!=='ESPN_SITE_SCOREBOARD_UNOFFICIAL'||
      attestation.officialLeagueCertification!==false||
      attestation.gameId!==result.gameId||attestation.gameDate!==result.gameDate||
      attestation.homeScore!==result.homeScore||attestation.awayScore!==result.awayScore||
      typeof attestation.eventId!=='string'||!/^[0-9]{6,20}$/.test(attestation.eventId)||
-     typeof attestation.sourceSha256!=='string'||
-     !/^[0-9a-f]{64}$/.test(attestation.sourceSha256))return false;
-  const at=Date.parse(attestation.observedAt);
-  return Number.isFinite(now)&&Number.isFinite(at)&&at<=now+120000&&at>=now-3600000;
+     !validDigest(attestation.sourceSha256))return false;
+  return freshReceipt(attestation.observedAt,now);
 }
 
 /** Only separately corroborated source results qualify for model scoring. */
 export function isCorroboratedSettlement(record){
+  // Validate both receipts against the original reconciliation, not against
+  // their own timestamp or today's clock. Missing legacy provenance is not
+  // silently upgraded, while valid historical evidence never ages out.
+  const verifiedAt=observedAt(record?.verifiedAt);
   return record?.source==='NFLVERSE_SCHEDULES'&&
     record?.finalityBasis==='TWO_SOURCE_FINAL_STATUS_NOT_LEAGUE_CERTIFIED'&&
-    isAttestedFinal(record,record.finalityAttestation,{
-      now:Date.parse(record.finalityAttestation?.observedAt)
-    });
+    validCommunityVintage(record.communitySourceVintage,verifiedAt)&&
+    isAttestedFinal(record,record.finalityAttestation,{now:verifiedAt});
 }
 /** Appends corrections exactly once, retaining every prior revision. */
 export function reconcileSettlements(journal, rows, {
@@ -143,7 +161,9 @@ export function reconcileSettlements(journal, rows, {
 
   const updated=structuredClone(journal);
   const added=[];
-  let uncorroborated=0,upgraded=0,alreadyVerified=0;
+  const sourceVintage={sha256:communitySourceSha256,
+    collectorObservedAt:communitySourceObservedAt,publicationTimeVerified:false};
+  let uncorroborated=0,unprovenanced=0,upgraded=0,alreadyVerified=0;
   for (const result of candidates) {
     const old=latest.get(result.gameId);
     if(old?.homeScore===result.homeScore && old?.awayScore===result.awayScore &&
@@ -153,24 +173,18 @@ export function reconcileSettlements(journal, rows, {
     }
     const attestation=attestations[result.gameId];
     if(!isAttestedFinal(result,attestation,{now})){uncorroborated++;continue;}
+    if(!validCommunityVintage(sourceVintage,now)){unprovenanced++;continue;}
     if(old?.homeScore===result.homeScore && old?.awayScore===result.awayScore)upgraded++;
     const revision=(old?.revision ?? 0)+1;
-    const sourceVintage={
-      sha256:typeof communitySourceSha256==='string'&&/^[a-f0-9]{64}$/.test(communitySourceSha256)
-        ?communitySourceSha256:null,
-      collectorObservedAt:typeof communitySourceObservedAt==='string'&&
-        Number.isFinite(Date.parse(communitySourceObservedAt))?
-        communitySourceObservedAt:null,
-      publicationTimeVerified:false
-    };
     const record={...result,finalityBasis:'TWO_SOURCE_FINAL_STATUS_NOT_LEAGUE_CERTIFIED',
       finalityAttestation:structuredClone(attestation),
-      communitySourceVintage:sourceVintage,verifiedAt:asDate(now),revision};
+      communitySourceVintage:{...sourceVintage},verifiedAt:asDate(now),revision};
     updated.settlements.push(record);
     latest.set(result.gameId,record);
     added.push({gameId:result.gameId,revision,outcome:result.outcome});
   }
   return {journal:updated,appended:added.length,added,sourceFinalScoreCandidates:candidates.length,
     uncorroboratedCandidates:uncorroborated,alreadyVerifiedCandidates:alreadyVerified,
+    incompleteSourceProvenanceCandidates:unprovenanced,
     upgradedLegacySettlements:upgraded};
 }

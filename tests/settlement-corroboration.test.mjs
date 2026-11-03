@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {sourceProvenance} from './fixtures/source-provenance.mjs';
 import {
   FREE_SCOREBOARD_BASE,matchFinalFromScoreboard,corroborateFinals
 } from '../src/settlement-corroboration.mjs';
@@ -108,6 +109,7 @@ test('already attested same-score result avoids redundant ESPN requests',async()
   const attested={
     ...candidate,source:'NFLVERSE_SCHEDULES',revision:2,
     finalityBasis:'TWO_SOURCE_FINAL_STATUS_NOT_LEAGUE_CERTIFIED',
+    ...sourceProvenance(at),
     finalityAttestation:{
       status:'CROSS_SOURCE_FINAL',corroborator:'ESPN_SITE_SCOREBOARD_UNOFFICIAL',
       eventId:'401123456',gameId:candidate.gameId,gameDate:candidate.gameDate,

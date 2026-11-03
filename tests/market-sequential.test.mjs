@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {sourceProvenance} from './fixtures/source-provenance.mjs';
 import {emptyJournal} from '../src/evidence.mjs';
 import {calculateSequentialEvidence,evidencePath,SEQUENTIAL_PROTOCOL,
   isEligibleFirstSnapshot} from '../src/market-sequential.mjs';
@@ -32,6 +33,7 @@ function final(game,y,revision=1){
     resultHash:'result-'+game+'-'+revision,verifiedAt:iso(NOW+10*86400000),
     source:'NFLVERSE_SCHEDULES',
     finalityBasis:'TWO_SOURCE_FINAL_STATUS_NOT_LEAGUE_CERTIFIED',
+    ...sourceProvenance(iso(NOW+10*86400000)),
     finalityAttestation:{
       status:'CROSS_SOURCE_FINAL',corroborator:'ESPN_SITE_SCOREBOARD_UNOFFICIAL',
       gameId:game,gameDate:'2026-11-08',
@@ -99,6 +101,7 @@ test('Tie, missing settlement, stale provider quote and revised result are never
     {gameId:'b',gameDate:'2026-11-08',homeScore:14,awayScore:14,
      outcome:'TIE',revision:1,resultHash:'tie-b',source:'NFLVERSE_SCHEDULES',
      finalityBasis:'TWO_SOURCE_FINAL_STATUS_NOT_LEAGUE_CERTIFIED',
+     ...sourceProvenance(iso(NOW+10*86400000)),
      finalityAttestation:{status:'CROSS_SOURCE_FINAL',
        corroborator:'ESPN_SITE_SCOREBOARD_UNOFFICIAL',gameId:'b',gameDate:'2026-11-08',
        homeScore:14,awayScore:14,eventId:'401123456',
