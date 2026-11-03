@@ -159,3 +159,23 @@ test('settlement command and transitive import graph contain no live odds client
   assert.ok(explored.has(resolve(root,'src/nfl-elo.mjs')));
   assert.ok(explored.size>=5);
 });
+
+
+test('real frozen 2026 journal fixture retains summary schema and suppresses scores under 30',()=>{
+  const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
+  const original=JSON.parse(readFileSync(resolve(root,'data/evidence/nfl-2026.json'),'utf8'));
+  const currentSummary=JSON.parse(readFileSync(resolve(root,'data/evidence/summary.json'),'utf8'));
+  const frozen=JSON.stringify(original.snapshots);
+  const added=reconcileSettlements(original,[makeRow()],{now});
+  assert.equal(added.appended,1); // synthetic Chicago-Seattle fixture, never published
+  const report=summarizeEvidence(added.journal,now);
+  assert.deepEqual(Object.keys(report).sort(),Object.keys(currentSummary).sort());
+  assert.equal(report.prospectiveGames,currentSummary.prospectiveGames);
+  assert.equal(report.settledGames,currentSummary.settledGames+1);
+  assert.equal(report.forwardMetrics,null);
+  assert.equal(report.marketComparison,null);
+  assert.equal(report.verifiedCLV,null);
+  assert.equal(report.realizedROI,null);
+  assert.equal(JSON.stringify(added.journal.snapshots),frozen);
+  assert.equal(added.journal.settlements[0].resultHash,original.settlements[0].resultHash);
+});
