@@ -56,6 +56,7 @@ jobs:
         run: node scripts/capture-evidence.mjs
       - name: Verify immutable journal and no raw odds/secrets
         run: |
+          node scripts/verify-evidence-append-only.mjs
           node --input-type=module <<'NODE'
           import {readFile,readdir} from 'node:fs/promises';
           import {validateJournal,summarizeEvidence} from './src/evidence.mjs';
