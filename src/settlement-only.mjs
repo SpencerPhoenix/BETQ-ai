@@ -114,6 +114,14 @@ export function isAttestedFinal(result,attestation,{now=Date.now()}={}){
   return Number.isFinite(now)&&Number.isFinite(at)&&at<=now+120000&&at>=now-3600000;
 }
 
+/** Only separately corroborated source results qualify for model scoring. */
+export function isCorroboratedSettlement(record){
+  return record?.source==='NFLVERSE_SCHEDULES'&&
+    record?.finalityBasis==='TWO_SOURCE_FINAL_STATUS_NOT_LEAGUE_CERTIFIED'&&
+    isAttestedFinal(record,record.finalityAttestation,{
+      now:Date.parse(record.finalityAttestation?.observedAt)
+    });
+}
 /** Appends corrections exactly once, retaining every prior revision. */
 export function reconcileSettlements(journal, rows, {
   now=Date.now(),attestations={},
