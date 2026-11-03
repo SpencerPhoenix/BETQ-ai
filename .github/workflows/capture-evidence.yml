@@ -1,8 +1,7 @@
 name: BETQ prospective NFL evidence collector
 on:
-  push:
-    branches: [main]
-    paths: ['scripts/capture-evidence.mjs', 'src/evidence.mjs']
+  # Do not spend live-odds credits merely because a development PR merged.
+  # Existing scheduled/manual collection remains separately permission-gated.
   workflow_dispatch:
   schedule:
     - cron: '41 11 * * *'
