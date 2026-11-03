@@ -7,8 +7,10 @@
  */
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import {createHash} from 'node:crypto';
 import { parseCsv } from '../src/nfl-elo.mjs';
-import {fetchNflverseScheduleCsv,reconcileSettlements,nflSeasonAt} from '../src/settlement-only.mjs';
+import {corroborateFinals} from '../src/settlement-corroboration.mjs';
+import {fetchNflverseScheduleCsv,selectFinalizedResults,reconcileSettlements,nflSeasonAt} from '../src/settlement-only.mjs';
 import {
   emptyJournal, validateJournal, observationsFromSlate,
   updateJournal, summarizeEvidence
@@ -25,7 +27,10 @@ async function loadJson(path,fallback) {
   catch(err){if(err?.code==='ENOENT')return fallback;throw err;}
 }
 async function getCsv() {
-  return parseCsv(await fetchNflverseScheduleCsv());
+  const csv=await fetchNflverseScheduleCsv();
+  return {rows:parseCsv(csv),
+    observedAt:new Date().toISOString(),
+    sha256:createHash('sha256').update(csv).digest('hex')};
 }
 async function getSlate() {
   const endpoint=new URL('/api/slate',API);
@@ -42,7 +47,8 @@ async function getSlate() {
 }
 
 const original=validateJournal(await loadJson(journalPath,emptyJournal(season)));
-const schedule=await getCsv();
+const scheduleSource=await getCsv();
+const schedule=scheduleSource.rows;
 let captures=[],skipped=[],captureStatus='SUCCESS';
 try {
   const slate=await getSlate();
@@ -60,7 +66,15 @@ try {
 // and revision logic. Append newly observed pregame forecasts first, then
 // reconcile only source-matched results older than the fixed finality window.
 const capturesOnly=updateJournal(original,captures,[],now);
-const reconciled=reconcileSettlements(capturesOnly.journal,schedule,{now});
+const candidates=selectFinalizedResults(capturesOnly.journal,schedule,{now});
+const corroboration=await corroborateFinals(capturesOnly.journal,candidates);
+// If the second public source is unavailable, preserve the new original
+// forecast while deferring all unverified final outcomes. No odds retry.
+const reconciled=reconcileSettlements(capturesOnly.journal,schedule,{
+  now:Date.now(),attestations:corroboration.attestations,
+  communitySourceSha256:scheduleSource.sha256,
+  communitySourceObservedAt:scheduleSource.observedAt
+});
 const updated=reconciled.journal;
 const added=capturesOnly.added;
 const settled=reconciled.appended;
@@ -69,6 +83,9 @@ const changed=added>0||settled>0;
 console.log(JSON.stringify({
   season,captureStatus,eligible:captures.length,skipped:skipped.length,
   appended:added,newResultsOrCorrections:settled,
+  corroboratedFinals:corroboration.confirmed,
+  uncorroboratedFinals:reconciled.uncorroboratedCandidates,
+  unavailableSecondSourceDates:corroboration.unavailableDates,
   cumulativeSnapshots:summary.totalSnapshots,prospectiveGames:summary.prospectiveGames,
   finalized:summary.settledGames,paired:summary.pairedMarketGames,
   status:summary.status,metricsPublished:summary.forwardMetrics!==null
