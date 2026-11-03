@@ -1,4 +1,4 @@
-name: BETQ v0.10 source-dated QB shadow production audit (no paid odds)
+name: BETQ v0.11 source-dated QB shadow production audit (no paid odds)
 on:
   push:
     paths:
@@ -33,7 +33,7 @@ jobs:
           for(let attempt=0;attempt<15;attempt++){
             try{
               const h=await get('/api/health');
-              if(h.status===200&&h.data?.version==='0.10.0'){
+              if(h.status===200&&h.data?.version==='0.11.0'){
                 health=h.data;break;
               }
             }catch{}
@@ -71,7 +71,7 @@ jobs:
             throw Error('Derived market observations presented as raw odds or QB news');
           const site=await get('/');
           if(site.status!==200||
-             !site.text.includes('TERMINAL / v0.10.0')||
+             !site.text.includes('TERMINAL / v0.11.0')||
              !site.text.includes('id="page-latency"')||
              !site.text.includes('id="shadow-forward-view"'))
             throw Error('Latency UI does not match backend release');
