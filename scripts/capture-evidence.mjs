@@ -8,16 +8,15 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { parseCsv } from '../src/nfl-elo.mjs';
+import {fetchNflverseScheduleCsv,reconcileSettlements,nflSeasonAt} from '../src/settlement-only.mjs';
 import {
   emptyJournal, validateJournal, observationsFromSlate,
-  resultsFromSchedule, updateJournal, summarizeEvidence
+  updateJournal, summarizeEvidence
 } from '../src/evidence.mjs';
 
-const SCHEDULES_URL = 'https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv';
 const API = process.env.BETQ_PRODUCTION_URL || 'https://betq-ai.onrender.com';
 const now=Date.now();
-const date=new Date(now);
-const season=date.getUTCMonth()<2?date.getUTCFullYear()-1:date.getUTCFullYear();
+const season=nflSeasonAt(now);
 const journalPath='data/evidence/nfl-'+season+'.json';
 const summaryPath='data/evidence/summary.json';
 
@@ -26,12 +25,7 @@ async function loadJson(path,fallback) {
   catch(err){if(err?.code==='ENOENT')return fallback;throw err;}
 }
 async function getCsv() {
-  const response=await fetch(SCHEDULES_URL,{signal:AbortSignal.timeout(30000),
-    headers:{Accept:'text/csv,text/plain'}});
-  if(!response.ok)throw Error('nflverse schedules unavailable HTTP '+response.status);
-  const text=await response.text();
-  if(text.length>12000000)throw Error('Schedules source too large');
-  return parseCsv(text);
+  return parseCsv(await fetchNflverseScheduleCsv());
 }
 async function getSlate() {
   const endpoint=new URL('/api/slate',API);
@@ -62,13 +56,14 @@ try {
   captureStatus='SKIPPED: '+err.message;
   console.log('Market forecast capture unavailable; continuing results reconciliation:',err.message);
 }
-const newlySettled=resultsFromSchedule(original,schedule,now);
-const result=updateJournal(original,captures,newlySettled,now);
-const updatedResults=resultsFromSchedule(result.journal,schedule,now);
-const combined=updateJournal(result.journal,[],updatedResults,now);
-const updated=combined.journal;
-const added=result.added+combined.added;
-const settled=result.settlementRevisions+combined.settlementRevisions;
+// The independent and odds-based collectors now use the SAME score-finality
+// and revision logic. Append newly observed pregame forecasts first, then
+// reconcile only source-matched results older than the fixed finality window.
+const capturesOnly=updateJournal(original,captures,[],now);
+const reconciled=reconcileSettlements(capturesOnly.journal,schedule,{now});
+const updated=reconciled.journal;
+const added=capturesOnly.added;
+const settled=reconciled.appended;
 const summary=summarizeEvidence(updated,now);
 const changed=added>0||settled>0;
 console.log(JSON.stringify({
