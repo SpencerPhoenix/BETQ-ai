@@ -36,6 +36,18 @@ unlock model-performance or conditional sequential evidence.
    record is newly corroborated. Do not rewrite the first pregame forecast or
    any previous settlement. A verified identical score remains idempotent.
 
+Both source digests and collector receipt timestamps are required, not optional
+metadata. Receipts must use the collectors' canonical UTC timestamp format;
+incomplete times and impossible dates are rejected. At append time, each receipt must be within the hour before the
+reconciliation timestamp (with at most two minutes of clock skew). Stored
+records are checked against their original `verifiedAt` timestamp, never against
+the receipt's own timestamp or today's reporting clock. Thus valid historical
+records do not expire, but incomplete or inconsistent older provenance cannot
+unlock scores. Those rows remain intact and can receive a new independently
+corroborated revision when both sources are available. This checks provenance
+completeness and chronology; it does not reconstruct or authenticate source
+bytes that were not archived.
+
 If ESPN is down, the result remains uncorroborated and scoring eligibility is
 **withheld**. Missing independent confirmation is not treated as a verified
 loss, no-result, or evidence of a model advantage.
@@ -51,6 +63,10 @@ loss, no-result, or evidence of a model advantage.
   likelihood ratios require at least 30 independent source-corroborated
   qualifying games.** The prior minimum of 30 is a descriptive publication
   gate, not proof of model skill, market superiority or profitability.
+- The independently fetched public summary applies the same corroborated-sample
+  requirement to challenger comparisons. Thirty legacy finals alone cannot
+  publish challenger performance, and an invalid remote summary leaves the last
+  valid local fallback in place.
 - The preregistered first-source market-direction audit does not depend on
   final scores and remains separate; no thresholds or observation choices
   were optimized after outcomes.

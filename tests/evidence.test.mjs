@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {sourceProvenance} from './fixtures/source-provenance.mjs';
 import { nflMoneylineConsensus } from '../src/market-consensus.mjs';
 import {reconcileSettlements} from '../src/settlement-only.mjs';
 import {
@@ -41,6 +42,37 @@ const slate=(time=NOW)=>{
     }]
   };
 };
+
+test('collector refuses missing, impossible and future model result cutoffs before append',()=>{
+  for(const cutoff of [undefined,'2027-01-01','2026-02-30']){
+    const source=slate();source.events[0].independentModel.throughGameDate=cutoff;
+    const report=observationsFromSlate(source,schedule(),NOW,2026);
+    assert.equal(report.accepted.length,0);
+    assert.equal(report.skipped[0].reason,'MODEL_RESULT_CUTOFF_INVALID');
+  }
+  assert.equal(observationsFromSlate(slate(),schedule(),NOW,2026).accepted.length,1);
+});
+
+test('collector cannot trust a fresh-age label when the actual newest quote timestamp is stale',()=>{
+  const source=slate();
+  source.events[0].marketConsensus.latestQuoteAt='2020-01-01T00:00:00.000Z';
+  source.events[0].marketConsensus.oldestQuoteAgeSeconds=1;
+  const report=observationsFromSlate(source,schedule(),NOW,2026);
+  assert.equal(report.accepted.length,1);
+  assert.equal(report.accepted[0].marketHomeProbability,null);
+  assert.equal(report.accepted[0].marketBasis,'UNAVAILABLE');
+});
+
+test('collector and read-side audits agree on the post-receipt quote clock-skew bound',()=>{
+  const source=slate();
+  const received=Date.parse(source.receivedAt);
+  source.events[0].marketConsensus.latestQuoteAt=ISO(received+60001);
+  assert.equal(observationsFromSlate(source,schedule(),NOW,2026)
+    .accepted[0].marketHomeProbability,null);
+  source.events[0].marketConsensus.latestQuoteAt=ISO(received+60000);
+  assert.ok(observationsFromSlate(source,schedule(),NOW,2026)
+    .accepted[0].marketHomeProbability>0);
+});
 
 test('Multi-book no-vig consensus excludes stale quotes and rejects thin lines',()=>{
   const original=mockEvent();
@@ -147,6 +179,7 @@ test('Prospective 30+ finalized games unlock performance without claiming ROI or
       outcome:i%2===0?'HOME':'AWAY',revision:1,
       source:'NFLVERSE_SCHEDULES',
       finalityBasis:'TWO_SOURCE_FINAL_STATUS_NOT_LEAGUE_CERTIFIED',
+      ...sourceProvenance(ISO(NOW+2*86400000)),
       finalityAttestation:{status:'CROSS_SOURCE_FINAL',
         corroborator:'ESPN_SITE_SCOREBOARD_UNOFFICIAL',
         gameId:obs.gameId,gameDate:obs.gameDate,
@@ -190,7 +223,8 @@ test('legacy and zero-credit pipelines refuse the same premature partial final',
     eventId:'401123456',observedAt:ISO(ready),
     sourceSha256:'b'.repeat(64),officialLeagueCertification:false};
   const fromZeroCredit=reconcileSettlements(journal,schedule(true),{
-    now:ready,attestations:{[resultRow.game_id]:attestation}
+    now:ready,attestations:{[resultRow.game_id]:attestation},
+    communitySourceSha256:'a'.repeat(64),communitySourceObservedAt:ISO(ready)
   });
   assert.equal(fromLegacy.length,1);
   assert.equal(fromZeroCredit.appended,1);

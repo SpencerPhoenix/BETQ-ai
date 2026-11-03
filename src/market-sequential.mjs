@@ -10,6 +10,7 @@
  */
 import {validateJournal} from './evidence.mjs';
 import {isCorroboratedSettlement} from './settlement-only.mjs';
+import {validModelResultCutoff} from './integrity.mjs';
 
 export const SEQUENTIAL_PROTOCOL=Object.freeze({
   version:'betq-market-sequential-v1',
@@ -38,7 +39,7 @@ export function isEligibleFirstSnapshot(s){
     s.marketBasis!=='NO_VIG_MULTI_BOOK_MEDIAN'||
     !probability(s.marketHomeProbability)||!probability(s.modelHomeProbability)||
     !Number.isInteger(s.marketBookCount)||s.marketBookCount<3||
-    typeof s.gameId!=='string'||s.gameId.length>140)return false;
+    typeof s.gameId!=='string'||s.gameId.length>140||!validModelResultCutoff(s))return false;
   const captured=time(s.capturedAt),kick=time(s.commenceTime),
     received=time(s.sourceReceivedAt),built=time(s.modelBuiltAt),
     quote=time(s.marketNewestQuoteAt);
@@ -46,7 +47,8 @@ export function isEligibleFirstSnapshot(s){
     captured<kick&&received<=captured+60000&&
     received>=captured-600000&&
     built<=captured+60000&&built<kick&&
-    quote<=received+60000&&quote<=captured+60000&&quote<kick;
+    quote<=received+60000&&quote<=captured+60000&&quote<kick&&
+    quote>=received-600000&&quote>=captured-600000;
 }
 function challengerAtSameFirstSnapshot(s){
   const built=time(s.challengerBuiltAt),captured=time(s.capturedAt),kick=time(s.commenceTime);

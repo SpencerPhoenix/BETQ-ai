@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {sourceProvenance} from './fixtures/source-provenance.mjs';
 import {
   emptyJournal,observationsFromSlate,updateJournal,summarizeEvidence,MIN_SAMPLE
 } from '../src/evidence.mjs';
@@ -81,6 +82,7 @@ test('Paired prospective Elo vs EPA scores require 30 finalized challenger games
       homeScore,awayScore,revision:1,
       source:'NFLVERSE_SCHEDULES',
       finalityBasis:'TWO_SOURCE_FINAL_STATUS_NOT_LEAGUE_CERTIFIED',
+      ...sourceProvenance(iso(NOW+10*86400000)),
       finalityAttestation:{status:'CROSS_SOURCE_FINAL',
         corroborator:'ESPN_SITE_SCOREBOARD_UNOFFICIAL',
         gameId:'game-'+i,gameDate:'2026-11-07',

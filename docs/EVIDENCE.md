@@ -6,6 +6,22 @@ The historical 2025 NFL Elo backtest is separate from actual **forward-recorded 
 
 ## Sources and attribution
 
+### Point-in-time read checks
+
+The collector and both prospective market audits recheck that the newest stored
+market quote is no more than ten minutes older than receipt **and** capture.
+A fresh aggregate age label cannot override a contradictory old quote timestamp.
+This is a necessary freshness check on the derived record, not a reconstruction
+of all underlying bookmaker quotes.
+
+New forecasts require a valid model result-cutoff date no later than model
+construction or capture. Impossible dates or future cutoffs in an existing row
+fail validation. Legacy rows without a cutoff remain unchanged but cannot enter
+the sequential or direction audits. A same-day date cannot establish within-day
+publication order; no timestamp is invented to resolve that limitation. These
+checks do not replace the still-missing model artifact/input/code hashes or a
+durable historical source archive.
+
 Independent model: BETQ NFL Elo using nflverse schedules and game results maintained by Lee Sharpe (CC BY 4.0). Results: the same community-maintained nflverse schedules release; not certified as an official NFL scoreboard. Market comparator: The Odds API v4, aggregated from at least three independent, fresh, two-way moneyline books after removal of each book's vig. The published GitHub journal stores only *derived* home-win market consensus, never raw odds, individual book prices or names.
 
 ## Scheduled collector and storage

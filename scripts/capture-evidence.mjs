@@ -85,6 +85,7 @@ console.log(JSON.stringify({
   appended:added,newResultsOrCorrections:settled,
   corroboratedFinals:corroboration.confirmed,
   uncorroboratedFinals:reconciled.uncorroboratedCandidates,
+  incompleteSourceProvenanceFinals:reconciled.incompleteSourceProvenanceCandidates,
   unavailableSecondSourceDates:corroboration.unavailableDates,
   cumulativeSnapshots:summary.totalSnapshots,prospectiveGames:summary.prospectiveGames,
   finalized:summary.settledGames,paired:summary.pairedMarketGames,

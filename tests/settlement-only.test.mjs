@@ -31,7 +31,9 @@ const attestationFor=(r,when)=>({
 });
 const settle=(journal,rows,{now:clock=now,...other}={})=>{
   const first=rows[0],attestations=first?{[first.game_id]:attestationFor(first,clock)}:{};
-  return reconcileSettlements(journal,rows,{now:clock,attestations,...other});
+  return reconcileSettlements(journal,rows,{now:clock,attestations,
+    communitySourceSha256:'b'.repeat(64),
+    communitySourceObservedAt:new Date(clock).toISOString(),...other});
 };
 
 
