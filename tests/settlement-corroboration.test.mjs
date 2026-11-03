@@ -103,3 +103,39 @@ test('no candidate triggers no HTTP request and no betting provider',async()=>{
   assert.equal(result.checkedDates.length,0);
   assert.equal(result.paidOddsCalls,0);
 });
+
+test('already attested same-score result avoids redundant ESPN requests',async()=>{
+  const attested={
+    ...candidate,source:'NFLVERSE_SCHEDULES',revision:2,
+    finalityBasis:'TWO_SOURCE_FINAL_STATUS_NOT_LEAGUE_CERTIFIED',
+    finalityAttestation:{
+      status:'CROSS_SOURCE_FINAL',corroborator:'ESPN_SITE_SCOREBOARD_UNOFFICIAL',
+      eventId:'401123456',gameId:candidate.gameId,gameDate:candidate.gameDate,
+      homeScore:17,awayScore:34,sourceSha256:digest,
+      observedAt:at,officialLeagueCertification:false
+    }
+  };
+  const result=await corroborateFinals({...journal,settlements:[attested]},[candidate],{
+    clock:()=>now,fetchImpl:()=>{throw Error('already verified; no request')}});
+  assert.equal(result.alreadyCorroborated,1);
+  assert.equal(result.eligibleCandidates,0);
+  assert.deepEqual(result.checkedDates,[]);
+  assert.equal(result.confirmed,0);
+});
+test('bounded multi-date requests rotate to avoid starving old provisional games',async()=>{
+  const candidates=Array.from({length:6},(_,i)=>({
+    gameId:'game-'+i,gameDate:'2026-11-'+String(i+1).padStart(2,'0'),
+    homeScore:17,awayScore:34
+  }));
+  const j={...journal,snapshots:candidates.map(c=>({
+    ...journal.snapshots[0],id:c.gameId,gameId:c.gameId,gameDate:c.gameDate
+  }))};
+  const fetchImpl=async()=>new Response(JSON.stringify({events:[]}),{status:200});
+  const one=await corroborateFinals(j,candidates,{clock:()=>now,fetchImpl});
+  const two=await corroborateFinals(j,candidates,{clock:()=>now+86400000,fetchImpl});
+  assert.equal(one.checkedDates.length,4);
+  assert.equal(two.checkedDates.length,4);
+  assert.notDeepEqual(one.checkedDates,two.checkedDates);
+  assert.equal(one.deferredDates.length,2);
+  assert.equal(two.deferredDates.length,2);
+});
