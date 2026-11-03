@@ -1,0 +1,55 @@
+name: BETQ prospective model versus market movement audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'data/evidence/nfl-2026.json'
+      - 'src/prospective-direction.mjs'
+      - 'src/shadow-derived.mjs'
+      - 'scripts/audit-prospective-direction.mjs'
+      - '.github/workflows/prospective-direction-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: betq-prospective-direction
+  cancel-in-progress: true
+jobs:
+  research-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify source integrity, price-timing and independent risk gates
+        run: |
+          npm run check
+          npm test
+      - name: Analyze already captured forward market movements
+        run: npm run audit:direction
+      - name: Verify research cannot be interpreted as actual profit or bookmaker fill
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const x=JSON.parse(readFileSync('audit-output/prospective-direction.json','utf8'));
+          const d=x.report;
+          if(d.schema!==1||d.version!=='betq-prospective-direction-v1'||
+             d.realMoneyROI!==null||d.verifiedCLV!==null||
+             d.bettingAuthorized!==false||d.modelPromoted!==false||
+             d.marketBeatingEdgeEstablished!==false||
+             d.sourceBasedOnPrivateBookmakerQuotes!==false||
+             x.realBettingProfitabilityEstablished!==false)
+            throw Error('Forward profit evidence was fabricated or mislabelled');
+          if(d.candidateMarketMovements<30&&d.directionMatchPercent!==null)
+            throw Error('Insufficient sample was incorrectly displayed as a percentage');
+          console.log('FORWARD AUDIT: PASS; actual bookmaker fill/CLV/ROI unavailable');
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: betq-forward-direction-proof
+          path: audit-output/prospective-direction.json
+          retention-days: 30
