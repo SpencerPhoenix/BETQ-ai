@@ -54,7 +54,8 @@ jobs:
           node --input-type=module <<'NODE'
           import {readFileSync} from 'node:fs';
           import {execFileSync} from 'node:child_process';
-          const d=new Date(),season=d.getUTCMonth()<2?d.getUTCFullYear()-1:d.getUTCFullYear();
+          import {nflSeasonAt} from './src/settlement-only.mjs';
+          const season=nflSeasonAt(Date.now());
           const file='data/evidence/nfl-'+season+'.json';
           const previous=JSON.parse(execFileSync('git',['show','HEAD:'+file],{encoding:'utf8'}));
           const current=JSON.parse(readFileSync(file,'utf8'));
