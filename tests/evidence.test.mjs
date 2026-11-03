@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { nflMoneylineConsensus } from '../src/market-consensus.mjs';
+import {reconcileSettlements} from '../src/settlement-only.mjs';
 import {
   MIN_SAMPLE,emptyJournal,validateJournal,matchSchedule,observationsFromSlate,
   resultsFromSchedule,updateJournal,summarizeEvidence
@@ -95,13 +96,13 @@ test('Append-only first forecast survives later revisions, results are reconcile
   assert.notEqual(near[0].id,one[0].id);
   const j=updateJournal(initial.journal,near,[],last).journal;
   assert.equal(j.snapshots.length,2);
-  const results=resultsFromSchedule(j,schedule(true),NOW+86400000);
+  const results=resultsFromSchedule(j,schedule(true),NOW+2*86400000);
   assert.equal(results.length,1);
-  const completed=updateJournal(j,[],results,NOW+86400000);
+  const completed=updateJournal(j,[],results,NOW+2*86400000);
   assert.equal(completed.settlementRevisions,1);
   assert.equal(completed.journal.snapshots[0].id,one[0].id);
-  assert.equal(updateJournal(completed.journal,[],results,NOW+86400000).settlementRevisions,0);
-  const report=summarizeEvidence(completed.journal,NOW+86400000);
+  assert.equal(updateJournal(completed.journal,[],results,NOW+2*86400000).settlementRevisions,0);
+  const report=summarizeEvidence(completed.journal,NOW+2*86400000);
   assert.equal(report.status,'COLLECTING_FORWARD_EVIDENCE');
   assert.equal(report.prospectiveGames,1);
   assert.equal(report.settledGames,1);
@@ -120,10 +121,10 @@ test('No post-kickoff reconstruction, early/late game trust and result correctio
   const journal=updateJournal(emptyJournal(2026),[obs],[]).journal;
   const noFinal=resultsFromSchedule(journal,schedule(true),NOW);
   assert.equal(noFinal.length,0); // day-of source should not be called final.
-  const finals=resultsFromSchedule(journal,schedule(true),NOW+86400000);
-  const settled=updateJournal(journal,[],finals,NOW+86400000).journal;
+  const finals=resultsFromSchedule(journal,schedule(true),NOW+2*86400000);
+  const settled=updateJournal(journal,[],finals,NOW+2*86400000).journal;
   const corrected={...finals[0],homeScore:24,resultHash:'corrected-hash'};
-  const updated=updateJournal(settled,[],[corrected],NOW+2*86400000).journal;
+  const updated=updateJournal(settled,[],[corrected],NOW+3*86400000).journal;
   assert.equal(updated.settlements.length,2);
   assert.equal(updated.settlements[1].revision,2);
   assert.equal(summarizeEvidence(updated).settledGames,1);
@@ -162,4 +163,20 @@ test('Never accepts corrupt or oversize journals',()=>{
   const journal=emptyJournal(2026);
   journal.snapshots=Array.from({length:10001},()=>({}));
   assert.throws(()=>validateJournal(journal),/Invalid journal/);
+});
+
+test('legacy and zero-credit pipelines refuse the same premature partial final',()=>{
+  const obs=observationsFromSlate(slate(),schedule(),NOW,2026).accepted;
+  const journal=updateJournal(emptyJournal(2026),obs,[],NOW).journal;
+  const early=NOW+86400000;
+  assert.deepEqual(resultsFromSchedule(journal,schedule(true),early),[]);
+  const ready=NOW+2*86400000;
+  const fromLegacy=resultsFromSchedule(journal,schedule(true),ready);
+  const fromZeroCredit=reconcileSettlements(journal,schedule(true),{now:ready});
+  assert.equal(fromLegacy.length,1);
+  assert.equal(fromZeroCredit.appended,1);
+  const legacy=updateJournal(journal,[],fromLegacy,ready).journal;
+  const a=legacy.settlements[0],b=fromZeroCredit.journal.settlements[0];
+  for(const key of ['gameId','outcome','homeScore','awayScore','resultHash','finalityBasis'])
+    assert.deepEqual(a[key],b[key]);
 });
