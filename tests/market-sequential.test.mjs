@@ -29,7 +29,16 @@ function final(game,y,revision=1){
     gameId:game,gameDate:'2026-11-08',
     homeScore:y===1?31:10,awayScore:y===1?10:31,
     outcome:y===1?'HOME':'AWAY',revision,
-    resultHash:'result-'+game+'-'+revision,verifiedAt:iso(NOW+10*86400000)
+    resultHash:'result-'+game+'-'+revision,verifiedAt:iso(NOW+10*86400000),
+    source:'NFLVERSE_SCHEDULES',
+    finalityBasis:'TWO_SOURCE_FINAL_STATUS_NOT_LEAGUE_CERTIFIED',
+    finalityAttestation:{
+      status:'CROSS_SOURCE_FINAL',corroborator:'ESPN_SITE_SCOREBOARD_UNOFFICIAL',
+      gameId:game,gameDate:'2026-11-08',
+      homeScore:y===1?31:10,awayScore:y===1?10:31,
+      eventId:'401123456',observedAt:iso(NOW+10*86400000),
+      sourceSha256:'f'.repeat(64),officialLeagueCertification:false
+    }
   };
 }
 function makeJ(snaps,results){
@@ -88,7 +97,13 @@ test('Tie, missing settlement, stale provider quote and revised result are never
   const journal=makeJ([a,b,c,d],[
     final('a',0,1),final('a',1,2),
     {gameId:'b',gameDate:'2026-11-08',homeScore:14,awayScore:14,
-     outcome:'TIE',revision:1,resultHash:'tie-b'}
+     outcome:'TIE',revision:1,resultHash:'tie-b',source:'NFLVERSE_SCHEDULES',
+     finalityBasis:'TWO_SOURCE_FINAL_STATUS_NOT_LEAGUE_CERTIFIED',
+     finalityAttestation:{status:'CROSS_SOURCE_FINAL',
+       corroborator:'ESPN_SITE_SCOREBOARD_UNOFFICIAL',gameId:'b',gameDate:'2026-11-08',
+       homeScore:14,awayScore:14,eventId:'401123456',
+       observedAt:iso(NOW+10*86400000),sourceSha256:'f'.repeat(64),
+       officialLeagueCertification:false}}
   ]);
   const out=calculateSequentialEvidence(journal);
   assert.equal(out.allTrackedGames,4);
@@ -153,4 +168,14 @@ test('1000 synthetic efficient-market worlds keep threshold crossings rare; sign
   console.log('PRE-REGISTERED SYNTHETIC E-MONITOR: null crossings '+nullCrossing+
     '/1000; genuine injected p=0.6 signal crossings '+signalCrossing+'/1000'+
     ' over 150 independent outcomes, not NFL performance or investment results.');
+});
+
+test('unverified legacy community result never advances outcome or likelihood gate',()=>{
+  const old=final('legacy',1);
+  delete old.finalityAttestation;
+  const report=calculateSequentialEvidence(makeJ([shot('legacy',0,.5,.65)],[old]));
+  assert.equal(report.eligibleSettledNonTieGames,0);
+  assert.equal(report.exclusions.uncorroboratedSettlement,1);
+  assert.equal(report.properScores,null);
+  assert.equal(report.gamesNeededForDescriptiveScore,30);
 });
