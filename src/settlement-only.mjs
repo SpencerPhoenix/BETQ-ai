@@ -149,7 +149,7 @@ export function reconcileSettlements(journal, rows, {
     if(!isAttestedFinal(result,attestation,{now})){uncorroborated++;continue;}
     const old=latest.get(result.gameId);
     if(old?.homeScore===result.homeScore && old?.awayScore===result.awayScore &&
-       isAttestedFinal(result,old.finalityAttestation,{now:Date.parse(old.finalityAttestation?.observedAt)}))
+       isCorroboratedSettlement(old))
       continue;
     if(old?.homeScore===result.homeScore && old?.awayScore===result.awayScore)upgraded++;
     const revision=(old?.revision ?? 0)+1;
