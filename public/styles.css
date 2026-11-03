@@ -521,3 +521,12 @@ progress.evidence-meter::-moz-progress-bar {background:var(--lime);border-radius
   .shadow-head-panel .metric-grid,.shadow-study-panel .metric-grid{padding:10px;}
   .shadow-live-notice,.shadow-diagnostic{margin:10px;}
 }
+
+
+/* v0.10 – time-frozen model-vs-later-market movement research */
+.shadow-lead-box{padding:17px 17px 11px;margin:18px 0;background:#141e2f;border:1px solid #35415a;border-radius:11px;}
+.shadow-lead-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 15px;}
+.shadow-lead-heading strong{font-size:13px;color:#e5ecf8;}
+.shadow-lead-box .metric-grid{margin-bottom:14px;}
+.shadow-lead-box .shadow-live-notice{margin:0;padding:13px;border-left:3px solid #9f96ed;background:#1c2438;line-height:1.75;}
+@media(max-width:650px){.shadow-lead-box{padding:12px;margin:12px 0;}.shadow-lead-heading strong{font-size:12px;}}
