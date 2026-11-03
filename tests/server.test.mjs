@@ -5,8 +5,8 @@ import { createHandler } from '../src/server.mjs';
 import { createOddsSource } from '../src/odds.mjs';
 import { demoEvents } from '../src/demo.mjs';
 const NOW = Date.parse('2026-11-01T20:00:00Z');
-function localServer(source) {
-  const server = http.createServer(createHandler({ source, clock: () => NOW }));
+function localServer(source, options={}) {
+  const server = http.createServer(createHandler({ source, clock: () => NOW, ...options }));
   return new Promise(resolve => server.listen(0, '127.0.0.1', () =>
     resolve({ server, base: 'http://127.0.0.1:' + server.address().port })));
 }
@@ -24,6 +24,18 @@ test('Health reports setup state without leaking API key', async (t) => {
   assert.match(body, /BETQ.ai/);
   assert.doesNotMatch(body, /apiKey/);
   assert.match(res.headers.get('content-security-policy'), /default-src/);
+});
+test('Health exposes only validated deployment commit fingerprint',async(t)=>{
+  const sha='a'.repeat(40);
+  const {server,base}=await localServer(fakeSource,{releaseCommit:sha});
+  t.after(()=>server.close());
+  const body=await (await fetch(base+'/api/health')).json();
+  assert.equal(body.commit,sha);
+  assert.equal(body.version,'0.11.0');
+  assert.equal(body.app,'BETQ.ai');
+  const invalid=await localServer(fakeSource,{releaseCommit:'not-a-sha'});
+  t.after(()=>invalid.server.close());
+  assert.equal((await (await fetch(invalid.base+'/api/health')).json()).commit,null);
 });
 test('Demo slate delivers explicitly synthetic events', async (t) => {
   const { server, base } = await localServer(fakeSource);
