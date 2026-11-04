@@ -13,6 +13,29 @@ on:
       - 'tests/prospective-direction.test.mjs'
       - 'tests/replay-ui.test.mjs'
       - '.github/workflows/prospective-direction-audit.yml'
+  pull_request:
+    paths:
+      - 'src/evidence.mjs'
+      - 'src/settlement-only.mjs'
+      - 'scripts/capture-evidence.mjs'
+      - 'tests/evidence.test.mjs'
+      - 'tests/settlement-only.test.mjs'
+      - 'src/settlement-corroboration.mjs'
+      - 'tests/settlement-corroboration.test.mjs'
+      - 'tests/market-sequential.test.mjs'
+      - 'tests/evidence-challenger.test.mjs'
+      - '.github/workflows/capture-evidence.yml'
+      - '.github/workflows/settlement-only.yml'
+      - '.github/workflows/prospective-direction-audit.yml'
+  # GITHUB_TOKEN pushes do not generate push-triggered workflows. Re-audit
+  # the newly published journal after either writer finishes on main.
+  workflow_run:
+    workflows:
+      - BETQ prospective NFL evidence collector
+      - BETQ free-only NFL settlement reconciliation
+    types: [completed]
+  schedule:
+    - cron: '37 12 * * *'
   workflow_dispatch:
 permissions:
   contents: read
@@ -21,10 +44,13 @@ concurrency:
   cancel-in-progress: true
 jobs:
   research-proof:
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22'

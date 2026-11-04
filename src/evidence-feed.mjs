@@ -16,10 +16,17 @@ export function isValidEvidenceSummary(s) {
     s.realizedROI===null && s.verifiedCLV===null &&
     s.marketBeatingEdgeEstablished===false &&
     s.settledGames<=s.prospectiveGames &&
-    (!s.forwardMetrics || (s.settledGames>=30 && s.forwardMetrics.n===s.settledGames &&
+    (s.sourceCorroboratedSettledGames==null ||
+      (Number.isInteger(s.sourceCorroboratedSettledGames) &&
+       s.sourceCorroboratedSettledGames>=0 &&
+       s.sourceCorroboratedSettledGames<=s.settledGames)) &&
+    (!s.forwardMetrics || ((s.sourceCorroboratedSettledGames??0)>=30 &&
+      s.forwardMetrics.n===s.sourceCorroboratedSettledGames &&
       Number.isFinite(s.forwardMetrics.brier) && s.forwardMetrics.brier>=0 && s.forwardMetrics.brier<=1)) &&
-    (!s.marketComparison || (s.pairedMarketGames>=30 && s.marketComparison.n===s.pairedMarketGames &&
-      s.pairedMarketGames<=s.settledGames)) &&
+    (!s.marketComparison || ((s.sourceCorroboratedSettledGames??0)>=30 &&
+      s.marketComparison.n<=s.sourceCorroboratedSettledGames &&
+      s.marketComparison.n<=s.pairedMarketGames &&
+      s.marketComparison.n>=30)) &&
     (!s.challengerForwardComparison || (s.pairedChallengerSettled>=30 && s.challengerForwardComparison.n===s.pairedChallengerSettled &&
       s.pairedChallengerSettled<=s.settledGames))); 
 }

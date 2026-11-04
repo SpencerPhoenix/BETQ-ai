@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { nflMoneylineConsensus } from '../src/market-consensus.mjs';
+import {reconcileSettlements} from '../src/settlement-only.mjs';
 import {
   MIN_SAMPLE,emptyJournal,validateJournal,matchSchedule,observationsFromSlate,
   resultsFromSchedule,updateJournal,summarizeEvidence
@@ -95,13 +96,13 @@ test('Append-only first forecast survives later revisions, results are reconcile
   assert.notEqual(near[0].id,one[0].id);
   const j=updateJournal(initial.journal,near,[],last).journal;
   assert.equal(j.snapshots.length,2);
-  const results=resultsFromSchedule(j,schedule(true),NOW+86400000);
+  const results=resultsFromSchedule(j,schedule(true),NOW+2*86400000);
   assert.equal(results.length,1);
-  const completed=updateJournal(j,[],results,NOW+86400000);
+  const completed=updateJournal(j,[],results,NOW+2*86400000);
   assert.equal(completed.settlementRevisions,1);
   assert.equal(completed.journal.snapshots[0].id,one[0].id);
-  assert.equal(updateJournal(completed.journal,[],results,NOW+86400000).settlementRevisions,0);
-  const report=summarizeEvidence(completed.journal,NOW+86400000);
+  assert.equal(updateJournal(completed.journal,[],results,NOW+2*86400000).settlementRevisions,0);
+  const report=summarizeEvidence(completed.journal,NOW+2*86400000);
   assert.equal(report.status,'COLLECTING_FORWARD_EVIDENCE');
   assert.equal(report.prospectiveGames,1);
   assert.equal(report.settledGames,1);
@@ -120,10 +121,10 @@ test('No post-kickoff reconstruction, early/late game trust and result correctio
   const journal=updateJournal(emptyJournal(2026),[obs],[]).journal;
   const noFinal=resultsFromSchedule(journal,schedule(true),NOW);
   assert.equal(noFinal.length,0); // day-of source should not be called final.
-  const finals=resultsFromSchedule(journal,schedule(true),NOW+86400000);
-  const settled=updateJournal(journal,[],finals,NOW+86400000).journal;
+  const finals=resultsFromSchedule(journal,schedule(true),NOW+2*86400000);
+  const settled=updateJournal(journal,[],finals,NOW+2*86400000).journal;
   const corrected={...finals[0],homeScore:24,resultHash:'corrected-hash'};
-  const updated=updateJournal(settled,[],[corrected],NOW+2*86400000).journal;
+  const updated=updateJournal(settled,[],[corrected],NOW+3*86400000).journal;
   assert.equal(updated.settlements.length,2);
   assert.equal(updated.settlements[1].revision,2);
   assert.equal(summarizeEvidence(updated).settledGames,1);
@@ -139,13 +140,24 @@ test('Prospective 30+ finalized games unlock performance without claiming ROI or
       modelHomeProbability:0.65,marketHomeProbability:0.57
     };
     j.snapshots.push(obs);
+    const homeScore=i%2===0?27:14,awayScore=i%2===0?14:27;
     j.settlements.push({
       gameId:obs.gameId,gameDate:obs.gameDate,
-      homeScore:i%2===0?27:14,awayScore:i%2===0?14:27,
-      outcome:i%2===0?'HOME':'AWAY',revision:1
+      homeScore,awayScore,
+      outcome:i%2===0?'HOME':'AWAY',revision:1,
+      source:'NFLVERSE_SCHEDULES',
+      finalityBasis:'TWO_SOURCE_FINAL_STATUS_NOT_LEAGUE_CERTIFIED',
+      finalityAttestation:{status:'CROSS_SOURCE_FINAL',
+        corroborator:'ESPN_SITE_SCOREBOARD_UNOFFICIAL',
+        gameId:obs.gameId,gameDate:obs.gameDate,
+        homeScore,awayScore,eventId:'401123456',
+        observedAt:ISO(NOW+2*86400000),
+        sourceSha256:'e'.repeat(64),officialLeagueCertification:false}
     });
   }
   const report=summarizeEvidence(j,NOW+86400000);
+  assert.equal(report.sourceCorroboratedSettledGames,31);
+  assert.equal(report.sourceUncorroboratedSettledGames,0);
   assert.equal(report.forwardMetrics.n,31);
   assert.equal(report.marketComparison.n,31);
   assert.ok(report.marketComparison.confidence95);
@@ -162,4 +174,65 @@ test('Never accepts corrupt or oversize journals',()=>{
   const journal=emptyJournal(2026);
   journal.snapshots=Array.from({length:10001},()=>({}));
   assert.throws(()=>validateJournal(journal),/Invalid journal/);
+});
+
+test('legacy and zero-credit pipelines refuse the same premature partial final',()=>{
+  const obs=observationsFromSlate(slate(),schedule(),NOW,2026).accepted;
+  const journal=updateJournal(emptyJournal(2026),obs,[],NOW).journal;
+  const early=NOW+86400000;
+  assert.deepEqual(resultsFromSchedule(journal,schedule(true),early),[]);
+  const ready=NOW+2*86400000;
+  const fromLegacy=resultsFromSchedule(journal,schedule(true),ready);
+  const resultRow=schedule(true)[0];
+  const attestation={status:'CROSS_SOURCE_FINAL',
+    corroborator:'ESPN_SITE_SCOREBOARD_UNOFFICIAL',gameId:resultRow.game_id,
+    gameDate:resultRow.gameday,homeScore:27,awayScore:17,
+    eventId:'401123456',observedAt:ISO(ready),
+    sourceSha256:'b'.repeat(64),officialLeagueCertification:false};
+  const fromZeroCredit=reconcileSettlements(journal,schedule(true),{
+    now:ready,attestations:{[resultRow.game_id]:attestation}
+  });
+  assert.equal(fromLegacy.length,1);
+  assert.equal(fromZeroCredit.appended,1);
+  const legacy=updateJournal(journal,[],fromLegacy,ready).journal;
+  const a=legacy.settlements[0],b=fromZeroCredit.journal.settlements[0];
+  for(const key of ['gameId','outcome','homeScore','awayScore','resultHash'])
+    assert.deepEqual(a[key],b[key]);
+  assert.equal(a.finalityBasis,'COMMUNITY_SCORE_24H_AFTER_KICKOFF_NOT_LEAGUE_CERTIFIED');
+  assert.equal(b.finalityBasis,'TWO_SOURCE_FINAL_STATUS_NOT_LEAGUE_CERTIFIED');
+});
+
+
+test('highest corrected settlement is used once even if revisions are out of order',()=>{
+  const obs=observationsFromSlate(slate(),schedule(),NOW,2026).accepted;
+  const journal=updateJournal(emptyJournal(2026),obs,[],NOW).journal;
+  const earlier={gameId:'2026_09_LV_KC',gameDate:'2026-11-01',homeScore:27,awayScore:17,
+    outcome:'HOME',revision:1};
+  const corrected={...earlier,homeScore:14,awayScore:27,outcome:'AWAY',revision:2};
+  journal.settlements=[corrected,earlier];
+  const report=summarizeEvidence(journal,NOW+3*86400000);
+  assert.equal(report.settledGames,1);
+  assert.equal(report.recentResults[0].score,'27-14');
+  assert.equal(report.recentResults[0].result,'AWAY');
+  const bad=structuredClone(journal);
+  bad.settlements.push({...corrected,homeScore:21,outcome:'AWAY'});
+  assert.throws(()=>summarizeEvidence(bad),/CONTRADICTORY_SETTLEMENT_REVISION/);
+});
+
+test('thirty uncorroborated community scores cannot publish proper scores or calibration',()=>{
+  const j=emptyJournal(2026);
+  for(let i=0;i<30;i++){
+    j.snapshots.push({id:'legacy-'+i,gameId:'legacy-'+i,
+      season:2026,home:'KC',away:'LV',gameDate:'2026-11-01',
+      commenceTime:ISO(NOW+7*3600000),capturedAt:ISO(NOW+i),
+      modelHomeProbability:0.6,marketHomeProbability:0.55});
+    j.settlements.push({gameId:'legacy-'+i,gameDate:'2026-11-01',
+      homeScore:27,awayScore:17,outcome:'HOME',revision:1});
+  }
+  const report=summarizeEvidence(j,NOW+3*86400000);
+  assert.equal(report.settledGames,30);
+  assert.equal(report.sourceCorroboratedSettledGames,0);
+  assert.equal(report.forwardMetrics,null);
+  assert.equal(report.marketComparison,null);
+  assert.equal(report.status,'COLLECTING_FORWARD_EVIDENCE');
 });

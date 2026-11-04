@@ -7,6 +7,7 @@ import {pairedWeekBootstrap} from './statistical-audit.mjs';
 import {timestamp, isProbability, validDay} from './integrity.mjs';
 import { createHash } from 'node:crypto';
 import { NFL_TEAMS, canonicalTeam } from './nfl-elo.mjs';
+import {selectFinalizedResults,isCorroboratedSettlement} from './settlement-only.mjs';
 
 export const MIN_SAMPLE = 30;
 const round = (n,d=5) => Number.isFinite(n)?Number(n.toFixed(d)):null;
@@ -45,6 +46,22 @@ function validObservation(s,season){
   if(s.challengerHomeProbability!=null&&(!isProbability(s.challengerHomeProbability)||s.challengerResearchOnly!==true||
      !Number.isFinite(timestamp(s.challengerBuiltAt))||timestamp(s.challengerBuiltAt)>at+60000||timestamp(s.challengerBuiltAt)>=kick))return false;
   return true;
+}
+/** Highest unambiguous revision, independent of source array ordering. */
+function latestSettlementsByRevision(records) {
+  const latest=new Map();
+  for(const row of records){
+    const revision=Number.isInteger(row.revision)&&row.revision>0?row.revision:0;
+    const previous=latest.get(row.gameId);
+    const prevRevision=Number.isInteger(previous?.revision)&&previous.revision>0
+      ?previous.revision:0;
+    if(!previous||revision>prevRevision)latest.set(row.gameId,row);
+    else if(revision===prevRevision &&
+      (row.homeScore!==previous.homeScore||row.awayScore!==previous.awayScore||
+       row.outcome!==previous.outcome))
+      throw Error('CONTRADICTORY_SETTLEMENT_REVISION: '+row.gameId);
+  }
+  return latest;
 }
 function validResult(r){
   return Boolean(r&&typeof r.gameId==='string'&&
@@ -133,22 +150,10 @@ export function observationsFromSlate(slate,rows,now=Date.now(),season=new Date(
   return {accepted,skipped};
 }
 
+/** Legacy public API now delegates to the same 24h+ community-source finality gate. */
 export function resultsFromSchedule(journal,rows,now=Date.now()) {
   validateJournal(journal);
-  const tracked=new Set(journal.snapshots.map(s=>s.gameId));
-  const today=new Date(now).toISOString().slice(0,10),results=[];
-  for(const row of rows) {
-    if(!row || !tracked.has(row.game_id)||Number(row.season)!==journal.season||
-       !gameTypes.has(row.game_type)||!/^\d{4}-\d{2}-\d{2}$/.test(row.gameday)||
-       row.gameday>=today||row.home_score===''||row.away_score==='')continue;
-    const homeScore=Number(row.home_score),awayScore=Number(row.away_score);
-    if(!Number.isInteger(homeScore)||!Number.isInteger(awayScore)||
-       homeScore<0||awayScore<0||homeScore>100||awayScore>100)continue;
-    results.push({gameId:row.game_id,gameDate:row.gameday,homeScore,awayScore,
-      outcome:homeScore===awayScore?'TIE':homeScore>awayScore?'HOME':'AWAY',
-      source:'NFLVERSE_SCHEDULES',resultHash:hash(row.game_id+'|'+homeScore+'|'+awayScore)});
-  }
-  return results;
+  return selectFinalizedResults(journal,rows,{now});
 }
 
 export function updateJournal(existing,captures,results,now=Date.now()) {
@@ -170,7 +175,7 @@ export function updateJournal(existing,captures,results,now=Date.now()) {
     if(!ids.has(s.id)){journal.snapshots.push(structuredClone(s));ids.add(s.id);added++;}
   }
   const tracked=new Set(journal.snapshots.map(x=>x.gameId));
-  const latest=new Map(journal.settlements.map(s=>[s.gameId,s]));
+  const latest=latestSettlementsByRevision(journal.settlements);
   for(const result of results){
     if(!validResult(result))throw Error('Invalid result outcome / score');
     if(!tracked.has(result.gameId)||latest.get(result.gameId)?.resultHash===result.resultHash)continue;
@@ -215,7 +220,7 @@ export function summarizeEvidence(journal,now=Date.now()) {
     if(!byGame.has(shot.gameId))byGame.set(shot.gameId,[]);
     byGame.get(shot.gameId).push(shot);
   }
-  const settled=new Map(journal.settlements.map(s=>[s.gameId,s]));
+  const settled=latestSettlementsByRevision(journal.settlements);
   const observed=[...first.values()].filter(s=>settled.has(s.gameId)&&settled.get(s.gameId).outcome!=='TIE')
     .map(s=>{const final=settled.get(s.gameId),y=final.outcome==='HOME'?1:0;
       return {s,final,y,model:loss(s.modelHomeProbability,y),
@@ -237,8 +242,14 @@ export function summarizeEvidence(journal,now=Date.now()) {
       challenger:loss(s.challengerHomeProbability,y)
     });
   }
-  const minMet=observed.length>=MIN_SAMPLE,pairedMet=paired.length>=MIN_SAMPLE;
-  const differences=paired.map(x=>x.market.brier-x.model.brier);
+  // Old community-score-only records remain visible for historical provenance,
+  // but cannot unlock publication of any model or market performance score.
+  const scored=observed.filter(x=>isCorroboratedSettlement(x.final));
+  const scoredPaired=scored.filter(x=>x.market);
+  const scoredChallenger=challengerPaired.filter(x=>
+    isCorroboratedSettlement(settled.get(x.gameId)));
+  const minMet=scored.length>=MIN_SAMPLE,pairedMet=scoredPaired.length>=MIN_SAMPLE;
+  const differences=scoredPaired.map(x=>x.market.brier-x.model.brier);
   const movement=[];
   for(const [gameId,shots] of byGame){
     const firstShot=first.get(gameId);
@@ -256,34 +267,36 @@ export function summarizeEvidence(journal,now=Date.now()) {
     realizedROI:null,verifiedCLV:null,minimumScoredSample:MIN_SAMPLE,
     totalSnapshots:journal.snapshots.length,prospectiveGames:first.size,
     settledGames:observed.length,pendingGames:pending.length,
+    sourceCorroboratedSettledGames:scored.length,
+    sourceUncorroboratedSettledGames:observed.length-scored.length,
     pairedMarketGames:paired.length,nearKickoffConsensusPairs:movement.length,
     prospectiveChallengerGames:[...byGame.values()].filter(shots=>
       shots.some(s=>Number.isFinite(s.challengerHomeProbability))).length,
-    pairedChallengerSettled:challengerPaired.length,
-    challengerForwardComparison:challengerPaired.length>=MIN_SAMPLE?{
-      n:challengerPaired.length,
-      baselineBrier:round(avg(challengerPaired.map(x=>x.baseline.brier))),
-      challengerBrier:round(avg(challengerPaired.map(x=>x.challenger.brier))),
-      baselineLogLoss:round(avg(challengerPaired.map(x=>x.baseline.logLoss))),
-      challengerLogLoss:round(avg(challengerPaired.map(x=>x.challenger.logLoss))),
-      baselineMinusChallengerBrier:round(avg(challengerPaired.map(x=>
+    pairedChallengerSettled:scoredChallenger.length,
+    challengerForwardComparison:scoredChallenger.length>=MIN_SAMPLE?{
+      n:scoredChallenger.length,
+      baselineBrier:round(avg(scoredChallenger.map(x=>x.baseline.brier))),
+      challengerBrier:round(avg(scoredChallenger.map(x=>x.challenger.brier))),
+      baselineLogLoss:round(avg(scoredChallenger.map(x=>x.baseline.logLoss))),
+      challengerLogLoss:round(avg(scoredChallenger.map(x=>x.challenger.logLoss))),
+      baselineMinusChallengerBrier:round(avg(scoredChallenger.map(x=>
         x.baseline.brier-x.challenger.brier))),
-      confidence95:ciPaired(challengerPaired.map(x=>
+      confidence95:ciPaired(scoredChallenger.map(x=>
         x.baseline.brier-x.challenger.brier)),
-      weekSensitivity:pairedWeekBootstrap(challengerPaired.map(x=>({id:x.gameId,date:x.gameDate,
+      weekSensitivity:pairedWeekBootstrap(scoredChallenger.map(x=>({id:x.gameId,date:x.gameDate,
         baseline:x.baselineProbability,challenger:x.challengerProbability,outcome:x.outcome}))),
       interpretation:'PAIRED_PROSPECTIVE_PREGAME_NOT_PROFIT_VALIDATION'
     }:null,
     tiesExcluded:[...first.keys()].filter(id=>settled.get(id)?.outcome==='TIE').length,
     forwardMetrics:minMet?{
-      n:observed.length,brier:round(avg(observed.map(x=>x.model.brier))),
-      logLoss:round(avg(observed.map(x=>x.model.logLoss))),
-      winnerAccuracy:round(avg(observed.map(x=>x.model.correct)),4),
-      calibration:bins(observed.map(x=>({p:x.s.modelHomeProbability,y:x.y})))
+      n:scored.length,brier:round(avg(scored.map(x=>x.model.brier))),
+      logLoss:round(avg(scored.map(x=>x.model.logLoss))),
+      winnerAccuracy:round(avg(scored.map(x=>x.model.correct)),4),
+      calibration:bins(scored.map(x=>({p:x.s.modelHomeProbability,y:x.y})))
     }:null,
     marketComparison:pairedMet?{
-      n:paired.length,modelBrier:round(avg(paired.map(x=>x.model.brier))),
-      consensusBrier:round(avg(paired.map(x=>x.market.brier))),
+      n:scoredPaired.length,modelBrier:round(avg(scoredPaired.map(x=>x.model.brier))),
+      consensusBrier:round(avg(scoredPaired.map(x=>x.market.brier))),
       consensusMinusModelBrier:round(avg(differences)),
       confidence95:ciPaired(differences),
       basis:'SAME_SNAPSHOT_NON_CLOSING_CONSENSUS'
@@ -294,7 +307,8 @@ export function summarizeEvidence(journal,now=Date.now()) {
       gameDate:x.s.gameDate,score:x.final.awayScore+'-'+x.final.homeScore,
       result:x.final.outcome,modelHomeProbability:x.s.modelHomeProbability,
       marketHomeProbability:x.s.marketHomeProbability,
-      capturedAt:x.s.capturedAt,brier:round(x.model.brier)
+      capturedAt:x.s.capturedAt,brier:round(x.model.brier),
+      sourceCorroborated:isCorroboratedSettlement(x.final)
     })),
     pendingPreview:pending.slice(0,12).map(x=>({
       gameId:x.gameId,home:x.home,away:x.away,gameDate:x.gameDate,

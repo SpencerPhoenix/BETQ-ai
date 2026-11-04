@@ -1,0 +1,120 @@
+name: BETQ free-only NFL settlement reconciliation
+on:
+  pull_request:
+    paths:
+      - 'src/settlement-only.mjs'
+      - 'scripts/reconcile-settlements.mjs'
+      - 'tests/settlement-only.test.mjs'
+      - 'src/settlement-corroboration.mjs'
+      - 'tests/settlement-corroboration.test.mjs'
+      - 'src/evidence.mjs'
+      - 'scripts/capture-evidence.mjs'
+      - '.github/workflows/settlement-only.yml'
+      - 'package.json'
+  workflow_dispatch:
+  schedule:
+    # After late NFL games, and independently of the paid market collector.
+    - cron: '11 11 * * *'
+permissions:
+  contents: read
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install existing project dependencies
+        run: npm ci
+      - name: Syntax and regression tests (mocked source, zero paid calls)
+        run: |
+          npm run check
+          npm test
+      - name: Optional free-source end-to-end dry run (no bookmaker requests or writes)
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          ODDS_API_KEY: ''
+        run: npm run evidence:settle -- --dry-run
+  settlement:
+    # PR validation is read-only. Only scheduled/manual main branch can write.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: write
+    concurrency:
+      group: betq-evidence-journal-writers
+      cancel-in-progress: false
+      queue: max
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: true # required for guarded evidence-only push
+      - name: Start from latest origin/main after entering writer queue
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reconcile finalized community results without market requests
+        run: npm run evidence:settle
+      - name: Enforce original forecasts and settlements are append-only
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          import {execFileSync} from 'node:child_process';
+          import {nflSeasonAt} from './src/settlement-only.mjs';
+          const season=nflSeasonAt(Date.now());
+          const file='data/evidence/nfl-'+season+'.json';
+          const previous=JSON.parse(execFileSync('git',['show','HEAD:'+file],{encoding:'utf8'}));
+          const current=JSON.parse(readFileSync(file,'utf8'));
+          if(JSON.stringify(previous.snapshots)!==JSON.stringify(current.snapshots))
+            throw Error('Reconciliation modified frozen forecast snapshots');
+          if(current.settlements.length<previous.settlements.length||
+             JSON.stringify(current.settlements.slice(0,previous.settlements.length))!==
+             JSON.stringify(previous.settlements))
+            throw Error('Reconciliation rewrote or deleted historic settlements');
+          const source=readFileSync('scripts/reconcile-settlements.mjs','utf8');
+          if(/api\.the-odds-api\.com|\/api\/slate|ODDS_API_KEY/.test(source))
+            throw Error('Settlement-only command would access sportsbook data');
+          console.log('PASS append-only evidence; no paid sportsbook API path');
+          NODE
+      - name: Commit updated derived results only when changed
+        shell: bash
+        run: |
+          if [[ -z "$(git status --porcelain -- data/evidence/)" ]]; then
+            echo "No new finalized results; no commit and no redeploy."
+            exit 0
+          fi
+          git config user.name "betq-settlement-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/evidence/
+          git commit -m "data: reconcile independent NFL final scores without odds request [skip render]"
+          git fetch origin main
+          if ! git merge-base --is-ancestor origin/main HEAD; then
+            echo "Concurrent main change: do not rebase results computed from an old journal." >&2
+            exit 1
+          fi
+          git push origin HEAD:main || {
+            echo "Fast-forward evidence push rejected; candidate artifact preserved for manual review." >&2
+            exit 1
+          }
+      - name: Preserve public-derived candidate if publication fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: betq-unpublished-settlement-${{ github.run_id }}
+          path: |
+            data/evidence/nfl-2026.json
+            data/evidence/summary.json
+          retention-days: 30
+          if-no-files-found: warn

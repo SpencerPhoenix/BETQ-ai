@@ -111,7 +111,8 @@ export function createHandler({
   riskReport = NFL_RISK_REPORT,
   shadowStore = SHADOW_PRIVATE,
   derivedShadowFeed = SHADOW_DERIVED_FEED,
-  maxAgeMs = Number(process.env.ODDS_MAX_AGE_MS) || 600000
+  maxAgeMs = Number(process.env.ODDS_MAX_AGE_MS) || 600000,
+  releaseCommit = process.env.RENDER_GIT_COMMIT ?? null
 } = {}) {
   const access = new Map();
   return async (req, res) => {
@@ -135,6 +136,8 @@ export function createHandler({
         }
         if (url.pathname === '/api/health') return reply(res, 200, {
           status: 'ok', app: 'BETQ.ai', version: '0.11.0',
+          commit: typeof releaseCommit==='string' && /^[0-9a-f]{40}$/i.test(releaseCommit)
+            ? releaseCommit.toLowerCase() : null,
           serverTime: new Date(now).toISOString(), odds: source.status(),
           nflModel: { available: Boolean(nflArtifact?.readyForResearch), version: nflArtifact?.version || null },
           forwardEvidence: { status: nflEvidence.status, prospectiveGames: nflEvidence.prospectiveGames,

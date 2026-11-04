@@ -75,9 +75,18 @@ test('Paired prospective Elo vs EPA scores require 30 finalized challenger games
       marketHomeProbability:null
     });
     const score=i%2===0?1:0;
+    const homeScore=score?27:17,awayScore=score?17:27;
     j.settlements.push({
-      gameId:'game-'+i,outcome:score?'HOME':'AWAY',
-      homeScore:score?27:17,awayScore:score?17:27,revision:1
+      gameId:'game-'+i,gameDate:'2026-11-07',outcome:score?'HOME':'AWAY',
+      homeScore,awayScore,revision:1,
+      source:'NFLVERSE_SCHEDULES',
+      finalityBasis:'TWO_SOURCE_FINAL_STATUS_NOT_LEAGUE_CERTIFIED',
+      finalityAttestation:{status:'CROSS_SOURCE_FINAL',
+        corroborator:'ESPN_SITE_SCOREBOARD_UNOFFICIAL',
+        gameId:'game-'+i,gameDate:'2026-11-07',
+        homeScore,awayScore,eventId:'401123456',
+        observedAt:iso(NOW+10*86400000),
+        sourceSha256:'a'.repeat(64),officialLeagueCertification:false}
     });
   }
   let report=summarizeEvidence(j,NOW+10*86400000);
