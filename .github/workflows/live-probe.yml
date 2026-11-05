@@ -1,72 +1,81 @@
-name: BETQ production feed probe
+name: BETQ one-shot free NFL comparison (isolated branch only)
 
+# Branch-only replacement of an existing registered manual workflow path.
+# Never dispatch from main or merge this as a production probe.
 on:
   workflow_dispatch:
+    inputs:
+      approve_one_request:
+        description: Approve one free BALLDONTLIE NFL games request; no retries or publication
+        type: boolean
+        default: false
+        required: true
+      repository_secret_confirmed:
+        description: Confirm BALLDONTLIE_API_KEY is the intended repository-level BALLDONTLIE key
+        type: boolean
+        default: false
+        required: true
+      expected_sha:
+        description: Full reviewed commit SHA for this isolated branch
+        type: string
+        required: true
+      expires_at:
+        description: Approval expiry in canonical UTC, no more than 15 minutes ahead
+        type: string
+        required: true
 
 permissions:
   contents: read
+concurrency:
+  group: betq-one-shot-balldontlie-refresh-20261104
+  cancel-in-progress: false
 
 jobs:
-  probe:
+  compare:
+    if: >-
+      github.repository == 'SpencerPhoenix/BETQ-ai' &&
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/feat/one-shot-balldontlie-refresh-20261104' &&
+      github.run_attempt == 1 && inputs.approve_one_request && inputs.repository_secret_confirmed
     runs-on: ubuntu-latest
-    timeout-minutes: 7
+    timeout-minutes: 5
     steps:
-      - uses: actions/setup-node@v4
+      - name: Check out exact dispatched revision without persisted credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Use Node without installing application dependencies
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
-      - name: Probe public health and live odds safely
+      - name: Verify approved revision and unchanged current main
+        id: verify
         shell: bash
+        env:
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
         run: |
-          node --input-type=module <<'NODE'
-          const base = 'https://betq-ai.onrender.com';
-          const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-          async function read(path) {
-            const res = await fetch(base + path, {
-              headers: { Accept: 'application/json' },
-              signal: AbortSignal.timeout(95000)
-            });
-            const raw = await res.text();
-            let body = null;
-            try { body = JSON.parse(raw); } catch { /* handled by validation */ }
-            return { status: res.status, body };
-          }
-          let health;
-          for (let attempt = 1; attempt <= 3; attempt++) {
-            try {
-              health = await read('/api/health');
-              if (health.status === 200 && health.body?.status === 'ok') break;
-            } catch (error) {
-              console.log('Health attempt ' + attempt + ': transient connection issue');
-            }
-            if (attempt < 3) await wait(10000);
-          }
-          if (health?.status !== 200 || health?.body?.status !== 'ok') {
-            console.error('PRODUCTION HEALTH: FAIL');
-            process.exit(1);
-          }
-          console.log('PRODUCTION HEALTH: OK');
-          console.log('Version: ' + String(health.body.version || 'unknown'));
-          const configured = health.body.odds?.configured === true;
-          console.log('ODDS_API_KEY configured on server: ' + (configured ? 'YES' : 'NO'));
-          if (!configured) {
-            console.log('LIVE DATA: NOT READY (set ODDS_API_KEY in Render; demo still operates)');
-            process.exit(0);
-          }
-          // Request one live NFL moneyline snapshot. This may cost one provider credit.
-          let result;
-          try { result = await read('/api/slate?sport=americanfootball_nfl&market=h2h&mode=live'); }
-          catch {
-            console.error('LIVE DATA: network error');
-            process.exit(1);
-          }
-          if (result.status !== 200 || result.body?.source !== 'THE_ODDS_API_V4' || result.body?.demo !== false) {
-            console.error('LIVE DATA: FAIL, HTTP=' + result.status + ', code=' + String(result.body?.error?.code || 'UNKNOWN'));
-            process.exit(1);
-          }
-          console.log('LIVE DATA: VERIFIED');
-          console.log('Sport: ' + result.body.sport + ' / market: ' + result.body.market);
-          console.log('Games: ' + Number(result.body.summary?.games ?? 0));
-          console.log('Signals: ' + Number(result.body.summary?.signals ?? 0));
-          console.log('Model independently validated: ' + String(result.body.independentlyValidated === true));
-          console.log('Provider credits remaining: ' + String(result.body.quota?.remaining ?? 'not reported'));
-          NODE
+          set -euo pipefail
+          [[ "$EXPECTED_SHA" =~ ^[a-f0-9]{40}$ ]]
+          [[ "$EXPECTED_SHA" == "$GITHUB_SHA" ]]
+          [[ "$(git rev-parse HEAD)" == "$GITHUB_SHA" ]]
+          [[ "${RUNNER_DEBUG:-0}" != 1 ]]
+          MAIN_SHA="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          [[ "$MAIN_SHA" == '3dcd5a49948246248026f44f57f39d1e37fa9303' ]]
+          echo "main_sha=$MAIN_SHA" >> "$GITHUB_OUTPUT"
+      - name: Verify reviewed snapshot, journal integrity and offline regressions
+        run: |
+          node scripts/one-shot-balldontlie/verify.mjs
+          npm run check
+          npm test
+          git diff --exit-code
+      - name: Make the one approved read and print only sanitized derived comparison
+        env:
+          BDL_ONE_SHOT_API_KEY: ${{ secrets.BALLDONTLIE_API_KEY }}
+          BDL_APPROVED: ${{ inputs.approve_one_request }}
+          BDL_REPOSITORY_SECRET_CONFIRMED: ${{ inputs.repository_secret_confirmed }}
+          BDL_EXPECTED_SHA: ${{ inputs.expected_sha }}
+          BDL_EXPIRES_AT: ${{ inputs.expires_at }}
+          BDL_CURRENT_MAIN_SHA: ${{ steps.verify.outputs.main_sha }}
+        run: node scripts/one-shot-balldontlie/run.mjs
