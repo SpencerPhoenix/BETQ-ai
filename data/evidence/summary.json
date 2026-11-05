@@ -1,23 +1,29 @@
 {
   "schema": 1,
   "season": 2026,
-  "generatedAt": "2026-11-04T18:50:45.294Z",
+  "generatedAt": "2026-11-05T18:56:56.267Z",
   "provenance": {
     "model": "BETQ_NFL_ELO",
     "market": "THE_ODDS_API_V4_DERIVED",
     "results": "NFLVERSE_SCHEDULES_CC_BY_4_0"
   },
   "status": "COLLECTING_FORWARD_EVIDENCE",
+  "outcomeScoringPolicy": "SOURCE_CORROBORATED_SETTLEMENT_V1",
+  "sourceIndependenceVerified": false,
   "researchOnly": true,
   "noWagering": true,
   "marketBeatingEdgeEstablished": false,
   "realizedROI": null,
   "verifiedCLV": null,
   "minimumScoredSample": 30,
-  "totalSnapshots": 77,
+  "totalSnapshots": 105,
   "prospectiveGames": 31,
   "settledGames": 2,
   "pendingGames": 29,
+  "sourceCorroboratedSettledGames": 0,
+  "sourceUncorroboratedSettledGames": 2,
+  "sourceCorroboratedMarketGames": 0,
+  "sourceCorroboratedChallengerGames": 0,
   "pairedMarketGames": 2,
   "nearKickoffConsensusPairs": 0,
   "prospectiveChallengerGames": 30,
@@ -38,7 +44,8 @@
       "modelHomeProbability": 0.471092,
       "marketHomeProbability": 0.688889,
       "capturedAt": "2026-11-02T01:07:26.939Z",
-      "brier": 0.27974
+      "sourceCorroborated": false,
+      "brier": null
     },
     {
       "gameId": "2026_08_CHI_SEA",
@@ -50,7 +57,8 @@
       "modelHomeProbability": 0.610222,
       "marketHomeProbability": 0.607672,
       "capturedAt": "2026-11-02T01:07:26.939Z",
-      "brier": 0.37237
+      "sourceCorroborated": false,
+      "brier": null
     }
   ],
   "pendingPreview": [
@@ -166,10 +174,11 @@
   "safeguards": [
     "Only pregame forecasts captured before outcomes, never reconstructed after games",
     "Original forecasts are append-only; corrected results retain settlement revisions",
-    "At least 30 finalized non-ties before performance statistics are displayed",
+    "At least 30 source-corroborated non-ties before aggregate outcome performance is displayed",
     "Market consensus is paired at the same as-of snapshot, NOT genuine bookmaker closing-line value",
     "Only derived probabilities are journaled; no raw bookmaker prices or identities",
-    "nflverse community-maintained results are not an official league certification",
+    "Legacy community scores remain recorded but do not qualify for outcome scoring",
+    "Cross-source agreement does not establish upstream source independence or official league certification",
     "No real wagers, account execution or realized ROI"
   ]
 }
