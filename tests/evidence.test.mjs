@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {withSyntheticCorroboration} from './fixtures/source-corroborated.mjs';
 import assert from 'node:assert/strict';
 import { nflMoneylineConsensus } from '../src/market-consensus.mjs';
 import {
@@ -129,7 +130,7 @@ test('No post-kickoff reconstruction, early/late game trust and result correctio
   assert.equal(summarizeEvidence(updated).settledGames,1);
 });
 
-test('Prospective 30+ finalized games unlock performance without claiming ROI or closing-line value',()=>{
+test('Prospective 30+ source-corroborated games unlock performance without claiming ROI or closing-line value',()=>{
   const j=emptyJournal(2026);
   for(let i=0;i<MIN_SAMPLE+1;i++){
     const obs={
@@ -139,11 +140,11 @@ test('Prospective 30+ finalized games unlock performance without claiming ROI or
       modelHomeProbability:0.65,marketHomeProbability:0.57
     };
     j.snapshots.push(obs);
-    j.settlements.push({
+    j.settlements.push(withSyntheticCorroboration({
       gameId:obs.gameId,gameDate:obs.gameDate,
       homeScore:i%2===0?27:14,awayScore:i%2===0?14:27,
       outcome:i%2===0?'HOME':'AWAY',revision:1
-    });
+    },ISO(NOW+86400000)));
   }
   const report=summarizeEvidence(j,NOW+86400000);
   assert.equal(report.forwardMetrics.n,31);

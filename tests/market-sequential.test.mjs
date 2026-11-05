@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {withSyntheticCorroboration} from './fixtures/source-corroborated.mjs';
 import assert from 'node:assert/strict';
 import {emptyJournal} from '../src/evidence.mjs';
 import {calculateSequentialEvidence,evidencePath,SEQUENTIAL_PROTOCOL,
@@ -25,12 +26,12 @@ function shot(game,num,market=.5,elo=.65,{at=NOW,challenger=null}={}){
   };
 }
 function final(game,y,revision=1){
-  return {
+  return withSyntheticCorroboration({
     gameId:game,gameDate:'2026-11-08',
     homeScore:y===1?31:10,awayScore:y===1?10:31,
     outcome:y===1?'HOME':'AWAY',revision,
-    resultHash:'result-'+game+'-'+revision,verifiedAt:iso(NOW+10*86400000)
-  };
+    resultHash:'result-'+game+'-'+revision
+  },iso(NOW+10*86400000));
 }
 function makeJ(snaps,results){
   const j=emptyJournal(2026);j.snapshots=snaps;j.settlements=results;return j;

@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {withSyntheticCorroboration} from './fixtures/source-corroborated.mjs';
 import assert from 'node:assert/strict';
 import {
   emptyJournal,observationsFromSlate,updateJournal,summarizeEvidence,MIN_SAMPLE
@@ -75,10 +76,10 @@ test('Paired prospective Elo vs EPA scores require 30 finalized challenger games
       marketHomeProbability:null
     });
     const score=i%2===0?1:0;
-    j.settlements.push({
-      gameId:'game-'+i,outcome:score?'HOME':'AWAY',
+    j.settlements.push(withSyntheticCorroboration({
+      gameDate:'2026-11-07',gameId:'game-'+i,outcome:score?'HOME':'AWAY',
       homeScore:score?27:17,awayScore:score?17:27,revision:1
-    });
+    },iso(NOW+10*86400000)));
   }
   let report=summarizeEvidence(j,NOW+10*86400000);
   assert.equal(report.prospectiveChallengerGames,31);

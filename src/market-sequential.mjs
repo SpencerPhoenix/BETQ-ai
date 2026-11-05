@@ -8,6 +8,7 @@
  * Protocol: docs/PREREGISTERED_SEQUENTIAL_EVIDENCE.md
  * Version v1 is frozen; neither thresholds nor selection rules auto-adapt.
  */
+import {OUTCOME_SCORING_POLICY,isSourceCorroboratedSettlement,latestSettlementsByRevision,unambiguousFrozenGameIds} from './settlement-qualification.mjs';
 import {validateJournal} from './evidence.mjs';
 
 export const SEQUENTIAL_PROTOCOL=Object.freeze({
@@ -53,23 +54,9 @@ function challengerAtSameFirstSnapshot(s){
     probability(s.challengerHomeProbability)&&Number.isFinite(built)&&
     built<=captured+60000&&built<kick? s.challengerHomeProbability:s.marketHomeProbability;
 }
-function latestSettlements(j){
-  const latest=new Map();
-  for(const r of j.settlements){
-    const revision=Number.isInteger(r.revision)&&r.revision>0?r.revision:0;
-    const previous=latest.get(r.gameId);
-    if(!previous||revision>previous.revision){
-      latest.set(r.gameId,{...r,revision});
-    }else if(revision===previous.revision&&
-      (r.homeScore!==previous.homeScore||r.awayScore!==previous.awayScore)){
-      throw Error('Contradictory finalized results with same settlement revision');
-    }
-  }
-  return latest;
-}
 function eligible(j){
   const first=new Map();
-  const exclusions={noEligiblePregameQuote:0,noSettlement:0,tie:0};
+  const exclusions={noEligiblePregameQuote:0,noSettlement:0,tie:0,uncorroboratedSettlement:0};
   const games=new Set(j.snapshots.map(x=>x.gameId));
   for(const s of j.snapshots){
     if(!isEligibleFirstSnapshot(s))continue;
@@ -78,12 +65,14 @@ function eligible(j){
       (s.capturedAt===current.capturedAt&&s.id<current.id))first.set(s.gameId,s);
   }
   exclusions.noEligiblePregameQuote=games.size-first.size;
-  const final=latestSettlements(j);
+  const final=latestSettlementsByRevision(j.settlements);
+  const unambiguous=unambiguousFrozenGameIds(j.snapshots);
   const observations=[];
   for(const [id,s] of first){
     const r=final.get(id);
     if(!r){exclusions.noSettlement++;continue;}
     if(r.outcome==='TIE'){exclusions.tie++;continue;}
+    if(!unambiguous.has(id)||!isSourceCorroboratedSettlement(r,s)){exclusions.uncorroboratedSettlement++;continue;}
     const y=r.outcome==='HOME'?1:0,p=s.marketHomeProbability;
     observations.push({
       gameId:id,gameDate:s.gameDate,scheduledAt:s.commenceTime,
@@ -124,6 +113,7 @@ export function calculateSequentialEvidence(journal){
   const publish=n>=SEQUENTIAL_PROTOCOL.minDistinctFinalGames;
   return {
     schema:1,version:SEQUENTIAL_PROTOCOL.version,protocol:SEQUENTIAL_PROTOCOL,
+    outcomeScoringPolicy:OUTCOME_SCORING_POLICY,sourceIndependenceVerified:false,
     study:'PROSPECTIVE_CONDITIONAL_MARKET_LIKELIHOOD_COMPARISON',
     source:'BETQ_IMMUTABLE_FORWARD_DERIVED_JOURNAL',
     predictionsFrozenBeforeLaterPrice:true,
@@ -164,6 +154,7 @@ export function calculateSequentialEvidence(journal){
       'Shared NFL teams, injuries and week shocks violate the simple conditional-null model unless captured in true p_i.',
       'The challenger contributes neutral market p when unavailable at the first qualified prediction; no later backfill.',
       'Every settlement is evaluated only once using its highest unambiguous revision.',
+      'Only source-corroborated results with matching receipts qualify; upstream source independence is not established.',
       'No live bet, accepted bookmaker price, actual CLV, realized ROI or financially executable edge is measured.'
     ]
   };

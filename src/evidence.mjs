@@ -3,6 +3,7 @@
  * no-vig consensus are stored. Raw odds/bookmaker identities are never stored.
  * Forecast snapshots are immutable; verified results have revision history.
  */
+import {OUTCOME_SCORING_POLICY,isSourceCorroboratedSettlement,latestSettlementsByRevision,unambiguousFrozenGameIds} from './settlement-qualification.mjs';
 import {pairedWeekBootstrap} from './statistical-audit.mjs';
 import {timestamp, isProbability, validDay} from './integrity.mjs';
 import { createHash } from 'node:crypto';
@@ -210,35 +211,41 @@ export function summarizeEvidence(journal,now=Date.now()) {
   const first=new Map(),byGame=new Map();
   for(const shot of journal.snapshots) {
     if(parsed(shot.capturedAt)>=parsed(shot.commenceTime))continue;
-    if(!first.has(shot.gameId)||shot.capturedAt<first.get(shot.gameId).capturedAt)
+    if(!first.has(shot.gameId)||(shot.capturedAt<first.get(shot.gameId).capturedAt||
+      (shot.capturedAt===first.get(shot.gameId).capturedAt&&shot.id<first.get(shot.gameId).id)))
       first.set(shot.gameId,shot);
     if(!byGame.has(shot.gameId))byGame.set(shot.gameId,[]);
     byGame.get(shot.gameId).push(shot);
   }
-  const settled=new Map(journal.settlements.map(s=>[s.gameId,s]));
+  const settled=latestSettlementsByRevision(journal.settlements);
+  const unambiguous=unambiguousFrozenGameIds(journal.snapshots);
   const observed=[...first.values()].filter(s=>settled.has(s.gameId)&&settled.get(s.gameId).outcome!=='TIE')
     .map(s=>{const final=settled.get(s.gameId),y=final.outcome==='HOME'?1:0;
       return {s,final,y,model:loss(s.modelHomeProbability,y),
         market:Number.isFinite(s.marketHomeProbability)?loss(s.marketHomeProbability,y):null};});
   const paired=observed.filter(x=>x.market);
+  const scored=observed.filter(x=>(unambiguous.has(x.s.gameId)&&isSourceCorroboratedSettlement(x.final,x.s)));
+  const scoredPaired=scored.filter(x=>x.market);
   const challengerPaired=[];
   for(const [gameId,shots] of byGame){
     const result=settled.get(gameId);
     if(!result||result.outcome==='TIE')continue;
     const s=[...shots].filter(x=>Number.isFinite(x.challengerHomeProbability)&&
       parsed(x.capturedAt)<parsed(x.commenceTime))
-      .sort((a,b)=>a.capturedAt.localeCompare(b.capturedAt))[0];
+      .sort((a,b)=>a.capturedAt.localeCompare(b.capturedAt)||a.id.localeCompare(b.id))[0];
     if(!s)continue;
     const y=result.outcome==='HOME'?1:0;
     challengerPaired.push({
       gameId,gameDate:s.gameDate,modelVersion:s.challengerModelVersion,
+      sourceCorroborated:unambiguous.has(gameId)&&isSourceCorroboratedSettlement(result,s),
       baselineProbability:s.modelHomeProbability,challengerProbability:s.challengerHomeProbability,outcome:y,
       baseline:loss(s.modelHomeProbability,y),
       challenger:loss(s.challengerHomeProbability,y)
     });
   }
-  const minMet=observed.length>=MIN_SAMPLE,pairedMet=paired.length>=MIN_SAMPLE;
-  const differences=paired.map(x=>x.market.brier-x.model.brier);
+  const scoredChallenger=challengerPaired.filter(x=>x.sourceCorroborated);
+  const minMet=scored.length>=MIN_SAMPLE,pairedMet=scoredPaired.length>=MIN_SAMPLE;
+  const differences=scoredPaired.map(x=>x.market.brier-x.model.brier);
   const movement=[];
   for(const [gameId,shots] of byGame){
     const firstShot=first.get(gameId);
@@ -252,38 +259,43 @@ export function summarizeEvidence(journal,now=Date.now()) {
   return {
     schema:1,season:journal.season,generatedAt:new Date(now).toISOString(),
     provenance:journal.provenance,status:minMet?'FORWARD_SAMPLE_AVAILABLE':'COLLECTING_FORWARD_EVIDENCE',
+    outcomeScoringPolicy:OUTCOME_SCORING_POLICY,sourceIndependenceVerified:false,
     researchOnly:true,noWagering:true,marketBeatingEdgeEstablished:false,
     realizedROI:null,verifiedCLV:null,minimumScoredSample:MIN_SAMPLE,
     totalSnapshots:journal.snapshots.length,prospectiveGames:first.size,
     settledGames:observed.length,pendingGames:pending.length,
+    sourceCorroboratedSettledGames:scored.length,
+    sourceUncorroboratedSettledGames:observed.length-scored.length,
+    sourceCorroboratedMarketGames:scoredPaired.length,
+    sourceCorroboratedChallengerGames:scoredChallenger.length,
     pairedMarketGames:paired.length,nearKickoffConsensusPairs:movement.length,
     prospectiveChallengerGames:[...byGame.values()].filter(shots=>
       shots.some(s=>Number.isFinite(s.challengerHomeProbability))).length,
     pairedChallengerSettled:challengerPaired.length,
-    challengerForwardComparison:challengerPaired.length>=MIN_SAMPLE?{
-      n:challengerPaired.length,
-      baselineBrier:round(avg(challengerPaired.map(x=>x.baseline.brier))),
-      challengerBrier:round(avg(challengerPaired.map(x=>x.challenger.brier))),
-      baselineLogLoss:round(avg(challengerPaired.map(x=>x.baseline.logLoss))),
-      challengerLogLoss:round(avg(challengerPaired.map(x=>x.challenger.logLoss))),
-      baselineMinusChallengerBrier:round(avg(challengerPaired.map(x=>
+    challengerForwardComparison:scoredChallenger.length>=MIN_SAMPLE?{
+      n:scoredChallenger.length,
+      baselineBrier:round(avg(scoredChallenger.map(x=>x.baseline.brier))),
+      challengerBrier:round(avg(scoredChallenger.map(x=>x.challenger.brier))),
+      baselineLogLoss:round(avg(scoredChallenger.map(x=>x.baseline.logLoss))),
+      challengerLogLoss:round(avg(scoredChallenger.map(x=>x.challenger.logLoss))),
+      baselineMinusChallengerBrier:round(avg(scoredChallenger.map(x=>
         x.baseline.brier-x.challenger.brier))),
-      confidence95:ciPaired(challengerPaired.map(x=>
+      confidence95:ciPaired(scoredChallenger.map(x=>
         x.baseline.brier-x.challenger.brier)),
-      weekSensitivity:pairedWeekBootstrap(challengerPaired.map(x=>({id:x.gameId,date:x.gameDate,
+      weekSensitivity:pairedWeekBootstrap(scoredChallenger.map(x=>({id:x.gameId,date:x.gameDate,
         baseline:x.baselineProbability,challenger:x.challengerProbability,outcome:x.outcome}))),
       interpretation:'PAIRED_PROSPECTIVE_PREGAME_NOT_PROFIT_VALIDATION'
     }:null,
     tiesExcluded:[...first.keys()].filter(id=>settled.get(id)?.outcome==='TIE').length,
     forwardMetrics:minMet?{
-      n:observed.length,brier:round(avg(observed.map(x=>x.model.brier))),
-      logLoss:round(avg(observed.map(x=>x.model.logLoss))),
-      winnerAccuracy:round(avg(observed.map(x=>x.model.correct)),4),
-      calibration:bins(observed.map(x=>({p:x.s.modelHomeProbability,y:x.y})))
+      n:scored.length,brier:round(avg(scored.map(x=>x.model.brier))),
+      logLoss:round(avg(scored.map(x=>x.model.logLoss))),
+      winnerAccuracy:round(avg(scored.map(x=>x.model.correct)),4),
+      calibration:bins(scored.map(x=>({p:x.s.modelHomeProbability,y:x.y})))
     }:null,
     marketComparison:pairedMet?{
-      n:paired.length,modelBrier:round(avg(paired.map(x=>x.model.brier))),
-      consensusBrier:round(avg(paired.map(x=>x.market.brier))),
+      n:scoredPaired.length,modelBrier:round(avg(scoredPaired.map(x=>x.model.brier))),
+      consensusBrier:round(avg(scoredPaired.map(x=>x.market.brier))),
       consensusMinusModelBrier:round(avg(differences)),
       confidence95:ciPaired(differences),
       basis:'SAME_SNAPSHOT_NON_CLOSING_CONSENSUS'
@@ -294,7 +306,9 @@ export function summarizeEvidence(journal,now=Date.now()) {
       gameDate:x.s.gameDate,score:x.final.awayScore+'-'+x.final.homeScore,
       result:x.final.outcome,modelHomeProbability:x.s.modelHomeProbability,
       marketHomeProbability:x.s.marketHomeProbability,
-      capturedAt:x.s.capturedAt,brier:round(x.model.brier)
+      capturedAt:x.s.capturedAt,
+      sourceCorroborated:(unambiguous.has(x.s.gameId)&&isSourceCorroboratedSettlement(x.final,x.s)),
+      brier:(unambiguous.has(x.s.gameId)&&isSourceCorroboratedSettlement(x.final,x.s))?round(x.model.brier):null
     })),
     pendingPreview:pending.slice(0,12).map(x=>({
       gameId:x.gameId,home:x.home,away:x.away,gameDate:x.gameDate,
@@ -304,10 +318,11 @@ export function summarizeEvidence(journal,now=Date.now()) {
     safeguards:[
       'Only pregame forecasts captured before outcomes, never reconstructed after games',
       'Original forecasts are append-only; corrected results retain settlement revisions',
-      'At least 30 finalized non-ties before performance statistics are displayed',
+      'At least 30 source-corroborated non-ties before aggregate outcome performance is displayed',
       'Market consensus is paired at the same as-of snapshot, NOT genuine bookmaker closing-line value',
       'Only derived probabilities are journaled; no raw bookmaker prices or identities',
-      'nflverse community-maintained results are not an official league certification',
+      'Legacy community scores remain recorded but do not qualify for outcome scoring',
+      'Cross-source agreement does not establish upstream source independence or official league certification',
       'No real wagers, account execution or realized ROI'
     ]
   };

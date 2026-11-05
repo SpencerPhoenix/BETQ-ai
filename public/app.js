@@ -327,9 +327,11 @@
       return proof;
     })():'<p class="shadow-diagnostic">Source-frozen model-vs-later-market audit is not available.</p>';
     const sequential=r.sequentialMarketEvidence;
-    const sequentialBox=sequential?.version==='betq-market-sequential-v1'?(()=>{
+    const sequentialBox=sequential?.version==='betq-market-sequential-v1'&&
+      sequential.outcomeScoringPolicy==='SOURCE_CORROBORATED_SETTLEMENT_V1'&&
+      sequential.sourceIndependenceVerified===false?(()=>{
       const settled=sequential.eligibleSettledNonTieGames||0,
-        readable=sequential.properScores!==null&&settled>=30;
+        readable=Number.isInteger(settled)&&settled>=30&&sequential.properScores?.n===settled;
       const evidence=sequential.candidateEvidence;
       const score=sequential.properScores;
       return '<div class="shadow-lead-box">'+
@@ -337,7 +339,7 @@
         '<span class="status-tag pass">'+(readable?'RESEARCH ONLY':'AWAITING 30 FINAL GAMES')+'</span></div>'+
         '<div class="metric-grid">'+
         metric('QUALIFIED FINAL GAMES',String(settled),
-          'One first, source-checked pregame snapshot per settled NFL game','cyan','▤')+
+          'One frozen forecast per source-corroborated NFL result','cyan','▤')+
         metric('REMAINING TO REPORT',String(sequential.gamesNeededForDescriptiveScore),
           '30-game minimum is a display gate, not proof of an advantage','','◷')+
         metric('MARKET VS ELO BRIER',readable?
@@ -348,7 +350,7 @@
           'Requires an unproven efficient-market probability assumption','','⌁')+
         '</div><p class="shadow-live-notice"><b>No verified profitability.</b> '+
         'A precommitted 50/50 Elo/efficiency likelihood comparison uses the first '+
-        'eligible forecast and a later finalized game result. If no efficiency '+
+        'eligible forecast and a later source-corroborated result. Source independence is unverified. If no efficiency '+
         'forecast was present initially, its contribution is neutral. '+
         'This diagnostic assumes the market probability is the true conditional '+
         'outcome probability, which is not established, and cannot demonstrate '+
@@ -1120,6 +1122,34 @@
       '</div>';
   }
 
+  // A cached or older API summary must not restore legacy outcome claims.
+  function evidenceScoringView(e) {
+    const count=n=>Number.isInteger(n)&&n>=0;
+    const keys=['prospectiveGames','settledGames','pairedMarketGames','pairedChallengerSettled',
+      'sourceCorroboratedSettledGames','sourceUncorroboratedSettledGames',
+      'sourceCorroboratedMarketGames','sourceCorroboratedChallengerGames'];
+    const valid=e?.outcomeScoringPolicy==='SOURCE_CORROBORATED_SETTLEMENT_V1'&&
+      e.sourceIndependenceVerified===false&&e.minimumScoredSample===30&&
+      e.researchOnly===true&&e.noWagering===true&&e.marketBeatingEdgeEstablished===false&&
+      e.realizedROI===null&&e.verifiedCLV===null&&keys.every(key=>count(e[key]))&&
+      e.sourceCorroboratedSettledGames+e.sourceUncorroboratedSettledGames===e.settledGames&&
+      e.settledGames<=e.prospectiveGames&&e.pairedMarketGames<=e.settledGames&&
+      e.pairedChallengerSettled<=e.settledGames&&
+      e.status===(e.sourceCorroboratedSettledGames>=30?'FORWARD_SAMPLE_AVAILABLE':'COLLECTING_FORWARD_EVIDENCE')&&
+      e.sourceCorroboratedMarketGames<=e.sourceCorroboratedSettledGames&&
+      e.sourceCorroboratedMarketGames<=e.pairedMarketGames&&
+      e.sourceCorroboratedChallengerGames<=e.sourceCorroboratedSettledGames&&
+      e.sourceCorroboratedChallengerGames<=e.pairedChallengerSettled;
+    const sample=valid?e.sourceCorroboratedSettledGames:0;
+    const market=valid?e.sourceCorroboratedMarketGames:0;
+    const challenger=valid?e.sourceCorroboratedChallengerGames:0;
+    return {valid,sample,market,challenger,
+      forward:sample>=30&&e.forwardMetrics?.n===sample&&
+        Number.isFinite(e.forwardMetrics.brier)&&e.forwardMetrics.brier>=0&&e.forwardMetrics.brier<=1?e.forwardMetrics:null,
+      benchmark:market>=30&&e.marketComparison?.n===market?e.marketComparison:null,
+      comparison:challenger>=30&&e.challengerForwardComparison?.n===challenger?e.challengerForwardComparison:null};
+  }
+
   function renderEvidence() {
     const root = $('evidence-view');
     if (!root) return;
@@ -1132,16 +1162,18 @@
       root.innerHTML = empty('Evidence service unavailable', 'The evidence API has not finished deploying. Historical NFL Prediction Lab remains available.');
       return;
     }
-    const sample = Math.max(0, Number(e.settledGames) || 0);
+    const scoring = evidenceScoringView(e);
+    const sample = scoring.sample;
+    const recorded = Math.max(0, Number(e.settledGames) || 0);
     const progress = Math.min(30, sample);
-    const qualified = Boolean(e.forwardMetrics);
-    const positive = e.marketComparison?.consensusMinusModelBrier > 0;
+    const qualified = Boolean(scoring.forward);
+    const positive = scoring.benchmark?.consensusMinusModelBrier > 0;
     const stats = '<div class="metric-grid">' +
       metric('PREGAME FORECASTS', String(e.prospectiveGames || 0), 'Unique frozen before kickoff', 'cyan', '◫') +
-      metric('FINALS MATCHED', String(sample), 'Later reconciled results · ties excluded', 'lime', '✓') +
-      metric('SAME-TIME MARKET PAIRS', String(e.pairedMarketGames || 0), 'Independent median no-vig comparisons', 'violet', '⌁') +
+      metric('RESULTS RECORDED', String(recorded), sample + ' source-corroborated · ties excluded', 'lime', '✓') +
+      metric('SAME-TIME MARKET PAIRS', String(scoring.market), 'Source-corroborated outcome pairs', 'violet', '⌁') +
       metric('FORWARD BRIER SCORE', qualified ? num(e.forwardMetrics.brier, 5) : '—',
-        qualified ? 'Newly observed games only' : 'Requires 30 completed games', '', '◇') +
+        qualified ? 'Source-corroborated outcomes only' : 'Requires 30 source-corroborated games', '', '◇') +
       '</div>';
     const gate = '<section class="panel evidence-collection"><div class="panel-head"><div>' +
       '<span class="panel-kicker">PROSPECTIVE EVIDENCE GATE</span><h3>' +
@@ -1149,17 +1181,17 @@
       '</h3></div><span class="status-tag ' + (qualified ? 'watch' : 'pass') + '">' +
       (qualified ? 'SAMPLE AVAILABLE' : 'NOT ENOUGH GAMES') + '</span></div>' +
       '<div class="evidence-body"><p>Every forecast is timestamped before kickoff, retained without rewriting, then matched to a subsequent nflverse final score. ' +
-      'BETQ.ai does not backfill historical model probabilities and pass them off as past live forecasts.</p>' +
-      '<div class="evidence-progress-head"><b>' + sample + ' of 30 completed games</b>' +
+      'Recorded scores alone do not qualify for performance reporting. Matching source receipts are required; upstream source independence is not established.</p>' +
+      '<div class="evidence-progress-head"><b>' + sample + ' of 30 source-corroborated games</b>' +
       '<span>' + e.pendingGames + ' still pending</span></div>' +
       '<progress class="evidence-meter" max="30" value="' + progress + '"></progress>' +
       (qualified ? '<div class="evidence-performance"><div><span>Forward winner accuracy</span><strong>' +
         pct(e.forwardMetrics.winnerAccuracy, 2) + '</strong></div><div><span>Forward log loss</span><strong>' +
         num(e.forwardMetrics.logLoss, 5) + '</strong></div></div>' :
-        '<p class="evidence-warning">Winner accuracy, model advantage and any performance claims stay withheld until at least 30 independently settled games are available. ' +
+        '<p class="evidence-warning">Winner accuracy, model advantage and any performance claims stay withheld until at least 30 source-corroborated games are available. ' +
         'Thirty games is an initial reporting threshold, not sufficient to prove statistical or financial superiority.</p>') +
       '</div></section>';
-    const mc = e.marketComparison;
+    const mc = scoring.benchmark;
     const benchmark = '<section class="panel"><div class="panel-head"><div>' +
       '<span class="panel-kicker">PAIRED MARKET BENCHMARK</span><h3>Elo vs sportsbook consensus</h3></div>' +
       '<span class="header-mini-icon">≋</span></div>' +
@@ -1174,7 +1206,7 @@
         '</strong></div></div><p>Lower Brier is better. A positive difference favors the model on this sample; ' +
         'it is not proof of a profitable betting strategy or true closing-line value.</p></div>' :
         empty('Market comparison not yet reportable',
-          'At least 30 finalized NFL games must contain both frozen model probabilities and the same-time, de-vigged multi-book market reference.')) +
+          'At least 30 source-corroborated NFL results must match both frozen model probabilities and the same-time, de-vigged multi-book market reference.')) +
       '</section>';
     const dates = (e.pendingPreview || []).map(x =>
       '<div class="evidence-row"><div><strong>' + esc(x.away) + ' @ ' + esc(x.home) +
@@ -1186,8 +1218,9 @@
     const recent = (e.recentResults || []).map(x =>
       '<div class="evidence-row"><div><strong>' + esc(x.away) + ' @ ' + esc(x.home) +
       '</strong><small>' + esc(x.gameDate) + ' · final ' + esc(x.score) +
-      ' · ' + esc(x.result) + '</small></div><div class="evidence-numbers"><b>' +
-      pct(x.modelHomeProbability) + '</b><small>Brier: ' + num(x.brier, 4) +
+      ' · ' + esc(x.result) + ' · ' + (scoring.valid && x.sourceCorroborated === true ? 'source-corroborated' : 'corroboration not established') + '</small></div><div class="evidence-numbers"><b>' +
+      pct(x.modelHomeProbability) + '</b><small>Brier: ' +
+      (scoring.valid && x.sourceCorroborated === true && Number.isFinite(x.brier) ? num(x.brier, 4) : 'withheld') +
       '</small></div></div>').join('');
     const ledger = '<section class="panel"><div class="panel-head"><div>' +
       '<span class="panel-kicker">IMMUTABLE FORECAST JOURNAL</span><h3>Pending game evidence</h3></div>' +
@@ -1195,12 +1228,12 @@
       (dates ? '<div class="evidence-list">' + dates + '</div>' :
         empty('No pending tracked games', 'The scheduled collector has not captured eligible future NFL games yet.')) +
       '</section><section class="panel"><div class="panel-head"><div>' +
-      '<span class="panel-kicker">SOURCE-ALIGNED RESULTS</span><h3>Finalized forecast results</h3></div>' +
+      '<span class="panel-kicker">SOURCE-ALIGNED RESULTS</span><h3>Recorded forecast results</h3></div>' +
       '<span class="faint-caption">HOME TEAM MODEL P</span></div>' +
       (recent ? '<div class="evidence-list">' + recent + '</div>' :
         empty('No completed forward forecasts yet', 'Results appear here after previously captured games are finalized in nflverse schedules.')) +
       '</section>';
-    const cf=e.challengerForwardComparison;
+    const cf=scoring.comparison;
     const challengerBlock='<section class="panel evidence-challenger"><div class="panel-head">'+
       '<div><span class="panel-kicker">EPA CHALLENGER / FROZEN PREGAME</span>'+
       '<h3>Prospective Elo vs EPA comparison</h3></div>'+
@@ -1209,8 +1242,8 @@
       '<div class="evidence-body"><p><b>'+
       esc(String(e.prospectiveChallengerGames||0))+
       ' future games with an independent EPA challenger frozen before kickoff.</b> '+
-      esc(String(e.pairedChallengerSettled||0))+
-      ' matching games have subsequently reached a finalized, non-tied outcome. '+
+      esc(String(scoring.challenger))+
+      ' matching games have source-corroborated, non-tied outcomes. '+
       'These forecasts are separate from the historical 2025 backtest.</p>'+
       (cf?'<div class="evidence-performance"><div><span>Prospective Elo Brier</span><strong>'+
         num(cf.baselineBrier,5)+'</strong></div><div><span>Prospective EPA Brier</span>'+
@@ -1221,12 +1254,12 @@
         signed(cf.confidence95?.upper,5)+
         '. This is probability scoring only, not a verified betting return.</p>' :
         '<div class="evidence-progress-head"><b>'+
-        esc(String(e.pairedChallengerSettled||0))+
-        ' / 30 finished paired games</b><span>No retrospective backfill</span></div>'+
+        esc(String(scoring.challenger))+
+        ' / 30 source-corroborated paired games</b><span>No retrospective backfill</span></div>'+
         '<progress class="evidence-meter" max="30" value="'+
-        Math.min(30,Math.max(0,Number(e.pairedChallengerSettled)||0))+
+        Math.min(30,Math.max(0,scoring.challenger))+
         '"></progress><p>Scores remain hidden until a minimum 30 challenger '+
-        'forecasts were frozen and their games subsequently completed.</p>')+
+        'forecasts were frozen and their results subsequently source-corroborated.</p>')+
       '</div></section>';
     root.innerHTML = stats + '<div class="evidence-columns">' + gate + benchmark + '</div>' +
       challengerBlock +
@@ -1255,10 +1288,11 @@
         state.nflModel?.available ? 'RESEARCH' : 'UNAVAILABLE', Boolean(state.nflModel?.available)),
       auditRow('Prospective outcome tracking',
         state.evidence ? String(state.evidence.prospectiveGames) + ' games frozen pregame · ' +
-          String(state.evidence.settledGames) + ' scored against later results' :
+          String(state.evidence.settledGames) + ' results recorded · ' +
+          String(evidenceScoringView(state.evidence).sample) + ' source-corroborated for scoring' :
           'Evidence journal not yet available',
-        state.evidence?.settledGames >= 30 ? 'SAMPLE READY' : 'COLLECTING',
-        state.evidence?.settledGames >= 30),
+        Boolean(evidenceScoringView(state.evidence).forward) ? 'SAMPLE READY' : 'COLLECTING',
+        Boolean(evidenceScoringView(state.evidence).forward)),
       auditRow('EPA/success/rest independent challenger',
         state.efficiency?.available ? '2025 holdout baseline Brier '+
           num(state.efficiency.holdout?.elo?.brier,5)+' versus feature Brier '+
