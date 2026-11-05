@@ -4,16 +4,16 @@
   "source": "NFLVERSE_INJURIES",
   "attribution": "nflverse injury reports (CC BY 4.0); upstream NFL injury report API",
   "sourceUrl": "https://github.com/nflverse/nflverse-data/releases/download/injuries/injuries_2026.csv",
-  "sourceUpdatedAt": "2026-11-04T15:21:18.000Z",
-  "builtAt": "2026-11-04T18:03:39.939Z",
-  "reportCount": 244,
+  "sourceUpdatedAt": "2026-11-05T15:22:25.000Z",
+  "builtAt": "2026-11-05T18:05:35.258Z",
+  "reportCount": 268,
   "ambiguousPlayerRecords": 0,
   "perPlayerTimestampsAvailable": false,
   "reports": {
     "ARI:1": {
       "team": "ARI",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -56,7 +56,7 @@
     "ATL:1": {
       "team": "ATL",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -121,7 +121,7 @@
     "BAL:1": {
       "team": "BAL",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -157,7 +157,7 @@
     "BUF:1": {
       "team": "BUF",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -193,7 +193,7 @@
     "CAR:1": {
       "team": "CAR",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 1,
       "statusCounts": {
@@ -215,7 +215,7 @@
     "CHI:1": {
       "team": "CHI",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -266,7 +266,7 @@
     "CIN:1": {
       "team": "CIN",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 1,
       "statusCounts": {
@@ -288,7 +288,7 @@
     "CLE:1": {
       "team": "CLE",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -317,7 +317,7 @@
     "DAL:1": {
       "team": "DAL",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 1,
       "statusCounts": {
@@ -339,7 +339,7 @@
     "DEN:1": {
       "team": "DEN",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 0,
       "statusCounts": {
@@ -353,7 +353,7 @@
     "DET:1": {
       "team": "DET",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 1,
       "statusCounts": {
@@ -375,7 +375,7 @@
     "GB:1": {
       "team": "GB",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -418,7 +418,7 @@
     "HOU:1": {
       "team": "HOU",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 0,
       "statusCounts": {
@@ -432,7 +432,7 @@
     "IND:1": {
       "team": "IND",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 1,
       "statusCounts": {
@@ -462,7 +462,7 @@
     "JAX:1": {
       "team": "JAX",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 1,
       "statusCounts": {
@@ -484,7 +484,7 @@
     "KC:1": {
       "team": "KC",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -521,7 +521,7 @@
     "LA:1": {
       "team": "LA",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 1,
       "statusCounts": {
@@ -543,7 +543,7 @@
     "LAC:1": {
       "team": "LAC",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -572,7 +572,7 @@
     "LV:1": {
       "team": "LV",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 1,
       "statusCounts": {
@@ -594,7 +594,7 @@
     "MIA:1": {
       "team": "MIA",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 0,
       "statusCounts": {
@@ -608,7 +608,7 @@
     "MIN:1": {
       "team": "MIN",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 0,
       "statusCounts": {
@@ -622,7 +622,7 @@
     "NE:1": {
       "team": "NE",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -651,7 +651,7 @@
     "NO:1": {
       "team": "NO",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -694,7 +694,7 @@
     "NYG:1": {
       "team": "NYG",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 1,
       "statusCounts": {
@@ -716,7 +716,7 @@
     "NYJ:1": {
       "team": "NYJ",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -759,7 +759,7 @@
     "PHI:1": {
       "team": "PHI",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -788,7 +788,7 @@
     "PIT:1": {
       "team": "PIT",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 1,
       "statusCounts": {
@@ -810,7 +810,7 @@
     "SEA:1": {
       "team": "SEA",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -846,7 +846,7 @@
     "SF:1": {
       "team": "SF",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -875,7 +875,7 @@
     "TB:1": {
       "team": "TB",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -918,7 +918,7 @@
     "TEN:1": {
       "team": "TEN",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 1,
       "statusCounts": {
@@ -940,7 +940,7 @@
     "WAS:1": {
       "team": "WAS",
       "week": 1,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 0,
       "statusCounts": {
@@ -962,7 +962,7 @@
     "ARI:2": {
       "team": "ARI",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 7,
       "statusCounts": {
@@ -1026,7 +1026,7 @@
     "ATL:2": {
       "team": "ATL",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -1098,7 +1098,7 @@
     "BAL:2": {
       "team": "BAL",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 7,
       "statusCounts": {
@@ -1162,7 +1162,7 @@
     "BUF:2": {
       "team": "BUF",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -1198,7 +1198,7 @@
     "CAR:2": {
       "team": "CAR",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -1227,7 +1227,7 @@
     "CHI:2": {
       "team": "CHI",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 0,
       "statusCounts": {
@@ -1241,7 +1241,7 @@
     "CIN:2": {
       "team": "CIN",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -1278,7 +1278,7 @@
     "CLE:2": {
       "team": "CLE",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -1314,7 +1314,7 @@
     "DAL:2": {
       "team": "DAL",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -1343,7 +1343,7 @@
     "DEN:2": {
       "team": "DEN",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -1372,7 +1372,7 @@
     "DET:2": {
       "team": "DET",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -1408,7 +1408,7 @@
     "GB:2": {
       "team": "GB",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -1465,7 +1465,7 @@
     "HOU:2": {
       "team": "HOU",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -1508,7 +1508,7 @@
     "IND:2": {
       "team": "IND",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -1545,7 +1545,7 @@
     "JAX:2": {
       "team": "JAX",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 0,
       "statusCounts": {
@@ -1559,7 +1559,7 @@
     "KC:2": {
       "team": "KC",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -1610,7 +1610,7 @@
     "LA:2": {
       "team": "LA",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -1646,7 +1646,7 @@
     "LAC:2": {
       "team": "LAC",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -1689,7 +1689,7 @@
     "LV:2": {
       "team": "LV",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -1733,7 +1733,7 @@
     "MIA:2": {
       "team": "MIA",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -1777,7 +1777,7 @@
     "MIN:2": {
       "team": "MIN",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -1821,7 +1821,7 @@
     "NE:2": {
       "team": "NE",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -1864,7 +1864,7 @@
     "NO:2": {
       "team": "NO",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -1914,7 +1914,7 @@
     "NYG:2": {
       "team": "NYG",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -1943,7 +1943,7 @@
     "NYJ:2": {
       "team": "NYJ",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -1993,7 +1993,7 @@
     "PHI:2": {
       "team": "PHI",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -2022,7 +2022,7 @@
     "PIT:2": {
       "team": "PIT",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -2058,7 +2058,7 @@
     "SEA:2": {
       "team": "SEA",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -2109,7 +2109,7 @@
     "SF:2": {
       "team": "SF",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -2145,7 +2145,7 @@
     "TB:2": {
       "team": "TB",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -2181,7 +2181,7 @@
     "TEN:2": {
       "team": "TEN",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -2217,7 +2217,7 @@
     "WAS:2": {
       "team": "WAS",
       "week": 2,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -2253,7 +2253,7 @@
     "ARI:3": {
       "team": "ARI",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -2297,7 +2297,7 @@
     "ATL:3": {
       "team": "ATL",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -2341,7 +2341,7 @@
     "BAL:3": {
       "team": "BAL",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -2370,7 +2370,7 @@
     "BUF:3": {
       "team": "BUF",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -2427,7 +2427,7 @@
     "CAR:3": {
       "team": "CAR",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -2477,7 +2477,7 @@
     "CHI:3": {
       "team": "CHI",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -2535,7 +2535,7 @@
     "CIN:3": {
       "team": "CIN",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -2564,7 +2564,7 @@
     "CLE:3": {
       "team": "CLE",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -2600,7 +2600,7 @@
     "DAL:3": {
       "team": "DAL",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -2643,7 +2643,7 @@
     "DEN:3": {
       "team": "DEN",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -2672,7 +2672,7 @@
     "DET:3": {
       "team": "DET",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -2701,7 +2701,7 @@
     "GB:3": {
       "team": "GB",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -2758,7 +2758,7 @@
     "HOU:3": {
       "team": "HOU",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -2815,7 +2815,7 @@
     "IND:3": {
       "team": "IND",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -2851,7 +2851,7 @@
     "JAX:3": {
       "team": "JAX",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 1,
       "statusCounts": {
@@ -2873,7 +2873,7 @@
     "KC:3": {
       "team": "KC",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -2910,7 +2910,7 @@
     "LA:3": {
       "team": "LA",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -2946,7 +2946,7 @@
     "LAC:3": {
       "team": "LAC",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 8,
       "statusCounts": {
@@ -3025,7 +3025,7 @@
     "LV:3": {
       "team": "LV",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -3076,7 +3076,7 @@
     "MIA:3": {
       "team": "MIA",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -3126,7 +3126,7 @@
     "MIN:3": {
       "team": "MIN",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -3155,7 +3155,7 @@
     "NE:3": {
       "team": "NE",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -3205,7 +3205,7 @@
     "NO:3": {
       "team": "NO",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -3241,7 +3241,7 @@
     "NYG:3": {
       "team": "NYG",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -3285,7 +3285,7 @@
     "NYJ:3": {
       "team": "NYJ",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -3342,7 +3342,7 @@
     "PHI:3": {
       "team": "PHI",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -3385,7 +3385,7 @@
     "PIT:3": {
       "team": "PIT",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -3442,7 +3442,7 @@
     "SEA:3": {
       "team": "SEA",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -3486,7 +3486,7 @@
     "SF:3": {
       "team": "SF",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -3536,7 +3536,7 @@
     "TB:3": {
       "team": "TB",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -3573,7 +3573,7 @@
     "TEN:3": {
       "team": "TEN",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -3602,7 +3602,7 @@
     "WAS:3": {
       "team": "WAS",
       "week": 3,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -3660,7 +3660,7 @@
     "ARI:4": {
       "team": "ARI",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -3689,7 +3689,7 @@
     "ATL:4": {
       "team": "ATL",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -3725,7 +3725,7 @@
     "BAL:4": {
       "team": "BAL",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -3790,7 +3790,7 @@
     "BUF:4": {
       "team": "BUF",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -3826,7 +3826,7 @@
     "CAR:4": {
       "team": "CAR",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -3891,7 +3891,7 @@
     "CHI:4": {
       "team": "CHI",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -3956,7 +3956,7 @@
     "CIN:4": {
       "team": "CIN",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -4013,7 +4013,7 @@
     "CLE:4": {
       "team": "CLE",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -4049,7 +4049,7 @@
     "DAL:4": {
       "team": "DAL",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -4078,7 +4078,7 @@
     "DEN:4": {
       "team": "DEN",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 1,
       "statusCounts": {
@@ -4100,7 +4100,7 @@
     "DET:4": {
       "team": "DET",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -4129,7 +4129,7 @@
     "GB:4": {
       "team": "GB",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -4186,7 +4186,7 @@
     "HOU:4": {
       "team": "HOU",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -4243,7 +4243,7 @@
     "IND:4": {
       "team": "IND",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -4272,7 +4272,7 @@
     "JAX:4": {
       "team": "JAX",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -4308,7 +4308,7 @@
     "KC:4": {
       "team": "KC",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 1,
       "statusCounts": {
@@ -4338,7 +4338,7 @@
     "LA:4": {
       "team": "LA",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -4388,7 +4388,7 @@
     "LAC:4": {
       "team": "LAC",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 9,
       "statusCounts": {
@@ -4467,7 +4467,7 @@
     "LV:4": {
       "team": "LV",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -4504,7 +4504,7 @@
     "MIA:4": {
       "team": "MIA",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -4540,7 +4540,7 @@
     "MIN:4": {
       "team": "MIN",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -4576,7 +4576,7 @@
     "NE:4": {
       "team": "NE",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 10,
       "statusCounts": {
@@ -4655,7 +4655,7 @@
     "NO:4": {
       "team": "NO",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -4705,7 +4705,7 @@
     "NYG:4": {
       "team": "NYG",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 0,
       "statusCounts": {
@@ -4719,7 +4719,7 @@
     "NYJ:4": {
       "team": "NYJ",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 7,
       "statusCounts": {
@@ -4783,7 +4783,7 @@
     "PHI:4": {
       "team": "PHI",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -4840,7 +4840,7 @@
     "PIT:4": {
       "team": "PIT",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -4883,7 +4883,7 @@
     "SEA:4": {
       "team": "SEA",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -4926,7 +4926,7 @@
     "SF:4": {
       "team": "SF",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 7,
       "statusCounts": {
@@ -4990,7 +4990,7 @@
     "TB:4": {
       "team": "TB",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 7,
       "statusCounts": {
@@ -5062,7 +5062,7 @@
     "TEN:4": {
       "team": "TEN",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -5091,7 +5091,7 @@
     "WAS:4": {
       "team": "WAS",
       "week": 4,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -5156,7 +5156,7 @@
     "ARI:5": {
       "team": "ARI",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -5199,7 +5199,7 @@
     "ATL:5": {
       "team": "ATL",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -5249,7 +5249,7 @@
     "BAL:5": {
       "team": "BAL",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -5314,7 +5314,7 @@
     "BUF:5": {
       "team": "BUF",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -5364,7 +5364,7 @@
     "CHI:5": {
       "team": "CHI",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -5429,7 +5429,7 @@
     "CIN:5": {
       "team": "CIN",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -5486,7 +5486,7 @@
     "CLE:5": {
       "team": "CLE",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 7,
       "statusCounts": {
@@ -5558,7 +5558,7 @@
     "DAL:5": {
       "team": "DAL",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -5608,7 +5608,7 @@
     "DEN:5": {
       "team": "DEN",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -5637,7 +5637,7 @@
     "DET:5": {
       "team": "DET",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -5687,7 +5687,7 @@
     "GB:5": {
       "team": "GB",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 7,
       "statusCounts": {
@@ -5751,7 +5751,7 @@
     "HOU:5": {
       "team": "HOU",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 7,
       "statusCounts": {
@@ -5815,7 +5815,7 @@
     "IND:5": {
       "team": "IND",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 7,
       "statusCounts": {
@@ -5879,7 +5879,7 @@
     "JAX:5": {
       "team": "JAX",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -5908,7 +5908,7 @@
     "LA:5": {
       "team": "LA",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 1,
       "statusCounts": {
@@ -5930,7 +5930,7 @@
     "LAC:5": {
       "team": "LAC",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 13,
       "statusCounts": {
@@ -6009,7 +6009,7 @@
     "LV:5": {
       "team": "LV",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -6052,7 +6052,7 @@
     "MIA:5": {
       "team": "MIA",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 8,
       "statusCounts": {
@@ -6123,7 +6123,7 @@
     "MIN:5": {
       "team": "MIN",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 7,
       "statusCounts": {
@@ -6187,7 +6187,7 @@
     "NE:5": {
       "team": "NE",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 13,
       "statusCounts": {
@@ -6266,7 +6266,7 @@
     "NO:5": {
       "team": "NO",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 9,
       "statusCounts": {
@@ -6345,7 +6345,7 @@
     "NYG:5": {
       "team": "NYG",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -6374,7 +6374,7 @@
     "NYJ:5": {
       "team": "NYJ",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 7,
       "statusCounts": {
@@ -6438,7 +6438,7 @@
     "PHI:5": {
       "team": "PHI",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -6503,7 +6503,7 @@
     "PIT:5": {
       "team": "PIT",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -6553,7 +6553,7 @@
     "SEA:5": {
       "team": "SEA",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -6603,7 +6603,7 @@
     "SF:5": {
       "team": "SF",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -6660,7 +6660,7 @@
     "TB:5": {
       "team": "TB",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -6711,7 +6711,7 @@
     "TEN:5": {
       "team": "TEN",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -6754,7 +6754,7 @@
     "WAS:5": {
       "team": "WAS",
       "week": 5,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 10,
       "statusCounts": {
@@ -6840,7 +6840,7 @@
     "ARI:6": {
       "team": "ARI",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 7,
       "statusCounts": {
@@ -6912,7 +6912,7 @@
     "ATL:6": {
       "team": "ATL",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -6949,7 +6949,7 @@
     "BAL:6": {
       "team": "BAL",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 7,
       "statusCounts": {
@@ -7021,7 +7021,7 @@
     "BUF:6": {
       "team": "BUF",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -7071,7 +7071,7 @@
     "CAR:6": {
       "team": "CAR",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 7,
       "statusCounts": {
@@ -7143,7 +7143,7 @@
     "CHI:6": {
       "team": "CHI",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 7,
       "statusCounts": {
@@ -7215,7 +7215,7 @@
     "CLE:6": {
       "team": "CLE",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 9,
       "statusCounts": {
@@ -7294,7 +7294,7 @@
     "DAL:6": {
       "team": "DAL",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -7351,7 +7351,7 @@
     "DEN:6": {
       "team": "DEN",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -7387,7 +7387,7 @@
     "GB:6": {
       "team": "GB",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 10,
       "statusCounts": {
@@ -7458,7 +7458,7 @@
     "HOU:6": {
       "team": "HOU",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -7508,7 +7508,7 @@
     "IND:6": {
       "team": "IND",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -7552,7 +7552,7 @@
     "JAX:6": {
       "team": "JAX",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -7588,7 +7588,7 @@
     "KC:6": {
       "team": "KC",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -7632,7 +7632,7 @@
     "LA:6": {
       "team": "LA",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -7661,7 +7661,7 @@
     "LAC:6": {
       "team": "LAC",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 12,
       "statusCounts": {
@@ -7732,7 +7732,7 @@
     "LV:6": {
       "team": "LV",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -7775,7 +7775,7 @@
     "NE:6": {
       "team": "NE",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 9,
       "statusCounts": {
@@ -7854,7 +7854,7 @@
     "NO:6": {
       "team": "NO",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 7,
       "statusCounts": {
@@ -7926,7 +7926,7 @@
     "NYG:6": {
       "team": "NYG",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -7983,7 +7983,7 @@
     "NYJ:6": {
       "team": "NYJ",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 7,
       "statusCounts": {
@@ -8047,7 +8047,7 @@
     "PHI:6": {
       "team": "PHI",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 11,
       "statusCounts": {
@@ -8126,7 +8126,7 @@
     "PIT:6": {
       "team": "PIT",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 8,
       "statusCounts": {
@@ -8197,7 +8197,7 @@
     "SEA:6": {
       "team": "SEA",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -8241,7 +8241,7 @@
     "SF:6": {
       "team": "SF",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 10,
       "statusCounts": {
@@ -8312,7 +8312,7 @@
     "TB:6": {
       "team": "TB",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 8,
       "statusCounts": {
@@ -8391,7 +8391,7 @@
     "TEN:6": {
       "team": "TEN",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -8434,7 +8434,7 @@
     "WAS:6": {
       "team": "WAS",
       "week": 6,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 13,
       "statusCounts": {
@@ -8520,7 +8520,7 @@
     "ARI:7": {
       "team": "ARI",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 8,
       "statusCounts": {
@@ -8599,7 +8599,7 @@
     "ATL:7": {
       "team": "ATL",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 14,
       "statusCounts": {
@@ -8670,7 +8670,7 @@
     "BAL:7": {
       "team": "BAL",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -8728,7 +8728,7 @@
     "CAR:7": {
       "team": "CAR",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -8779,7 +8779,7 @@
     "CHI:7": {
       "team": "CHI",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -8822,7 +8822,7 @@
     "CIN:7": {
       "team": "CIN",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 0,
       "statusCounts": {
@@ -8836,7 +8836,7 @@
     "CLE:7": {
       "team": "CLE",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -8901,7 +8901,7 @@
     "DAL:7": {
       "team": "DAL",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -8951,7 +8951,7 @@
     "DEN:7": {
       "team": "DEN",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -9001,7 +9001,7 @@
     "DET:7": {
       "team": "DET",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -9030,7 +9030,7 @@
     "GB:7": {
       "team": "GB",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -9088,7 +9088,7 @@
     "HOU:7": {
       "team": "HOU",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -9138,7 +9138,7 @@
     "IND:7": {
       "team": "IND",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -9195,7 +9195,7 @@
     "KC:7": {
       "team": "KC",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -9253,7 +9253,7 @@
     "LA:7": {
       "team": "LA",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -9289,7 +9289,7 @@
     "LV:7": {
       "team": "LV",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -9332,7 +9332,7 @@
     "MIA:7": {
       "team": "MIA",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -9383,7 +9383,7 @@
     "MIN:7": {
       "team": "MIN",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 1,
       "statusCounts": {
@@ -9405,7 +9405,7 @@
     "NE:7": {
       "team": "NE",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 10,
       "statusCounts": {
@@ -9484,7 +9484,7 @@
     "NO:7": {
       "team": "NO",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -9528,7 +9528,7 @@
     "NYG:7": {
       "team": "NYG",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 8,
       "statusCounts": {
@@ -9599,7 +9599,7 @@
     "NYJ:7": {
       "team": "NYJ",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -9656,7 +9656,7 @@
     "PHI:7": {
       "team": "PHI",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 11,
       "statusCounts": {
@@ -9727,7 +9727,7 @@
     "PIT:7": {
       "team": "PIT",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -9770,7 +9770,7 @@
     "SEA:7": {
       "team": "SEA",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 8,
       "statusCounts": {
@@ -9849,7 +9849,7 @@
     "SF:7": {
       "team": "SF",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 9,
       "statusCounts": {
@@ -9920,7 +9920,7 @@
     "TB:7": {
       "team": "TB",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -9971,7 +9971,7 @@
     "TEN:7": {
       "team": "TEN",
       "week": 7,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -10021,7 +10021,7 @@
     "ARI:8": {
       "team": "ARI",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -10079,7 +10079,7 @@
     "ATL:8": {
       "team": "ATL",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 9,
       "statusCounts": {
@@ -10150,7 +10150,7 @@
     "BAL:8": {
       "team": "BAL",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -10201,7 +10201,7 @@
     "BUF:8": {
       "team": "BUF",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 7,
       "statusCounts": {
@@ -10265,7 +10265,7 @@
     "CAR:8": {
       "team": "CAR",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -10323,7 +10323,7 @@
     "CHI:8": {
       "team": "CHI",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -10359,7 +10359,7 @@
     "CIN:8": {
       "team": "CIN",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -10388,7 +10388,7 @@
     "CLE:8": {
       "team": "CLE",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -10424,7 +10424,7 @@
     "DAL:8": {
       "team": "DAL",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 8,
       "statusCounts": {
@@ -10495,7 +10495,7 @@
     "DEN:8": {
       "team": "DEN",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -10552,7 +10552,7 @@
     "DET:8": {
       "team": "DET",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -10581,7 +10581,7 @@
     "GB:8": {
       "team": "GB",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 7,
       "statusCounts": {
@@ -10645,7 +10645,7 @@
     "IND:8": {
       "team": "IND",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -10688,7 +10688,7 @@
     "JAX:8": {
       "team": "JAX",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 2,
       "statusCounts": {
@@ -10717,7 +10717,7 @@
     "KC:8": {
       "team": "KC",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -10768,7 +10768,7 @@
     "LA:8": {
       "team": "LA",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -10818,7 +10818,7 @@
     "LAC:8": {
       "team": "LAC",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -10875,7 +10875,7 @@
     "LV:8": {
       "team": "LV",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -10918,7 +10918,7 @@
     "MIA:8": {
       "team": "MIA",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -10962,7 +10962,7 @@
     "MIN:8": {
       "team": "MIN",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 1,
       "statusCounts": {
@@ -10984,7 +10984,7 @@
     "NE:8": {
       "team": "NE",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 4,
       "statusCounts": {
@@ -11035,7 +11035,7 @@
     "NYJ:8": {
       "team": "NYJ",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -11092,7 +11092,7 @@
     "PHI:8": {
       "team": "PHI",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 6,
       "statusCounts": {
@@ -11149,7 +11149,7 @@
     "PIT:8": {
       "team": "PIT",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -11185,7 +11185,7 @@
     "SEA:8": {
       "team": "SEA",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 8,
       "statusCounts": {
@@ -11264,7 +11264,7 @@
     "TB:8": {
       "team": "TB",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 3,
       "statusCounts": {
@@ -11308,7 +11308,7 @@
     "TEN:8": {
       "team": "TEN",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 7,
       "statusCounts": {
@@ -11372,7 +11372,7 @@
     "WAS:8": {
       "team": "WAS",
       "week": 8,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 5,
       "statusCounts": {
@@ -11434,10 +11434,10 @@
         }
       ]
     },
-    "BAL:9": {
-      "team": "BAL",
+    "ARI:9": {
+      "team": "ARI",
       "week": 9,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 0,
       "statusCounts": {
@@ -11448,17 +11448,89 @@
       "flaggedPlayers": [],
       "reportedQBs": [
         {
-          "player": "Lamar Jackson",
+          "player": "Jacoby Brissett",
           "position": "QB",
           "status": "NOT_REPORTED",
           "injury": null,
+          "dateModified": null
+        }
+      ]
+    },
+    "ATL:9": {
+      "team": "ATL",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": []
+    },
+    "BAL:9": {
+      "team": "BAL",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 5,
+      "statusCounts": {
+        "out": 3,
+        "doubtful": 0,
+        "questionable": 2
+      },
+      "flaggedPlayers": [
+        {
+          "player": "Jaylinn Hawkins",
+          "position": "S",
+          "status": "OUT",
+          "injury": "Knee",
+          "dateModified": null
+        },
+        {
+          "player": "Lamar Jackson",
+          "position": "QB",
+          "status": "OUT",
+          "injury": "Thumb",
           "dateModified": null
         },
         {
           "player": "Tyler Huntley",
           "position": "QB",
-          "status": "NOT_REPORTED",
-          "injury": null,
+          "status": "OUT",
+          "injury": "Toe",
+          "dateModified": null
+        },
+        {
+          "player": "Adam Randall",
+          "position": "RB",
+          "status": "QUESTIONABLE",
+          "injury": "Neck",
+          "dateModified": null
+        },
+        {
+          "player": "Nate Wiggins",
+          "position": "CB",
+          "status": "QUESTIONABLE",
+          "injury": "Stinger",
+          "dateModified": null
+        }
+      ],
+      "reportedQBs": [
+        {
+          "player": "Lamar Jackson",
+          "position": "QB",
+          "status": "OUT",
+          "injury": "Thumb",
+          "dateModified": null
+        },
+        {
+          "player": "Tyler Huntley",
+          "position": "QB",
+          "status": "OUT",
+          "injury": "Toe",
           "dateModified": null
         },
         {
@@ -11470,10 +11542,32 @@
         }
       ]
     },
-    "JAX:9": {
-      "team": "JAX",
+    "CAR:9": {
+      "team": "CAR",
       "week": 9,
-      "lastPlayerUpdate": "2026-11-04T15:21:18.000Z",
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": [
+        {
+          "player": "Bryce Young",
+          "position": "QB",
+          "status": "NOT_REPORTED",
+          "injury": null,
+          "dateModified": null
+        }
+      ]
+    },
+    "CIN:9": {
+      "team": "CIN",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
       "individualTimestampAvailable": false,
       "flaggedCount": 0,
       "statusCounts": {
@@ -11483,6 +11577,379 @@
       },
       "flaggedPlayers": [],
       "reportedQBs": []
+    },
+    "CLE:9": {
+      "team": "CLE",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": [
+        {
+          "player": "Deshaun Watson",
+          "position": "QB",
+          "status": "NOT_REPORTED",
+          "injury": null,
+          "dateModified": null
+        }
+      ]
+    },
+    "DAL:9": {
+      "team": "DAL",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": []
+    },
+    "DEN:9": {
+      "team": "DEN",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": []
+    },
+    "DET:9": {
+      "team": "DET",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": []
+    },
+    "GB:9": {
+      "team": "GB",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": []
+    },
+    "HOU:9": {
+      "team": "HOU",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": []
+    },
+    "IND:9": {
+      "team": "IND",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": []
+    },
+    "JAX:9": {
+      "team": "JAX",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 2,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 2
+      },
+      "flaggedPlayers": [
+        {
+          "player": "Bhayshul Tuten",
+          "position": "RB",
+          "status": "QUESTIONABLE",
+          "injury": "Ankle",
+          "dateModified": null
+        },
+        {
+          "player": "Travon Walker",
+          "position": "DE",
+          "status": "QUESTIONABLE",
+          "injury": "Rib",
+          "dateModified": null
+        }
+      ],
+      "reportedQBs": []
+    },
+    "KC:9": {
+      "team": "KC",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": [
+        {
+          "player": "Patrick Mahomes",
+          "position": "QB",
+          "status": "NOT_REPORTED",
+          "injury": null,
+          "dateModified": null
+        }
+      ]
+    },
+    "LA:9": {
+      "team": "LA",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": [
+        {
+          "player": "Matthew Stafford",
+          "position": "QB",
+          "status": "NOT_REPORTED",
+          "injury": null,
+          "dateModified": null
+        }
+      ]
+    },
+    "LAC:9": {
+      "team": "LAC",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": []
+    },
+    "LV:9": {
+      "team": "LV",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": []
+    },
+    "MIA:9": {
+      "team": "MIA",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": [
+        {
+          "player": "Malik Willis",
+          "position": "QB",
+          "status": "NOT_REPORTED",
+          "injury": null,
+          "dateModified": null
+        }
+      ]
+    },
+    "NE:9": {
+      "team": "NE",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": [
+        {
+          "player": "Drake Maye",
+          "position": "QB",
+          "status": "NOT_REPORTED",
+          "injury": null,
+          "dateModified": null
+        }
+      ]
+    },
+    "NO:9": {
+      "team": "NO",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": []
+    },
+    "NYG:9": {
+      "team": "NYG",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": []
+    },
+    "NYJ:9": {
+      "team": "NYJ",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": []
+    },
+    "PHI:9": {
+      "team": "PHI",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": [
+        {
+          "player": "Tanner McKee",
+          "position": "QB",
+          "status": "NOT_REPORTED",
+          "injury": null,
+          "dateModified": null
+        }
+      ]
+    },
+    "SF:9": {
+      "team": "SF",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": []
+    },
+    "TB:9": {
+      "team": "TB",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": [
+        {
+          "player": "Baker Mayfield",
+          "position": "QB",
+          "status": "NOT_REPORTED",
+          "injury": null,
+          "dateModified": null
+        }
+      ]
+    },
+    "WAS:9": {
+      "team": "WAS",
+      "week": 9,
+      "lastPlayerUpdate": "2026-11-05T15:22:25.000Z",
+      "individualTimestampAvailable": false,
+      "flaggedCount": 0,
+      "statusCounts": {
+        "out": 0,
+        "doubtful": 0,
+        "questionable": 0
+      },
+      "flaggedPlayers": [],
+      "reportedQBs": [
+        {
+          "player": "Jayden Daniels",
+          "position": "QB",
+          "status": "NOT_REPORTED",
+          "injury": null,
+          "dateModified": null
+        }
+      ]
     }
   },
   "advisory": "Reported player status is not confirmed quarterback starter status. Injury adjustments are not modeled.",
@@ -11689,7 +12156,14 @@
       "gameDate": "2026-11-16",
       "home": "BAL",
       "away": "LAC"
+    },
+    {
+      "gameId": "2026_11_IND_HOU",
+      "week": 11,
+      "gameDate": "2026-11-19",
+      "home": "HOU",
+      "away": "IND"
     }
   ],
-  "validUntil": "2026-11-07T15:21:18.000Z"
+  "validUntil": "2026-11-08T15:22:25.000Z"
 }
