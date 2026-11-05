@@ -3,23 +3,29 @@
 This is an isolated research branch, based on main commit
 `3dcd5a49948246248026f44f57f39d1e37fa9303`. It does not modify application code,
 data, collectors, deployment configuration or any existing draft branch.
-The reviewed reader and its pure dependencies are copied into `lib/` without
-changes, with source commit and SHA-256 hashes in `reviewed-source.json`.
+The reader and its pure dependencies originate from the source commit recorded
+in `reviewed-source.json`. Two modules now have local diagnostic-only changes;
+the manifest records their original hashes and the current hashes of all files.
 This keeps the stronger draft validation separate from the production modules.
 
 ## Current state
 
-This refreshed revision is local only and has not been published or run against
-BALLDONTLIE. The earlier isolated branch is unchanged and had no comparison runs
-when this refresh was prepared. Current main's 77 snapshots, 31 tracked games and
+This diagnostic revision is local only and has not been published or run against
+BALLDONTLIE. Its predecessor at `5054c64d60ae364b1a0ae29211aaabc674ac9c0e`
+ran once on November 5, 2026. All 219 offline tests passed, then one authenticated
+request received HTTP 200 but failed response validation. The result was
+`INVALID_PROVIDER_RESPONSE`, with no raw response retained, so the exact failing
+field is unknown. Do not assume that an omitted terminal cursor caused it.
+This revision adds fixed diagnostic codes without relaxing any acceptance rule.
+Current main's 77 snapshots, 31 tracked games and
 two community-score settlement records are preserved byte-for-byte. The refreshed
 journal SHA-256 is
 `94625a292147c8806fe9a66af2df58cc6b081f1b2f04d8387887d4e39d4d5441`.
 The user reports an existing GitHub Actions repository secret named
 `Balldontlie_api_key`, correcting an earlier environment-scope description. The
-fixed repository reference is prepared, but metadata availability and real
-account entitlement are not independently verified. No secret value has been
-requested or accessed. Publication and use still require approval.
+fixed repository reference was available to that run. The key value was never
+requested, exposed or retained by the assistant. Valid score-schema compatibility
+is not established. Publication and another request still require approval.
 
 GitHub stores secret names in uppercase and references are case-insensitive, so
 the final fixed reference is `secrets.BALLDONTLIE_API_KEY`. There is no dynamic
@@ -72,7 +78,13 @@ credential or a different service.
   game. An unrelated tracked-game identity conflict can stop the read before any
   credential-bearing request. Never rewrite the frozen journal to force a match.
 - Only a bounded, allowlisted JSON summary is printed: status, pinned code/data
-  identity, request counts, matching scores and source hashes when valid. No raw
+  identity, request counts, matching scores and source hashes when valid. An HTTP
+  200 body-validation failure also reports a fixed stage/reason pair. Stages cover
+  headers, streamed body, UTF-8 decoding, receipt time and source validation.
+  Reasons distinguish missing versus nonterminal cursors, invalid JSON, page
+  shape/size, game IDs and conflicting identities. Missing cursors still fail.
+  Provider exception text cannot mint a trusted source-validation reason, and
+  the output boundary separately allowlists exact stage/reason pairs. No raw
   responses, headers, arbitrary provider strings or secret material are logged.
   There are no artifact uploads, repository writes or model/metric updates.
 - Matches remain independence-unverified and nonqualifying. They establish
@@ -89,13 +101,13 @@ credential or a different service.
 
 Tests fabricate score responses in memory and never call the provider. The full
 main evidence journal is read only to verify compatibility and exact identity;
-no fabricated results are written into it. Real account entitlement, API schema
-compatibility, repository secret availability and actual execution remain
-unverified. Treat a request timeout as a possibly consumed request, not permission
+no fabricated results are written into it. API score-schema compatibility and
+successful comparison remain unverified. Treat a request timeout as a possibly consumed request, not permission
 to retry. A zero write-token scope does not make published logs private; summaries
 are visible to the repository audience.
 
 References:
+- [First real comparison run](https://github.com/SpencerPhoenix/BETQ-ai/actions/runs/41976780721)
 - [GitHub secret naming](https://docs.github.com/en/actions/reference/security/secrets)
 - [Manual workflow dispatch](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow)
 - [BALLDONTLIE NFL schema](https://nfl.balldontlie.io/#games)

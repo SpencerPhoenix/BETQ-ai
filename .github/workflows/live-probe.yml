@@ -27,7 +27,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: betq-one-shot-balldontlie-refresh-20261104
+  group: betq-one-shot-diagnostics-20261105
   cancel-in-progress: false
 
 jobs:
@@ -35,7 +35,7 @@ jobs:
     if: >-
       github.repository == 'SpencerPhoenix/BETQ-ai' &&
       github.event_name == 'workflow_dispatch' &&
-      github.ref == 'refs/heads/feat/one-shot-balldontlie-refresh-20261104' &&
+      github.ref == 'refs/heads/feat/one-shot-diagnostics-20261105' &&
       github.run_attempt == 1 && inputs.approve_one_request && inputs.repository_secret_confirmed
     runs-on: ubuntu-latest
     timeout-minutes: 5

@@ -8,7 +8,7 @@ import {NFLVERSE_SCHEDULES_URL} from './lib/settlement-only.mjs';
 
 export const BASE_SHA='3dcd5a49948246248026f44f57f39d1e37fa9303';
 export const JOURNAL_SHA256='94625a292147c8806fe9a66af2df58cc6b081f1b2f04d8387887d4e39d4d5441';
-export const BRANCH='refs/heads/feat/one-shot-balldontlie-refresh-20261104';
+export const BRANCH='refs/heads/feat/one-shot-diagnostics-20261105';
 export const GAME_ID='2026_08_PHI_WAS';
 const digest=s=>createHash('sha256').update(s).digest('hex');
 const sha=s=>typeof s==='string'&&/^[a-f0-9]{40}$/.test(s);
@@ -19,6 +19,19 @@ const statuses=new Set(['CROSS_CHECKED_INDEPENDENCE_UNVERIFIED','NO_CROSS_CHECK_
 const reasons=new Set(['NFLVERSE_CANDIDATE_UNAVAILABLE_OR_TOO_EARLY','AMBIGUOUS_NFLVERSE_GAME',
   'AMBIGUOUS_PROVIDER_GAME','NO_PROVIDER_GAME_MATCH','KICKOFF_OR_RECEIPT_MISMATCH',
   'SEASON_PHASE_MISMATCH','EXPLICIT_CONSISTENT_FINAL_REQUIRED','FINAL_SCORE_MISMATCH','INVALID_PROVIDER_RECORD_TIME']);
+const diagnosticPairs=Object.freeze({
+  RESPONSE_HEADERS:['HEADER_READ_FAILED','JSON_CONTENT_TYPE_REQUIRED','STREAM_REQUIRED','DECLARED_BODY_TOO_LARGE'],
+  RESPONSE_BODY:['BODY_READ_FAILED','INVALID_OR_EXCESSIVE_CHUNKS','ACTUAL_BODY_TOO_LARGE'],
+  UTF8_DECODING:['INVALID_UTF8'],RECEIPT_TIME:['INVALID_RECEIPT_CLOCK'],
+  SOURCE_VALIDATION:['SOURCE_VALIDATION_FAILED','INVALID_JSON','INVALID_PAGE_DATA','MISSING_TERMINAL_CURSOR',
+    'NONTERMINAL_CURSOR','INVALID_PAGE_SIZE','INVALID_GAME_ID','DUPLICATE_GAME_ID','INVALID_GAME_IDENTITY','CONFLICTING_TEAM_IDENTITY']
+});
+/** A second output boundary accepts only exact locally defined stage/reason pairs. */
+export function sanitizedValidationDiagnostic(value){
+  if(value?.httpStatus!==200||typeof value.stage!=='string'||typeof value.reason!=='string'||
+    !Object.hasOwn(diagnosticPairs,value.stage)||!diagnosticPairs[value.stage].includes(value.reason))return null;
+  return {httpStatus:200,stage:value.stage,reason:value.reason};
+}
 const result=(status,extra={})=>({status,mode:'ONE_APPROVED_READ_ONLY_COMPARISON',gameId:GAME_ID,
   sourceIndependenceVerified:false,qualifiesForExistingCorroborationGate:false,
   publicationAuthorized:false,qualifiedOutcomes:0,journalWrites:0,retries:0,
@@ -99,6 +112,8 @@ export async function runOneShot({context,apiKey,journalText,fetchImpl=globalThi
     // headers, URLs, provider errors or arbitrary provider strings.
     const clean=result(status,{...receipt,publicScheduleRequests,
       providerRequests:report.providerRequests===1?1:0,matched:status==='CROSS_CHECKED_INDEPENDENCE_UNVERIFIED'});
+    const diagnostic=sanitizedValidationDiagnostic(report.validationDiagnostic);
+    if(status==='INVALID_PROVIDER_RESPONSE'&&diagnostic)clean.validationDiagnostic=diagnostic;
     if(match&&Number.isInteger(match.homeScore)&&Number.isInteger(match.awayScore)&&
       match.homeScore>=0&&match.homeScore<=100&&match.awayScore>=0&&match.awayScore<=100){
       clean.homeScore=match.homeScore;clean.awayScore=match.awayScore;

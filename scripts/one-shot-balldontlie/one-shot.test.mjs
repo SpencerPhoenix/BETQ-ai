@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {approvedContext,runOneShot,BASE_SHA,BRANCH,GAME_ID} from './run.mjs';
+import {approvedContext,runOneShot,sanitizedValidationDiagnostic,BASE_SHA,BRANCH,GAME_ID} from './run.mjs';
 import {NFLVERSE_SCHEDULES_URL} from './lib/settlement-only.mjs';
 
 const root=new URL('../../',import.meta.url);
@@ -22,6 +22,80 @@ const payload=()=>({data:[{id:990001,season:2026,postseason:false,date:'2026-11-
   home_team:{id:990002,abbreviation:'WAS'},visitor_team:{id:990003,abbreviation:'PHI'},
   home_team_score:21,visitor_team_score:17}],meta:{next_cursor:null,per_page:100}});
 const json=p=>new Response(JSON.stringify(p),{headers:{'content-type':'application/json'}});
+const diagnosed=async response=>{
+  let calls=0;
+  const report=await runOneShot({...options(),fetchImpl:async url=>{
+    calls++;if(url===NFLVERSE_SCHEDULES_URL)return new Response(csv);
+    return typeof response==='function'?response():response;
+  }});
+  assert.equal(calls,2);assert.equal(report.providerRequests,1);assert.equal(report.retries,0);
+  assert.equal(report.journalWrites,0);assert.equal(report.qualifiedOutcomes,0);assert.equal(report.matched,false);
+  assert.equal(report.status,'INVALID_PROVIDER_RESPONSE');
+  assert.ok(!JSON.stringify(report).includes(key));assert.ok(!JSON.stringify(report).includes('::'));
+  return report.validationDiagnostic;
+};
+
+test('response header diagnostics are fixed codes, never header or exception values',async()=>{
+  for(const [response,reason] of [
+    [new Response(key,{headers:{'content-type':'text/plain'}}),'JSON_CONTENT_TYPE_REQUIRED'],
+    [new Response('x',{headers:{'content-type':'application/json','content-length':'262145'}}),'DECLARED_BODY_TOO_LARGE'],
+    [{status:200,headers:new Headers({'content-type':'application/json'})},'STREAM_REQUIRED'],
+    [{status:200,headers:{get(){throw Error(key+'::error::injected');}}},'HEADER_READ_FAILED']
+  ])assert.deepEqual(await diagnosed(response),{httpStatus:200,stage:'RESPONSE_HEADERS',reason});
+});
+test('response body diagnostics preserve byte/chunk limits and redact stream errors',async()=>{
+  for(const [read,reason] of [
+    [async()=>({done:false,value:new Uint8Array(262145)}),'ACTUAL_BODY_TOO_LARGE'],
+    [async()=>({done:false,value:new Uint8Array()}),'INVALID_OR_EXCESSIVE_CHUNKS'],
+    [async()=>{throw Object.assign(Error(key),{reason:'INVALID_JSON',code:'INVALID_JSON'});},'BODY_READ_FAILED']
+  ]){
+    const response={status:200,headers:new Headers({'content-type':'application/json'}),
+      body:{getReader:()=>({read,cancel(){},releaseLock(){}})}};
+    assert.deepEqual(await diagnosed(response),{httpStatus:200,stage:'RESPONSE_BODY',reason});
+  }
+});
+test('malformed UTF-8 has its own bounded diagnostic',async()=>{
+  assert.deepEqual(await diagnosed(new Response(new Uint8Array([0xc3,0x28]),
+    {headers:{'content-type':'application/json'}})),
+    {httpStatus:200,stage:'UTF8_DECODING',reason:'INVALID_UTF8'});
+});
+test('JSON and page validation distinguish missing/nonterminal cursor without accepting either',async()=>{
+  const cases=[
+    [()=>new Response(key+'::error::injected',{headers:{'content-type':'application/json'}}),'INVALID_JSON'],
+    [()=>json(null),'INVALID_PAGE_DATA'],[()=>json({data:{},meta:{next_cursor:null,per_page:100}}),'INVALID_PAGE_DATA'],
+    [()=>{const p=payload();delete p.meta.next_cursor;return json(p);},'MISSING_TERMINAL_CURSOR'],
+    [()=>{const p=payload();p.meta.next_cursor=1;return json(p);},'NONTERMINAL_CURSOR'],
+    [()=>{const p=payload();p.meta.per_page='100';return json(p);},'INVALID_PAGE_SIZE'],
+    [()=>{const p=payload();p.meta.per_page=0;return json(p);},'INVALID_PAGE_SIZE']
+  ];
+  for(const [response,reason] of cases)
+    assert.deepEqual(await diagnosed(response),{httpStatus:200,stage:'SOURCE_VALIDATION',reason});
+});
+test('provider identity diagnostics remain distinct and fail closed',async()=>{
+  const cases=[
+    [p=>{p.data[0].id='990001';},'INVALID_GAME_ID'],
+    [p=>{p.data.push(structuredClone(p.data[0]));},'DUPLICATE_GAME_ID'],
+    [p=>{p.data[0].home_team.abbreviation='UNKNOWN';},'INVALID_GAME_IDENTITY'],
+    [p=>{const other=structuredClone(p.data[0]);other.id++;other.home_team.abbreviation='NYG';p.data.push(other);},'CONFLICTING_TEAM_IDENTITY']
+  ];
+  for(const [change,reason] of cases){const p=payload();change(p);
+    assert.deepEqual(await diagnosed(json(p)),{httpStatus:200,stage:'SOURCE_VALIDATION',reason});}
+});
+test('diagnostic output allowlist drops unknown/mismatched fields and copies no extra data',()=>{
+  const safe={httpStatus:200,stage:'SOURCE_VALIDATION',reason:'INVALID_JSON'};
+  assert.deepEqual(sanitizedValidationDiagnostic({...safe,body:key,error:key,headers:{Authorization:key}}),safe);
+  for(const value of [null,{}, {...safe,httpStatus:401},{...safe,stage:key},{...safe,reason:key},
+    {...safe,stage:'toString'},{...safe,stage:'RESPONSE_BODY'},{...safe,reason:'INVALID_JSON\n::error::injected'}])
+    assert.equal(sanitizedValidationDiagnostic(value),null);
+});
+test('non-200 responses never claim successful HTTP validation or emit body diagnostics',async()=>{
+  for(const status of [401,403,429,500]){
+    const report=await runOneShot({...options(),fetchImpl:async url=>url===NFLVERSE_SCHEDULES_URL?
+      new Response(csv):new Response(key,{status})});
+    assert.equal(report.providerRequests,1);assert.equal(report.validationDiagnostic,undefined);
+    assert.ok(!JSON.stringify(report).includes(key));
+  }
+});
 
 test('every missing or mismatched approval/context property prevents all requests',async()=>{
   let calls=0;const fetchImpl=async()=>{calls++;throw Error('NO_NETWORK');};
@@ -128,7 +202,7 @@ test('workflow is manual-only, least privilege, secret scoped solely to final re
   const workflow=await readFile(new URL('.github/workflows/live-probe.yml',root),'utf8');
   assert.match(workflow,/workflow_dispatch:/);assert.doesNotMatch(workflow,/\n\s*(?:push|pull_request|schedule|workflow_run):/);
   assert.match(workflow,/contents: read/);assert.match(workflow,/persist-credentials: false/);
-  assert.match(workflow,/github\.run_attempt == 1/);assert.match(workflow,/github\.ref == 'refs\/heads\/feat\/one-shot-balldontlie-refresh-20261104'/);
+  assert.match(workflow,/github\.run_attempt == 1/);assert.match(workflow,/github\.ref == 'refs\/heads\/feat\/one-shot-diagnostics-20261105'/);
   assert.equal((workflow.match(/secrets\./g)??[]).length,1);assert.match(workflow,/secrets\.BALLDONTLIE_API_KEY/);
   assert.doesNotMatch(workflow,/secrets\[|upload-artifact|npm (?:ci|install)|git push|api\/slate|mode=live|contents: write/);
   assert.equal((workflow.match(/default: false/g)??[]).length,2);
@@ -142,4 +216,10 @@ test('entrypoint has no write/log facilities and vendor hashes identify exact re
   const manifest=JSON.parse(await readFile(new URL('./reviewed-source.json',import.meta.url),'utf8'));
   assert.equal(manifest.sourceCommit,'0ccfec250206c871151a2db5520b8fbc5ea5cd0b');
   assert.equal(Object.keys(manifest.files).length,7);
+  assert.deepEqual(Object.keys(manifest.localModifications).sort(),
+    ['lib/balldontlie-crosscheck.mjs','lib/balldontlie-live-reader.mjs']);
+  for(const [file,origin] of Object.entries(manifest.localModifications)){
+    assert.match(origin.sourceSha256,/^[a-f0-9]{64}$/);assert.notEqual(origin.sourceSha256,manifest.files[file]);
+    assert.equal(origin.purpose,'Allowlisted validation diagnostics only; acceptance rules unchanged');
+  }
 });

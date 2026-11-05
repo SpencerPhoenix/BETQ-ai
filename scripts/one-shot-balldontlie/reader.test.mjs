@@ -115,6 +115,7 @@ test('malformed JSON, UTF-8, BOM, MIME and source clocks fail closed with redact
   }
   let clocks=0;const r=await readLiveBallDontLieFinal({...opts(),clock:()=>Date.parse(template.evaluatedAt)-(clocks++?1000:0),fetchImpl:async()=>jsonResponse()});
   assert.equal(r.status,'INVALID_PROVIDER_RESPONSE');
+  assert.deepEqual(r.validationDiagnostic,{httpStatus:200,stage:'RECEIPT_TIME',reason:'INVALID_RECEIPT_CLOCK'});
 });
 test('deadline covers stalled headers and body even when cancellation never settles',async()=>{
   const started=Date.now();

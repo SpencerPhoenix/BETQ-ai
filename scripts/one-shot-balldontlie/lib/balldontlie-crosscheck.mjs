@@ -19,6 +19,14 @@ const bounded=(text,max)=>typeof text==='string'&&text.length>0&&Buffer.byteLeng
 const sha256=text=>createHash('sha256').update(text,'utf8').digest('hex');
 const id=n=>Number.isSafeInteger(n)&&n>0;
 const score=n=>Number.isInteger(n)&&n>=0&&n<=100;
+// Only errors created here carry a diagnostic. Provider JSON/exception text
+// cannot supply one, and no error message is exposed by this accessor.
+const providerFailures=new WeakMap();
+function failProvider(reason){
+  const error=new Error('INVALID_PROVIDER_PAYLOAD');
+  providerFailures.set(error,reason);throw error;
+}
+export const ballDontLieValidationReason=error=>providerFailures.get(error)??null;
 // Validate CSV shape before the shared reader can discard extra columns or
 // overwrite duplicate header names. Quoted cells follow the same RFC 4180 form.
 function strictSchedule(text){
@@ -80,23 +88,26 @@ export function assessBallDontLieSourceBytes(fixture){
   const bdlAt=instant(fixture.balldontlieObservedAt);
   if(!Number.isFinite(bdlAt)||bdlAt>now||bdlAt<now-3600000)throw Error('INVALID_RECEIPT_CHRONOLOGY');
   if(!bounded(fixture.balldontlieJson,1000000))throw Error('INVALID_PAYLOAD_SIZE');
-  const payload=JSON.parse(fixture.balldontlieJson);
-  if(!payload||!Array.isArray(payload.data)||payload.data.length>100||
-    payload.meta?.next_cursor!==null||!Number.isInteger(payload.meta?.per_page)||
-    payload.meta.per_page<1||payload.meta.per_page>100||payload.data.length>payload.meta.per_page)
-    throw Error('COMPLETE_BOUNDED_PAGE_REQUIRED');
+  let payload;
+  try{payload=JSON.parse(fixture.balldontlieJson);}catch{failProvider('INVALID_JSON');}
+  if(!payload||!Array.isArray(payload.data)||payload.data.length>100)failProvider('INVALID_PAGE_DATA');
+  if(payload.meta?.next_cursor!==null)
+    failProvider(payload.meta&&Object.hasOwn(payload.meta,'next_cursor')?'NONTERMINAL_CURSOR':'MISSING_TERMINAL_CURSOR');
+  if(!Number.isInteger(payload.meta?.per_page)||payload.meta.per_page<1||
+    payload.meta.per_page>100||payload.data.length>payload.meta.per_page)failProvider('INVALID_PAGE_SIZE');
   const ids=new Set(),teamIds=new Map(),teamCodes=new Map();
   for(const event of payload.data){
-    if(!event||!id(event.id)||ids.has(event.id))throw Error('INVALID_OR_DUPLICATE_PROVIDER_GAME_ID');
+    if(!event||!id(event.id))failProvider('INVALID_GAME_ID');
+    if(ids.has(event.id))failProvider('DUPLICATE_GAME_ID');
     ids.add(event.id);
     if(!Number.isInteger(event.season)||!team(event.home_team?.abbreviation)||
       !team(event.visitor_team?.abbreviation)||team(event.home_team.abbreviation)===team(event.visitor_team.abbreviation)||
       !id(event.home_team.id)||!id(event.visitor_team.id)||event.home_team.id===event.visitor_team.id)
-      throw Error('INVALID_PROVIDER_GAME_IDENTITY');
+      failProvider('INVALID_GAME_IDENTITY');
     for(const side of [event.home_team,event.visitor_team]){
       const code=team(side.abbreviation);
       if(teamIds.has(side.id)&&teamIds.get(side.id)!==code||teamCodes.has(code)&&teamCodes.get(code)!==side.id)
-        throw Error('CONFLICTING_PROVIDER_TEAM_IDENTITY');
+        failProvider('CONFLICTING_TEAM_IDENTITY');
       teamIds.set(side.id,code);teamCodes.set(code,side.id);
     }
   }

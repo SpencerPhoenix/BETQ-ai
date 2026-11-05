@@ -1,5 +1,5 @@
 /** Opt-in read-only transport. No account setup, key persistence, retries or publication. */
-import {assessBallDontLieSourceBytes,prepareBallDontLieCrossCheck} from './balldontlie-crosscheck.mjs';
+import {assessBallDontLieSourceBytes,prepareBallDontLieCrossCheck,ballDontLieValidationReason} from './balldontlie-crosscheck.mjs';
 
 const ENDPOINT='https://api.balldontlie.io/nfl/v1/games';
 const MAX_BODY_BYTES=262144,MAX_TIMEOUT_MS=8000,MAX_CHUNKS=8192;
@@ -52,7 +52,8 @@ export async function readLiveBallDontLieFinal({enabled=false,apiKey,gameId,jour
   const checkDeadline=()=>{
     if(controller.signal.aborted||performance.now()>=deadlineAt){cancel();throw Error('DEADLINE');}
   };
-  let phase='request';
+  let phase='request',stage,reason;
+  const failBody=code=>{reason=code;throw Error('INVALID_PROVIDER_BODY');};
   try{
     const deadline=new Promise((resolve,reject)=>{
       timer=setTimeout(()=>{cancel();reject(Error('DEADLINE'));},timeoutMs);
@@ -67,24 +68,29 @@ export async function readLiveBallDontLieFinal({enabled=false,apiKey,gameId,jour
       if(response?.status===429)return base('RATE_LIMITED',1);
       if(response?.status!==200)return base('PROVIDER_UNAVAILABLE',1);
       phase='body';
-      if(!/^application\/json(?:;|$)/i.test(response.headers?.get('content-type')??''))throw Error('JSON_REQUIRED');
-      if(!response.body?.getReader)throw Error('STREAM_REQUIRED');
+      stage='RESPONSE_HEADERS';reason='HEADER_READ_FAILED';
+      if(!/^application\/json(?:;|$)/i.test(response.headers?.get('content-type')??''))failBody('JSON_CONTENT_TYPE_REQUIRED');
+      if(!response.body?.getReader)failBody('STREAM_REQUIRED');
       const length=Number(response.headers?.get('content-length'));
-      if(Number.isFinite(length)&&length>MAX_BODY_BYTES)throw Error('BODY_LIMIT');
+      if(Number.isFinite(length)&&length>MAX_BODY_BYTES)failBody('DECLARED_BODY_TOO_LARGE');
+      stage='RESPONSE_BODY';reason='BODY_READ_FAILED';
       reader=response.body.getReader();const chunks=[];let bytes=0;
       while(true){
         const {done,value}=await reader.read();checkDeadline();if(done)break;
-        if(!(value instanceof Uint8Array)||value.byteLength===0||chunks.length>=MAX_CHUNKS)throw Error('INVALID_CHUNK');
-        bytes+=value.byteLength;if(bytes>MAX_BODY_BYTES)throw Error('BODY_LIMIT');
+        if(!(value instanceof Uint8Array)||value.byteLength===0||chunks.length>=MAX_CHUNKS)failBody('INVALID_OR_EXCESSIVE_CHUNKS');
+        bytes+=value.byteLength;if(bytes>MAX_BODY_BYTES)failBody('ACTUAL_BODY_TOO_LARGE');
         chunks.push(Buffer.from(value));
       }
       // Preserve BOM bytes rather than silently changing the hashed source.
       // A BOM or malformed JSON then fails closed in the parser.
+      stage='UTF8_DECODING';reason='INVALID_UTF8';
       const text=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}).decode(Buffer.concat(chunks,bytes));
+      stage='RECEIPT_TIME';reason='INVALID_RECEIPT_CLOCK';
       const received=clock();
       if(!Number.isFinite(received)||received<start||received>start+MAX_TIMEOUT_MS+2000)
         throw Error('RECEIPT_CLOCK_INVALID');
       const observedAt=new Date(received).toISOString();
+      stage='SOURCE_VALIDATION';reason='SOURCE_VALIDATION_FAILED';
       const report=assessBallDontLieSourceBytes({...input,evaluatedAt:observedAt,
         balldontlieObservedAt:observedAt,balldontlieJson:text});
       checkDeadline();
@@ -92,9 +98,15 @@ export async function readLiveBallDontLieFinal({enabled=false,apiKey,gameId,jour
         ...report,requestedGameId:gameId,observedAt,provider:'BALLDONTLIE_NFL_GAMES'};
     })();
     return await Promise.race([operation,deadline]);
-  }catch{
+  }catch(error){
     // Neither provider bodies/exceptions nor supplied credentials are echoed.
-    return base(controller.signal.aborted?'REQUEST_TIMEOUT':phase==='body'?'INVALID_PROVIDER_RESPONSE':'REQUEST_FAILED',1);
+    const status=controller.signal.aborted?'REQUEST_TIMEOUT':phase==='body'?'INVALID_PROVIDER_RESPONSE':'REQUEST_FAILED';
+    const report=base(status,1);
+    if(status==='INVALID_PROVIDER_RESPONSE'){
+      const internalReason=ballDontLieValidationReason(error);
+      report.validationDiagnostic={httpStatus:200,stage,reason:internalReason??reason};
+    }
+    return report;
   }finally{
     clearTimeout(timer);cancel();
     try{reader?.releaseLock();}catch{}
