@@ -3,25 +3,36 @@
  * raw content URL; no arbitrary URL input and no third-party odds API credits.
  * This avoids requiring a Render redeploy on every evidence journal commit.
  */
+import {OUTCOME_SCORING_POLICY} from './settlement-qualification.mjs';
 import {readBoundedText} from './integrity.mjs';
 const FIXED_SUMMARY_URL =
   'https://raw.githubusercontent.com/SpencerPhoenix/BETQ-ai/main/data/evidence/summary.json';
 
+const count=n=>Number.isInteger(n)&&n>=0;
+const brier=n=>Number.isFinite(n)&&n>=0&&n<=1;
 export function isValidEvidenceSummary(s) {
-  return Boolean(s && s.schema===1 && Number.isInteger(s.season) &&
-    s.season>=2020 && s.season<=2100 &&
-    Number.isInteger(s.prospectiveGames) && s.prospectiveGames>=0 &&
-    Number.isInteger(s.settledGames) && s.settledGames>=0 &&
-    s.status && s.researchOnly===true && s.noWagering===true &&
-    s.realizedROI===null && s.verifiedCLV===null &&
-    s.marketBeatingEdgeEstablished===false &&
-    s.settledGames<=s.prospectiveGames &&
-    (!s.forwardMetrics || (s.settledGames>=30 && s.forwardMetrics.n===s.settledGames &&
-      Number.isFinite(s.forwardMetrics.brier) && s.forwardMetrics.brier>=0 && s.forwardMetrics.brier<=1)) &&
-    (!s.marketComparison || (s.pairedMarketGames>=30 && s.marketComparison.n===s.pairedMarketGames &&
-      s.pairedMarketGames<=s.settledGames)) &&
-    (!s.challengerForwardComparison || (s.pairedChallengerSettled>=30 && s.challengerForwardComparison.n===s.pairedChallengerSettled &&
-      s.pairedChallengerSettled<=s.settledGames))); 
+  if(!s||s.schema!==1||!Number.isInteger(s.season)||s.season<2020||s.season>2100||
+    s.outcomeScoringPolicy!==OUTCOME_SCORING_POLICY||s.sourceIndependenceVerified!==false||
+    s.minimumScoredSample!==30||s.researchOnly!==true||s.noWagering!==true||
+    s.realizedROI!==null||s.verifiedCLV!==null||s.marketBeatingEdgeEstablished!==false)return false;
+  const keys=['prospectiveGames','settledGames','pairedMarketGames','pairedChallengerSettled',
+    'sourceCorroboratedSettledGames','sourceUncorroboratedSettledGames',
+    'sourceCorroboratedMarketGames','sourceCorroboratedChallengerGames'];
+  if(keys.some(key=>!count(s[key])))return false;
+  const n=s.sourceCorroboratedSettledGames,m=s.sourceCorroboratedMarketGames,
+    c=s.sourceCorroboratedChallengerGames;
+  if(s.settledGames>s.prospectiveGames||n+s.sourceUncorroboratedSettledGames!==s.settledGames||
+    s.pairedMarketGames>s.settledGames||s.pairedChallengerSettled>s.settledGames||
+    m>n||m>s.pairedMarketGames||c>n||c>s.pairedChallengerSettled||
+    s.status!==(n>=30?'FORWARD_SAMPLE_AVAILABLE':'COLLECTING_FORWARD_EVIDENCE'))return false;
+  if(s.forwardMetrics!=null&&(n<30||s.forwardMetrics.n!==n||!brier(s.forwardMetrics.brier)))return false;
+  if(s.marketComparison!=null&&(m<30||s.marketComparison.n!==m))return false;
+  if(s.challengerForwardComparison!=null&&(c<30||s.challengerForwardComparison.n!==c))return false;
+  // Old summaries cannot smuggle a per-result score around the aggregate gate.
+  if(!Array.isArray(s.recentResults)||s.recentResults.length>10||s.recentResults.length>s.settledGames)return false;
+  if(s.recentResults.some(r=>!r||typeof r.sourceCorroborated!=='boolean'||
+    (r.sourceCorroborated?!brier(r.brier):r.brier!==null)))return false;
+  return s.recentResults.filter(r=>r.sourceCorroborated).length<=n;
 }
 
 export function createEvidenceFeed({
