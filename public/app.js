@@ -1261,14 +1261,22 @@
         '"></progress><p>Scores remain hidden until a minimum 30 challenger '+
         'forecasts were frozen and their results subsequently source-corroborated.</p>')+
       '</div></section>';
+    const publication=e.publication;
+    const sourceNotice=publication?.source==='PUBLIC_JOURNAL'?
+      'Existing public journal last read successfully: '+esc(when(publication.lastSuccessfulFetchAt))+'. ':
+      publication?.source==='BUNDLED_JOURNAL'?'Using the bundled evidence journal. ':'';
+    const refreshNotice=publication?.lastError?
+      'The latest journal refresh failed or did not pass integrity checks; retained evidence is shown. ':'';
+    const captureNotice=publication?.latestSnapshotAt?
+      'Newest recorded forecast capture: '+esc(when(publication.latestSnapshotAt))+'. ':'';
     root.innerHTML = stats + '<div class="evidence-columns">' + gate + benchmark + '</div>' +
       challengerBlock +
       '<div class="evidence-columns evidence-lists">' + ledger + '</div>' +
       '<div class="notice info evidence-footer"><span>◇</span><p><b>Auditable, not promotional.</b> ' +
       'No verified closing-line value, no real-money ROI, no betting orders, and no presumed model advantage. ' +
       'The historical 2025 backtest is not included in this prospective cohort. ' +
-      'Scores come from community-maintained nflverse schedules. Last evidence publication: ' +
-      esc(when(e.generatedAt)) + '.</p></div>';
+      'Scores come from community-maintained nflverse schedules. '+sourceNotice+refreshNotice+captureNotice+
+      'Summary calculated: '+esc(when(e.generatedAt))+'. Source publication time is not verified.</p></div>';
   }
 
   function renderAudit() {

@@ -1,8 +1,7 @@
 name: BETQ prospective NFL evidence collector
 on:
-  push:
-    branches: [main]
-    paths: ['scripts/capture-evidence.mjs', 'src/evidence.mjs']
+  # Code publication must not implicitly request paid odds or write evidence.
+  # Existing manual and time-based collection remain separate operations.
   workflow_dispatch:
   schedule:
     - cron: '41 11 * * *'
