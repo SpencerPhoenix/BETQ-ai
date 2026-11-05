@@ -91,10 +91,16 @@ export function assessBallDontLieSourceBytes(fixture){
   let payload;
   try{payload=JSON.parse(fixture.balldontlieJson);}catch{failProvider('INVALID_JSON');}
   if(!payload||!Array.isArray(payload.data)||payload.data.length>100)failProvider('INVALID_PAGE_DATA');
-  if(payload.meta?.next_cursor!==null)
-    failProvider(payload.meta&&Object.hasOwn(payload.meta,'next_cursor')?'NONTERMINAL_CURSOR':'MISSING_TERMINAL_CURSOR');
-  if(!Number.isInteger(payload.meta?.per_page)||payload.meta.per_page<1||
-    payload.meta.per_page>100||payload.data.length>payload.meta.per_page)failProvider('INVALID_PAGE_SIZE');
+  const meta=payload.meta;
+  if(!meta||typeof meta!=='object'||Array.isArray(meta))failProvider('INVALID_PAGE_METADATA');
+  if(!Object.hasOwn(meta,'per_page')||!Number.isInteger(meta.per_page)||meta.per_page<1||
+    meta.per_page>100||payload.data.length>meta.per_page)failProvider('INVALID_PAGE_SIZE');
+  const hasCursor=Object.hasOwn(meta,'next_cursor');
+  if(hasCursor&&meta.next_cursor!==null)failProvider('NONTERMINAL_CURSOR');
+  // The official games Pagination schema makes next_cursor optional. Accept
+  // omission only on a short, bounded page; a full page could hide another page.
+  // This permits a data-consistency check, not proof of exhaustive source data.
+  if(!hasCursor&&payload.data.length===meta.per_page)failProvider('AMBIGUOUS_FULL_PAGE');
   const ids=new Set(),teamIds=new Map(),teamCodes=new Map();
   for(const event of payload.data){
     if(!event||!id(event.id))failProvider('INVALID_GAME_ID');

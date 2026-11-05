@@ -4,19 +4,22 @@ This is an isolated research branch, based on main commit
 `3dcd5a49948246248026f44f57f39d1e37fa9303`. It does not modify application code,
 data, collectors, deployment configuration or any existing draft branch.
 The reader and its pure dependencies originate from the source commit recorded
-in `reviewed-source.json`. Two modules now have local diagnostic-only changes;
+in `reviewed-source.json`. Two modules have local diagnostic changes, and the
+cross-check module also supports a documented omitted cursor on a short page;
 the manifest records their original hashes and the current hashes of all files.
 This keeps the stronger draft validation separate from the production modules.
 
 ## Current state
 
-This diagnostic revision is local only and has not been published or run against
-BALLDONTLIE. Its predecessor at `5054c64d60ae364b1a0ae29211aaabc674ac9c0e`
-ran once on November 5, 2026. All 219 offline tests passed, then one authenticated
-request received HTTP 200 but failed response validation. The result was
-`INVALID_PROVIDER_RESPONSE`, with no raw response retained, so the exact failing
-field is unknown. Do not assume that an omitted terminal cursor caused it.
-This revision adds fixed diagnostic codes without relaxing any acceptance rule.
+This pagination revision is local only and has not been published or run against
+BALLDONTLIE. Diagnostic predecessor `36759c9982263771d63e984eed334d52e6993873`
+ran an authenticated request on November 5, 2026 after all 226 offline tests
+passed. It received HTTP 200 and failed `MISSING_TERMINAL_CURSOR`. No raw body was
+retained; that code alone cannot establish metadata validity or page length.
+The official games OpenAPI schema permits omission of `next_cursor`. This
+revision supports omission only with valid metadata and a strictly short page.
+It does not claim that omission certifies source completeness, and later score
+or identity validation could still fail on real data.
 Current main's 77 snapshots, 31 tracked games and
 two community-score settlement records are preserved byte-for-byte. The refreshed
 journal SHA-256 is
@@ -77,12 +80,20 @@ credential or a different service.
 - All tracked frozen identities are checked before narrowing to the selected
   game. An unrelated tracked-game identity conflict can stop the read before any
   credential-bearing request. Never rewrite the frozen journal to force a match.
+- Pagination metadata must be a non-null object, not an array, with its own
+  integer `per_page` from 1 through 100. Returned data must be an array with no
+  more records than that page limit. Explicit `next_cursor: null` retains prior
+  behavior. Omission is accepted only when the returned count is strictly below
+  `per_page`; a full page without a cursor is rejected as ambiguous. Every
+  present non-null cursor is rejected, including malformed values. No next page
+  is fetched. This conservative compatibility interpretation supports checking
+  the observed records, not a provider-certified claim of exhaustive coverage.
 - Only a bounded, allowlisted JSON summary is printed: status, pinned code/data
   identity, request counts, matching scores and source hashes when valid. An HTTP
   200 body-validation failure also reports a fixed stage/reason pair. Stages cover
   headers, streamed body, UTF-8 decoding, receipt time and source validation.
-  Reasons distinguish missing versus nonterminal cursors, invalid JSON, page
-  shape/size, game IDs and conflicting identities. Missing cursors still fail.
+  Reasons distinguish ambiguous full pages, nonterminal cursors, invalid JSON,
+  page metadata/size, game IDs and conflicting identities.
   Provider exception text cannot mint a trusted source-validation reason, and
   the output boundary separately allowlists exact stage/reason pairs. No raw
   responses, headers, arbitrary provider strings or secret material are logged.
@@ -108,6 +119,10 @@ are visible to the repository audience.
 
 References:
 - [First real comparison run](https://github.com/SpencerPhoenix/BETQ-ai/actions/runs/41976780721)
+- [Live pagination diagnostic](https://github.com/SpencerPhoenix/BETQ-ai/actions/runs/42019729971)
 - [GitHub secret naming](https://docs.github.com/en/actions/reference/security/secrets)
 - [Manual workflow dispatch](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow)
 - [BALLDONTLIE NFL schema](https://nfl.balldontlie.io/#games)
+- [Official OpenAPI schema](https://www.balldontlie.io/openapi/nfl.yml): `/nfl/v1/games`
+  references `Pagination`; `next_cursor` is an optional integer. The schema does
+  not guarantee that a short page is terminal. Reviewed November 5, 2026.

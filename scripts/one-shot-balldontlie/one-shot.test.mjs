@@ -59,17 +59,93 @@ test('malformed UTF-8 has its own bounded diagnostic',async()=>{
     {headers:{'content-type':'application/json'}})),
     {httpStatus:200,stage:'UTF8_DECODING',reason:'INVALID_UTF8'});
 });
-test('JSON and page validation distinguish missing/nonterminal cursor without accepting either',async()=>{
+test('JSON and page validation distinguish ambiguous full pages and nonterminal cursors',async()=>{
   const cases=[
     [()=>new Response(key+'::error::injected',{headers:{'content-type':'application/json'}}),'INVALID_JSON'],
     [()=>json(null),'INVALID_PAGE_DATA'],[()=>json({data:{},meta:{next_cursor:null,per_page:100}}),'INVALID_PAGE_DATA'],
-    [()=>{const p=payload();delete p.meta.next_cursor;return json(p);},'MISSING_TERMINAL_CURSOR'],
+    [()=>{const p=payload();delete p.meta.next_cursor;p.meta.per_page=1;return json(p);},'AMBIGUOUS_FULL_PAGE'],
     [()=>{const p=payload();p.meta.next_cursor=1;return json(p);},'NONTERMINAL_CURSOR'],
     [()=>{const p=payload();p.meta.per_page='100';return json(p);},'INVALID_PAGE_SIZE'],
     [()=>{const p=payload();p.meta.per_page=0;return json(p);},'INVALID_PAGE_SIZE']
   ];
   for(const [response,reason] of cases)
     assert.deepEqual(await diagnosed(response),{httpStatus:200,stage:'SOURCE_VALIDATION',reason});
+});
+test('documented omitted cursor on a short page supports only a nonqualifying cross-check',async()=>{
+  for(const perPage of [2,25,100]){
+    const p=payload();delete p.meta.next_cursor;p.meta.per_page=perPage;let calls=0;
+    const report=await runOneShot({...options(),fetchImpl:async url=>{
+      calls++;return url===NFLVERSE_SCHEDULES_URL?new Response(csv):json(p);}});
+    assert.equal(calls,2);assert.equal(report.providerRequests,1);assert.equal(report.retries,0);
+    assert.equal(report.status,'CROSS_CHECKED_INDEPENDENCE_UNVERIFIED');assert.equal(report.matched,true);
+    assert.equal(report.homeScore,21);assert.equal(report.awayScore,17);
+    assert.equal(report.qualifiesForExistingCorroborationGate,false);assert.equal(report.sourceIndependenceVerified,false);
+    assert.equal(report.qualifiedOutcomes,0);assert.equal(report.journalWrites,0);
+    assert.equal(report.validationDiagnostic,undefined);
+  }
+});
+test('missing, null, primitive or array page metadata never counts as an omitted cursor',async()=>{
+  for(const meta of [undefined,null,false,1,'bad',[]]){
+    const p=payload();p.meta=meta;
+    assert.deepEqual(await diagnosed(json(p)),{httpStatus:200,stage:'SOURCE_VALIDATION',reason:'INVALID_PAGE_METADATA'});
+  }
+});
+test('omitted cursor still requires own bounded integer per_page and a bounded data array',async()=>{
+  for(const perPage of [undefined,null,false,'100',0,-1,1.5,101]){
+    const p=payload();p.meta={per_page:perPage};
+    assert.deepEqual(await diagnosed(json(p)),{httpStatus:200,stage:'SOURCE_VALIDATION',reason:'INVALID_PAGE_SIZE'});
+  }
+  const p=payload();delete p.meta.next_cursor;p.meta.per_page=1;p.data.push({...p.data[0],id:990004});
+  assert.equal((await diagnosed(json(p))).reason,'INVALID_PAGE_SIZE');
+  p.data=Array.from({length:101},(_,i)=>({...p.data[0],id:i+1}));p.meta.per_page=100;
+  assert.equal((await diagnosed(json(p))).reason,'INVALID_PAGE_DATA');
+});
+test('any present nonnull cursor remains rejected even on an empty or short page',async()=>{
+  for(const cursor of [1,0,-1,1.5,'1','',false,true,{},[]])for(const empty of [false,true]){
+    const p=payload();p.meta.next_cursor=cursor;if(empty)p.data=[];
+    assert.deepEqual(await diagnosed(json(p)),{httpStatus:200,stage:'SOURCE_VALIDATION',reason:'NONTERMINAL_CURSOR'});
+  }
+});
+test('empty short pages are no-match and full pages without a cursor are ambiguous',async()=>{
+  const empty=payload();empty.data=[];delete empty.meta.next_cursor;
+  const report=await runOneShot({...options(),fetchImpl:async url=>url===NFLVERSE_SCHEDULES_URL?new Response(csv):json(empty)});
+  assert.equal(report.status,'NO_CROSS_CHECK_MATCH');assert.equal(report.matched,false);
+  assert.equal(report.reason,'NO_PROVIDER_GAME_MATCH');assert.equal(report.qualifiedOutcomes,0);
+  for(const size of [1,25,100]){
+    const p=payload();p.meta={per_page:size};
+    p.data=Array.from({length:size},(_,i)=>({...p.data[0],id:i+1,season:i===0?2026:2025}));
+    assert.equal((await diagnosed(json(p))).reason,'AMBIGUOUS_FULL_PAGE');
+  }
+});
+test('largest admitted omitted-cursor short page remains bounded and uses the untouched response',async()=>{
+  const p=payload();delete p.meta.next_cursor;
+  p.data=Array.from({length:99},(_,i)=>({...p.data[0],id:i+1,season:i===0?2026:2025}));
+  const report=await runOneShot({...options(),fetchImpl:async url=>url===NFLVERSE_SCHEDULES_URL?new Response(csv):json(p)});
+  assert.equal(report.status,'CROSS_CHECKED_INDEPENDENCE_UNVERIFIED');assert.equal(report.providerRequests,1);
+  assert.equal(report.qualifiedOutcomes,0);assert.equal(report.journalWrites,0);
+});
+test('explicit null retains prior full-page support but cannot bypass metadata validation',async()=>{
+  const p=payload();p.meta.per_page=1;
+  const report=await runOneShot({...options(),fetchImpl:async url=>url===NFLVERSE_SCHEDULES_URL?new Response(csv):json(p)});
+  assert.equal(report.status,'CROSS_CHECKED_INDEPENDENCE_UNVERIFIED');assert.equal(report.qualifiedOutcomes,0);
+  p.meta.per_page=0;assert.equal((await diagnosed(json(p))).reason,'INVALID_PAGE_SIZE');
+});
+test('omitted cursor never bypasses identity, duplicate, kickoff, finality, score or update checks',async()=>{
+  const cases=[
+    [p=>{p.data[0].home_team.abbreviation='UNKNOWN';},'INVALID_PROVIDER_RESPONSE','INVALID_GAME_IDENTITY'],
+    [p=>{p.data.push(structuredClone(p.data[0]));},'INVALID_PROVIDER_RESPONSE','DUPLICATE_GAME_ID'],
+    [p=>{p.data[0].date='2026-11-02T02:20:00.000Z';},'NO_CROSS_CHECK_MATCH','KICKOFF_OR_RECEIPT_MISMATCH'],
+    [p=>{p.data[0].postseason=true;},'NO_CROSS_CHECK_MATCH','SEASON_PHASE_MISMATCH'],
+    [p=>{p.data[0].status_state='in_progress';},'NO_CROSS_CHECK_MATCH','EXPLICIT_CONSISTENT_FINAL_REQUIRED'],
+    [p=>{p.data[0].home_team_score=22;},'NO_CROSS_CHECK_MATCH','FINAL_SCORE_MISMATCH'],
+    [p=>{p.data[0].updated_at='2026-11-05T00:00:00.000Z';},'NO_CROSS_CHECK_MATCH','INVALID_PROVIDER_RECORD_TIME']
+  ];
+  for(const [change,status,reason] of cases){const p=payload();delete p.meta.next_cursor;change(p);let calls=0;
+    const report=await runOneShot({...options(),fetchImpl:async url=>{calls++;return url===NFLVERSE_SCHEDULES_URL?new Response(csv):json(p);}});
+    assert.equal(calls,2);assert.equal(report.providerRequests,1);assert.equal(report.retries,0);
+    assert.equal(report.status,status);assert.equal(report.reason??report.validationDiagnostic?.reason,reason);
+    assert.equal(report.matched,false);assert.equal(report.qualifiedOutcomes,0);assert.equal(report.journalWrites,0);
+  }
 });
 test('provider identity diagnostics remain distinct and fail closed',async()=>{
   const cases=[
@@ -202,7 +278,7 @@ test('workflow is manual-only, least privilege, secret scoped solely to final re
   const workflow=await readFile(new URL('.github/workflows/live-probe.yml',root),'utf8');
   assert.match(workflow,/workflow_dispatch:/);assert.doesNotMatch(workflow,/\n\s*(?:push|pull_request|schedule|workflow_run):/);
   assert.match(workflow,/contents: read/);assert.match(workflow,/persist-credentials: false/);
-  assert.match(workflow,/github\.run_attempt == 1/);assert.match(workflow,/github\.ref == 'refs\/heads\/feat\/one-shot-diagnostics-20261105'/);
+  assert.match(workflow,/github\.run_attempt == 1/);assert.match(workflow,/github\.ref == 'refs\/heads\/fix\/one-shot-pagination-20261105'/);
   assert.equal((workflow.match(/secrets\./g)??[]).length,1);assert.match(workflow,/secrets\.BALLDONTLIE_API_KEY/);
   assert.doesNotMatch(workflow,/secrets\[|upload-artifact|npm (?:ci|install)|git push|api\/slate|mode=live|contents: write/);
   assert.equal((workflow.match(/default: false/g)??[]).length,2);
@@ -220,6 +296,8 @@ test('entrypoint has no write/log facilities and vendor hashes identify exact re
     ['lib/balldontlie-crosscheck.mjs','lib/balldontlie-live-reader.mjs']);
   for(const [file,origin] of Object.entries(manifest.localModifications)){
     assert.match(origin.sourceSha256,/^[a-f0-9]{64}$/);assert.notEqual(origin.sourceSha256,manifest.files[file]);
-    assert.equal(origin.purpose,'Allowlisted validation diagnostics only; acceptance rules unchanged');
+    assert.equal(origin.purpose,file==='lib/balldontlie-crosscheck.mjs'?
+      'Allowlisted diagnostics and documented omitted cursor on validated short pages':
+      'Allowlisted validation diagnostics only; acceptance rules unchanged');
   }
 });

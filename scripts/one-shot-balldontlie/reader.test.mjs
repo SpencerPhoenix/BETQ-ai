@@ -158,11 +158,16 @@ test('full bounded community CSV is hashed intact rather than substituting a fil
     createHash('sha256').update(csv).digest('hex'));
 });
 test('successful transport output still cannot pass existing attestation or settlement gates',async()=>{
-  const r=await readLiveBallDontLieFinal({...opts(),fetchImpl:async()=>jsonResponse()});
+  for(const omitted of [false,true]){
+  const text=JSON.parse(template.balldontlieJson);if(omitted)delete text.meta.next_cursor;
+  const raw=JSON.stringify(text);
+  const r=await readLiveBallDontLieFinal({...opts(),fetchImpl:async()=>jsonResponse(raw)});
+  assert.equal(r.crossChecks[0].sourceReceipts.balldontlie.sha256,createHash('sha256').update(raw).digest('hex'));
   const now=Date.parse(template.evaluatedAt),candidate=selectFinalizedResults(template.journal,parseCsv(template.nflverseCsv),{now})[0];
   assert.equal(isAttestedFinal(candidate,r.crossChecks[0],{now}),false);
   assert.equal(isCorroboratedSettlement({...candidate,revision:1,verifiedAt:template.evaluatedAt,
     finalityBasis:'TWO_SOURCE_FINAL_STATUS_NOT_LEAGUE_CERTIFIED',finalityAttestation:r.crossChecks[0],
     communitySourceVintage:{sha256:createHash('sha256').update(template.nflverseCsv).digest('hex'),
       collectorObservedAt:template.nflverseObservedAt,publicationTimeVerified:false}}),false);
+  }
 });

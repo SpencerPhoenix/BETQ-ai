@@ -1,7 +1,7 @@
 {
   "sourceCommit": "0ccfec250206c871151a2db5520b8fbc5ea5cd0b",
   "files": {
-    "lib/balldontlie-crosscheck.mjs": "087ad94f61f2eb133a3e9200db4a434d713f9c8b0704bd36716c63b3feb0deed",
+    "lib/balldontlie-crosscheck.mjs": "d90c164fc875e5f6ce5ab36860d0343a8969854f5f018b812087fd2cafe28741",
     "lib/balldontlie-live-reader.mjs": "0a97900d5417e979843d3c4e780bb02bbc73372de68412c1a7685860a265fb95",
     "lib/evidence.mjs": "98c4cca907a990eb2671dbc8f7afed00247e03981ac5b63fd782d43538f2657c",
     "lib/integrity.mjs": "fde39cac2e4951a49678410b842cc5a4249fe35edd7730982a6b661d41878ccd",
@@ -12,7 +12,7 @@
   "localModifications": {
     "lib/balldontlie-crosscheck.mjs": {
       "sourceSha256": "70a6985cb87407da976012944efbbc930613954ec476db017618fdb72d32f3ec",
-      "purpose": "Allowlisted validation diagnostics only; acceptance rules unchanged"
+      "purpose": "Allowlisted diagnostics and documented omitted cursor on validated short pages"
     },
     "lib/balldontlie-live-reader.mjs": {
       "sourceSha256": "f7b55b7e58fee94d960505993f2cc1fd6a25eaccac1f2d48fb76a741a418d87f",

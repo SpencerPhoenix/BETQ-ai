@@ -14,8 +14,11 @@ try{
   if(JSON.stringify(Object.keys(manifest.localModifications??{}).sort())!==
     JSON.stringify(Object.keys(originalHashes).sort()))throw Error('MODIFICATIONS');
   for(const [file,original] of Object.entries(originalHashes)){
+    const purpose=file==='lib/balldontlie-crosscheck.mjs'?
+      'Allowlisted diagnostics and documented omitted cursor on validated short pages':
+      'Allowlisted validation diagnostics only; acceptance rules unchanged';
     if(manifest.localModifications[file].sourceSha256!==original||manifest.files[file]===original||
-      manifest.localModifications[file].purpose!=='Allowlisted validation diagnostics only; acceptance rules unchanged')
+      manifest.localModifications[file].purpose!==purpose)
       throw Error('MODIFICATION_PROVENANCE');
   }
   const names=(await readdir(new URL('./lib/',import.meta.url))).sort().map(x=>'lib/'+x);
