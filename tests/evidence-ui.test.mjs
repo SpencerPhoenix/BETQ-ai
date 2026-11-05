@@ -57,3 +57,14 @@ test('Audit and sequential UI use the same scoring contract rather than raw coun
   assert.match(context.output,/MARKET VS ELO BRIER/);
   assert.match(context.output,/Source independence is unverified/);
 });
+test('Journal read, capture and calculation times are distinct from publication time',()=>{
+  const e=report(2,0);e.publication={source:'PUBLIC_JOURNAL',lastSuccessfulFetchAt:'2026-11-16T12:00:00.000Z',
+    latestSnapshotAt:'2026-11-07T12:00:00.000Z',lastError:'PUBLIC_JOURNAL_UNAVAILABLE_OR_INVALID'};
+  const out=html(e);
+  assert.match(out,/Existing public journal last read successfully/);
+  assert.match(out,/latest journal refresh failed or did not pass integrity checks/);
+  assert.match(out,/Newest recorded forecast capture/);
+  assert.match(out,/Summary calculated/);assert.match(out,/Source publication time is not verified/);
+  assert.doesNotMatch(out,/Last evidence publication/);
+  e.publication.source='BUNDLED_JOURNAL';assert.match(html(e),/Using the bundled evidence journal/);
+});

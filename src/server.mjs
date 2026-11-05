@@ -9,7 +9,7 @@ import { demoEvents } from './demo.mjs';
 import { predictNflEvent, MODEL_VERSION } from './nfl-elo.mjs';
 import { nflMoneylineConsensus } from './market-consensus.mjs';
 import { emptyJournal, summarizeEvidence } from './evidence.mjs';
-import { createEvidenceFeed } from './evidence-feed.mjs';
+import { createJournalEvidenceFeed,recomputeJournalEvidence } from './evidence-journal-feed.mjs';
 import { challengerResearchForEvent } from './nfl-efficiency.mjs';
 import { injuryContextForGame } from './injuries.mjs';
 import { illustrativePrice, PriceAuditError } from './price-metrics.mjs';
@@ -42,16 +42,19 @@ const NFL_EFFICIENCY=loadResearchArtifact('nfl_efficiency.json',a=>
   a?.sourceManifest?.project==='nflverse/nflverse-data'&&a?.readyForResearch);
 const NFL_INJURIES=loadResearchArtifact('nfl_injuries.json',a=>
   a?.schema===1&&a?.source==='NFLVERSE_INJURIES');
-function loadEvidence() {
+export function loadEvidenceJournal({read=()=>readFileSync(resolve(dirname(fileURLToPath(import.meta.url)),
+  '../data/evidence/nfl-2026.json'),'utf8'),clock=Date.now}={}) {
   try {
-    const json=JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), '../data/evidence/nfl-2026.json'), 'utf8'));
-    return summarizeEvidence(json);
+    const json=JSON.parse(read());
+    recomputeJournalEvidence(json,clock()); // Same boundary as the remote journal.
+    return json;
   } catch {
-    return summarizeEvidence(emptyJournal(2026));
+    return emptyJournal(2026);
   }
 }
-const NFL_EVIDENCE=loadEvidence();
-const NFL_EVIDENCE_FEED=createEvidenceFeed({fallback:NFL_EVIDENCE});
+const NFL_EVIDENCE_JOURNAL=loadEvidenceJournal();
+const NFL_EVIDENCE=summarizeEvidence(NFL_EVIDENCE_JOURNAL);
+const NFL_EVIDENCE_FEED=createJournalEvidenceFeed({fallbackJournal:NFL_EVIDENCE_JOURNAL});
 function loadReplayFile(name){
   try {
     const path=resolve(dirname(fileURLToPath(import.meta.url)),'../data/replay/'+name);
