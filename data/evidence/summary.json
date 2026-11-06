@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "season": 2026,
-  "generatedAt": "2026-11-05T18:56:56.267Z",
+  "generatedAt": "2026-11-06T18:22:10.756Z",
   "provenance": {
     "model": "BETQ_NFL_ELO",
     "market": "THE_ODDS_API_V4_DERIVED",
@@ -16,18 +16,18 @@
   "realizedROI": null,
   "verifiedCLV": null,
   "minimumScoredSample": 30,
-  "totalSnapshots": 105,
+  "totalSnapshots": 132,
   "prospectiveGames": 31,
-  "settledGames": 2,
-  "pendingGames": 29,
+  "settledGames": 3,
+  "pendingGames": 28,
   "sourceCorroboratedSettledGames": 0,
-  "sourceUncorroboratedSettledGames": 2,
+  "sourceUncorroboratedSettledGames": 3,
   "sourceCorroboratedMarketGames": 0,
   "sourceCorroboratedChallengerGames": 0,
-  "pairedMarketGames": 2,
+  "pairedMarketGames": 3,
   "nearKickoffConsensusPairs": 0,
   "prospectiveChallengerGames": 30,
-  "pairedChallengerSettled": 1,
+  "pairedChallengerSettled": 2,
   "challengerForwardComparison": null,
   "tiesExcluded": 0,
   "forwardMetrics": null,
@@ -59,6 +59,19 @@
       "capturedAt": "2026-11-02T01:07:26.939Z",
       "sourceCorroborated": false,
       "brier": null
+    },
+    {
+      "gameId": "2026_09_JAX_BAL",
+      "home": "BAL",
+      "away": "JAX",
+      "gameDate": "2026-11-05",
+      "score": "33-10",
+      "result": "AWAY",
+      "modelHomeProbability": 0.401566,
+      "marketHomeProbability": 0.239418,
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "sourceCorroborated": false,
+      "brier": null
     }
   ],
   "pendingPreview": [
@@ -79,15 +92,6 @@
       "capturedAt": "2026-11-02T01:07:26.939Z",
       "modelHomeProbability": 0.807551,
       "marketHomeProbability": 0.804293
-    },
-    {
-      "gameId": "2026_09_JAX_BAL",
-      "home": "BAL",
-      "away": "JAX",
-      "gameDate": "2026-11-05",
-      "capturedAt": "2026-11-02T01:07:26.939Z",
-      "modelHomeProbability": 0.401566,
-      "marketHomeProbability": 0.239418
     },
     {
       "gameId": "2026_09_BUF_MIN",
@@ -169,6 +173,15 @@
       "capturedAt": "2026-11-02T01:07:26.939Z",
       "modelHomeProbability": 0.442978,
       "marketHomeProbability": 0.380086
+    },
+    {
+      "gameId": "2026_09_DAL_IND",
+      "home": "IND",
+      "away": "DAL",
+      "gameDate": "2026-11-08",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelHomeProbability": 0.499108,
+      "marketHomeProbability": 0.302668
     }
   ],
   "safeguards": [
