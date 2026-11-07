@@ -530,3 +530,37 @@ progress.evidence-meter::-moz-progress-bar {background:var(--lime);border-radius
 .shadow-lead-box .metric-grid{margin-bottom:14px;}
 .shadow-lead-box .shadow-live-notice{margin:0;padding:13px;border-left:3px solid #9f96ed;background:#1c2438;line-height:1.75;}
 @media(max-width:650px){.shadow-lead-box{padding:12px;margin:12px 0;}.shadow-lead-heading strong{font-size:12px;}}
+
+/* Accessible research controls and a dismissible mobile navigation drawer. */
+.skip-link{position:fixed;left:12px;top:-80px;z-index:100;background:var(--lime);color:#101820;padding:13px 17px;border-radius:6px;font-weight:800;}
+.skip-link:focus{top:12px;}
+.mobile-nav-close{display:none;}
+.nav-backdrop{position:fixed;inset:0;border:0;background:#0009;z-index:25;}
+.nav-backdrop[hidden]{display:none;}
+.capability-note{font-size:12px;line-height:1.7;color:#b5c5d5;border-left:3px solid #7791ab;padding:9px 13px;margin:0 0 14px;}
+.game-bottom{flex-wrap:wrap;}
+.game-bottom .text-link{white-space:normal;text-align:left;line-height:1.65;max-width:100%;overflow-wrap:anywhere;}
+.spotlight-actions button{white-space:normal;line-height:1.5;}
+.empty-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;padding:0 16px 22px;}
+@media(max-width:850px){
+  .sidebar:not(.open){visibility:hidden;pointer-events:none;}
+  .sidebar.open{visibility:visible;pointer-events:auto;}
+  .mobile-nav-close{display:block;align-self:flex-end;border:1px solid var(--border);background:#182132;color:#dce7f2;border-radius:8px;min-width:44px;min-height:44px;margin-bottom:10px;}
+  button,.choice-bar button,.small-button,.text-link,.refresh-btn,.mobile-nav-button{min-height:44px;}
+  .refresh-btn,.mobile-nav-button{min-width:44px;}
+  .filter-checkbox{min-height:44px;padding:8px 2px;}
+  .filter-checkbox input{min-width:20px;min-height:20px;}
+  .scanner-bar input,.scanner-bar select{min-height:44px;}
+  .game-card,.signal-card{min-width:0;}
+  .game-bottom>span{min-width:0;overflow-wrap:anywhere;}
+  .section-heading{flex-wrap:wrap;gap:12px;}
+  .topbar{gap:8px;}
+  .topbar-left{flex:none;}
+  .topbar-right{min-width:0;gap:8px;}
+  .refresh-btn{flex:none;}
+  .feed-chip{font-size:9px;min-width:0;white-space:normal;line-height:1.4;}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto;}
+  .sidebar,.pulse-dot{transition:none;animation:none;}
+}

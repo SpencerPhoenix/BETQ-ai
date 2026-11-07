@@ -22,9 +22,10 @@ const mockEvent=()=>{
 };
 const schedule=(final=false)=>[{
   game_id:'2026_09_LV_KC',season:'2026',game_type:'REG',week:'9',
-  gameday:'2026-11-01',home_team:'KC',away_team:'LV',
+  gameday:'2026-11-01',home_team:'KC',away_team:'LV',commenceTime:ISO(NOW+7*3600000),status:final?'FINAL':'SCHEDULED',
   home_score:final?'27':'',away_score:final?'17':''
 }];
+const receipt=at=>({sourceReceipt:{observedAt:ISO(at),sha256:'a'.repeat(64)}});
 const slate=(time=NOW)=>{
   const original=mockEvent();
   return {
@@ -96,13 +97,13 @@ test('Append-only first forecast survives later revisions, results are reconcile
   assert.notEqual(near[0].id,one[0].id);
   const j=updateJournal(initial.journal,near,[],last).journal;
   assert.equal(j.snapshots.length,2);
-  const results=resultsFromSchedule(j,schedule(true),NOW+86400000);
+  const results=resultsFromSchedule(j,schedule(true),NOW+2*86400000,receipt(NOW+2*86400000));
   assert.equal(results.length,1);
-  const completed=updateJournal(j,[],results,NOW+86400000);
+  const completed=updateJournal(j,[],results,NOW+2*86400000);
   assert.equal(completed.settlementRevisions,1);
   assert.equal(completed.journal.snapshots[0].id,one[0].id);
-  assert.equal(updateJournal(completed.journal,[],results,NOW+86400000).settlementRevisions,0);
-  const report=summarizeEvidence(completed.journal,NOW+86400000);
+  assert.equal(updateJournal(completed.journal,[],results,NOW+2*86400000).settlementRevisions,0);
+  const report=summarizeEvidence(completed.journal,NOW+2*86400000);
   assert.equal(report.status,'COLLECTING_FORWARD_EVIDENCE');
   assert.equal(report.prospectiveGames,1);
   assert.equal(report.settledGames,1);
@@ -121,10 +122,10 @@ test('No post-kickoff reconstruction, early/late game trust and result correctio
   const journal=updateJournal(emptyJournal(2026),[obs],[]).journal;
   const noFinal=resultsFromSchedule(journal,schedule(true),NOW);
   assert.equal(noFinal.length,0); // day-of source should not be called final.
-  const finals=resultsFromSchedule(journal,schedule(true),NOW+86400000);
-  const settled=updateJournal(journal,[],finals,NOW+86400000).journal;
-  const corrected={...finals[0],homeScore:24,resultHash:'corrected-hash'};
-  const updated=updateJournal(settled,[],[corrected],NOW+2*86400000).journal;
+  const finals=resultsFromSchedule(journal,schedule(true),NOW+2*86400000,receipt(NOW+2*86400000));
+  const settled=updateJournal(journal,[],finals,NOW+2*86400000).journal;
+  const corrected={...finals[0],homeScore:24,resultHash:'corrected-hash',terminalStatusReceipt:{...finals[0].terminalStatusReceipt,observedAt:ISO(NOW+3*86400000)}};
+  const updated=updateJournal(settled,[],[corrected],NOW+3*86400000).journal;
   assert.equal(updated.settlements.length,2);
   assert.equal(updated.settlements[1].revision,2);
   assert.equal(summarizeEvidence(updated).settledGames,1);
@@ -137,16 +138,19 @@ test('Prospective 30+ source-corroborated games unlock performance without claim
       id:'id-'+i,gameId:'game-'+i,season:2026,home:'KC',away:'LV',
       gameDate:'2026-11-01',commenceTime:ISO(NOW+7*3600000),
       capturedAt:ISO(NOW+i),window:'DAILY',
-      modelHomeProbability:0.65,marketHomeProbability:0.57
+      modelHomeProbability:0.65,marketHomeProbability:0.57,
+      independentModel:true,researchOnly:true,modelBuiltAt:ISO(NOW-3600000),
+      sourceReceivedAt:ISO(NOW-1000),modelLastResultDate:'2026-10-31',
+      marketNewestQuoteAt:ISO(NOW-2000),marketBookCount:4,marketBasis:'NO_VIG_MULTI_BOOK_MEDIAN'
     };
     j.snapshots.push(obs);
     j.settlements.push(withSyntheticCorroboration({
-      gameId:obs.gameId,gameDate:obs.gameDate,
+      gameId:obs.gameId,gameDate:obs.gameDate,commenceTime:obs.commenceTime,
       homeScore:i%2===0?27:14,awayScore:i%2===0?14:27,
       outcome:i%2===0?'HOME':'AWAY',revision:1
-    },ISO(NOW+86400000)));
+    },ISO(NOW+2*86400000)));
   }
-  const report=summarizeEvidence(j,NOW+86400000);
+  const report=summarizeEvidence(j,NOW+2*86400000);
   assert.equal(report.forwardMetrics.n,31);
   assert.equal(report.marketComparison.n,31);
   assert.ok(report.marketComparison.confidence95);
