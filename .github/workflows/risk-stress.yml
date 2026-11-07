@@ -1,14 +1,6 @@
 name: BETQ historical bankroll stress
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'src/risk-stress.mjs'
-      - 'scripts/run-risk-stress.mjs'
-      - 'tests/risk-stress.test.mjs'
-      - 'tests/risk-api.test.mjs'
-      - 'data/replay/nfl_2022_2025.json'
-      - '.github/workflows/risk-stress.yml'
+  # Code publication must not run research or publish generated artifacts.
   workflow_dispatch:
 permissions:
   contents: write

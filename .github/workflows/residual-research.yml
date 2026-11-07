@@ -1,11 +1,6 @@
 name: BETQ pre-registered residual and winner's-curse research
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/residual-research.yml'
-      - 'src/residual-research.mjs'
-      - 'scripts/run-residual-research.mjs'
+  # Code publication must not run research or publish generated artifacts.
   workflow_dispatch:
 permissions:
   contents: write

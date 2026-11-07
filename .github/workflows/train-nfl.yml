@@ -1,8 +1,6 @@
 name: NFL historical model research refresh
 on:
-  push:
-    branches: [main]
-    paths: ['scripts/train-nfl.mjs', 'src/nfl-elo.mjs', '.github/workflows/train-nfl.yml']
+  # Code publication must not run research or publish generated artifacts.
   workflow_dispatch:
   schedule:
     - cron: '17 11 * * *'

@@ -1,11 +1,6 @@
 name: BETQ preregistered model promotion power study
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'src/promotion-power.mjs'
-      - 'scripts/run-promotion-power.mjs'
-      - '.github/workflows/promotion-power.yml'
+  # Code publication must not run research or publish generated artifacts.
   workflow_dispatch:
 permissions:
   contents: write

@@ -1,11 +1,6 @@
 name: BETQ historical NFL as-of replay
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'src/historical-replay.mjs'
-      - 'scripts/generate-replay.mjs'
-      - '.github/workflows/nfl-replay.yml'
+  # Code publication must not run research or publish generated artifacts.
   workflow_dispatch:
 permissions:
   contents: write

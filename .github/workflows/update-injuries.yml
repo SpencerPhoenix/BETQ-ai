@@ -1,8 +1,6 @@
 name: NFL injury report provenance refresh
 on:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/update-injuries.yml', 'scripts/update-injuries.mjs', 'src/injuries.mjs']
+  # Code publication must not run research or publish generated artifacts.
   workflow_dispatch:
   schedule:
     - cron: '24 10 * * *'
