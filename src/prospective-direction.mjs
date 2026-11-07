@@ -15,7 +15,8 @@
  *  - no threshold optimization, book prices, stake, or trading advice.
  */
 import {validateJournal} from './evidence.mjs';
-const isP=n=>Number.isFinite(n)&&n>0&&n<1;
+import {isEligibleMarketSnapshot} from './evidence-integrity.mjs';
+import {unambiguousFrozenGameIds} from './settlement-qualification.mjs';
 const at=s=>typeof s==='string'&&s.trim()?Date.parse(s):NaN;
 const round=(n,d=3)=>Number.isFinite(n)?Number(n.toFixed(d)):null;
 export const MOVEMENT_PROTOCOL=Object.freeze({
@@ -29,22 +30,8 @@ export const MOVEMENT_PROTOCOL=Object.freeze({
   marketSource:'NO_VIG_MULTI_BOOK_MEDIAN_NOT_BOOK_SPECIFIC_ENTRY'
 });
 
-function admissible(s){
-  if(!s||s.marketBasis!=='NO_VIG_MULTI_BOOK_MEDIAN'||
-     !isP(s.marketHomeProbability)||!isP(s.modelHomeProbability)||
-     !Number.isInteger(s.marketBookCount)||s.marketBookCount<3||
-     !Number.isFinite(at(s.capturedAt))||
-     !Number.isFinite(at(s.sourceReceivedAt))||
-     !Number.isFinite(at(s.marketNewestQuoteAt))||
-     !Number.isFinite(at(s.modelBuiltAt))||
-     !Number.isFinite(at(s.commenceTime)))return false;
-  const capture=at(s.capturedAt),received=at(s.sourceReceivedAt),
-    provider=at(s.marketNewestQuoteAt),model=at(s.modelBuiltAt),kick=at(s.commenceTime);
-  return capture<kick&&received<=capture+60000&&received>=capture-600000&&
-    provider<=received+60000&&provider<=capture+60000&&
-    provider<kick&&model<=capture+60000&&model<kick&&
-    s.independentModel===true&&s.researchOnly===true;
-}
+const admissible=isEligibleMarketSnapshot;
+
 function wilson(w,n){
   if(!n)return null;
   const z=1.96,p=w/n,d=1+z*z/n;
@@ -73,9 +60,10 @@ export function summarizeProspectiveDirection(journal,{
     if(!byGame.has(shot.gameId))byGame.set(shot.gameId,[]);
     byGame.get(shot.gameId).push(shot);
   }
-  const rows=[];
+  const rows=[],unambiguous=unambiguousFrozenGameIds(journal.snapshots);
   for(const [id,shots] of byGame){
-    const sorted=[...shots].sort((a,b)=>a.capturedAt.localeCompare(b.capturedAt));
+    if(!unambiguous.has(id)){ignored.invalidSource++;continue;}
+    const sorted=[...shots].sort((a,b)=>a.capturedAt.localeCompare(b.capturedAt)||a.id.localeCompare(b.id));
     const safe=sorted.filter(admissible);
     if(!safe.length){ignored.invalidSource++;continue;}
     if(safe.length<2){ignored.missingQuotes++;continue;}

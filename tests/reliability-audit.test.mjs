@@ -17,7 +17,7 @@ const event={id:'probe',home_team:'Kansas City Chiefs',away_team:'Las Vegas Raid
 const elo={schema:1,version:'nfl-elo-1',readyForResearch:true,generatedAt:iso(NOW-60000),lastGameDate:'2026-11-01',params:{homeAdv:25,scale:1},ratings:{KC:1500,LV:1500},holdout:{n:284,brier:.22,ece:.05}};
 const feature={n:8,netEPA:.1,netSuccess:.05,offEPA:.2,defEPA:.1,latestGameDate:'2026-10-25'};
 const challenger={version:'nfl-efficiency-1',readyForResearch:true,generatedAt:iso(NOW-60000),teamFeatures:{KC:feature,LV:feature},coefficients:{epa:1,success:1,rest:.02},holdout:{}};
-const observation={id:'valid',gameId:'g',season:2026,modelHomeProbability:.61,marketHomeProbability:.54,capturedAt:iso(NOW),commenceTime:iso(NOW+86400000),gameDate:'2026-11-03',modelBuiltAt:iso(NOW-60000)};
+const observation={home:'KC',away:'LV',sourceReceivedAt:iso(NOW-1000),modelLastResultDate:'2026-11-01',independentModel:true,researchOnly:true,id:'valid',gameId:'g',season:2026,modelHomeProbability:.61,marketHomeProbability:.54,capturedAt:iso(NOW),commenceTime:iso(NOW+86400000),gameDate:'2026-11-03',modelBuiltAt:iso(NOW-60000)};
 const final={gameId:'g',homeScore:20,awayScore:10,outcome:'HOME',resultHash:'h'};
 function randGenerator(seed){return ()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);}
 
@@ -133,12 +133,19 @@ test('Concurrent distinct-market bursts respect the total daily quota limit',asy
   assert.equal(calls,4);assert.equal(results.filter(r=>r.status==='fulfilled').length,4);
   assert.equal(s.status().budget.used,4);
 });
-test('NaN configuration must not disable budgets; scores cannot spend below provider reserve',async()=>{
-  const s=createOddsSource({apiKey:'TEST_ONLY',clock:()=>NOW,dailyCreditCap:NaN,reserveCredits:NaN,
-    fetchImpl:async()=>new Response('[]',{headers:{'x-requests-remaining':'51','x-requests-last':'1'}})});
-  assert.equal(s.status().budget.limit,12);
+test('NaN daily budget fails closed; an invalid reserve still retains its protective default',async()=>{
+  let calls=0;
+  const options={apiKey:'TEST_ONLY',clock:()=>NOW,reserveCredits:NaN,
+    fetchImpl:async()=>{calls++;return new Response('[]',{headers:{'x-requests-remaining':'51','x-requests-last':'1'}});}};
+  const disabled=createOddsSource({...options,dailyCreditCap:NaN});
+  assert.equal(disabled.status().budget.limit,0);
+  await assert.rejects(disabled.getOdds('americanfootball_nfl','h2h'),{code:'API_DAILY_BUDGET'});
+  assert.equal(calls,0);
+  const s=createOddsSource({...options,dailyCreditCap:12});
+  assert.equal(s.status().budget.minimumProviderCredits,50);
   await s.getOdds('americanfootball_nfl','h2h');
   await assert.rejects(s.getScores('americanfootball_nfl'),{code:'PROVIDER_CREDIT_RESERVE'});
+  assert.equal(calls,1);
 });
 test('Oversize unknown-length streams are cancelled before unlimited buffering',async()=>{
   let cancelled=false;

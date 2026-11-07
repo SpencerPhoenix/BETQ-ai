@@ -157,7 +157,7 @@ test('An appended backdated forecast cannot replace frozen model or challenger b
     if(alteration==='challenger'){
       baseline.snapshots[0].challengerHomeProbability=null;
       candidate.snapshots[0].challengerHomeProbability=null;
-      const later={...candidate.snapshots[0],id:'later-challenger',capturedAt:'2026-11-07T12:10:00.000Z',challengerHomeProbability:.65};
+      const later={...candidate.snapshots[0],id:'later-challenger',capturedAt:'2026-11-07T12:10:00.000Z',sourceReceivedAt:'2026-11-07T12:09:59.000Z',marketNewestQuoteAt:'2026-11-07T12:09:58.000Z',challengerHomeProbability:.65};
       baseline.snapshots.push(later);candidate.snapshots.push(structuredClone(later));
       extra.capturedAt='2026-11-07T12:05:00.000Z';
     }
