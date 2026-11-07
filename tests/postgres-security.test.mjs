@@ -137,7 +137,7 @@ test('Uncertain budget COMMIT fails closed, discards active client and retains c
     client=new EventEmitter();client.release=flag=>{discard=flag;};
     client.query=async(sql,args=[])=>{
       if(sql.startsWith('SELECT remaining_credits'))return {rows:[{remaining_credits:remaining,daily_credit_limit:12,minimum_reserve:50}]};
-      if(sql.startsWith('SELECT to_char'))return {rows:[{utc_day:'2026-11-07'}]};
+      if(sql.startsWith('SELECT to_char'))return {rows:[{utc_day:'2026-11-07',baseline_current:true}]};
       if(sql.startsWith('SELECT COALESCE'))return {rows:[{used:String(used),unresolved:used?'1':'0'}]};
       if(sql.includes('INSERT INTO provider_budget_reservations'))used+=args[3];
       if(sql.includes('UPDATE provider_budget_accounts'))remaining-=args[1];
@@ -145,7 +145,7 @@ test('Uncertain budget COMMIT fails closed, discards active client and retains c
       return {rows:[],rowCount:1};
     };return client;
   }};
-  const budget=createProviderBudget({pool,accountId:'fixture',dailyCreditCap:12,reserveCredits:50});
+  const budget=createProviderBudget({pool,accountId:'fixture',dailyCreditCap:12,reserveCredits:50,baselineMaxAgeSeconds:3600});
   await assert.rejects(budget.reserve({estimatedCredits:3}),error=>{
     assert.equal(error.code,'BUDGET_STORAGE_UNAVAILABLE');assert.doesNotMatch(error.message,/offline-secret/);return true;
   });

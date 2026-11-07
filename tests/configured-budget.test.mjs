@@ -35,3 +35,15 @@ test('Configured budget passes strict cap and floor without silently authorizing
   }
   assert.equal(connects,0);
 });
+
+test('Missing explicit age policy cannot inherit a different process environment',async()=>{
+  const name='BETQ_BUDGET_BASELINE_MAX_AGE_SECONDS',previous=process.env[name];
+  process.env[name]='3600';let connects=0;
+  try{
+    const pool={query:async()=>{},connect:async()=>{connects++;throw Error('must not connect');}};
+    const budget=configuredProviderBudget({env:{BETQ_BUDGET_ACCOUNT_ID:'fixture',
+      BETQ_BUDGET_DATABASE_URL:'postgresql://offline.invalid/fixture'},clientFactory:async()=>pool});
+    await assert.rejects(budget.reserve({estimatedCredits:1}),{code:'BUDGET_BASELINE_POLICY_REQUIRED'});
+    assert.equal(connects,0);
+  }finally{if(previous===undefined)delete process.env[name];else process.env[name]=previous;}
+});

@@ -9,7 +9,8 @@ const budget = createProviderBudget({
   pool,                         // configured pg.Pool, supplied by the server
   accountId: 'odds-main',        // nonsecret operator-assigned identity
   dailyCreditCap: 12,
-  reserveCredits: 50
+  reserveCredits: 50,
+  baselineMaxAgeSeconds: operatorApprovedBaselineMaxAgeSeconds // explicit positive integer, no default
 });
 const reservation = await budget.reserve({ estimatedCredits: 2 });
 // Only now may the caller issue the explicitly authorized provider request.
@@ -18,9 +19,21 @@ await budget.reconcile(reservation, { last: 2, remaining: 198 });
 const status = await budget.status();
 ```
 
-Reservations contain `id`, `accountId`, `utcDay` and `estimatedCredits`. The ledger trusts the stored reservation, not caller-supplied estimates when reconciling. Status includes `persistent`, `available` (storage accessible), `ready` (no unresolved request and at least one credit admissible), `reason`, `utcDay`, `used`, `limit`, `availableCredits`, `minimumProviderCredits`, `providerRemaining` and `unresolvedReservations`. `ready` is not permission to call the provider; the atomic `reserve` is always required and may reject a larger estimate. Storage/configuration/baseline errors throw a sanitized `ProviderBudgetError`; callers must represent them as unavailable/not ready, not fall back to a process-local counter.
+Reservations contain `id`, `accountId`, `utcDay` and `estimatedCredits`. The ledger trusts the stored reservation, not caller-supplied estimates when reconciling. Status includes `persistent`, `available` (storage accessible), `ready` (current baseline, no unresolved request and at least one credit admissible), `reason`, `utcDay`, `used`, `limit`, `availableCredits`, `minimumProviderCredits`, `providerRemaining`, `unresolvedReservations`, `baselineCurrent` and `baselineMaxAgeSeconds`. `ready` is not permission to call the provider; the atomic `reserve` is always required and may reject a larger estimate. Storage/configuration/baseline errors throw a sanitized `ProviderBudgetError`; callers must represent them as unavailable/not ready, not fall back to a process-local counter.
 
 Absent environment settings default to daily cap 12 and reserve 50. Explicit zero cap disables paid requests. Malformed settings, blanks, fractions, negatives, unsafe integers, nulls and booleans disable admission. Decimal integer strings are accepted. `BETQ_BUDGET_ACCOUNT_ID` is the default identity setting; credit settings are `ODDS_DAILY_CREDIT_LIMIT` and `ODDS_MIN_CREDITS_RESERVE`. The parent application owns pool configuration. Neither secrets nor provider URLs are persisted in this ledger.
+
+Account IDs have one shared runtime contract matching the SQL schema: an ASCII letter or digit first, followed by letters, digits, underscore, dot, colon or hyphen, up to 128 characters total. Whitespace and trailing line breaks are invalid.
+
+## Required baseline freshness policy
+
+**Compatibility change:** new paid reservations require an explicit `baselineMaxAgeSeconds` option or `BETQ_BUDGET_BASELINE_MAX_AGE_SECONDS` setting. There is no default duration. An operator must choose a positive safe integer number of seconds based on the provider account and all its consumers; this change neither chooses nor configures that value. Missing, zero or malformed policy disables new admission with `BUDGET_BASELINE_POLICY_REQUIRED`. All consumers of an account must use the same approved policy. This process setting is not a database-enforced upper bound.
+
+After locking the account, PostgreSQL samples its clock once for both the UTC day and freshness comparison. A baseline must be finite, not future-dated, and strictly younger than the approved maximum. Exact expiry, missing or invalid freshness results fail closed with `BUDGET_BASELINE_NOT_CURRENT`. Timestamp text preserves PostgreSQL microseconds without JavaScript date rounding. Status reports `ready:false`; neither a healthy web server nor an earlier ready result is spending permission.
+
+Reconciliation of existing reservations deliberately does not check freshness or require the new setting. It must still record an already-incurred charge after expiry, an outage or a policy change. Provider responses never update `baseline_verified_at`, reset history or renew the approved age window. Only an independently verified operator procedure may refresh that timestamp. A current timestamp is still an operator assertion about the observed balance, not proof that unrelated external spending has not occurred.
+
+No schema or retained-data migration is needed. Admission/status now read `baseline_verified_at`; column-specific roles need SELECT on that column, but no new UPDATE privilege. Reconciliation retains the previous column requirements. The runtime does not apply grants or configuration automatically.
 
 The effective daily cap is the smaller of the process setting and the operator's stored `daily_credit_limit`. The effective reserve is the larger of the process setting and stored `minimum_reserve`. There is no clamp that lowers a large operator reserve.
 
@@ -46,7 +59,7 @@ INSERT INTO provider_budget_accounts
 VALUES ('odds-main', 200, 12, 50, clock_timestamp());
 ```
 
-4. Scope the runtime database role to the necessary SELECT/INSERT/UPDATE operations on these tables. Do not give the runtime role migration, account seeding, ledger deletion or baseline-reset responsibilities. Configure a finite pool connection timeout; SQL lock and statement waits are also bounded by the module.
+4. Choose the explicit maximum baseline age before enabling new paid requests. Scope the runtime database role to the necessary SELECT/INSERT/UPDATE operations on these tables. Do not give the runtime role migration, account seeding, ledger deletion or baseline-reset responsibilities. Column-specific admission/status SELECT grants must include `baseline_verified_at`. Configure a finite pool connection timeout; SQL lock and statement waits are also bounded by the module.
 5. For unknown-outcome recovery, stop **all** callers for the provider account, wait until upstream outcomes can be established, and independently verify actual charges and remaining balance. In an operator transaction locking the account row, conservatively repair the affected reservations and only then mark them reconciled. If charge remains unknown, keep the account blocked. Keep existing daily charges and record the operator's evidence outside this runtime ledger. Do not delete reservations or lower charges to obtain budget headroom.
 6. For a verified quota renewal/top-up, likewise quiesce all callers before raising the baseline under the account lock and refreshing `baseline_verified_at`. Do not reset daily accounting or clear unresolved outcomes as a side effect. Runtime response headers can never raise the baseline.
 
@@ -65,7 +78,9 @@ Isolated real PostgreSQL 17.11 integration was completed on 2026-11-07 after tra
 - cap/floor policy, explicit offline seeding/recovery and a provider-cycle reset without clearing charges;
 - migration compatibility, runtime least-privilege grants and rejection of a missing/malformed schema.
 
-No real database, provider account, paid request, deployment, publication or credential operation is part of the mock tests.
+The later local baseline/readiness verification retained those 27 positive PostgreSQL checks and added 18 groups, for 45 positive checks plus the explicit privilege-limit probe, with zero failures. New groups covered finite/nonfuture baselines, exact expiry and microsecond boundaries, expiry during a real row-lock wait, invalid/missing age policies, shared account-ID boundaries, column-specific grants and reconciliation after expiry or loss of freshness SELECT permission. Exact-boundary SQL tests substituted only a fixed clock expression; the lock-wait test used the unmodified database clock. This is isolated PostgreSQL evidence, not managed-host or production certification.
+
+No provider account, paid request, deployment or publication was used. Mock tests do not connect to PostgreSQL; separate real-database checks use only disposable localhost fixtures.
 
 ## PostgreSQL transport hardening
 
@@ -82,3 +97,9 @@ The forced native-driver mode (`NODE_PG_FORCE_NATIVE`) is rejected. The hardened
 ### Database privilege boundary
 
 The isolated least-privilege test rejected DDL, new-account seeding, deletion and account-policy updates. However, grants allowing the runtime to update `remaining_credits` also allow arbitrary direct SQL to increase that column; grants alone do not enforce monotonicity. Monotonicity and reservation rules are enforced by this application, not a tamper-resistant database API. A runtime able to issue arbitrary SQL can violate application accounting rules. Stronger database-side enforcement would require separately reviewed triggers or restricted stored procedures, migration and role design. No such enforcement or production permission change is claimed here.
+
+## Bounded health readiness
+
+`/api/health` keeps web liveness separate from paid readiness. The source/ledger status check has a 500 ms deadline. Timeout or failure returns HTTP 200 for the running web process, with `captureReadiness.ready:false` and a sanitized `ODDS_STATUS_TIMEOUT` or `ODDS_STATUS_UNAVAILABLE` reason. No old ready result is cached.
+
+Concurrent health probes share one in-flight status operation. If it times out, later probes return the same not-ready outcome until that operation settles; they do not launch additional stuck queries. A late success cannot replace the timed-out response. A subsequent probe starts a fresh check after settlement. The underlying operation is not cancelled, so its database timeouts still apply; a permanently hung operation remains not-ready until recovery or restart. The deadline assumes the Node event loop is responsive. Paid routes still independently authenticate and commit a fresh durable reservation.

@@ -1,5 +1,6 @@
 import http from 'node:http';
 import {createHash,timingSafeEqual} from 'node:crypto';
+import {performance} from 'node:perf_hooks';
 import {collectionHealthFromBundledJournal} from './collection-health.mjs';
 import {listGameDossiers,buildGameDossier} from './game-dossier.mjs';
 import { readFile } from 'node:fs/promises';
@@ -105,6 +106,41 @@ function safeError(res, err) {
   console.error('[BETQ] request failed:', err && err.message ? err.message : 'unknown error');
   return reply(res, 500, { error: { code: 'INTERNAL_ERROR', message: 'Unexpected server error.' } });
 }
+const HEALTH_STATUS_TIMEOUT_MS = 500;
+function createHealthStatusReader(source) {
+  let pending = null;
+  const unavailable = reason => ({
+    reason,
+    odds: {
+      configured: typeof source.configured === 'boolean' ? source.configured : null,
+      lastSuccess: null, lastError: null, quota: null, cacheEntries: null,
+      budget: { persistent: false, available: false, ready: false, reason }
+    }
+  });
+  return () => {
+    if (pending) return pending;
+    let finish;
+    const result = new Promise(resolve => { finish = resolve; });
+    pending = result;
+    const deadline = performance.now() + HEALTH_STATUS_TIMEOUT_MS;
+    // Keep the timed-out operation tracked until it actually settles. Repeated
+    // probes share this bounded result rather than queueing more ledger queries.
+    const timer = setTimeout(() => finish(unavailable('ODDS_STATUS_TIMEOUT')), HEALTH_STATUS_TIMEOUT_MS);
+    function complete(value) {
+      clearTimeout(timer);
+      pending = null;
+      finish(value); // A late success cannot replace an already returned timeout.
+    }
+    Promise.resolve().then(() => source.status()).then(odds => {
+      const reason = performance.now() >= deadline ? 'ODDS_STATUS_TIMEOUT' :
+        typeof odds?.configured !== 'boolean' ? 'ODDS_STATUS_UNAVAILABLE' : null;
+      complete(reason ? unavailable(reason) : { odds, reason: null });
+    }, () => complete(unavailable(performance.now() >= deadline ?
+      'ODDS_STATUS_TIMEOUT' : 'ODDS_STATUS_UNAVAILABLE')));
+    // Do not cache a successful check: each later probe must verify readiness.
+    return result;
+  };
+}
 export function createHandler({
   source = createOddsSource(),
   operatorRefreshToken = process.env.BETQ_OPERATOR_REFRESH_TOKEN || '',
@@ -124,6 +160,7 @@ export function createHandler({
   maxAgeMs = Number(process.env.ODDS_MAX_AGE_MS) || 600000
 } = {}) {
   const access = new Map();
+  const healthStatus = createHealthStatusReader(source);
   const operatorConfigured=typeof operatorRefreshToken==='string' &&
     /^[A-Za-z0-9._~-]{32,512}$/.test(operatorRefreshToken);
   const tokenDigest=operatorConfigured ? createHash('sha256').update(operatorRefreshToken).digest() : null;
@@ -158,10 +195,10 @@ export function createHandler({
           return reply(res, 429, { error: { code: 'LOCAL_RATE_LIMIT', message: 'Too many requests. Try again shortly.' } });
         }
         if (url.pathname === '/api/health') {
-          const odds=await source.status();
-          const reason=!odds.configured?'LIVE_ODDS_SOURCE_NOT_CONFIGURED':!operatorConfigured ? 'OPERATOR_REFRESH_NOT_CONFIGURED' :
+          const {odds,reason:statusReason}=await healthStatus();
+          const reason=statusReason || (!odds.configured?'LIVE_ODDS_SOURCE_NOT_CONFIGURED':!operatorConfigured ? 'OPERATOR_REFRESH_NOT_CONFIGURED' :
             odds.budget?.persistent!==true || odds.budget?.available!==true || odds.budget?.ready!==true ?
-              odds.budget?.reason||'DURABLE_BUDGET_NOT_READY' : null;
+              odds.budget?.reason||'DURABLE_BUDGET_NOT_READY' : null);
           return reply(res, 200, {
           status: 'ok', app: 'BETQ.ai', version: '0.11.0',
           serverTime: new Date(now).toISOString(), odds,
