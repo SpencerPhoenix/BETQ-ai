@@ -1,4 +1,8 @@
 import http from 'node:http';
+import {createHash,timingSafeEqual} from 'node:crypto';
+import {performance} from 'node:perf_hooks';
+import {collectionHealthFromBundledJournal} from './collection-health.mjs';
+import {listGameDossiers,buildGameDossier} from './game-dossier.mjs';
 import { readFile } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -21,7 +25,6 @@ import {createDerivedForwardMarketFeed} from './shadow-derived.mjs';
 
 const PUBLIC_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../public');
 const SHADOW_PRIVATE = configuredShadowStore();
-const SHADOW_DERIVED_FEED = createDerivedForwardMarketFeed();
 const SHADOW_SYNTHETIC_REPORT = evaluateQBLatency(syntheticQBStudyFixture());
 function loadModelArtifact() {
   try {
@@ -43,18 +46,21 @@ const NFL_EFFICIENCY=loadResearchArtifact('nfl_efficiency.json',a=>
 const NFL_INJURIES=loadResearchArtifact('nfl_injuries.json',a=>
   a?.schema===1&&a?.source==='NFLVERSE_INJURIES');
 export function loadEvidenceJournal({read=()=>readFileSync(resolve(dirname(fileURLToPath(import.meta.url)),
-  '../data/evidence/nfl-2026.json'),'utf8'),clock=Date.now}={}) {
+  '../data/evidence/nfl-2026.json'),'utf8'),clock=Date.now,onInvalid=()=>{}}={}) {
   try {
     const json=JSON.parse(read());
     recomputeJournalEvidence(json,clock()); // Same boundary as the remote journal.
     return json;
   } catch {
+    onInvalid();
     return emptyJournal(2026);
   }
 }
-const NFL_EVIDENCE_JOURNAL=loadEvidenceJournal();
+let BUNDLED_JOURNAL_AVAILABLE=true;
+const NFL_EVIDENCE_JOURNAL=loadEvidenceJournal({onInvalid:()=>{BUNDLED_JOURNAL_AVAILABLE=false;}});
 const NFL_EVIDENCE=summarizeEvidence(NFL_EVIDENCE_JOURNAL);
 const NFL_EVIDENCE_FEED=createJournalEvidenceFeed({fallbackJournal:NFL_EVIDENCE_JOURNAL});
+const SHADOW_DERIVED_FEED=createDerivedForwardMarketFeed({fallbackJournal:NFL_EVIDENCE_JOURNAL});
 function loadReplayFile(name){
   try {
     const path=resolve(dirname(fileURLToPath(import.meta.url)),'../data/replay/'+name);
@@ -100,13 +106,50 @@ function safeError(res, err) {
   console.error('[BETQ] request failed:', err && err.message ? err.message : 'unknown error');
   return reply(res, 500, { error: { code: 'INTERNAL_ERROR', message: 'Unexpected server error.' } });
 }
+const HEALTH_STATUS_TIMEOUT_MS = 500;
+function createHealthStatusReader(source) {
+  let pending = null;
+  const unavailable = reason => ({
+    reason,
+    odds: {
+      configured: typeof source.configured === 'boolean' ? source.configured : null,
+      lastSuccess: null, lastError: null, quota: null, cacheEntries: null,
+      budget: { persistent: false, available: false, ready: false, reason }
+    }
+  });
+  return () => {
+    if (pending) return pending;
+    let finish;
+    const result = new Promise(resolve => { finish = resolve; });
+    pending = result;
+    const deadline = performance.now() + HEALTH_STATUS_TIMEOUT_MS;
+    // Keep the timed-out operation tracked until it actually settles. Repeated
+    // probes share this bounded result rather than queueing more ledger queries.
+    const timer = setTimeout(() => finish(unavailable('ODDS_STATUS_TIMEOUT')), HEALTH_STATUS_TIMEOUT_MS);
+    function complete(value) {
+      clearTimeout(timer);
+      pending = null;
+      finish(value); // A late success cannot replace an already returned timeout.
+    }
+    Promise.resolve().then(() => source.status()).then(odds => {
+      const reason = performance.now() >= deadline ? 'ODDS_STATUS_TIMEOUT' :
+        typeof odds?.configured !== 'boolean' ? 'ODDS_STATUS_UNAVAILABLE' : null;
+      complete(reason ? unavailable(reason) : { odds, reason: null });
+    }, () => complete(unavailable(performance.now() >= deadline ?
+      'ODDS_STATUS_TIMEOUT' : 'ODDS_STATUS_UNAVAILABLE')));
+    // Do not cache a successful check: each later probe must verify readiness.
+    return result;
+  };
+}
 export function createHandler({
   source = createOddsSource(),
+  operatorRefreshToken = process.env.BETQ_OPERATOR_REFRESH_TOKEN || '',
   clock = Date.now,
   nflArtifact = NFL_ARTIFACT,
   nflEfficiency = NFL_EFFICIENCY,
   nflInjuries = NFL_INJURIES,
   nflEvidence = NFL_EVIDENCE,
+  nflEvidenceJournal = BUNDLED_JOURNAL_AVAILABLE ? NFL_EVIDENCE_JOURNAL : null,
   evidenceFeed = NFL_EVIDENCE_FEED,
   replaySummary = NFL_REPLAY_SUMMARY,
   replayFull = NFL_REPLAY_FULL,
@@ -117,6 +160,21 @@ export function createHandler({
   maxAgeMs = Number(process.env.ODDS_MAX_AGE_MS) || 600000
 } = {}) {
   const access = new Map();
+  const healthStatus = createHealthStatusReader(source);
+  const operatorConfigured=typeof operatorRefreshToken==='string' &&
+    /^[A-Za-z0-9._~-]{32,512}$/.test(operatorRefreshToken);
+  const tokenDigest=operatorConfigured ? createHash('sha256').update(operatorRefreshToken).digest() : null;
+  function paidPermission(req){
+    if(req.headers['x-betq-paid-request']!=='true')return false;
+    if(!operatorConfigured)throw new OddsError('OPERATOR_REFRESH_NOT_CONFIGURED',503,
+      'Paid refresh is disabled until operator authentication is configured. Public reads use cached data only.');
+    const header=req.headers.authorization;
+    const candidate=typeof header==='string' && /^Bearer [A-Za-z0-9._~-]{32,512}$/.test(header) ? header.slice(7) : '';
+    const candidateDigest=createHash('sha256').update(candidate).digest();
+    if(!timingSafeEqual(candidateDigest,tokenDigest))throw new OddsError('OPERATOR_AUTH_REQUIRED',401,
+      'Paid refresh requires operator authentication. Public reads use cached data only.');
+    return true;
+  }
   return async (req, res) => {
     try {
       if (req.method !== 'GET' && req.method !== 'HEAD') {
@@ -136,9 +194,17 @@ export function createHandler({
         if (bucket.count > 180 && !['/api/health','/api/config'].includes(url.pathname)) {
           return reply(res, 429, { error: { code: 'LOCAL_RATE_LIMIT', message: 'Too many requests. Try again shortly.' } });
         }
-        if (url.pathname === '/api/health') return reply(res, 200, {
+        if (url.pathname === '/api/health') {
+          const {odds,reason:statusReason}=await healthStatus();
+          const reason=statusReason || (!odds.configured?'LIVE_ODDS_SOURCE_NOT_CONFIGURED':!operatorConfigured ? 'OPERATOR_REFRESH_NOT_CONFIGURED' :
+            odds.budget?.persistent!==true || odds.budget?.available!==true || odds.budget?.ready!==true ?
+              odds.budget?.reason||'DURABLE_BUDGET_NOT_READY' : null);
+          return reply(res, 200, {
           status: 'ok', app: 'BETQ.ai', version: '0.11.0',
-          serverTime: new Date(now).toISOString(), odds: source.status(),
+          serverTime: new Date(now).toISOString(), odds,
+          operatorRefresh:{configured:operatorConfigured,authenticationRequired:true,paidIntentRequired:true},
+          captureReadiness:{ready:reason===null,reason,scope:'PROVIDER_REFRESH_PREREQUISITES_ONLY'},
+          collectionHealth:collectionHealthFromBundledJournal(nflEvidenceJournal,now),
           nflModel: { available: Boolean(nflArtifact?.readyForResearch), version: nflArtifact?.version || null },
           forwardEvidence: { status: nflEvidence.status, prospectiveGames: nflEvidence.prospectiveGames,
             settledGames: nflEvidence.settledGames },
@@ -149,9 +215,13 @@ export function createHandler({
             startingQuarterbacksVerified:false
           }
         });
+        }
         if (url.pathname === '/api/config') return reply(res, 200, {
           sports: SPORTS, markets: MARKETS,
           maxAgeMs, refreshMs: null, autoRefresh: false,
+          paidRefreshRequiresExplicitRequest: true,
+          paidRefreshRequiresOperatorAuthentication: true,
+          publicReadsCacheOnly: true,
           marketOnlySignals: true, nflResearchModel: Boolean(nflArtifact?.readyForResearch),
           forwardEvidenceEnabled: true,
           nflEfficiencyChallengerAvailable:Boolean(nflEfficiency),
@@ -240,6 +310,31 @@ export function createHandler({
         if (url.pathname === '/api/shadow/demo') {
           // Entirely synthetic, immutable fixture; zero odds-provider requests.
           return reply(res,200,SHADOW_SYNTHETIC_REPORT);
+        }
+        if (['/api/research/games','/api/research/game'].includes(url.pathname)) {
+          const detail=url.pathname==='/api/research/game';
+          const keys=[...url.searchParams.keys()];
+          const selector=keys.length===1 && ['gameId','providerEventId'].includes(keys[0]) ? keys[0] : null;
+          const value=selector ? url.searchParams.get(selector) : null;
+          if ((!detail&&keys.length) || (detail&&(!selector||typeof value!=='string'||
+              !value.trim()||value.length>(selector==='providerEventId'?200:140)||/[\u0000-\u001f\u007f]/.test(value)))) {
+            return reply(res,400,{error:{code:'INVALID_SELECTOR',message:'Choose exactly one retained game identifier.'}});
+          }
+          try {
+            // Immutable bundled evidence only. No live source, refresh or remote journal request.
+            const result=detail ? buildGameDossier(nflEvidenceJournal,{[selector]:value,now}) :
+              listGameDossiers(nflEvidenceJournal,{now});
+            if(result.available!==true)throw Object.assign(new Error('Retained dossier unavailable'),{code:result.reason});
+            return reply(res,200,result);
+          } catch(error) {
+            const codes={GAME_NOT_FOUND:[404,'No retained dossier matches this game.'],
+              INVALID_SELECTOR:[400,'Choose exactly one retained game identifier.'],
+              AMBIGUOUS_PROVIDER_EVENT_ID:[409,'This provider identifier matches conflicting retained games.'],
+              INVALID_RETAINED_JOURNAL:[503,'Retained game evidence is unavailable or did not pass integrity checks.']};
+            const code=Object.hasOwn(codes,error?.code)?error.code:'INVALID_RETAINED_JOURNAL';
+            const [status,message]=codes[code];
+            return reply(res,status,{error:{code,message}});
+          }
         }
         if (url.pathname === '/api/evidence/nfl') {
           return reply(res, 200, await evidenceFeed.get());
@@ -384,9 +479,14 @@ export function createHandler({
             return reply(res, 400, { error: { code: 'INVALID_FILTER', message: 'Unsupported sport, market or mode.' } });
           }
           const demo = mode === 'demo';
+          if (!demo && req.method === 'HEAD') return reply(res, 405, {
+            error: { code: 'METHOD_NOT_ALLOWED', message: 'Live data supports GET only; HEAD never requests provider data.' }
+          }, { Allow: 'GET' });
           const snapshot = demo
             ? { events: demoEvents(sport, now), receivedAt: new Date(now).toISOString(), cacheHit: false, quota: null }
-            : await source.getOdds(sport, market);
+            : await source.getOdds(sport, market, {
+                allowPaid: paidPermission(req)
+              });
           const analysisNow=clock(); // Upstream fetch can cross kickoff or the freshness boundary.
           // Private opt-in capture reuses EXACTLY this already paid live response:
           // no second provider call, no demo, no caching-as-new-observation.
@@ -420,9 +520,9 @@ export function createHandler({
               }:{available:false,reason:game.marketConsensus?.reason||'MARKET_UNAVAILABLE'};
               const projection = game.started
                 ? { available: false, reason: 'GAME_ALREADY_STARTED' }
-                : predictNflEvent({
-                    home_team: game.homeTeam, away_team: game.awayTeam
-                  }, nflArtifact, analysisNow);
+                // Preserve explicit venue and kickoff metadata for the model's
+                // fail-closed neutral-site and chronology checks.
+                : predictNflEvent(rawGame, nflArtifact, analysisNow);
               game.independentModel = projection;
               game.efficiencyChallenger = projection.available ?
                 challengerResearchForEvent(rawGame,projection.homeWinProbability,nflEfficiency,analysisNow) :
@@ -464,7 +564,12 @@ export function createHandler({
           if (!Object.hasOwn(SPORTS, sport)) return reply(res, 400, {
             error: { code: 'INVALID_FILTER', message: 'Unsupported sport.' }
           });
-          const snapshot = await source.getScores(sport);
+          if (req.method === 'HEAD') return reply(res, 405, {
+            error: { code: 'METHOD_NOT_ALLOWED', message: 'Live data supports GET only; HEAD never requests provider data.' }
+          }, { Allow: 'GET' });
+          const snapshot = await source.getScores(sport, {
+            allowPaid: paidPermission(req)
+          });
           return reply(res, 200, {
             source: 'THE_ODDS_API_V4', sport, receivedAt: snapshot.receivedAt,
             cacheHit: snapshot.cacheHit, quota: snapshot.quota,

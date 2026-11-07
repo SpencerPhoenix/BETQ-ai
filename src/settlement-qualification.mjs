@@ -5,13 +5,10 @@
  */
 import {isDeepStrictEqual} from 'node:util';
 import {validDay} from './integrity.mjs';
+import {canonicalTimestamp,FINALITY_DELAY_MS,validFrozenIdentity,sameFrozenIdentity} from './evidence-integrity.mjs';
 
 export const OUTCOME_SCORING_POLICY='SOURCE_CORROBORATED_SETTLEMENT_V1';
-const canonicalTime=value=>{
-  if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value))return NaN;
-  const at=Date.parse(value);
-  return Number.isFinite(at)&&new Date(at).toISOString()===value?at:NaN;
-};
+const canonicalTime=canonicalTimestamp;
 const digest=x=>typeof x==='string'&&/^[a-f0-9]{64}$/.test(x);
 const freshReceipt=(value,verifiedAt)=>{
   const at=canonicalTime(value);
@@ -23,17 +20,17 @@ export function isSourceCorroboratedSettlement(record,snapshot){
   const at=canonicalTime(record?.verifiedAt),v=record?.communitySourceVintage,
     a=record?.finalityAttestation,kick=Date.parse(snapshot?.commenceTime);
   return Boolean(record&&snapshot&&Number.isInteger(record.revision)&&record.revision>0&&
-    record.gameId===snapshot.gameId&&validDay(record.gameDate)&&record.gameDate===snapshot.gameDate&&
-    Number.isFinite(at)&&Number.isFinite(kick)&&at>kick&&
+    sameFrozenIdentity(record,snapshot)&&validDay(record.gameDate)&&
+    validFrozenIdentity(snapshot)&&Number.isFinite(at)&&Number.isFinite(kick)&&at>=kick+FINALITY_DELAY_MS&&
     record.source==='NFLVERSE_SCHEDULES'&&
     record.finalityBasis==='TWO_SOURCE_FINAL_STATUS_NOT_LEAGUE_CERTIFIED'&&
     v&&digest(v.sha256)&&v.publicationTimeVerified===false&&
-    canonicalTime(v.collectorObservedAt)>kick&&freshReceipt(v.collectorObservedAt,at)&&
+    canonicalTime(v.collectorObservedAt)>=kick+FINALITY_DELAY_MS&&freshReceipt(v.collectorObservedAt,at)&&
     a?.status==='CROSS_SOURCE_FINAL'&&a.corroborator==='ESPN_SITE_SCOREBOARD_UNOFFICIAL'&&
-    a.officialLeagueCertification===false&&a.gameId===record.gameId&&a.gameDate===record.gameDate&&
+    a.officialLeagueCertification===false&&sameFrozenIdentity(a,snapshot)&&
     a.homeScore===record.homeScore&&a.awayScore===record.awayScore&&
     typeof a.eventId==='string'&&/^[0-9]{6,20}$/.test(a.eventId)&&digest(a.sourceSha256)&&
-    canonicalTime(a.observedAt)>kick&&freshReceipt(a.observedAt,at));
+    canonicalTime(a.observedAt)>=kick+FINALITY_DELAY_MS&&freshReceipt(a.observedAt,at));
 }
 
 /** Never select an older qualified result after a later unqualified correction. */
