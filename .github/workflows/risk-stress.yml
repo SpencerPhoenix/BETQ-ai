@@ -1,13 +1,6 @@
 name: BETQ historical bankroll stress
 on:
-  push:
-    paths:
-      - 'src/risk-stress.mjs'
-      - 'scripts/run-risk-stress.mjs'
-      - 'tests/risk-stress.test.mjs'
-      - 'tests/risk-api.test.mjs'
-      - 'data/replay/nfl_2022_2025.json'
-      - '.github/workflows/risk-stress.yml'
+  # Code publication must not run research or publish generated artifacts.
   workflow_dispatch:
 permissions:
   contents: write
@@ -16,6 +9,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   audit:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -23,6 +17,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Validate all engine and historical integrity tests
         run: |
           npm run check
