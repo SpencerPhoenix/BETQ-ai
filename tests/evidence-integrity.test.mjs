@@ -127,7 +127,7 @@ test('A real terminal provenance upgrade appends without rewriting the legacy sc
 
 test('Server seeds both public readers from the same sanitized bundled journal',async()=>{
   const server=await readFile(new URL('../src/server.mjs',import.meta.url),'utf8');
-  assert.match(server,/const NFL_EVIDENCE_JOURNAL=loadEvidenceJournal\(\);/);
+  assert.match(server,/const NFL_EVIDENCE_JOURNAL=loadEvidenceJournal\(\{onInvalid:\(\)=>\{BUNDLED_JOURNAL_AVAILABLE=false;\}\}\);/);
   assert.match(server,/createJournalEvidenceFeed\(\{fallbackJournal:NFL_EVIDENCE_JOURNAL\}\)/);
   assert.match(server,/createDerivedForwardMarketFeed\(\{fallbackJournal:NFL_EVIDENCE_JOURNAL\}\)/);
 });

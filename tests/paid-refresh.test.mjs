@@ -2,10 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { createHandler } from '../src/server.mjs';
-import { createOddsSource } from '../src/odds.mjs';
+import {createTestOddsSource as createOddsSource} from './helpers/mock-budget.mjs';
 
 const NOW = Date.parse('2026-11-07T12:00:00Z');
-const PAID = { headers: { 'x-betq-paid-request': 'true' } };
+const TOKEN='OFFLINE_OPERATOR_FIXTURE_0123456789';
+const PAID = { headers: { 'x-betq-paid-request': 'true',authorization:'Bearer '+TOKEN } };
 async function fixture(t, { dailyCreditCap = 12, fetchImpl } = {}) {
   let now = NOW, calls = 0, captures = 0;
   const source = createOddsSource({
@@ -16,7 +17,7 @@ async function fixture(t, { dailyCreditCap = 12, fetchImpl } = {}) {
     }
   });
   const server = http.createServer(createHandler({
-    source, clock: () => now,
+    source, clock: () => now, operatorRefreshToken:TOKEN,
     shadowStore: { capture: async () => { captures++; return { captured: false }; } },
     evidenceFeed: { get: async () => ({ researchOnly: true }) }
   }));
@@ -42,19 +43,23 @@ test('Cold page, static assets, config and default live requests spend zero prov
   assert.equal((await (await f.get('/api/config')).json()).paidRefreshRequiresExplicitRequest, true);
   assert.equal(f.calls(), 0);
   assert.equal(f.captures(), 0);
-  assert.equal(f.source.status().budget.used, 0);
+  assert.equal((await f.source.status()).budget.used, 0);
 });
 
-test('Only the exact explicit header authorizes a cold GET, not a query or truthy spelling', async t => {
+test('Only explicit paid intent plus operator authentication authorizes a cold GET', async t => {
   const f = await fixture(t);
   for (const value of ['', 'false', '1', 'True', 'true, true']) {
     await blocked(await f.get('/api/slate?mode=live', { headers: { 'x-betq-paid-request': value } }));
   }
   await blocked(await f.get('/api/slate?allowPaid=true&refresh=1'));
   assert.equal(f.calls(), 0);
+  for(const headers of [{'x-betq-paid-request':'true'},{'x-betq-paid-request':'true',authorization:'Bearer wrong-token'}]){
+    assert.equal((await f.get('/api/slate',{headers})).status,401);
+  }
+  assert.equal(f.calls(),0);
   assert.equal((await f.get('/api/slate?mode=live', PAID)).status, 200);
   assert.equal(f.calls(), 1);
-  assert.equal(f.source.status().budget.used, 1);
+  assert.equal((await f.source.status()).budget.used, 1);
 });
 
 test('Explicit refresh populates cache; ordinary reads stay free and expired reads fail closed', async t => {
@@ -70,7 +75,7 @@ test('Explicit refresh populates cache; ordinary reads stay free and expired rea
   f.advance(5000);
   await blocked(await f.get('/api/slate'));
   assert.equal(f.calls(), 1);
-  assert.equal(f.source.status().budget.used, 1);
+  assert.equal((await f.source.status()).budget.used, 1);
   assert.equal((await f.get('/api/slate', PAID)).status, 200);
   assert.equal(f.calls(), 2);
 });
@@ -85,14 +90,14 @@ test('HEAD and disallowed methods cannot spend credits even with an explicit hea
   }
   assert.equal(f.calls(), 0);
   assert.equal(f.captures(), 0);
-  assert.equal(f.source.status().budget.used, 0);
+  assert.equal((await f.source.status()).budget.used, 0);
 });
 
 test('Explicit score refresh still reserves two credits and cannot bypass daily budget', async t => {
   const f = await fixture(t, { dailyCreditCap: 2 });
   await blocked(await f.get('/api/scores'));
   assert.equal((await f.get('/api/scores', PAID)).status, 200);
-  assert.equal(f.source.status().budget.used, 2);
+  assert.equal((await f.source.status()).budget.used, 2);
   const cached = await (await f.get('/api/scores')).json();
   assert.equal(cached.cacheHit, true);
   const rejected = await f.get('/api/slate', PAID);
@@ -109,11 +114,12 @@ test('Concurrent explicit requests coalesce, but a cache-only request cannot joi
   });
   const pending = Array.from({ length: 20 }, () => source.getOdds('americanfootball_nfl', 'h2h', { allowPaid: true }));
   await assert.rejects(source.getOdds('americanfootball_nfl', 'h2h', { allowPaid: false }), { code: 'PAID_REFRESH_REQUIRED' });
+  await new Promise(resolve=>setImmediate(resolve));
   assert.equal(calls, 1);
   finish(new Response('[]', { status: 200 }));
   await Promise.all(pending);
   assert.equal((await source.getOdds('americanfootball_nfl', 'h2h', { allowPaid: false })).cacheHit, true);
-  assert.equal(source.status().budget.used, 1);
+  assert.equal((await source.status()).budget.used, 1);
 });
 
 test('Failed paid fetch does not let subsequent cache-only display retry the provider', async t => {
@@ -121,7 +127,7 @@ test('Failed paid fetch does not let subsequent cache-only display retry the pro
   assert.equal((await f.get('/api/slate', PAID)).status, 502);
   await blocked(await f.get('/api/slate'));
   assert.equal(f.calls(), 1);
-  assert.equal(f.source.status().budget.used, 1);
+  assert.equal((await f.source.status()).budget.used, 1);
 });
 
 
@@ -132,7 +138,7 @@ test('Zero daily budget blocks even explicit HTTP refresh while demo and health 
     assert.equal(response.status,429);
     const body=await response.json();
     assert.equal(body.error.code,'API_DAILY_BUDGET');
-    assert.match(body.error.message,/disabled/);
+    assert.match(body.error.message,/blocked/);
   }
   assert.equal((await f.get('/api/slate?mode=demo',PAID)).status,200);
   const health=await(await f.get('/api/health')).json();
@@ -140,4 +146,50 @@ test('Zero daily budget blocks even explicit HTTP refresh while demo and health 
   assert.equal(health.odds.budget.used,0);
   assert.equal(f.calls(),0);
   assert.equal(f.captures(),0);
+});
+
+test('Bearer alone, invalid auth and query strings never permit paid work',async t=>{
+  const f=await fixture(t);
+  await blocked(await f.get('/api/slate',{headers:{authorization:'Bearer '+TOKEN}}));
+  await blocked(await f.get('/api/slate?token='+TOKEN+'&paid=true'));
+  for(const authorization of ['Bearer '+TOKEN+'x','Basic '+TOKEN,'Bearer '+TOKEN+', Bearer '+TOKEN]){
+    const response=await f.get('/api/scores',{headers:{'x-betq-paid-request':'true',authorization}});
+    assert.equal(response.status,401);
+    assert.doesNotMatch(await response.text(),new RegExp(TOKEN));
+  }
+  assert.equal(f.calls(),0);
+});
+
+test('Health distinguishes running web server from blocked collection without secrets',async t=>{
+  const source={status:async()=>({configured:true,budget:{persistent:true,available:true,ready:false,
+    reason:'BUDGET_OUTCOME_UNKNOWN',unresolvedReservations:1}})};
+  const server=http.createServer(createHandler({source,operatorRefreshToken:TOKEN}));
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  t.after(()=>server.close());
+  const response=await fetch('http://127.0.0.1:'+server.address().port+'/api/health');
+  assert.equal(response.status,200);
+  const body=await response.json();
+  assert.equal(body.status,'ok');
+  assert.equal(body.captureReadiness.ready,false);
+  assert.equal(body.captureReadiness.reason,'BUDGET_OUTCOME_UNKNOWN');
+  assert.equal(body.operatorRefresh.authenticationRequired,true);
+  assert.doesNotMatch(JSON.stringify(body),new RegExp(TOKEN));
+});
+
+test('Missing operator credential cannot enable paid work even with spoofed headers',async t=>{
+  let calls=0;
+  const server=http.createServer(createHandler({operatorRefreshToken:'',source:{
+    status:async()=>({configured:true,budget:{persistent:true,available:true,ready:true}}),
+    getOdds:async()=>{calls++;throw Error('must not be called');}
+  }}));
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  t.after(()=>server.close());
+  const base='http://127.0.0.1:'+server.address().port;
+  const response=await fetch(base+'/api/slate',PAID);
+  assert.equal(response.status,503);
+  assert.equal((await response.json()).error.code,'OPERATOR_REFRESH_NOT_CONFIGURED');
+  const health=await(await fetch(base+'/api/health')).json();
+  assert.equal(health.captureReadiness.ready,false);
+  assert.equal(health.captureReadiness.reason,'OPERATOR_REFRESH_NOT_CONFIGURED');
+  assert.equal(calls,0);
 });

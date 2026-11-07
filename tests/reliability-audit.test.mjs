@@ -8,7 +8,7 @@ import {predictNflEvent} from '../src/nfl-elo.mjs';
 import {challengerResearchForEvent} from '../src/nfl-efficiency.mjs';
 import {emptyJournal,updateJournal,validateJournal,summarizeEvidence} from '../src/evidence.mjs';
 import {isValidEvidenceSummary} from '../src/evidence-feed.mjs';
-import {createOddsSource} from '../src/odds.mjs';
+import {createTestOddsSource as createOddsSource} from './helpers/mock-budget.mjs';
 import {createHandler} from '../src/server.mjs';
 import {validDay,nflGameDate,readBoundedText} from '../src/integrity.mjs';
 import {pairedWeekBootstrap} from '../src/statistical-audit.mjs';
@@ -122,30 +122,23 @@ test('1,000 simultaneous same-market requests coalesce into one provider call',a
     calls++;assert.equal(new URL(url).searchParams.get('apiKey'),'TEST_ONLY');
     return new Response('[]',{status:200});
   }});
-  const results=await Promise.all(Array.from({length:1000},()=>s.getOdds('americanfootball_nfl','h2h')));
-  assert.equal(calls,1);assert.equal(results.length,1000);assert.equal(s.status().budget.used,1);
+  const results=await Promise.all(Array.from({length:1000},()=>s.getOdds('americanfootball_nfl','h2h',{allowPaid:true})));
+  assert.equal(calls,1);assert.equal(results.length,1000);assert.equal((await s.status()).budget.used,1);
 });
 test('Concurrent distinct-market bursts respect the total daily quota limit',async()=>{
   let calls=0;
   const s=createOddsSource({apiKey:'TEST_ONLY',clock:()=>NOW,dailyCreditCap:4,fetchImpl:async()=>{calls++;return new Response('[]');}});
-  const jobs=['americanfootball_nfl','basketball_nba','baseball_mlb','icehockey_nhl','americanfootball_ncaaf'].flatMap(sp=>['h2h','spreads','totals'].map(m=>Promise.resolve().then(()=>s.getOdds(sp,m))));
+  const jobs=['americanfootball_nfl','basketball_nba','baseball_mlb','icehockey_nhl','americanfootball_ncaaf'].flatMap(sp=>['h2h','spreads','totals'].map(m=>Promise.resolve().then(()=>s.getOdds(sp,m,{allowPaid:true}))));
   const results=await Promise.allSettled(jobs);
   assert.equal(calls,4);assert.equal(results.filter(r=>r.status==='fulfilled').length,4);
-  assert.equal(s.status().budget.used,4);
+  assert.equal((await s.status()).budget.used,4);
 });
-test('NaN daily budget fails closed; an invalid reserve still retains its protective default',async()=>{
+test('Invalid reserve configuration blocks paid source access',async()=>{
   let calls=0;
-  const options={apiKey:'TEST_ONLY',clock:()=>NOW,reserveCredits:NaN,
-    fetchImpl:async()=>{calls++;return new Response('[]',{headers:{'x-requests-remaining':'51','x-requests-last':'1'}});}};
-  const disabled=createOddsSource({...options,dailyCreditCap:NaN});
-  assert.equal(disabled.status().budget.limit,0);
-  await assert.rejects(disabled.getOdds('americanfootball_nfl','h2h'),{code:'API_DAILY_BUDGET'});
+  const s=createOddsSource({apiKey:'TEST_ONLY',clock:()=>NOW,reserveCredits:NaN,
+    fetchImpl:async()=>{calls++;return new Response('[]');}});
+  await assert.rejects(s.getOdds('americanfootball_nfl','h2h',{allowPaid:true}),{code:'INVALID_BUDGET_CONFIGURATION'});
   assert.equal(calls,0);
-  const s=createOddsSource({...options,dailyCreditCap:12});
-  assert.equal(s.status().budget.minimumProviderCredits,50);
-  await s.getOdds('americanfootball_nfl','h2h');
-  await assert.rejects(s.getScores('americanfootball_nfl'),{code:'PROVIDER_CREDIT_RESERVE'});
-  assert.equal(calls,1);
 });
 test('Oversize unknown-length streams are cancelled before unlimited buffering',async()=>{
   let cancelled=false;

@@ -54,7 +54,7 @@
           <span class="time-now" id="clock">--:--:--</span>
           <span class="divider-vertical"></span>
           <span class="feed-chip" id="feed-chip"><span class="pulse-dot"></span> CONNECTING</span>
-          <button class="refresh-btn" type="button" data-action="refresh" aria-label="Request real odds (may use API credits)" title="Request real odds (may use API credits)">↻</button>
+          <button class="refresh-btn" type="button" data-action="refresh" aria-label="Reload cached odds" title="Reload cached odds">↻</button>
         </div>
       </header>
 
@@ -63,7 +63,7 @@
           <div class="hero-lines" aria-hidden="true"></div>
           <div class="hero-main">
             <div class="eyebrow"><span class="eyebrow-square"></span> BETQ QUANT LAB <span class="eyebrow-slash">//</span> SPORTS MARKET INTELLIGENCE</div>
-            <h1>See the <em>edge.</em><br>Question the signal.</h1>
+            <h1>Inspect the <em>price.</em><br>Demand the evidence.</h1>
             <p>Compare sportsbook prices and inspect NFL forecasting research. Market estimates are not verified win probabilities or a proven betting edge.</p>
             <div class="hero-actions">
               <button class="primary-button" data-tab="signals" type="button">Open signal scanner <span>↗</span></button>
@@ -109,9 +109,13 @@
 
         <section class="page active" id="page-overview" aria-label="Command center">
           <div class="section-heading"><div><div class="eyebrow subtle">01 / LIVE WORKSPACE</div><h2>Market command center</h2></div><p id="last-refreshed">Awaiting first snapshot</p></div>
+          <section class="panel readiness-panel" aria-labelledby="readiness-heading">
+            <div class="panel-head"><div><span class="panel-kicker">START HERE / WHAT BETQ CAN SUPPORT</span><h3 id="readiness-heading">Research readiness</h3></div></div>
+            <div class="readiness-grid" id="readiness-view" aria-live="polite"><p>Checking existing research evidence. No provider request is needed for this summary.</p></div>
+          </section>
           <div class="metric-grid" id="metric-grid"></div>
           <section class="panel agent-run-panel">
-            <div class="panel-head"><div><span class="panel-kicker">EVERY ACTIVATION / DETERMINISTIC QUANT AGENTS</span><h3>Agent decision &amp; quality gates</h3></div><button type="button" class="text-link" data-tab="replay">Historical proof ↗</button></div>
+            <div class="panel-head"><div><span class="panel-kicker">EVERY ACTIVATION / DETERMINISTIC QUANT AGENTS</span><h3>Agent decision &amp; quality gates</h3></div><button type="button" class="text-link" data-tab="replay">Historical research ↗</button></div>
             <div id="agent-run-view" aria-live="polite"></div>
           </section>
           <div class="main-grid">
@@ -140,7 +144,18 @@
         </section>
 
         <section class="page" id="page-games" aria-label="Game monitor">
-          <div class="section-heading"><div><div class="eyebrow subtle">02 / GAME MONITOR</div><h2>Game intelligence</h2></div><button class="outline-button" type="button" data-action="scores" title="Request recent scores (may use API credits)">Request scores (may use credits) ↗</button></div>
+          <div class="section-heading"><div><div class="eyebrow subtle">02 / GAME MONITOR</div><h2 id="games-heading" tabindex="-1">Game intelligence</h2></div><button class="outline-button" type="button" data-action="scores" title="Read cached scores">Read cached scores ↗</button></div>
+          <section id="game-dossier" class="panel game-dossier" aria-labelledby="game-dossier-heading" hidden>
+            <button class="outline-button" type="button" data-action="close-dossier">← Back to games</button>
+            <h3 id="game-dossier-heading" tabindex="-1">Game research dossier</h3>
+            <div id="game-dossier-status" role="status" aria-live="polite"></div>
+            <div id="game-dossier-content"></div>
+          </section>
+          <section class="panel retained-games" aria-labelledby="retained-games-heading">
+            <h3 id="retained-games-heading">Retained NFL game research</h3>
+            <p>Real retained NFL records, separate from the selected odds slate and fictional demo. Frozen research values only, not live recommendations.</p>
+            <div id="retained-games-list" aria-live="polite">Reading the bundled journal…</div>
+          </section>
           <div id="scores" class="scores-panel"></div>
           <div class="game-grid" id="game-grid"></div>
         </section>

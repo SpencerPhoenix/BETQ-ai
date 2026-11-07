@@ -564,3 +564,29 @@ progress.evidence-meter::-moz-progress-bar {background:var(--lime);border-radius
   html{scroll-behavior:auto;}
   .sidebar,.pulse-dot{transition:none;animation:none;}
 }
+
+/* A compact, non-promotional overview of data availability and research limits. */
+.readiness-panel{margin:0 0 20px;}
+.readiness-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--border);}
+.readiness-card{min-width:0;display:flex;flex-direction:column;align-items:flex-start;padding:18px;background:var(--bg-card,#172132);}
+.readiness-card strong{display:block;color:#e2eaf3;font-size:16px;line-height:1.5;margin:10px 0 0;overflow-wrap:anywhere;}
+.readiness-card p{color:#b5c5d5;font-size:12px;line-height:1.75;margin:9px 0 14px;}
+.readiness-card .text-link{margin-top:auto;white-space:normal;text-align:left;min-height:44px;line-height:1.5;}
+@media(max-width:950px){.readiness-grid{grid-template-columns:1fr;}}
+
+/* Retained game research is separate from the current odds snapshot. */
+.game-dossier,.retained-games{padding:24px;margin-bottom:24px;overflow-wrap:anywhere}
+.game-dossier[hidden]{display:none}
+.game-dossier h3,.retained-games h3{margin:16px 0 12px}
+.game-dossier p,.retained-games p,.dossier-unavailable{line-height:1.65;color:var(--text-muted,#a4aec2)}
+.dossier-open{margin:12px 16px}
+.game-dossier button,.retained-games button,.dossier-open{min-height:44px;white-space:normal;text-align:left}
+.dossier-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.dossier-section{border:1px solid var(--border,#30394b);padding:18px;border-radius:12px;min-width:0}
+.dossier-section dt{font-size:12px;color:var(--text-muted,#a4aec2);margin-top:12px}
+.dossier-section dd{margin:4px 0 12px;line-height:1.5}
+.retained-game-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;list-style:none;padding:0}
+.retained-game-list button{width:100%}
+#game-dossier-heading:focus,#games-heading:focus{outline:2px solid var(--cyan,#47d8ed);outline-offset:5px}
+@media(max-width:700px){.dossier-grid,.retained-game-list{grid-template-columns:1fr}.game-dossier,.retained-games{padding:16px}}
+.game-dossier summary{min-height:44px;cursor:pointer;padding:12px 0;line-height:1.5}

@@ -70,14 +70,16 @@ test('Existing local paper records retain manual settlement controls and unverif
   assert.match(out,/data-settle="paper-1"/);assert.match(out,/data-result="VOID"/);
   assert.match(out,/manually entered, not verified/);assert.equal(JSON.stringify(ledger),before);
 });
-test('Requests omit paid cost intent by default and add it only with explicit opt-in',async()=>{
+test('Public requests cannot opt into paid refreshes or send authentication',async()=>{
   const calls=[];const context={fetch:async(path,init)=>{calls.push({path,init});return {ok:true,json:async()=>({})};}};
   vm.runInNewContext(code('  async function requestJSON(','  function renderBanner(')+'globalThis.request=requestJSON;',context);
   await context.request('/api/slate');await context.request('/api/slate',{paidRequest:false});
   await context.request('/api/slate',{paidRequest:true});
   assert.equal(calls[0].init.headers['x-betq-paid-request'],undefined);
   assert.equal(calls[1].init.headers['x-betq-paid-request'],undefined);
-  assert.equal(calls[2].init.headers['x-betq-paid-request'],'true');
+  assert.equal(calls[2].init.headers['x-betq-paid-request'],undefined);
+  assert.ok(calls.every(call=>call.init.headers.Authorization===undefined));
+  assert.doesNotMatch(js,/x-betq-paid-request|BETQ_OPERATOR_REFRESH_TOKEN|Bearer /);
 });
 test('Cached-only error propagates its code for a clear explicit-refresh prompt',async()=>{
   const context={fetch:async()=>({ok:false,status:409,json:async()=>({error:{code:'PAID_REFRESH_REQUIRED',message:'Use explicit refresh'}})})};
@@ -86,7 +88,7 @@ test('Cached-only error propagates its code for a clear explicit-refresh prompt'
   const root={innerHTML:'',classList:{remove(){},add(){}}};
   vm.runInNewContext(formatting+code('  function renderBanner()','  function renderFeed()')+'renderBanner();',
     {state:{mode:'live',error:{code:'PAID_REFRESH_REQUIRED'}},$:()=>root});
-  assert.match(root.innerHTML,/NO FRESH CACHED ODDS/);assert.match(root.innerHTML,/may use API credits/);
+  assert.match(root.innerHTML,/NO CACHED ODDS AVAILABLE/);assert.match(root.innerHTML,/authenticated operator/);
 });
 function element(){
   const attrs=new Map(),classes=new Set();return {attrs,classes,inert:false,hidden:false,focusCount:0,
@@ -142,4 +144,13 @@ test('Full watchlist refuses another save without silently dropping a quote',()=
   const context={safeGet:()=>original,localStorage:{setItem(){writes++;}},toast:text=>{message=text;},retainQuoteFocus(){throw Error('unexpected render');}};
   vm.runInNewContext(code('  function toggleWatch(','  function stagePaper(')+'toggleWatch("new");',context);
   assert.match(message,/Watchlist is full/);assert.equal(writes,0);assert.equal(original.length,100);
+});
+
+ test('Cache reload failures preserve the previous same-selection snapshot, but filter changes clear it',async()=>{
+  const slate={events:[],receivedAt:'2026-11-07T00:00:00Z'};
+  const state={sport:'americanfootball_nfl',market:'h2h',mode:'live',slate,slateSelection:'americanfootball_nfl:h2h:live'};
+  const context={state,render(){},requestJSON:async()=>{throw Error('offline');},findSignal:()=>null};
+  vm.runInNewContext('let loadSerial=0;'+code('  async function loadSlate(','  let scoresLoading=')+'globalThis.load=loadSlate;',context);
+  await context.load();assert.equal(state.slate,slate);assert.equal(state.error.message,'offline');
+  state.market='spreads';await context.load();assert.equal(state.slate,null);
 });

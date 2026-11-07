@@ -28,7 +28,7 @@ def route_all(route):
     global cache_ready
     request = route.request
     u = urlparse(request.url)
-    requests.append({'path':u.path, 'query':u.query, 'paid':request.headers.get('x-betq-paid-request')})
+    requests.append({'path':u.path, 'query':u.query, 'paid':request.headers.get('x-betq-paid-request'), 'auth':request.headers.get('authorization')})
     if u.hostname != 'betq.test':
         unexpected.append(request.url)
         route.abort()
@@ -40,11 +40,9 @@ def route_all(route):
         return
     if u.path == '/api/slate':
         q = parse_qs(u.query)
-        if q.get('mode') == ['live'] and not cache_ready and request.headers.get('x-betq-paid-request') != 'true':
+        if q.get('mode') == ['live'] and not cache_ready:
             route.fulfill(status=409,json={'error':{'code':'PAID_REFRESH_REQUIRED','message':'No fresh cached data.'}})
             return
-        if request.headers.get('x-betq-paid-request') == 'true':
-            cache_ready = True
         data = json.loads(json.dumps(fixture))
         # Synthetic content is retained, including source and event demo flags.
         # Mode is UI-selected independently to test its cost-intent routing.
@@ -74,11 +72,16 @@ with sync_playwright() as p:
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.clock.install()
     page.goto('http://betq.test/')
-    expect(page.locator('#banner')).to_contain_text('NO FRESH CACHED ODDS')
+    expect(page.locator('#banner')).to_contain_text('NO CACHED ODDS AVAILABLE')
     assert not any(r['paid'] for r in requests), requests
+    cache_ready = True # Simulate a separate authenticated operator populating cache.
     page.locator('.refresh-btn').click()
     expect(page.locator('#banner')).to_contain_text('NO VALIDATED BETTING EDGE')
-    assert len([r for r in requests if r['paid']=='true']) == 1
+    assert len([r for r in requests if r['paid']=='true']) == 0
+    cache_ready = False
+    page.locator('.refresh-btn').click()
+    expect(page.locator('#banner')).to_contain_text('CACHE RELOAD FAILED')
+    cache_ready = True
     navigate(page,'games')
     expect(page.locator('.game-card')).to_have_count(3)
     expect(page.locator('#game-grid [data-pick]')).to_have_count(3)
@@ -124,7 +127,7 @@ with sync_playwright() as p:
     navigate(page,'games')
     page.locator('[data-action="scores"]').click()
     expect(page.locator('#scores')).to_contain_text('No scores returned')
-    assert len([r for r in requests if r['paid']]) == before+1
+    assert len([r for r in requests if r['paid']]) == before
     assert requests[-1]['path'] == '/api/scores'
     navigate(page,'execution')
     expect(page.locator('#execution-view')).to_contain_text('NEW PAPER STAGING IS LOCKED')
@@ -158,7 +161,8 @@ with sync_playwright() as p:
     assert not unexpected, unexpected
     assert not errors, errors
     paid = [r for r in requests if r['paid']]
-    assert [r['path'] for r in paid] == ['/api/slate','/api/scores'], paid
+    assert not paid, paid
+    assert not any(r['auth'] for r in requests), requests
     (OUT/'report.json').write_text(json.dumps({'passed':True,'fixture':'fictional demo, intercepted routes only','requests':requests,'pageErrors':errors,'unexpectedExternalRequests':unexpected,'testedWidths':[320,375,768,1440]},indent=2))
     browser.close()
 print('Offline browser checks passed; request intents, navigation, saved quotes, paper lock, widths and focus verified.')

@@ -119,6 +119,7 @@
 
   function setTab(tab) {
     if (!allowedTabs.includes(tab)) return;
+    if (tab !== 'games') closeGameDossier(false);
     state.tab = tab;
     document.querySelectorAll('.nav-item').forEach(b => {
       b.classList.toggle('active', b.dataset.tab === tab);
@@ -148,9 +149,8 @@
     window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   }
 
-  async function requestJSON(path,{paidRequest=false}={}) {
+  async function requestJSON(path) {
     const headers={Accept:'application/json'};
-    if(paidRequest)headers['x-betq-paid-request']='true';
     const response = await fetch(path, { cache: 'no-store', headers });
     let data = null;
     try { data = await response.json(); } catch { /* handled below */ }
@@ -170,16 +170,18 @@
       element.innerHTML = '<span>◈</span><p>Reading the available snapshot and validating lines…</p>';
     } else if (state.mode === 'demo') {
       element.innerHTML = '<span>◇</span><p><b>SIMULATION MODE.</b> All teams, games, odds and potential edges are fictional. No demo result is a live recommendation. <button type="button" class="text-link" data-mode="live">Switch to real odds ↗</button></p>';
+    } else if (state.error && state.slate) {
+      element.innerHTML = '<span>!</span><p><b>CACHE RELOAD FAILED.</b> Showing the previous snapshot with its original receipt time. ' + esc(state.error.message) + '</p>';
     } else if (state.error?.code === 'PAID_REFRESH_REQUIRED') {
       element.classList.add('info');
-      element.innerHTML='<span>◈</span><p><b>NO FRESH CACHED ODDS.</b> Opening the app and changing filters do not request paid quotes. <button type="button" class="text-link" data-action="refresh">Request real odds (may use API credits) ↻</button></p>';
+      element.innerHTML='<span>◈</span><p><b>NO CACHED ODDS AVAILABLE.</b> All public controls read cached data only. An authenticated operator must refresh source data. <button type="button" class="text-link" data-action="refresh">Reload cached odds ↻</button></p>';
     } else if (state.error) {
       element.innerHTML = '<span>!</span><p><b>' + esc(state.error.code === 'SETUP_REQUIRED' ? 'LIVE FEED NOT CONFIGURED.' : 'DATA SOURCE UNAVAILABLE.') +
         '</b> ' + esc(state.error.message) +
         ' <button type="button" class="text-link" data-mode="demo">Explore demo ↗</button></p>';
     } else if (state.slate) {
       element.classList.add('info');
-      element.innerHTML = '<span>◇</span><p><b>NO VALIDATED BETTING EDGE · PAPER STAGING LOCKED.</b> Opening the app and changing filters use cached odds only. ↻ requests real odds and may use API credits. Quotes are snapshots, not an in-play stream. NFL Elo and the historical EPA challenger appear separately in <button type="button" class="text-link" data-tab="model">Prediction Lab ↗</button>. Injury status may be stale; confirmed starters are not modeled.</p>';
+      element.innerHTML = '<span>◇</span><p><b>NO VALIDATED BETTING EDGE · PAPER STAGING LOCKED.</b> Opening the app and changing filters use cached odds only. ↻ reloads the available cache. Only an authenticated operator can request fresh source data. Quotes are snapshots, not an in-play stream. NFL Elo and the historical EPA challenger appear separately in <button type="button" class="text-link" data-tab="model">Prediction Lab ↗</button>. Injury status may be stale; confirmed starters are not modeled.</p>';
     } else {
       element.classList.add('info');
       element.innerHTML = '<span>◈</span><p>Checking for a cached odds snapshot…</p>';
@@ -196,7 +198,7 @@
       badge.classList.add('demo');
       badge.innerHTML = '<span class="pulse-dot"></span> SYNTHETIC DEMO';
       sidebar.textContent = 'Synthetic sandbox';
-    } else if (state.error || !state.slate) {
+    } else if (!state.slate) {
       badge.classList.add('offline');
       badge.innerHTML = '<span class="pulse-dot warning"></span> REAL ODDS UNAVAILABLE';
       dot.classList.add('warning');
@@ -204,7 +206,7 @@
     } else if (!Number.isFinite(Date.parse(state.slate.receivedAt)) || Date.now()-Date.parse(state.slate.receivedAt)>600000) {
       badge.classList.add('offline');
       badge.innerHTML='<span class="pulse-dot warning"></span> SNAPSHOT EXPIRED';
-      dot.classList.add('warning');sidebar.textContent='Refresh required / expired';
+      dot.classList.add('warning');sidebar.textContent='Cached snapshot expired';
     } else {
       badge.innerHTML = '<span class="pulse-dot"></span> API SNAPSHOT · NOT STREAMING';
       sidebar.textContent = 'The Odds API / snapshot';
@@ -219,8 +221,8 @@
     $('watch-only').checked=state.watchOnly;
     document.querySelectorAll('[data-action="refresh"]').forEach(el=>{
       el.disabled=state.loading;
-      el.setAttribute('aria-label',state.mode==='live'?'Request real odds (may use API credits)':'Refresh fictional demo');
-      el.title=state.mode==='live'?'Request real odds (may use API credits)':'Refresh fictional demo';
+      el.setAttribute('aria-label',state.mode==='live'?'Reload cached odds':'Refresh fictional demo');
+      el.title=state.mode==='live'?'Reload cached odds':'Refresh fictional demo';
     });
     const modelSelection=state.mode==='live'&&state.sport==='americanfootball_nfl'&&state.market==='h2h';
     $('capability-note').textContent=state.mode==='demo'?
@@ -765,6 +767,136 @@
       empty('Chart awaiting data', 'No price differences are available to graph.');
   }
 
+  // Dossiers are read only from the bundled full journal, never the summary preview.
+  let dossierSerial = 0;
+  let dossierOpen = false;
+  let dossierOpener = null;
+  const retainedEnvelope = data => data?.schema === 1 && data.available === true && Number.isFinite(Date.parse(data.generatedAt)) && data.source === 'BUNDLED_RETAINED_JOURNAL' &&
+    data.researchOnly === true && data.sourcePublicationTimeVerified === false;
+  const retainedGame = game => game && ['gameId','home','away','commenceTime'].every(key => typeof game[key] === 'string' && game[key].length > 0) &&
+    Number.isFinite(Date.parse(game.commenceTime)) && Array.isArray(game.providerEventIds) && game.providerEventIds.every(id => typeof id === 'string');
+  function validDossier(data, selector, value) {
+    if (!retainedEnvelope(data) || !retainedGame(data.game) ||
+      (selector === 'gameId' ? data.game.gameId !== value : !data.game.providerEventIds.includes(value)) ||
+      data.limitations?.verifiedEdge !== false || data.limitations?.wagerRecommendation !== false ||
+      data.limitations?.currentModelRecomputation !== false || data.limitations?.currentMarketRefresh !== false ||
+      data.comparableGames?.available !== false || !Array.isArray(data.history?.snapshots) ||
+      !Number.isInteger(data.history.total) || data.history.total < data.history.snapshots.length || data.history.snapshots.length > 100) return false;
+    const validSnapshot = s => s && s.gameId === data.game.gameId && s.home === data.game.home && s.away === data.game.away &&
+      s.commenceTime === data.game.commenceTime && s.gameDate === data.game.gameDate && s.season === data.game.season &&
+      typeof s.id === 'string' && Number.isFinite(Date.parse(s.capturedAt)) && Date.parse(s.capturedAt) <= Date.parse(data.generatedAt) &&
+      ['sourceReceivedAt','modelBuiltAt','challengerBuiltAt','marketNewestQuoteAt'].every(key => s[key] == null ||
+        (Number.isFinite(Date.parse(s[key])) && Date.parse(s[key]) <= Date.parse(data.generatedAt))) &&
+      ['model','market','challenger'].every(k => typeof s.eligibility?.[k] === 'boolean') &&
+      Array.isArray(s.missingness) && s.labels?.model === 'INDEPENDENT_RESEARCH_MODEL' &&
+      s.labels?.market === 'MARKET_DERIVED_NO_VIG_CONSENSUS' &&
+      (!s.eligibility.model || (Number.isFinite(s.modelHomeProbability) && s.modelHomeProbability >= 0 && s.modelHomeProbability <= 1 && Date.parse(s.capturedAt) < Date.parse(s.commenceTime))) &&
+      (!s.eligibility.market || (Number.isFinite(s.marketHomeProbability) && s.marketHomeProbability >= 0 && s.marketHomeProbability <= 1));
+    return validSnapshot(data.firstFrozenBaseline) && validSnapshot(data.latestSnapshot) && data.history.snapshots.every(validSnapshot) &&
+      Date.parse(data.firstFrozenBaseline.capturedAt) <= Date.parse(data.latestSnapshot.capturedAt) &&
+      data.history.snapshots.every((s,i,shots) => Date.parse(s.capturedAt) >= Date.parse(data.firstFrozenBaseline.capturedAt) &&
+        Date.parse(s.capturedAt) <= Date.parse(data.latestSnapshot.capturedAt) && (!i || Date.parse(shots[i-1].capturedAt) <= Date.parse(s.capturedAt))) &&
+      (data.result === null || (data.result?.gameId === data.game.gameId && typeof data.result.sourceCorroborated === 'boolean' &&
+        typeof data.result.scoringEligible === 'boolean' && data.result.officialLeagueCertification === false &&
+        (!data.result.scoringEligible || (data.result.sourceCorroborated === true && data.result.modelQualified === true &&
+          ['HOME','AWAY'].includes(data.result.outcome) && Number.isInteger(data.result.homeScore) && Number.isInteger(data.result.awayScore) &&
+          data.result.homeScore !== data.result.awayScore && data.result.homeScore >= 0 && data.result.awayScore >= 0 &&
+          data.result.outcome === (data.result.homeScore > data.result.awayScore ? 'HOME' : 'AWAY') &&
+          ['season','home','away','gameDate','commenceTime'].every(key => data.result[key] === data.game[key])))));
+
+  }
+  const dossierTime = value => value && Number.isFinite(Date.parse(value)) ? new Date(value).toISOString() : 'Not retained';
+  const dossierField = (label, value) => '<dt>' + esc(label) + '</dt><dd>' + esc(value) + '</dd>';
+  function frozenSnapshotHTML(snapshot, title) {
+    const s = snapshot;
+    const sourceTime = Date.parse(s.sourceReceivedAt);
+    const sourceAgeMs = Number.isFinite(sourceTime) ? Date.now() - sourceTime : null;
+    const sourceAge = sourceAgeMs === null ? null : Math.floor(sourceAgeMs / 60000);
+    return '<article class="dossier-section"><h4>' + esc(title) + '</h4><dl>' +
+      dossierField('Capture (UTC)', dossierTime(s.capturedAt)) +
+      dossierField('Snapshot ID / window', s.id + ' / ' + (s.window || 'Not retained')) +
+      dossierField('Independent frozen Elo', s.eligibility.model ? 'Home ' + pct(s.modelHomeProbability) + ' · Away ' + pct(1-s.modelHomeProbability) : 'Unavailable: required model provenance missing') +
+      dossierField('Model qualification', s.qualification?.model || 'Not retained') +
+      dossierField('Model version / built (UTC)', (s.modelVersion || 'Not retained') + ' / ' + dossierTime(s.modelBuiltAt)) +
+      dossierField('Latest model training result date', s.modelLastResultDate || 'Not retained') +
+      dossierField('Same-capture market-derived consensus', s.eligibility.market ? 'Home ' + pct(s.marketHomeProbability) + ' · Away ' + pct(1-s.marketHomeProbability) : 'Unavailable: required paired market provenance missing') +
+      dossierField('Market method', 'No-vig bookmaker consensus. Derived from market prices, not an independent model or a verified edge.') +
+      dossierField('Market qualification', s.qualification?.market || 'Not retained') +
+      dossierField('Market books / disagreement points', num(s.marketBookCount,0) + ' / ' + num(s.marketDisagreementPoints,2)) +
+      dossierField('Newest retained quote (UTC)', dossierTime(s.marketNewestQuoteAt)) +
+      dossierField('Source receipt (UTC)', dossierTime(s.sourceReceivedAt)) +
+      dossierField('Source freshness when this view was opened', sourceAge === null ? 'Unknown: receipt not retained' : sourceAge < 0 ? 'Invalid future receipt' : sourceAgeMs > 600000 ? 'Stale retained source · ' + sourceAge + ' minutes old' : 'Receipt within 10 minutes; frozen observation, not a live feed') +
+      dossierField('Missing retained fields', s.missingness.length ? s.missingness.join(', ') : 'None in this record’s published field set') +
+      '</dl></article>';
+  }
+  function dossierHTML(data) {
+    const game = data.game, result = data.result;
+    return '<p><b>REAL RETAINED NFL RESEARCH · FROZEN VALUES ONLY</b></p>' +
+      '<p>' + esc(game.away + ' @ ' + game.home) + ' · Kickoff (UTC): ' + esc(dossierTime(game.commenceTime)) +
+      ' · Game ID: ' + esc(game.gameId) + '</p>' +
+      '<p>No verified betting edge, CLV or ROI. No wager recommendation. These are archived full-game moneyline research observations, separate from the current sport, market and demo selection.</p>' +
+      '<div class="dossier-grid">' + frozenSnapshotHTML(data.firstFrozenBaseline, 'First frozen baseline') +
+      frozenSnapshotHTML(data.latestSnapshot, 'Latest retained snapshot') + '</div>' +
+      '<section class="dossier-section"><h4>Result qualification</h4><p>' +
+      (result ? esc((result.sourceCorroborated ? 'Source-corroborated; not official league certification. Upstream source independence remains unverified. ' : 'Recorded only; source corroboration not established. ') +
+        (result.scoringEligible ? 'Eligible for the retained scoring contract, not evidence of a profitable strategy.' : 'Not eligible for retained model scoring.')) +
+        '</p><dl>' + dossierField('Retained score', game.away + ' ' + (result.awayScore ?? 'Not retained') + ' · ' + game.home + ' ' + (result.homeScore ?? 'Not retained')) +
+        dossierField('Result source / receipt (UTC)', (result.source || 'Not retained') + ' / ' + dossierTime(result.verifiedAt)) + '</dl>' :
+        'No result retained. This view does not fetch or invent outcomes.</p>') + '</section>' +
+      '<section class="dossier-section"><h4>Retained capture history</h4><p>' + esc(String(data.history.total)) + ' captures. ' +
+      (data.history.truncated ? 'Only the latest ' + esc(String(data.history.snapshots.length)) + ' are listed; the first baseline is preserved above.' : 'All retained captures are listed.') + '</p>' +
+      data.history.snapshots.map(s => '<details><summary>Capture ' + esc(dossierTime(s.capturedAt)) + ' · ' + esc(s.window || 'Unspecified window') + '</summary>' +
+        frozenSnapshotHTML(s, 'Frozen capture') + '</details>').join('') + '</section>' +
+      '<section class="dossier-section"><h4>Context and limitations</h4><p>No verified injury, starting-quarterback or weather adjustments. Missing context is not evidence that conditions were neutral. No current model recomputation, current market refresh, or current-slate comparison is performed.</p>' +
+      '<p><b>Comparable games unavailable.</b> No validated comparability method is available. No similar-game win rate is inferred.</p>' +
+      '<p>Source: bundled retained journal. Source publication time is not verified. Response generated (UTC): ' + esc(dossierTime(data.generatedAt)) + '; this is not a new forecast capture.</p></section>';
+  }
+  async function loadRetainedGames() {
+    const root = $('retained-games-list');
+    try {
+      const data = await requestJSON('/api/research/games');
+      if (!retainedEnvelope(data) || !Array.isArray(data.games) || !data.games.every(retainedGame) || !Number.isInteger(data.total) || data.total < data.games.length || typeof data.truncated !== 'boolean') throw new Error('Invalid retained game index');
+      root.innerHTML = data.games.length ? '<ul class="retained-game-list">' + data.games.map(game =>
+        '<li><button type="button" class="outline-button" data-dossier-game="' + esc(game.gameId) + '">' +
+        esc(game.away + ' @ ' + game.home) + ' · NFL · ' + esc(dossierTime(game.commenceTime)) + '</button></li>').join('') + '</ul>' + (data.truncated ? '<p>Showing ' + esc(String(data.games.length)) + ' of ' + esc(String(data.total)) + ' retained NFL games. This index is bounded, not the complete journal.</p>' : '') :
+        '<p>No retained NFL game records are available.</p>';
+    } catch {
+      root.innerHTML = '<p>Retained NFL game index unavailable. No complete, compatible bundled journal was returned.</p>';
+    }
+  }
+  async function openGameDossier(selector, value, opener) {
+    if (!['gameId','providerEventId'].includes(selector) || typeof value !== 'string' || !value ||
+      (selector === 'providerEventId' && (state.mode !== 'live' || state.sport !== 'americanfootball_nfl'))) return;
+    const serial = ++dossierSerial;
+    dossierOpen = true; dossierOpener = opener;
+    $('game-dossier').hidden = false;
+    $('game-dossier-heading').textContent = 'Game research dossier';
+    $('game-dossier-content').innerHTML = '';
+    $('game-dossier-status').textContent = 'Reading the bundled retained game record…';
+    $('game-dossier-heading').focus();
+    try {
+      const data = await requestJSON('/api/research/game?' + selector + '=' + encodeURIComponent(value));
+      if (serial !== dossierSerial || !dossierOpen) return;
+      if (!validDossier(data, selector, value)) throw new Error('Incompatible dossier contract');
+      $('game-dossier-heading').textContent = data.game.away + ' @ ' + data.game.home + ' · NFL research';
+      $('game-dossier-content').innerHTML = dossierHTML(data);
+      $('game-dossier-status').textContent = 'Retained dossier loaded. Frozen research only.';
+    } catch (error) {
+      if (serial !== dossierSerial || !dossierOpen) return;
+      $('game-dossier-status').textContent = error?.code === 'GAME_NOT_FOUND' ?
+        'No retained NFL dossier matches this game. No record or forecast has been generated.' :
+        'Dossier unavailable: no complete, compatible retained game record was returned. Try another game.';
+    }
+  }
+  function closeGameDossier(returnFocus = true) {
+    ++dossierSerial; dossierOpen = false;
+    $('game-dossier').hidden = true;
+    $('game-dossier-content').innerHTML = '';
+    $('game-dossier-status').textContent = '';
+    if (returnFocus) (dossierOpener?.isConnected ? dossierOpener : $('games-heading')).focus({preventScroll:true});
+    dossierOpener = null;
+  }
+
   function renderGames() {
     const events = state.slate?.events || [];
     $('game-grid').innerHTML = events.map(event => {
@@ -783,7 +915,10 @@
         '<div class="game-bottom"><span>' + esc(event.bookmakerCount) + ' sportsbooks · ' +
         esc(event.totalMarkets) + ' matched contract(s)</span>' +
         (top ? '<button type="button" class="text-link" data-pick="' + esc(top.id) + '">Inspect ' +
-          esc(signed(top.evPercent)) + '% price scenario (not a bet) ↗</button>' : '<span>No qualifying quotes</span>') + '</div></article>';
+          esc(signed(top.evPercent)) + '% price scenario (not a bet) ↗</button>' : '<span>No qualifying quotes</span>') + '</div>' +
+        (state.mode === 'live' && state.sport === 'americanfootball_nfl' && event.id ?
+          '<button type="button" class="outline-button dossier-open" data-dossier-provider="' + esc(event.id) + '">Research dossier</button>' :
+          '<p class="dossier-unavailable">Retained dossiers cover real NFL games only.</p>') + '</article>';
     }).join('') || empty('No upcoming games with listed odds', 'The provider may not have posted prices for this market or league yet.');
     if (state.mode === 'demo') $('scores').innerHTML = '<div class="notice">Demo scores are intentionally not generated. No fictitious final results are shown.</div>';
   }
@@ -1212,6 +1347,54 @@
       comparison:challenger>=30&&e.challengerForwardComparison?.n===challenger?e.challengerForwardComparison:null};
   }
 
+  // Product readiness is separate from quote availability and never unlocks execution.
+  function renderResearchReadiness() {
+    const root=$('readiness-view');
+    if(!root)return;
+    const e=state.evidence, scoring=evidenceScoringView(e);
+    const readable=Boolean(e&&!e.error&&e.schema===1&&scoring.valid);
+    const card=(label,value,detail,tab,action)=>'<article class="readiness-card"><span class="metric-label">'+
+      esc(label)+'</span><strong>'+esc(value)+'</strong><p>'+esc(detail)+'</p>'+
+      '<button type="button" class="text-link" data-tab="'+tab+'">'+esc(action)+' ↗</button></article>';
+    const selected=sportLabels[state.sport]+' / '+marketLabels[state.market];
+    let quoteTitle='No snapshot loaded', quoteDetail=selected+'. No odds are available in this view.';
+    if(state.mode==='demo'){
+      quoteTitle='Fictional demo';quoteDetail='This selection shows invented games and prices. The NFL evidence summary below is separate real-world research.';
+    }else if(state.slate){
+      const at=Date.parse(state.slate.receivedAt),now=Date.now();
+      const expired=!Number.isFinite(at)||at>now+60000||now-at>600000;
+      quoteTitle=state.error?'Snapshot retained; refresh failed':(expired?'Snapshot expired':'Snapshot loaded');
+      quoteDetail=selected+'. Received '+when(state.slate.receivedAt)+
+        '. Quote age and kickoff checks still apply. Not an in-play feed.';
+    }else if(state.loading){
+      quoteTitle='Checking snapshot';quoteDetail=selected+'. Reading the existing cache; this summary does not fetch new provider data.';
+    }
+    let evidenceTitle=e?'Evidence unavailable':'Checking evidence';
+    let evidenceDetail=e?'A compatible verified summary could not be read. No qualified count or accuracy is assumed.':'Loading the existing NFL journal; availability does not depend on current odds.';
+    if(readable){
+      evidenceTitle=e.prospectiveGames+' frozen games · '+e.settledGames+' recorded results';
+      evidenceDetail=scoring.sample+' source-corroborated for scoring. '+
+        (scoring.forward?'The initial 30-game reporting gate is met, not a validation of betting performance.':
+          'Accuracy reporting needs at least 30 source-corroborated games and compatible metrics.')+
+        ' Source independence is unverified.';
+      if(e.publication?.source==='BUNDLED_JOURNAL')evidenceDetail+=' Showing bundled evidence.';
+      if(e.publication?.lastError)evidenceDetail+=' Latest journal refresh failed; retained evidence is shown.';
+    }
+    const content=card('SELECTED MARKET VIEW',quoteTitle,quoteDetail,'games','Inspect games')+
+      card('NFL PROSPECTIVE RESEARCH',evidenceTitle,evidenceDetail,'evidence','Inspect frozen evidence')+
+      card('DECISION BOUNDARY','No verified betting edge',
+        'Historical model research is not a profitable strategy. Paper staging and real wagering stay locked; more recorded games alone cannot unlock them.',
+        'model','Review model limitations');
+    // Do not repeatedly replace focused controls on the freshness timer.
+    if(root.innerHTML!==content){
+      const active=document.activeElement;
+      const focusedTab=root.contains(active)?active?.getAttribute('data-tab'):null;
+      root.innerHTML=content;
+      if(focusedTab)[...root.querySelectorAll('button[data-tab]')]
+        .find(button=>button.getAttribute('data-tab')===focusedTab)?.focus({preventScroll:true});
+    }
+  }
+
   function renderEvidence() {
     const root = $('evidence-view');
     if (!root) return;
@@ -1423,7 +1606,7 @@
   function render() {
     renderFilters(); renderFeed(); renderBanner(); renderMetrics(); renderAgentRun();
     renderOpportunities(); renderSpotlight(); renderChart();
-    renderGames(); renderSignals(); renderModel(); renderIntelligence(); renderEvidence(); renderShadow(); renderShadowForward(); renderReplay(); renderMarketChallenge(); renderRiskStress(); renderPricing(); renderExecution(); renderAudit();
+    renderGames(); renderSignals(); renderModel(); renderIntelligence(); renderResearchReadiness(); renderEvidence(); renderShadow(); renderShadowForward(); renderReplay(); renderMarketChallenge(); renderRiskStress(); renderPricing(); renderExecution(); renderAudit();
   }
 
   async function loadIntelligence() {
@@ -1514,29 +1697,30 @@
   async function loadEvidence() {
     try { state.evidence = await requestJSON('/api/evidence/nfl'); }
     catch { state.evidence = { error:'EVIDENCE_ENDPOINT_UNAVAILABLE' }; }
-    renderEvidence(); renderAudit();
+    renderEvidence(); renderResearchReadiness(); renderAudit();
   }
   async function loadHealth() {
     try { state.sourceHealth = await requestJSON('/api/health'); }
     catch { state.sourceHealth = null; }
   }
   let loadSerial = 0;
-  async function loadSlate({paidRequest=false}={}) {
+  async function loadSlate() {
     const serial = ++loadSerial;
     state.loading = true; state.error = null;
-    state.slate=null;state.selectedId=null;
+    const selectionKey = [state.sport,state.market,state.mode].join(':');
+    if (state.slateSelection !== selectionKey) { state.slate=null;state.selectedId=null; }
     render();
     try {
       const path = '/api/slate?sport=' + encodeURIComponent(state.sport) +
         '&market=' + encodeURIComponent(state.market) + '&mode=' + encodeURIComponent(state.mode);
-      const slate = await requestJSON(path,{paidRequest:paidRequest&&state.mode==='live'});
+      const slate = await requestJSON(path);
       if (serial !== loadSerial) return;
-      state.slate = slate; state.error = null;
+      state.slate = slate; state.slateSelection = selectionKey; state.error = null;
       if (!findSignal(state.selectedId)) state.selectedId = null;
     } catch (err) {
       if (serial !== loadSerial) return;
       state.error = { code: err.code || 'FETCH_FAILED', message: err.message };
-      state.slate = null; state.selectedId = null;
+      // Keep the same selection's last successful snapshot on reload failure.
     } finally {
       if (serial === loadSerial) {
         state.loading = false;
@@ -1552,9 +1736,9 @@
     const sport=state.sport;
     scoresLoading=true;
     document.querySelectorAll('[data-action="scores"]').forEach(el=>el.disabled=true);
-    $('scores').innerHTML = '<div class="notice info">Requesting scores; this may use API credits…</div>';
+    $('scores').innerHTML = '<div class="notice info">Reading cached scores…</div>';
     try {
-      const data = await requestJSON('/api/scores?sport=' + encodeURIComponent(sport),{paidRequest:true});
+      const data = await requestJSON('/api/scores?sport=' + encodeURIComponent(sport));
       if(state.sport!==sport||state.mode!=='live')return;
       const games = data.games || [];
       $('scores').innerHTML = games.length ? '<section class="panel"><div class="panel-head"><div><span class="panel-kicker">THE ODDS API</span><h3>Scores & game status</h3></div><span class="faint-caption">RECEIVED ' +
@@ -1575,6 +1759,11 @@
   }
 
   document.addEventListener('click', (event) => {
+    const dossierGame = event.target.closest('[data-dossier-game]');
+    if (dossierGame) { openGameDossier('gameId', dossierGame.dataset.dossierGame, dossierGame); return; }
+    const dossierProvider = event.target.closest('[data-dossier-provider]');
+    if (dossierProvider) { openGameDossier('providerEventId', dossierProvider.dataset.dossierProvider, dossierProvider); return; }
+    if (event.target.closest('[data-action="close-dossier"]')) { closeGameDossier(); return; }
     const replayYear=event.target.closest('[data-replay-season]');
     if(replayYear){
       state.replaySeason=Number(replayYear.dataset.replaySeason);
@@ -1612,11 +1801,14 @@
       }return;
     }
     if (action?.dataset.action === 'clear-watch-filter') { state.watchOnly=false; persist(); $('watch-only').checked=false; renderSignals(); $('watch-only').focus(); return; }
-    if (action?.dataset.action === 'refresh') { if(state.loading)return; loadSlate({paidRequest:true}); loadHealth(); loadEvidence(); return; }
+    if (action?.dataset.action === 'refresh') { if(state.loading)return; loadSlate(); loadHealth(); loadEvidence(); return; }
     if (action?.dataset.action === 'scores') { loadScores(); return; }
     if (action?.dataset.action === 'save-settings') { saveSettings(); return; }
   });
   document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && dossierOpen && $('game-dossier').contains(event.target)) {
+      event.preventDefault(); closeGameDossier(); return;
+    }
     if(mobileNavigation.matches&&$('sidebar').classList.contains('open')){
       if(event.key==='Escape'){event.preventDefault();setNavigation(false);return;}
       if(event.key==='Tab'){
@@ -1654,15 +1846,16 @@
   $('clock').textContent = new Date().toLocaleTimeString();
   setInterval(() => {
     $('clock').textContent = new Date().toLocaleTimeString();
-    if (state.slate) retainQuoteFocus(()=>{renderFeed();renderMetrics();renderOpportunities();renderSpotlight();renderSignals();});
+    if (state.slate) retainQuoteFocus(()=>{renderFeed();renderResearchReadiness();renderMetrics();renderOpportunities();renderSpotlight();renderSignals();});
     if (state.slate) $('last-refreshed').textContent = 'Received ' + relativeAge(state.slate.receivedAt) +
       (state.slate.cacheHit ? ' · Cached' : '');
   }, 15000);
-  // Startup and filter changes read cached data only. Only explicit refresh/score
-  // actions send the cost-intent header; it is not authentication. No polling.
+  // All browser requests, including reload and scores, read cached data only.
+  // Operator authentication and paid source requests never belong in this client.
   syncSettings();
   render();
   loadHealth();
+  loadRetainedGames();
   loadModel();
   loadIntelligence();
   loadEvidence();

@@ -36,7 +36,7 @@ async function slate(overrides,{crossKickoff=false}={}){
     getScores:async()=>{throw Error('No score request expected');}
   };
   const server=http.createServer(createHandler({
-    source,clock:()=>clock,nflArtifact:artifact,nflEfficiency:null,nflInjuries:null,
+    source,operatorRefreshToken:'OFFLINE_OPERATOR_FIXTURE_0123456789',clock:()=>clock,nflArtifact:artifact,nflEfficiency:null,nflInjuries:null,
     shadowStore:{capture:async()=>({captured:false,reason:'OFFLINE_TEST'})}
   }));
   await new Promise((resolve,reject)=>{
@@ -46,7 +46,7 @@ async function slate(overrides,{crossKickoff=false}={}){
   try{
     const response=await fetch('http://127.0.0.1:'+server.address().port+
       '/api/slate?sport=americanfootball_nfl&market=h2h&mode=live',{
-        headers:{'x-betq-paid-request':'true'}
+        headers:{'x-betq-paid-request':'true',authorization:'Bearer OFFLINE_OPERATOR_FIXTURE_0123456789'}
       });
     assert.equal(response.status,200);
     const payload=await response.json();

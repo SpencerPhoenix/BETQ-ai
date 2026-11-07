@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * BETQ.ai prospective research evidence collector.
- * Uses the public read-only BETQ endpoint and public nflverse schedules.
+ * Uses the authenticated operator BETQ refresh endpoint and public nflverse schedules.
  * No API keys are embedded. At most one live NFL moneyline request per run.
  * Commits derived model and consensus probabilities ONLY, never raw odds.
  */
@@ -14,7 +14,7 @@ import {
 } from '../src/evidence.mjs';
 
 const SCHEDULES_URL = 'https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv';
-const API = process.env.BETQ_PRODUCTION_URL || 'https://betq-ai.onrender.com';
+import { operatorRequest } from './operator-auth.mjs';
 const now=Date.now();
 const date=new Date(now);
 const season=date.getUTCMonth()<2?date.getUTCFullYear()-1:date.getUTCFullYear();
@@ -34,12 +34,12 @@ async function getCsv() {
   return parseCsv(text);
 }
 async function getSlate() {
-  const endpoint=new URL('/api/slate',API);
+  if (process.env.BETQ_CAPTURE_SKIP_REASON) throw Error('PRODUCTION_PREFLIGHT_UNAVAILABLE');
+  const {endpoint,options}=operatorRequest('/api/slate');
   endpoint.searchParams.set('mode','live');
   endpoint.searchParams.set('sport','americanfootball_nfl');
   endpoint.searchParams.set('market','h2h');
-  const response=await fetch(endpoint,{signal:AbortSignal.timeout(100000),
-    headers:{Accept:'application/json','x-betq-paid-request':'true'}});
+  const response=await fetch(endpoint,options);
   const result=await response.json().catch(()=>null);
   if(!response.ok)throw Error('Live slate unavailable HTTP '+response.status+
     ' '+String(result?.error?.code||'UNKNOWN'));
@@ -56,6 +56,7 @@ try {
   const derived=observationsFromSlate(slate,schedule,Date.now(),season);
   captures=derived.accepted;
   skipped=derived.skipped;
+  if (!captures.length) captureStatus='STARVED: NO_ELIGIBLE_FRESH_CAPTURES';
 } catch(err) {
   // On quota exhaustion, still reconcile final results from nflverse. No retry
   // storm or additional API credits are consumed by the collector.
