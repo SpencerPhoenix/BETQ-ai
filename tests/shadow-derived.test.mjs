@@ -4,6 +4,7 @@ import http from 'node:http';
 import {
   summarizeDerivedForwardMarkets,createDerivedForwardMarketFeed
 } from '../src/shadow-derived.mjs';
+import {emptyJournal} from '../src/evidence.mjs';
 import {createHandler} from '../src/server.mjs';
 
 const T=Date.parse('2026-11-03T12:00:00.000Z');
@@ -16,12 +17,14 @@ const observation=(id,minutes,p,game='2026_09_DEMO_A_B')=>({
   capturedAt:iso(T+minutes*60000),
   sourceReceivedAt:iso(T+minutes*60000-1000),
   modelHomeProbability:.58,marketHomeProbability:p,
+  modelBuiltAt:iso(T-3600000),modelLastResultDate:'2026-11-02',marketBookCount:4,
+  marketNewestQuoteAt:iso(T+minutes*60000-2000),
   marketBasis:'NO_VIG_MULTI_BOOK_MEDIAN',researchOnly:true,
   independentModel:true
 });
 const journal=(snapshots)=>({
   schema:1,season:2026,sport:'americanfootball_nfl',
-  provenance:{market:'THE_ODDS_API_V4_DERIVED'},
+  provenance:emptyJournal(2026).provenance,
   snapshots,settlements:[]
 });
 test('Derived journal summarizes real capture-to-capture changes but not news, fills or CLV',()=>{
@@ -58,7 +61,7 @@ test('Same-time or less-than-ten-minute repeats cannot create a market trend',()
   assert.equal(r.medianObservedAbsoluteMovementPoints,null);
 });
 test('Derived feed fetches only fixed public-safe journal, caches and rejects raw-odds contamination',async()=>{
-  let calls=0,now=T;
+  let calls=0,now=T+3600000;
   const fake=async url=>{
     calls++;assert.equal(url,
       'https://raw.githubusercontent.com/SpencerPhoenix/BETQ-ai/main/data/evidence/nfl-2026.json');

@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {EventEmitter} from 'node:events';
 import {
   SHADOW_SCHEMA,normalizeOwnedOddsSnapshot,makeQBCandidateNews,
   reviewQBCandidate,isPublicSafeShadowSummary
@@ -209,4 +210,18 @@ test('Adversarial 10000 malformed or cached quote variations never escape source
     assert.ok(normalized.records.length<=2);
     assert.ok(normalized.records.every(x=>x.realWagerFillVerified===false));
   }
+});
+
+test('Private capture survives active connection failure and discards the failed client',async()=>{
+  let discard;
+  const client=new EventEmitter();
+  client.release=flag=>{discard=flag;};
+  client.query=async sql=>{
+    if(sql==='COMMIT'){client.emit('error',Error('offline active failure'));throw Error('offline COMMIT acknowledgement lost');}
+    return {rows:[],rowCount:3};
+  };
+  const store=postgresShadowStore({query:async()=>({rows:[]}),connect:async()=>client});
+  await assert.rejects(store.capture(snap(),config),/PRIVATE_SHADOW_WRITE_FAILED/);
+  assert.equal(discard,true);
+  assert.doesNotThrow(()=>client.emit('error',Error('offline late failure')));
 });

@@ -17,7 +17,7 @@ function shot(game,num,market=.5,elo=.65,{at=NOW,challenger=null}={}){
     marketNewestQuoteAt:iso(captured-2500),
     marketBookCount:4,marketBasis:'NO_VIG_MULTI_BOOK_MEDIAN',
     modelHomeProbability:elo,modelBuiltAt:iso(NOW-60000),
-    modelVersion:'nfl-elo-1',
+    modelVersion:'nfl-elo-1',modelLastResultDate:'2026-11-01',
     challengerHomeProbability:challenger,
     challengerBuiltAt:challenger===null?undefined:iso(NOW-30000),
     challengerResearchOnly:true,
@@ -27,7 +27,7 @@ function shot(game,num,market=.5,elo=.65,{at=NOW,challenger=null}={}){
 }
 function final(game,y,revision=1){
   return withSyntheticCorroboration({
-    gameId:game,gameDate:'2026-11-08',
+    gameId:game,gameDate:'2026-11-08',commenceTime:iso(NOW+5*86400000),
     homeScore:y===1?31:10,awayScore:y===1?10:31,
     outcome:y===1?'HOME':'AWAY',revision,
     resultHash:'result-'+game+'-'+revision
@@ -109,7 +109,7 @@ test('No odds API credit: reuses source-safe derived feed, withholding performan
   let calls=0;
   const feed=createDerivedForwardMarketFeed({fetchImpl:async()=>{
     calls++;return new Response(JSON.stringify(journal),{status:200});
-  },clock:()=>NOW});
+  },clock:()=>NOW+11*86400000});
   const one=await feed.get(),again=await feed.get();
   assert.equal(calls,1);
   assert.deepEqual(one,again);

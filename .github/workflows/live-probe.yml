@@ -9,8 +9,11 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
+    env:
+      BETQ_OPERATOR_REFRESH_TOKEN: ${{ secrets.BETQ_OPERATOR_REFRESH_TOKEN }}
     timeout-minutes: 7
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -18,12 +21,13 @@ jobs:
         shell: bash
         run: |
           node --input-type=module <<'NODE'
+          import { operatorRequest } from './scripts/operator-auth.mjs';
           const base = 'https://betq-ai.onrender.com';
           const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-          async function read(path) {
-            const res = await fetch(base + path, {
-              headers: { Accept: 'application/json' },
-              signal: AbortSignal.timeout(95000)
+          async function read(path, allowPaid = false) {
+            const paid = allowPaid ? operatorRequest(path) : null;
+            const res = await fetch(paid?.endpoint || base + path, paid?.options || {
+              redirect: 'error', headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(95000)
             });
             const raw = await res.text();
             let body = null;
@@ -52,9 +56,13 @@ jobs:
             console.log('LIVE DATA: NOT READY (set ODDS_API_KEY in Render; demo still operates)');
             process.exit(0);
           }
+          if (!process.env.BETQ_OPERATOR_REFRESH_TOKEN?.trim()) {
+            console.log('LIVE CAPTURE SKIPPED: OPERATOR_TOKEN_MISSING; no paid request sent');
+            process.exit(0);
+          }
           // Request one live NFL moneyline snapshot. This may cost one provider credit.
           let result;
-          try { result = await read('/api/slate?sport=americanfootball_nfl&market=h2h&mode=live'); }
+          try { result = await read('/api/slate?sport=americanfootball_nfl&market=h2h&mode=live', true); }
           catch {
             console.error('LIVE DATA: network error');
             process.exit(1);
