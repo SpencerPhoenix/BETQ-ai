@@ -1,4 +1,4 @@
-# Isolated Odds API transport diagnostic (local preparation, not published)
+# Isolated Odds API transport diagnostic (one fresh approved attempt)
 
 This branch is not an application release. Do not merge it. It changes only this
 directory and the existing registered `.github/workflows/live-probe.yml` path.
@@ -9,18 +9,28 @@ remain byte-identical to main `69ca969eeef474b379a0b8bc729a1cdde348dc6e`.
 
 The user confirmed the existing repository secret name `ODDS_API_KEY` from their
 GitHub screenshot. No secret value was accessed. Only the final request step
-references it. The reviewed local configuration pins workflow run number **69**.
-A read-only GitHub check found registered workflow ID **403983910** last ran as
-number **68**, run **42022137361**, on November 5, 2026. These are preparation facts,
-not a reservation of the next run number. Recheck immediately before publication.
+references it. This revision pins workflow run number **70**.
+
+Run **69**, ID **42496052178**, attempt 1, used the correct published revision on
+November 8, 2026 at 15:41:08 UTC. Its supplied 15:30 UTC expiry had already passed.
+Preflight failed and the provider-request step was skipped: this diagnostic made
+zero provider requests and used zero quota credits. The user explicitly approved
+one fresh attempt afterward. This is not permission to use Re-run jobs.
+
+The latest read-only history check found run 69 is still the most recent run of
+registered workflow **403983910**. The next number is therefore **70**, but this is
+not a reservation. Recheck immediately before publication and when the user is
+ready to dispatch. Do not send a fixed expiry while preparation is still underway;
+coordinate a fresh timestamp with the user only when they are ready to run.
 
 The script accepts only the exact branch and reviewed SHA, actor and triggering
 actor `SpencerPhoenix`, the same workflow SHA, canonical UTC expiry within 15
-minutes, explicit one-request/account approvals, run number 69 and attempt 1.
+minutes, explicit one-request/account approvals, run number 70 and attempt 1.
 Null or placeholder configuration fails closed before contacting the provider.
 
-Preparation does not authorize publication, secret creation, deployment, merging,
-dispatching or retrying. Before any separately authorized publication:
+The user authorized publishing this isolated update for one fresh attempt. They
+will dispatch it manually; publication does not authorize us to dispatch, retry,
+create secrets, deploy or merge. Before publication and execution respectively:
 
 1. Recheck current main and the existing registered workflow's latest run number.
    Keep its path and name unchanged. Any intervening run consumes the approved
@@ -36,8 +46,8 @@ dispatching or retrying. Before any separately authorized publication:
    not been tested on the signed-in UI. If fields are missing, do not run the form,
    change main, or weaken guards. An explicitly approved user-operated GitHub CLI
    or REST dispatch with the exact branch and all inputs is the supported fallback.
-4. The user must supply the published full SHA, canonical UTC expiry at most 15
-   minutes ahead, and true values for the one-request and intended-account
+4. The user must supply this revision's published full SHA, a freshly coordinated
+   canonical UTC expiry at most 15 minutes ahead, and true values for the one-request and intended-account
    approvals. Never select main, enable debug logging, or use Re-run jobs.
 
 GitHub assigns a new run number for every new run of a particular workflow and

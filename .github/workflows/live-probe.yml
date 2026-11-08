@@ -1,8 +1,8 @@
 name: BETQ production feed probe
 
 # Branch-only replacement of the registered manual workflow path. Never merge.
-# Local preparation only. Publication is not authorized.
-# The existing repository secret name was confirmed; only reviewed run 69 may proceed.
+# Fresh attempt approved after run 69 stopped before the provider request.
+# Only reviewed run 70 may proceed; this does not authorize an automatic dispatch.
 on:
   workflow_dispatch:
     inputs:
@@ -38,7 +38,7 @@ jobs:
       github.actor == 'SpencerPhoenix' && github.triggering_actor == 'SpencerPhoenix' &&
       github.event_name == 'workflow_dispatch' &&
       github.ref == 'refs/heads/feat/one-shot-odds-diagnostic-20261108' &&
-      github.run_number == 69 && github.run_attempt == 1 &&
+      github.run_number == 70 && github.run_attempt == 1 &&
       inputs.approve_one_request && inputs.repository_secret_confirmed
     runs-on: ubuntu-latest
     timeout-minutes: 5
