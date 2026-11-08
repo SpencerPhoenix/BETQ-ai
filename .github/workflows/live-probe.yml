@@ -1,13 +1,13 @@
 name: BETQ production feed probe
 
 # Branch-only replacement of the registered manual workflow path. Never merge.
-# One additional request authorized after the user updated the existing key.
-# Only reviewed run 71 may proceed; the user must start it manually.
+# One additional timestamp-count request authorized; only reviewed run 72 may proceed.
+# Fixed November 8 UTC kickoff bounds are in approval.json; the user starts it manually.
 on:
   workflow_dispatch:
     inputs:
       approve_one_request:
-        description: Approve one Odds API NFL h2h US GET, at most one expected quota credit, no retries
+        description: Approve one bounded Odds API NFL h2h US timestamp-count GET, at most one expected quota credit, no retries
         type: boolean
         default: false
         required: true
@@ -38,7 +38,7 @@ jobs:
       github.actor == 'SpencerPhoenix' && github.triggering_actor == 'SpencerPhoenix' &&
       github.event_name == 'workflow_dispatch' &&
       github.ref == 'refs/heads/feat/one-shot-odds-diagnostic-20261108' &&
-      github.run_number == 71 && github.run_attempt == 1 &&
+      github.run_number == 72 && github.run_attempt == 1 &&
       inputs.approve_one_request && inputs.repository_secret_confirmed
     runs-on: ubuntu-latest
     timeout-minutes: 5

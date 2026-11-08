@@ -1,110 +1,115 @@
-# Isolated Odds API transport diagnostic (one additional approved request)
+# Authorized isolated timestamp-count diagnostic: run 72 only
 
-This branch is not an application release. Do not merge it. It changes only this
-directory and the existing registered `.github/workflows/live-probe.yml` path.
-All application code, journal data, schedules, other workflows and dependencies
-remain byte-identical to main `69ca969eeef474b379a0b8bc729a1cdde348dc6e`.
+This isolated candidate starts from published diagnostic commit
+`2a1050fb5752ef1cae0eaae8abdd989b671f4ea6`. It is not an application release and must
+not be merged. All application code, evidence, schedules, dependencies and other
+workflows remain byte-identical to main `69ca969eeef474b379a0b8bc729a1cdde348dc6e`.
 
-## Local configuration and approval boundary
+## What failed in run 71
 
-The existing repository secret is named `ODDS_API_KEY`. The user reports updating
-its value after the rejected request, but no value was accessed and the replacement
-key has not been tested. Only the final request step references that existing name.
-This revision pins workflow run number **71** for one additional approved test.
+Run 71 was reported successful, but the published script deliberately never read
+the response body. Its HTTP_OK result established transport and reported quota
+only. It supplied no counts of market timestamps. The body was discarded, so its
+contents cannot be reconstructed from those logs. The published query also used
+American odds with no kickoff bounds rather than the requested decimal,
+today-remaining scope.
 
-Run **69**, ID **42496052178**, attempt 1, stopped in preflight because its supplied
-expiry had passed; the provider step was skipped and this run made zero requests.
-Run **70**, ID **42496867864**, attempt 1, passed preflight and all 315 tests, then
-made exactly one approved provider request. At 15:51:06 UTC on November 8, 2026,
-it returned HTTP 401. Remaining/used/last-cost quota headers were absent, so the
-actual charge is unverified. It supplied no odds or provider-source timestamp.
-No retry, redirect, production request or journal write occurred.
+The user explicitly approved publication of this corrected isolated diagnostic
+and one more manually started request, up to one additional quota credit, using
+the existing secret over HTTPS to api.the-odds-api.com. Key-exposure risk was
+disclosed. Output is limited to counts/status, never the key, prices or raw body.
+No automatic retry or BETQ deployment is authorized.
 
-The earlier one-request authorization was used by run 70. After updating the
-existing secret, the user explicitly approved updating this isolated branch and
-one new test using that key over HTTPS to api.the-odds-api.com, with up to one
-additional quota credit and the risk of key exposure disclosed. The user will
-start it manually. No automatic dispatch, deployment or retries are authorized.
-Do not click Re-run jobs.
+This revision pins run **72**, attempt **1**, and the exact UTC kickoff window
+**2026-11-08T16:50:00Z through 2026-11-08T23:59:59Z**. The latest read-only history
+showed run 71 completed; run 72 is not reserved. Recheck current history, main and
+branch immediately before publication and execution.
 
-Read-only history still shows run 70 as the most recent run of registered workflow
-**403983910**. The next number **71** is not reserved. Recheck history, main, published branch
-and deployment boundaries immediately before publication and execution. Coordinate a
-fresh expiry only when the user is ready, not during local preparation.
+No expiry is chosen during preparation. When the user is ready, coordinate a
+canonical UTC expiry no more than 15 minutes ahead and at or after 16:50 UTC.
+The actual request must start **before 16:50 UTC**. If readiness slips past the
+cutoff, stop and refresh the reviewed bounds before any dispatch. Do not knowingly
+consume the only allowed run with expired bounds. Never retry an uncertain or
+completed request, and never use Re-run jobs.
 
-The script accepts only the exact branch and reviewed SHA, actor and triggering
-actor `SpencerPhoenix`, the same workflow SHA, canonical UTC expiry within 15
-minutes, explicit one-request/account approvals, run number 71 and attempt 1.
-Null or placeholder configuration fails closed before contacting the provider.
+## Exact scope of the approved request
 
-The approved scope is publication of this isolated update and one additional
-fixed NFL h2h US diagnostic request using the updated existing secret and at most
-one expected quota credit. Follow these separate publication and user-operated
-execution steps. No deployment, merge, secret creation, automatic dispatch or
-retries are included.
+The only transport remains one HTTPS GET to the official Odds API v4 NFL odds
+endpoint. Fixed parameters are region `us`, market `h2h`, `dateFormat=iso`, and
+`oddsFormat=decimal`. The query additionally uses approval-pinned
+`commenceTimeFrom` and `commenceTimeTo` values. It has no redirects, retries,
+secondary provider requests, app calls, historical endpoint, pagination or purchase.
 
-1. Recheck current main and the existing registered workflow's latest run number.
-   Keep its path and name unchanged. Any intervening run consumes the approved
-   number and this diagnostic must stop. Do not automatically adjust the number
-   to retry; first establish whether the earlier request occurred and obtain a
-   fresh decision if needed.
-2. Recheck the complete reviewed tree, branch-push triggers and Render branch /
-   preview settings. Keep main and production unchanged. Publish this isolated
-   branch only with permission, without merging it or creating a release PR.
-3. After publication, the user can open the existing Actions workflow and select
-   this exact branch. **The current default-branch workflow has no inputs, so the
-   web form might not expose this branch's approval/SHA/expiry fields.** This has
-   not been tested on the signed-in UI. If fields are missing, do not run the form,
-   change main, or weaken guards. An explicitly approved user-operated GitHub CLI
-   or REST dispatch with the exact branch and all inputs is the supported fallback.
-4. The user must supply this revision's published full SHA, a freshly coordinated
-   canonical UTC expiry at most 15 minutes ahead, and true values for the one-request and intended-account
-   approvals. Never select main, enable debug logging, or use Re-run jobs.
+The fixed window is configured in `approval.json`, never supplied via an arbitrary
+URL or query input:
 
-GitHub assigns a new run number for every new run of a particular workflow and
-retains that number for reruns. This guard permits only one run number and attempt
-for the unchanged registered workflow and reviewed revision. It is **not**
-provider-side idempotency or a durable one-use token. Someone who changes or
-recreates the workflow/configuration can rearm it, which is outside this approval.
-A failed, cancelled or uncertain first attempt is not permission to run again.
+- `requestDateUtc` must be the request day's actual UTC date.
+- `commenceTimeFrom` must be a valid UTC second-resolution instant on that date,
+  strictly later than the actual request preflight clock and no later than the
+  separately approved canonical expiry, which is at most 15 minutes ahead.
+- `commenceTimeTo` must be exactly that UTC day's `23:59:59Z`.
 
-Verified workflow page:
-https://github.com/SpencerPhoenix/BETQ-ai/actions/workflows/live-probe.yml
+This selects remaining games from the **explicit approved cutoff**, not an inferred
+user-local sports day. A later-day request, passed cutoff, invalid date, widened
+end bound or missing window fails before transport. If any returned event lacks a
+valid kickoff, falls outside the approved bounds or has started by body inspection,
+the whole body is marked OUT_OF_SCOPE_RESPONSE and no partial counts are reported.
+An empty response remains inconclusive. Do not reinterpret UTC dates as local dates.
 
-GitHub's documented manual branch selection and CLI/API inputs:
-https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow
+## Bounded transient parsing and output
 
-GitHub's run-number / attempt semantics:
-https://docs.github.com/en/actions/reference/workflows-and-actions/variables
+Only HTTP 200 bodies from the exact requested origin and URL are inspected.
+Redirect and error bodies are never read. The body exists only in transient memory:
+maximum 5,000,000 decoded bytes, 4,096 stream chunks, 256 events, 256 bookmakers per
+event, 64 markets per bookmaker and 10,000 h2h markets overall. The existing single
+10-second deadline covers transport and body reading. Abort cancels the active
+reader; cleanup releases its lock. Invalid UTF-8, JSON, structure, size, fragmented
+streams and read failures produce fixed error enums, never reflected error text.
 
-## Request and output boundary
+The only new output is `bodyDiagnostic`, with fixed status and timestamp-rule enums
+plus these bounded aggregate counters:
 
-The isolated script makes one GET directly to the official Odds API v4 NFL odds
-endpoint with one region (`us`) and one market (`h2h`). It never imports application
-code, calls Render, captures evidence, reads odds bodies, creates files or artifacts,
-changes repository data, installs dependencies, follows redirects, or retries.
-It aborts after ten seconds. An ambiguous network outcome is not permission to retry.
+- `h2hMarkets`
+- `lastUpdatePresent`
+- `lastUpdateMissing`
+- `lastUpdateParseable`
+- `lastUpdateInvalid`
 
-Output is limited to fixed status enums and bounded numeric HTTP/quota values.
-No URL, key, arbitrary header, response body, error message, quote or team data is
-printed. A successful HTTP response is not evidence that the data is current or
-correct, nor an independent prediction, bet or qualified outcome.
+Presence includes null or malformed values; those count as invalid, not missing.
+Parseability requires a real explicit-zone ISO calendar instant, with at most three
+fractional-second digits. It rejects timezone-less strings, impossible calendar
+dates and silent date normalization. Bookmaker timestamps are never substituted.
+Unknown fields and non-h2h market values are not emitted. No raw key, URL, provider
+message, team, event ID, bookmaker ID, odds price, source timestamp or body appears
+in output or files. No raw-body artifact or dataset is created.
 
-The fixed one-market/one-region request is expected to cost at most one existing
-quota credit. It does not purchase credits. Actual provider accounting remains
-the provider's responsibility: zero or one can be reported, unavailable headers
-are labeled unverified, and an unexpectedly larger reported cost is flagged.
-The diagnostic cannot establish a reserve balance before spending without another
-provider request. That would require a separate decision, not a hidden preflight.
+Empty results use EMPTY_RESPONSE_INCONCLUSIVE; nonempty responses without h2h use
+NO_H2H_MARKETS_INCONCLUSIVE. Parse/schema/size failures have null counters. Successful
+HTTP status with failed body diagnostics is not labeled a completed timestamp
+check. Known sanitized HTTP/quota fields survive a body timeout or parsing failure.
 
-Standard public-repository Ubuntu runners are used, with no artifact/cache uploads.
-The runner checks main twice and verifies all non-diagnostic files against the
-pinned baseline. There remains an unavoidable race if main advances after the
-last check; the code itself remains pinned to the reviewed SHA and does not use main.
+These counts test field presence and strict parseability only. They do not prove
+quote freshness, provider timestamp semantics, executability, sporting accuracy,
+independent forecasts, profitable edge or source-qualified outcomes.
+
+## Cost and approval boundaries
+
+One market and one region retain the expected maximum of one existing quota credit.
+The script does not purchase credits or perform an extra balance probe. Actual
+provider charging remains provider-controlled: zero/one, missing cost and unexpected
+larger reported cost remain distinct. Missing quota headers do not establish zero
+spend. Failed, cancelled, timed-out or uncertain outcomes never authorize a retry.
+
+The workflow retains read-only permissions, exact actor/branch/SHA/workflow binding,
+run attempt, single reviewed run-number and short-expiry checks. Existing secret
+access remains confined to the final step. No credential value was read during
+preparation. Publishing the branch does not dispatch the request.
 
 ## Offline verification
 
-Run `node --test scripts/one-shot-odds/diagnostic.test.mjs`, `npm run check`,
-and `npm test` with no provider credentials and external networking forbidden.
-All diagnostic tests use synthetic keys and mocked transports. Incomplete configuration and missing approval are tested. `verify.mjs` exits
-unsuccessfully without exact approved GitHub context by design.
+Run `node --test scripts/one-shot-odds/diagnostic.test.mjs`, `npm run check` and
+`npm test` without credentials and with external default fetch blocked. Tests cover
+allowlisted output, redaction sentinels, strict timestamps, body limits/timeouts,
+actual stream cancellation, explicit scope and all existing approval/cost guards.
+The CLI and verifier must stop without the exact approved run context, before the
+request window can be covered by the expiry, or after the fixed cutoff passes.
