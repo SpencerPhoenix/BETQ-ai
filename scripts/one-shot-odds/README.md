@@ -1,4 +1,4 @@
-# Isolated Odds API transport diagnostic (one fresh approved attempt)
+# Isolated Odds API transport diagnostic (one additional approved request)
 
 This branch is not an application release. Do not merge it. It changes only this
 directory and the existing registered `.github/workflows/live-probe.yml` path.
@@ -7,30 +7,41 @@ remain byte-identical to main `69ca969eeef474b379a0b8bc729a1cdde348dc6e`.
 
 ## Local configuration and approval boundary
 
-The user confirmed the existing repository secret name `ODDS_API_KEY` from their
-GitHub screenshot. No secret value was accessed. Only the final request step
-references it. This revision pins workflow run number **70**.
+The existing repository secret is named `ODDS_API_KEY`. The user reports updating
+its value after the rejected request, but no value was accessed and the replacement
+key has not been tested. Only the final request step references that existing name.
+This revision pins workflow run number **71** for one additional approved test.
 
-Run **69**, ID **42496052178**, attempt 1, used the correct published revision on
-November 8, 2026 at 15:41:08 UTC. Its supplied 15:30 UTC expiry had already passed.
-Preflight failed and the provider-request step was skipped: this diagnostic made
-zero provider requests and used zero quota credits. The user explicitly approved
-one fresh attempt afterward. This is not permission to use Re-run jobs.
+Run **69**, ID **42496052178**, attempt 1, stopped in preflight because its supplied
+expiry had passed; the provider step was skipped and this run made zero requests.
+Run **70**, ID **42496867864**, attempt 1, passed preflight and all 315 tests, then
+made exactly one approved provider request. At 15:51:06 UTC on November 8, 2026,
+it returned HTTP 401. Remaining/used/last-cost quota headers were absent, so the
+actual charge is unverified. It supplied no odds or provider-source timestamp.
+No retry, redirect, production request or journal write occurred.
 
-The latest read-only history check found run 69 is still the most recent run of
-registered workflow **403983910**. The next number is therefore **70**, but this is
-not a reservation. Recheck immediately before publication and when the user is
-ready to dispatch. Do not send a fixed expiry while preparation is still underway;
-coordinate a fresh timestamp with the user only when they are ready to run.
+The earlier one-request authorization was used by run 70. After updating the
+existing secret, the user explicitly approved updating this isolated branch and
+one new test using that key over HTTPS to api.the-odds-api.com, with up to one
+additional quota credit and the risk of key exposure disclosed. The user will
+start it manually. No automatic dispatch, deployment or retries are authorized.
+Do not click Re-run jobs.
+
+Read-only history still shows run 70 as the most recent run of registered workflow
+**403983910**. The next number **71** is not reserved. Recheck history, main, published branch
+and deployment boundaries immediately before publication and execution. Coordinate a
+fresh expiry only when the user is ready, not during local preparation.
 
 The script accepts only the exact branch and reviewed SHA, actor and triggering
 actor `SpencerPhoenix`, the same workflow SHA, canonical UTC expiry within 15
-minutes, explicit one-request/account approvals, run number 70 and attempt 1.
+minutes, explicit one-request/account approvals, run number 71 and attempt 1.
 Null or placeholder configuration fails closed before contacting the provider.
 
-The user authorized publishing this isolated update for one fresh attempt. They
-will dispatch it manually; publication does not authorize us to dispatch, retry,
-create secrets, deploy or merge. Before publication and execution respectively:
+The approved scope is publication of this isolated update and one additional
+fixed NFL h2h US diagnostic request using the updated existing secret and at most
+one expected quota credit. Follow these separate publication and user-operated
+execution steps. No deployment, merge, secret creation, automatic dispatch or
+retries are included.
 
 1. Recheck current main and the existing registered workflow's latest run number.
    Keep its path and name unchanged. Any intervening run consumes the approved

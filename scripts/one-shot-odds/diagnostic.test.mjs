@@ -214,7 +214,7 @@ test('workflow is manual, read-only, pinned, final-step-only credential with no 
   assert.equal((workflow.match(/secrets\./g) || []).length, 1);
   const local = JSON.parse(readFileSync(new URL('./approval.json', import.meta.url)));
   assert.equal(local.repositorySecretName, 'ODDS_API_KEY');
-  assert.equal(local.expectedRunNumber, 70);
+  assert.equal(local.expectedRunNumber, 71);
   assert.equal(preparedApproval(local), true);
   assert.ok(workflow.includes(`github.run_number == ${local.expectedRunNumber}`));
   assert.ok(workflow.includes("github.actor == 'SpencerPhoenix'"));
@@ -264,10 +264,10 @@ test('baseline path allowlist admits the actual README and rejects all non-diagn
 });
 
 
-test('fresh actual configuration admits only run 70 and cannot rerun consumed run 69', () => {
+test('proposed local configuration admits only run 71 and rejects consumed or additional runs', () => {
   const local = JSON.parse(readFileSync(new URL('./approval.json', import.meta.url)));
-  assert.equal(approvedContext({...context, runNumber: '70'}, local, now), true);
-  for (const runNumber of ['69', '71', '070', '70.0'])
+  assert.equal(approvedContext({...context, runNumber: '71'}, local, now), true);
+  for (const runNumber of ['69', '70', '72', '071', '71.0'])
     assert.equal(approvedContext({...context, runNumber}, local, now), false);
-  assert.equal(approvedContext({...context, runNumber: '70', runAttempt: '2'}, local, now), false);
+  assert.equal(approvedContext({...context, runNumber: '71', runAttempt: '2'}, local, now), false);
 });
