@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "season": 2026,
-  "generatedAt": "2026-11-07T16:59:15.771Z",
+  "generatedAt": "2026-11-08T17:13:37.502Z",
   "provenance": {
     "model": "BETQ_NFL_ELO",
     "market": "THE_ODDS_API_V4_DERIVED",
@@ -16,7 +16,7 @@
   "realizedROI": null,
   "verifiedCLV": null,
   "minimumScoredSample": 30,
-  "totalSnapshots": 159,
+  "totalSnapshots": 183,
   "prospectiveGames": 31,
   "settledGames": 3,
   "pendingGames": 28,
@@ -25,7 +25,7 @@
   "sourceCorroboratedMarketGames": 0,
   "sourceCorroboratedChallengerGames": 0,
   "pairedMarketGames": 3,
-  "nearKickoffConsensusPairs": 0,
+  "nearKickoffConsensusPairs": 7,
   "prospectiveChallengerGames": 30,
   "pairedChallengerSettled": 2,
   "challengerForwardComparison": null,
