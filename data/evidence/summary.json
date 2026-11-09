@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "season": 2026,
-  "generatedAt": "2026-11-09T00:55:06.471Z",
+  "generatedAt": "2026-11-09T07:06:54.353Z",
   "provenance": {
     "model": "BETQ_NFL_ELO",
     "market": "THE_ODDS_API_V4_DERIVED",
@@ -18,22 +18,35 @@
   "minimumScoredSample": 30,
   "totalSnapshots": 203,
   "prospectiveGames": 31,
-  "settledGames": 15,
-  "pendingGames": 16,
+  "settledGames": 16,
+  "pendingGames": 15,
   "sourceCorroboratedSettledGames": 0,
-  "sourceUncorroboratedSettledGames": 15,
+  "sourceUncorroboratedSettledGames": 16,
   "sourceCorroboratedMarketGames": 0,
   "sourceCorroboratedChallengerGames": 0,
-  "pairedMarketGames": 15,
+  "pairedMarketGames": 16,
   "nearKickoffConsensusPairs": 12,
   "prospectiveChallengerGames": 30,
-  "pairedChallengerSettled": 14,
+  "pairedChallengerSettled": 15,
   "challengerForwardComparison": null,
   "tiesExcluded": 0,
   "forwardMetrics": null,
   "marketComparison": null,
   "consensusMovementPoints": null,
   "recentResults": [
+    {
+      "gameId": "2026_09_TB_CHI",
+      "home": "CHI",
+      "away": "TB",
+      "gameDate": "2026-11-08",
+      "score": "24-27",
+      "result": "HOME",
+      "modelHomeProbability": 0.714279,
+      "marketHomeProbability": 0.701195,
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "sourceCorroborated": false,
+      "brier": null
+    },
     {
       "gameId": "2026_09_ARI_SEA",
       "home": "SEA",
@@ -150,19 +163,6 @@
       "capturedAt": "2026-11-02T01:07:26.939Z",
       "sourceCorroborated": false,
       "brier": null
-    },
-    {
-      "gameId": "2026_09_LA_WAS",
-      "home": "WAS",
-      "away": "LA",
-      "gameDate": "2026-11-08",
-      "score": "20-13",
-      "result": "AWAY",
-      "modelHomeProbability": 0.35465,
-      "marketHomeProbability": 0.32515,
-      "capturedAt": "2026-11-02T01:07:26.939Z",
-      "sourceCorroborated": false,
-      "brier": null
     }
   ],
   "pendingPreview": [
@@ -174,15 +174,6 @@
       "capturedAt": "2026-11-02T01:07:26.939Z",
       "modelHomeProbability": 0.469159,
       "marketHomeProbability": 0.41959
-    },
-    {
-      "gameId": "2026_09_TB_CHI",
-      "home": "CHI",
-      "away": "TB",
-      "gameDate": "2026-11-08",
-      "capturedAt": "2026-11-02T01:07:26.939Z",
-      "modelHomeProbability": 0.714279,
-      "marketHomeProbability": 0.701195
     },
     {
       "gameId": "2026_10_LAC_BAL",
@@ -273,6 +264,15 @@
       "capturedAt": "2026-11-04T18:50:46.512Z",
       "modelHomeProbability": 0.55635,
       "marketHomeProbability": 0.545984
+    },
+    {
+      "gameId": "2026_10_BUF_NYJ",
+      "home": "NYJ",
+      "away": "BUF",
+      "gameDate": "2026-11-15",
+      "capturedAt": "2026-11-04T18:50:46.512Z",
+      "modelHomeProbability": 0.149525,
+      "marketHomeProbability": 0.211679
     }
   ],
   "safeguards": [

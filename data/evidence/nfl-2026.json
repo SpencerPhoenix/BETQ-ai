@@ -6196,6 +6196,17 @@
       "resultHash": "7314e97eeaf60854d5aeb3e6",
       "verifiedAt": "2026-11-09T00:55:06.471Z",
       "revision": 1
+    },
+    {
+      "gameId": "2026_09_TB_CHI",
+      "gameDate": "2026-11-08",
+      "homeScore": 27,
+      "awayScore": 24,
+      "outcome": "HOME",
+      "source": "NFLVERSE_SCHEDULES",
+      "resultHash": "45623f87f66aca8078e8f41b",
+      "verifiedAt": "2026-11-09T07:06:54.353Z",
+      "revision": 1
     }
   ]
 }
