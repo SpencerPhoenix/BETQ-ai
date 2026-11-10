@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "season": 2026,
-  "generatedAt": "2026-11-09T07:06:54.353Z",
+  "generatedAt": "2026-11-10T18:48:33.618Z",
   "provenance": {
     "model": "BETQ_NFL_ELO",
     "market": "THE_ODDS_API_V4_DERIVED",
@@ -16,18 +16,18 @@
   "realizedROI": null,
   "verifiedCLV": null,
   "minimumScoredSample": 30,
-  "totalSnapshots": 203,
+  "totalSnapshots": 217,
   "prospectiveGames": 31,
-  "settledGames": 16,
-  "pendingGames": 15,
+  "settledGames": 17,
+  "pendingGames": 14,
   "sourceCorroboratedSettledGames": 0,
-  "sourceUncorroboratedSettledGames": 16,
+  "sourceUncorroboratedSettledGames": 17,
   "sourceCorroboratedMarketGames": 0,
   "sourceCorroboratedChallengerGames": 0,
-  "pairedMarketGames": 16,
+  "pairedMarketGames": 17,
   "nearKickoffConsensusPairs": 12,
   "prospectiveChallengerGames": 30,
-  "pairedChallengerSettled": 15,
+  "pairedChallengerSettled": 16,
   "challengerForwardComparison": null,
   "tiesExcluded": 0,
   "forwardMetrics": null,
@@ -167,15 +167,6 @@
   ],
   "pendingPreview": [
     {
-      "gameId": "2026_09_BUF_MIN",
-      "home": "MIN",
-      "away": "BUF",
-      "gameDate": "2026-11-09",
-      "capturedAt": "2026-11-02T01:07:26.939Z",
-      "modelHomeProbability": 0.469159,
-      "marketHomeProbability": 0.41959
-    },
-    {
       "gameId": "2026_10_LAC_BAL",
       "home": "BAL",
       "away": "LAC",
@@ -273,6 +264,15 @@
       "capturedAt": "2026-11-04T18:50:46.512Z",
       "modelHomeProbability": 0.149525,
       "marketHomeProbability": 0.211679
+    },
+    {
+      "gameId": "2026_10_KC_ATL",
+      "home": "ATL",
+      "away": "KC",
+      "gameDate": "2026-11-15",
+      "capturedAt": "2026-11-04T18:50:46.512Z",
+      "modelHomeProbability": 0.423029,
+      "marketHomeProbability": 0.385463
     }
   ],
   "safeguards": [
