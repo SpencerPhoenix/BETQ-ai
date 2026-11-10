@@ -2,7 +2,7 @@
   "schema": 1,
   "version": "nfl-efficiency-1",
   "evaluationVersion": 2,
-  "generatedAt": "2026-11-03T18:00:26.065Z",
+  "generatedAt": "2026-11-10T18:12:21.789Z",
   "source": "NFLVERSE_PBP_CC_BY_4_0",
   "type": "INDEPENDENT_CHALLENGER_RESEARCH",
   "training": {
@@ -66,179 +66,179 @@
   "readyForResearch": true,
   "promotable": true,
   "coverage": {
-    "historicalGames": 2348,
-    "featureReadyGames": 2276
+    "historicalGames": 2363,
+    "featureReadyGames": 2291
   },
   "teamFeatures": {
     "PHI": {
       "n": 8,
-      "offEPA": -0.14481,
-      "defEPA": 0.09128,
-      "offSuccess": 0.37319,
-      "defSuccess": 0.4489,
-      "netEPA": -0.23609,
-      "netSuccess": -0.07571,
-      "latestGameDate": "2026-11-01"
+      "offEPA": -0.18655,
+      "defEPA": 0.05751,
+      "offSuccess": 0.34615,
+      "defSuccess": 0.41665,
+      "netEPA": -0.24407,
+      "netSuccess": -0.0705,
+      "latestGameDate": "2026-11-08"
     },
     "ATL": {
       "n": 8,
-      "offEPA": -0.13014,
-      "defEPA": -0.05942,
-      "offSuccess": 0.40045,
-      "defSuccess": 0.44856,
-      "netEPA": -0.07072,
-      "netSuccess": -0.04812,
-      "latestGameDate": "2026-11-01"
+      "offEPA": -0.06737,
+      "defEPA": 0.02345,
+      "offSuccess": 0.41702,
+      "defSuccess": 0.47256,
+      "netEPA": -0.09082,
+      "netSuccess": -0.05554,
+      "latestGameDate": "2026-11-08"
     },
     "BAL": {
       "n": 8,
-      "offEPA": -0.08328,
-      "defEPA": 0.02932,
-      "offSuccess": 0.41772,
-      "defSuccess": 0.45399,
-      "netEPA": -0.1126,
-      "netSuccess": -0.03627,
-      "latestGameDate": "2026-11-01"
+      "offEPA": -0.15784,
+      "defEPA": 0.04714,
+      "offSuccess": 0.39225,
+      "defSuccess": 0.45425,
+      "netEPA": -0.20498,
+      "netSuccess": -0.062,
+      "latestGameDate": "2026-11-05"
     },
     "BUF": {
       "n": 8,
-      "offEPA": 0.13161,
-      "defEPA": -0.01346,
-      "offSuccess": 0.47857,
-      "defSuccess": 0.43327,
-      "netEPA": 0.14506,
-      "netSuccess": 0.0453,
-      "latestGameDate": "2026-11-01"
+      "offEPA": 0.0958,
+      "defEPA": -0.17625,
+      "offSuccess": 0.45583,
+      "defSuccess": 0.39778,
+      "netEPA": 0.27205,
+      "netSuccess": 0.05805,
+      "latestGameDate": "2026-11-09"
     },
     "GB": {
       "n": 8,
-      "offEPA": 0.02537,
-      "defEPA": -0.09767,
-      "offSuccess": 0.40673,
-      "defSuccess": 0.42861,
-      "netEPA": 0.12304,
-      "netSuccess": -0.02188,
-      "latestGameDate": "2026-10-29"
+      "offEPA": 0.0932,
+      "defEPA": -0.10983,
+      "offSuccess": 0.41968,
+      "defSuccess": 0.43456,
+      "netEPA": 0.20303,
+      "netSuccess": -0.01488,
+      "latestGameDate": "2026-11-08"
     },
     "CHI": {
       "n": 8,
-      "offEPA": 0.04069,
-      "defEPA": -0.05082,
-      "offSuccess": 0.46966,
-      "defSuccess": 0.39062,
-      "netEPA": 0.09151,
-      "netSuccess": 0.07905,
-      "latestGameDate": "2026-11-02"
+      "offEPA": -0.03779,
+      "defEPA": -0.09619,
+      "offSuccess": 0.45807,
+      "defSuccess": 0.38807,
+      "netEPA": 0.0584,
+      "netSuccess": 0.07001,
+      "latestGameDate": "2026-11-08"
     },
     "IND": {
       "n": 8,
-      "offEPA": -0.15677,
-      "defEPA": 0.02357,
-      "offSuccess": 0.41306,
-      "defSuccess": 0.40745,
-      "netEPA": -0.18034,
-      "netSuccess": 0.0056,
-      "latestGameDate": "2026-11-01"
+      "offEPA": -0.16388,
+      "defEPA": 0.02862,
+      "offSuccess": 0.41902,
+      "defSuccess": 0.41355,
+      "netEPA": -0.1925,
+      "netSuccess": 0.00547,
+      "latestGameDate": "2026-11-08"
     },
     "CIN": {
       "n": 8,
-      "offEPA": 0.1296,
-      "defEPA": 0.01104,
-      "offSuccess": 0.52185,
-      "defSuccess": 0.43931,
-      "netEPA": 0.11857,
-      "netSuccess": 0.08254,
-      "latestGameDate": "2026-11-01"
+      "offEPA": 0.16863,
+      "defEPA": 0.04014,
+      "offSuccess": 0.52006,
+      "defSuccess": 0.45124,
+      "netEPA": 0.12849,
+      "netSuccess": 0.06882,
+      "latestGameDate": "2026-11-08"
     },
     "CAR": {
       "n": 8,
-      "offEPA": -0.04087,
-      "defEPA": 0.03632,
-      "offSuccess": 0.40878,
-      "defSuccess": 0.44935,
-      "netEPA": -0.07719,
-      "netSuccess": -0.04057,
-      "latestGameDate": "2026-10-29"
+      "offEPA": -0.0028,
+      "defEPA": 0.03107,
+      "offSuccess": 0.42107,
+      "defSuccess": 0.44203,
+      "netEPA": -0.03387,
+      "netSuccess": -0.02096,
+      "latestGameDate": "2026-11-08"
     },
     "DAL": {
       "n": 8,
-      "offEPA": 0.07392,
-      "defEPA": 0.09402,
-      "offSuccess": 0.46006,
-      "defSuccess": 0.43507,
-      "netEPA": -0.0201,
-      "netSuccess": 0.02499,
-      "latestGameDate": "2026-11-01"
+      "offEPA": 0.0724,
+      "defEPA": 0.01692,
+      "offSuccess": 0.45794,
+      "defSuccess": 0.42946,
+      "netEPA": 0.05548,
+      "netSuccess": 0.02848,
+      "latestGameDate": "2026-11-08"
     },
     "NE": {
       "n": 8,
-      "offEPA": 0.08753,
-      "defEPA": 0.01827,
-      "offSuccess": 0.45578,
-      "defSuccess": 0.43453,
-      "netEPA": 0.06926,
-      "netSuccess": 0.02125,
-      "latestGameDate": "2026-11-01"
+      "offEPA": 0.04838,
+      "defEPA": 0.07549,
+      "offSuccess": 0.4532,
+      "defSuccess": 0.44237,
+      "netEPA": -0.02711,
+      "netSuccess": 0.01083,
+      "latestGameDate": "2026-11-08"
     },
     "HOU": {
       "n": 8,
-      "offEPA": 0.02093,
-      "defEPA": 0.02321,
-      "offSuccess": 0.42135,
-      "defSuccess": 0.41114,
-      "netEPA": -0.00228,
-      "netSuccess": 0.01021,
-      "latestGameDate": "2026-10-25"
+      "offEPA": 0.09055,
+      "defEPA": -0.00552,
+      "offSuccess": 0.43035,
+      "defSuccess": 0.40531,
+      "netEPA": 0.09607,
+      "netSuccess": 0.02504,
+      "latestGameDate": "2026-11-08"
     },
     "NYG": {
       "n": 8,
-      "offEPA": 0.02482,
-      "defEPA": -0.02449,
-      "offSuccess": 0.41128,
-      "defSuccess": 0.41395,
-      "netEPA": 0.04931,
-      "netSuccess": -0.00266,
-      "latestGameDate": "2026-10-25"
+      "offEPA": -0.00134,
+      "defEPA": -0.07702,
+      "offSuccess": 0.38321,
+      "defSuccess": 0.37572,
+      "netEPA": 0.07568,
+      "netSuccess": 0.00749,
+      "latestGameDate": "2026-11-08"
     },
     "JAX": {
       "n": 8,
-      "offEPA": 0.15219,
-      "defEPA": -0.10498,
-      "offSuccess": 0.46589,
-      "defSuccess": 0.41532,
-      "netEPA": 0.25716,
-      "netSuccess": 0.05056,
-      "latestGameDate": "2026-11-01"
+      "offEPA": 0.13584,
+      "defEPA": -0.17328,
+      "offSuccess": 0.45902,
+      "defSuccess": 0.39068,
+      "netEPA": 0.30912,
+      "netSuccess": 0.06834,
+      "latestGameDate": "2026-11-05"
     },
     "LAC": {
       "n": 8,
-      "offEPA": -0.28918,
-      "defEPA": -0.07114,
-      "offSuccess": 0.33378,
-      "defSuccess": 0.42904,
-      "netEPA": -0.21803,
-      "netSuccess": -0.09526,
-      "latestGameDate": "2026-11-01"
+      "offEPA": -0.26667,
+      "defEPA": -0.00409,
+      "offSuccess": 0.33559,
+      "defSuccess": 0.43166,
+      "netEPA": -0.26258,
+      "netSuccess": -0.09607,
+      "latestGameDate": "2026-11-08"
     },
     "KC": {
       "n": 8,
-      "offEPA": 0.05755,
-      "defEPA": -0.04413,
-      "offSuccess": 0.44992,
-      "defSuccess": 0.39614,
-      "netEPA": 0.10168,
-      "netSuccess": 0.05378,
-      "latestGameDate": "2026-11-01"
+      "offEPA": 0.10248,
+      "defEPA": -0.07864,
+      "offSuccess": 0.483,
+      "defSuccess": 0.39996,
+      "netEPA": 0.18111,
+      "netSuccess": 0.08304,
+      "latestGameDate": "2026-11-08"
     },
     "CLE": {
       "n": 8,
-      "offEPA": -0.08988,
-      "defEPA": -0.01902,
-      "offSuccess": 0.42755,
-      "defSuccess": 0.41456,
-      "netEPA": -0.07086,
-      "netSuccess": 0.01299,
-      "latestGameDate": "2026-11-01"
+      "offEPA": -0.09006,
+      "defEPA": -0.04036,
+      "offSuccess": 0.40477,
+      "defSuccess": 0.41032,
+      "netEPA": -0.0497,
+      "netSuccess": -0.00555,
+      "latestGameDate": "2026-11-08"
     },
     "PIT": {
       "n": 8,
@@ -252,73 +252,73 @@
     },
     "DEN": {
       "n": 8,
-      "offEPA": -0.00282,
-      "defEPA": -0.03231,
-      "offSuccess": 0.37276,
-      "defSuccess": 0.40266,
-      "netEPA": 0.0295,
-      "netSuccess": -0.0299,
-      "latestGameDate": "2026-11-01"
+      "offEPA": 0.01941,
+      "defEPA": -0.00389,
+      "offSuccess": 0.3846,
+      "defSuccess": 0.41692,
+      "netEPA": 0.0233,
+      "netSuccess": -0.03232,
+      "latestGameDate": "2026-11-08"
     },
     "SEA": {
       "n": 8,
-      "offEPA": -0.08004,
-      "defEPA": -0.06435,
-      "offSuccess": 0.39322,
-      "defSuccess": 0.39158,
-      "netEPA": -0.01569,
-      "netSuccess": 0.00164,
-      "latestGameDate": "2026-11-02"
+      "offEPA": -0.05398,
+      "defEPA": -0.08934,
+      "offSuccess": 0.39674,
+      "defSuccess": 0.39471,
+      "netEPA": 0.03536,
+      "netSuccess": 0.00203,
+      "latestGameDate": "2026-11-08"
     },
     "MIN": {
       "n": 8,
-      "offEPA": -0.11573,
-      "defEPA": -0.18133,
-      "offSuccess": 0.3821,
-      "defSuccess": 0.38332,
-      "netEPA": 0.0656,
-      "netSuccess": -0.00122,
-      "latestGameDate": "2026-11-01"
+      "offEPA": -0.25885,
+      "defEPA": -0.14386,
+      "offSuccess": 0.35249,
+      "defSuccess": 0.38369,
+      "netEPA": -0.11499,
+      "netSuccess": -0.0312,
+      "latestGameDate": "2026-11-09"
     },
     "SF": {
       "n": 8,
-      "offEPA": 0.10833,
-      "defEPA": -0.03228,
-      "offSuccess": 0.5118,
-      "defSuccess": 0.43672,
-      "netEPA": 0.14061,
-      "netSuccess": 0.07508,
-      "latestGameDate": "2026-10-25"
+      "offEPA": 0.15323,
+      "defEPA": -0.11467,
+      "offSuccess": 0.51326,
+      "defSuccess": 0.42457,
+      "netEPA": 0.2679,
+      "netSuccess": 0.08869,
+      "latestGameDate": "2026-11-08"
     },
     "NO": {
       "n": 8,
-      "offEPA": -0.0581,
-      "defEPA": 0.03468,
-      "offSuccess": 0.39915,
-      "defSuccess": 0.46223,
-      "netEPA": -0.09279,
-      "netSuccess": -0.06307,
-      "latestGameDate": "2026-10-25"
+      "offEPA": -0.05133,
+      "defEPA": 0.01721,
+      "offSuccess": 0.40752,
+      "defSuccess": 0.44009,
+      "netEPA": -0.06854,
+      "netSuccess": -0.03257,
+      "latestGameDate": "2026-11-08"
     },
     "TB": {
       "n": 8,
-      "offEPA": -0.07853,
-      "defEPA": -0.22218,
-      "offSuccess": 0.41521,
-      "defSuccess": 0.3783,
-      "netEPA": 0.14365,
-      "netSuccess": 0.03691,
-      "latestGameDate": "2026-11-01"
+      "offEPA": -0.10124,
+      "defEPA": -0.23316,
+      "offSuccess": 0.40958,
+      "defSuccess": 0.38632,
+      "netEPA": 0.13192,
+      "netSuccess": 0.02326,
+      "latestGameDate": "2026-11-08"
     },
     "MIA": {
       "n": 8,
-      "offEPA": -0.05178,
-      "defEPA": 0.13285,
-      "offSuccess": 0.40941,
-      "defSuccess": 0.49513,
-      "netEPA": -0.18463,
-      "netSuccess": -0.08572,
-      "latestGameDate": "2026-11-01"
+      "offEPA": -0.07224,
+      "defEPA": 0.08417,
+      "offSuccess": 0.38145,
+      "defSuccess": 0.47334,
+      "netEPA": -0.15642,
+      "netSuccess": -0.09189,
+      "latestGameDate": "2026-11-08"
     },
     "TEN": {
       "n": 8,
@@ -332,63 +332,63 @@
     },
     "ARI": {
       "n": 8,
-      "offEPA": -0.03682,
-      "defEPA": 0.06716,
-      "offSuccess": 0.41828,
-      "defSuccess": 0.41981,
-      "netEPA": -0.10398,
-      "netSuccess": -0.00153,
-      "latestGameDate": "2026-11-01"
+      "offEPA": -0.07768,
+      "defEPA": 0.08343,
+      "offSuccess": 0.41418,
+      "defSuccess": 0.41899,
+      "netEPA": -0.16111,
+      "netSuccess": -0.00481,
+      "latestGameDate": "2026-11-08"
     },
     "WAS": {
       "n": 8,
-      "offEPA": -0.01469,
-      "defEPA": 0.00883,
-      "offSuccess": 0.41248,
-      "defSuccess": 0.45793,
-      "netEPA": -0.02352,
-      "netSuccess": -0.04546,
-      "latestGameDate": "2026-11-01"
+      "offEPA": -0.04821,
+      "defEPA": 0.01279,
+      "offSuccess": 0.40473,
+      "defSuccess": 0.45304,
+      "netEPA": -0.06101,
+      "netSuccess": -0.04831,
+      "latestGameDate": "2026-11-08"
     },
     "LV": {
       "n": 8,
-      "offEPA": 0.0251,
-      "defEPA": 0.12606,
-      "offSuccess": 0.42127,
-      "defSuccess": 0.48305,
-      "netEPA": -0.10095,
-      "netSuccess": -0.06177,
-      "latestGameDate": "2026-11-01"
+      "offEPA": -0.05318,
+      "defEPA": 0.15706,
+      "offSuccess": 0.41845,
+      "defSuccess": 0.48907,
+      "netEPA": -0.21024,
+      "netSuccess": -0.07062,
+      "latestGameDate": "2026-11-08"
     },
     "LA": {
       "n": 8,
-      "offEPA": 0.01407,
-      "defEPA": -0.14608,
-      "offSuccess": 0.48289,
-      "defSuccess": 0.38726,
-      "netEPA": 0.16015,
-      "netSuccess": 0.09563,
-      "latestGameDate": "2026-11-01"
+      "offEPA": 0.02491,
+      "defEPA": -0.16899,
+      "offSuccess": 0.47446,
+      "defSuccess": 0.37831,
+      "netEPA": 0.19389,
+      "netSuccess": 0.09615,
+      "latestGameDate": "2026-11-08"
     },
     "DET": {
       "n": 8,
-      "offEPA": 0.08524,
-      "defEPA": 0.05797,
-      "offSuccess": 0.49157,
-      "defSuccess": 0.44055,
-      "netEPA": 0.02727,
-      "netSuccess": 0.05102,
-      "latestGameDate": "2026-11-01"
+      "offEPA": 0.05127,
+      "defEPA": 0.0028,
+      "offSuccess": 0.47362,
+      "defSuccess": 0.40638,
+      "netEPA": 0.04847,
+      "netSuccess": 0.06724,
+      "latestGameDate": "2026-11-08"
     },
     "NYJ": {
       "n": 8,
-      "offEPA": 0.06359,
-      "defEPA": 0.04543,
-      "offSuccess": 0.46425,
-      "defSuccess": 0.44426,
-      "netEPA": 0.01816,
-      "netSuccess": 0.01999,
-      "latestGameDate": "2026-11-01"
+      "offEPA": -0.01936,
+      "defEPA": 0.07514,
+      "offSuccess": 0.44673,
+      "defSuccess": 0.46807,
+      "netEPA": -0.09449,
+      "netSuccess": -0.02135,
+      "latestGameDate": "2026-11-08"
     }
   },
   "limitations": [
@@ -415,7 +415,7 @@
         "season": 2019,
         "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2019.csv.gz",
         "completeGames": 267,
-        "parsedBytes": 93850474
+        "parsedBytes": 93850470
       },
       {
         "season": 2020,
@@ -456,14 +456,14 @@
       {
         "season": 2026,
         "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2026.csv.gz",
-        "completeGames": 121,
-        "parsedBytes": 42470054
+        "completeGames": 136,
+        "parsedBytes": 47712391
       }
     ],
-    "sourceLastCompletedGame": "2026-11-02",
-    "playedGamesWithPbp": 2348,
-    "qualifyingPlays": 296090
+    "sourceLastCompletedGame": "2026-11-09",
+    "playedGamesWithPbp": 2363,
+    "qualifyingPlays": 297941
   },
   "eloBaselineVersion": "nfl-elo-1",
-  "dataFingerprint": "527acf27618d2f37aab750719a880559b25c022ac331474a2c9334931128372a"
+  "dataFingerprint": "5ae06bf13a31b7d4137a84da14e2a9e4fe77d7c2788cc5d856a2e40a37f51d3f"
 }
