@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "season": 2026,
-  "generatedAt": "2026-11-12T19:06:01.381Z",
+  "generatedAt": "2026-11-13T18:43:06.053Z",
   "provenance": {
     "model": "BETQ_NFL_ELO",
     "market": "THE_ODDS_API_V4_DERIVED",
@@ -16,24 +16,37 @@
   "realizedROI": null,
   "verifiedCLV": null,
   "minimumScoredSample": 30,
-  "totalSnapshots": 271,
+  "totalSnapshots": 297,
   "prospectiveGames": 44,
-  "settledGames": 17,
-  "pendingGames": 27,
+  "settledGames": 18,
+  "pendingGames": 26,
   "sourceCorroboratedSettledGames": 0,
-  "sourceUncorroboratedSettledGames": 17,
+  "sourceUncorroboratedSettledGames": 18,
   "sourceCorroboratedMarketGames": 0,
   "sourceCorroboratedChallengerGames": 0,
-  "pairedMarketGames": 17,
+  "pairedMarketGames": 18,
   "nearKickoffConsensusPairs": 12,
   "prospectiveChallengerGames": 30,
-  "pairedChallengerSettled": 16,
+  "pairedChallengerSettled": 17,
   "challengerForwardComparison": null,
   "tiesExcluded": 0,
   "forwardMetrics": null,
   "marketComparison": null,
   "consensusMovementPoints": null,
   "recentResults": [
+    {
+      "gameId": "2026_10_WAS_NYG",
+      "home": "NYG",
+      "away": "WAS",
+      "gameDate": "2026-11-12",
+      "score": "24-21",
+      "result": "AWAY",
+      "modelHomeProbability": 0.541207,
+      "marketHomeProbability": 0.522678,
+      "capturedAt": "2026-11-04T18:50:46.512Z",
+      "sourceCorroborated": false,
+      "brier": null
+    },
     {
       "gameId": "2026_09_TB_CHI",
       "home": "CHI",
@@ -150,19 +163,6 @@
       "capturedAt": "2026-11-02T01:07:26.939Z",
       "sourceCorroborated": false,
       "brier": null
-    },
-    {
-      "gameId": "2026_09_NYG_PHI",
-      "home": "PHI",
-      "away": "NYG",
-      "gameDate": "2026-11-08",
-      "score": "19-11",
-      "result": "AWAY",
-      "modelHomeProbability": 0.572526,
-      "marketHomeProbability": 0.440833,
-      "capturedAt": "2026-11-02T01:07:26.939Z",
-      "sourceCorroborated": false,
-      "brier": null
     }
   ],
   "pendingPreview": [
@@ -239,15 +239,6 @@
       "marketHomeProbability": 0.198488
     },
     {
-      "gameId": "2026_10_WAS_NYG",
-      "home": "NYG",
-      "away": "WAS",
-      "gameDate": "2026-11-12",
-      "capturedAt": "2026-11-04T18:50:46.512Z",
-      "modelHomeProbability": 0.541207,
-      "marketHomeProbability": 0.522678
-    },
-    {
       "gameId": "2026_10_MIA_IND",
       "home": "IND",
       "away": "MIA",
@@ -273,6 +264,15 @@
       "capturedAt": "2026-11-04T18:50:46.512Z",
       "modelHomeProbability": 0.423029,
       "marketHomeProbability": 0.385463
+    },
+    {
+      "gameId": "2026_10_PIT_CIN",
+      "home": "CIN",
+      "away": "PIT",
+      "gameDate": "2026-11-15",
+      "capturedAt": "2026-11-04T18:50:46.512Z",
+      "modelHomeProbability": 0.453087,
+      "marketHomeProbability": 0.608265
     }
   ],
   "safeguards": [
