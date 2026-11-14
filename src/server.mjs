@@ -21,7 +21,6 @@ import {createDerivedForwardMarketFeed} from './shadow-derived.mjs';
 
 const PUBLIC_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../public');
 const SHADOW_PRIVATE = configuredShadowStore();
-const SHADOW_DERIVED_FEED = createDerivedForwardMarketFeed();
 const SHADOW_SYNTHETIC_REPORT = evaluateQBLatency(syntheticQBStudyFixture());
 function loadModelArtifact() {
   try {
@@ -55,6 +54,7 @@ export function loadEvidenceJournal({read=()=>readFileSync(resolve(dirname(fileU
 const NFL_EVIDENCE_JOURNAL=loadEvidenceJournal();
 const NFL_EVIDENCE=summarizeEvidence(NFL_EVIDENCE_JOURNAL);
 const NFL_EVIDENCE_FEED=createJournalEvidenceFeed({fallbackJournal:NFL_EVIDENCE_JOURNAL});
+const SHADOW_DERIVED_FEED=createDerivedForwardMarketFeed({fallbackJournal:NFL_EVIDENCE_JOURNAL});
 function loadReplayFile(name){
   try {
     const path=resolve(dirname(fileURLToPath(import.meta.url)),'../data/replay/'+name);
@@ -152,6 +152,7 @@ export function createHandler({
         if (url.pathname === '/api/config') return reply(res, 200, {
           sports: SPORTS, markets: MARKETS,
           maxAgeMs, refreshMs: null, autoRefresh: false,
+          paidRefreshRequiresExplicitRequest: true,
           marketOnlySignals: true, nflResearchModel: Boolean(nflArtifact?.readyForResearch),
           forwardEvidenceEnabled: true,
           nflEfficiencyChallengerAvailable:Boolean(nflEfficiency),
@@ -384,9 +385,14 @@ export function createHandler({
             return reply(res, 400, { error: { code: 'INVALID_FILTER', message: 'Unsupported sport, market or mode.' } });
           }
           const demo = mode === 'demo';
+          if (!demo && req.method === 'HEAD') return reply(res, 405, {
+            error: { code: 'METHOD_NOT_ALLOWED', message: 'Live data supports GET only; HEAD never requests provider data.' }
+          }, { Allow: 'GET' });
           const snapshot = demo
             ? { events: demoEvents(sport, now), receivedAt: new Date(now).toISOString(), cacheHit: false, quota: null }
-            : await source.getOdds(sport, market);
+            : await source.getOdds(sport, market, {
+                allowPaid: req.headers['x-betq-paid-request'] === 'true'
+              });
           const analysisNow=clock(); // Upstream fetch can cross kickoff or the freshness boundary.
           // Private opt-in capture reuses EXACTLY this already paid live response:
           // no second provider call, no demo, no caching-as-new-observation.
@@ -420,9 +426,9 @@ export function createHandler({
               }:{available:false,reason:game.marketConsensus?.reason||'MARKET_UNAVAILABLE'};
               const projection = game.started
                 ? { available: false, reason: 'GAME_ALREADY_STARTED' }
-                : predictNflEvent({
-                    home_team: game.homeTeam, away_team: game.awayTeam
-                  }, nflArtifact, analysisNow);
+                // Preserve explicit venue and kickoff metadata for the model's
+                // fail-closed neutral-site and chronology checks.
+                : predictNflEvent(rawGame, nflArtifact, analysisNow);
               game.independentModel = projection;
               game.efficiencyChallenger = projection.available ?
                 challengerResearchForEvent(rawGame,projection.homeWinProbability,nflEfficiency,analysisNow) :
@@ -464,7 +470,12 @@ export function createHandler({
           if (!Object.hasOwn(SPORTS, sport)) return reply(res, 400, {
             error: { code: 'INVALID_FILTER', message: 'Unsupported sport.' }
           });
-          const snapshot = await source.getScores(sport);
+          if (req.method === 'HEAD') return reply(res, 405, {
+            error: { code: 'METHOD_NOT_ALLOWED', message: 'Live data supports GET only; HEAD never requests provider data.' }
+          }, { Allow: 'GET' });
+          const snapshot = await source.getScores(sport, {
+            allowPaid: req.headers['x-betq-paid-request'] === 'true'
+          });
           return reply(res, 200, {
             source: 'THE_ODDS_API_V4', sport, receivedAt: snapshot.receivedAt,
             cacheHit: snapshot.cacheHit, quota: snapshot.quota,

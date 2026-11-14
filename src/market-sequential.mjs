@@ -10,6 +10,7 @@
  */
 import {OUTCOME_SCORING_POLICY,isSourceCorroboratedSettlement,latestSettlementsByRevision,unambiguousFrozenGameIds} from './settlement-qualification.mjs';
 import {validateJournal} from './evidence.mjs';
+import {isEligibleMarketSnapshot,isEligibleChallengerSnapshot} from './evidence-integrity.mjs';
 
 export const SEQUENTIAL_PROTOCOL=Object.freeze({
   version:'betq-market-sequential-v1',
@@ -20,7 +21,6 @@ export const SEQUENTIAL_PROTOCOL=Object.freeze({
   previsibleModel:'FIRST_SOURCE_VALID_PREGAME_SNAPSHOT',
   interpretation:'CONDITIONAL_MARKET_EFFICIENT_NULL_NOT_PROVEN_TRUE'
 });
-const time=s=>typeof s==='string'&&s.trim().length>0?Date.parse(s):NaN;
 const probability=x=>typeof x==='number'&&Number.isFinite(x)&&x>0&&x<1;
 const round=(x,d=5)=>Number.isFinite(x)?Number(x.toFixed(d)):null;
 const score=(p,y)=>({
@@ -33,27 +33,11 @@ function logMixture(a,b){
   const max=Math.max(a,b);
   return max+Math.log((Math.exp(a-max)+Math.exp(b-max))/2);
 }
-export function isEligibleFirstSnapshot(s){
-  if(!s||s.researchOnly!==true||s.independentModel!==true||
-    s.marketBasis!=='NO_VIG_MULTI_BOOK_MEDIAN'||
-    !probability(s.marketHomeProbability)||!probability(s.modelHomeProbability)||
-    !Number.isInteger(s.marketBookCount)||s.marketBookCount<3||
-    typeof s.gameId!=='string'||s.gameId.length>140)return false;
-  const captured=time(s.capturedAt),kick=time(s.commenceTime),
-    received=time(s.sourceReceivedAt),built=time(s.modelBuiltAt),
-    quote=time(s.marketNewestQuoteAt);
-  return [captured,kick,received,built,quote].every(Number.isFinite)&&
-    captured<kick&&received<=captured+60000&&
-    received>=captured-600000&&
-    built<=captured+60000&&built<kick&&
-    quote<=received+60000&&quote<=captured+60000&&quote<kick;
-}
+export const isEligibleFirstSnapshot=isEligibleMarketSnapshot;
 function challengerAtSameFirstSnapshot(s){
-  const built=time(s.challengerBuiltAt),captured=time(s.capturedAt),kick=time(s.commenceTime);
-  return s.challengerResearchOnly===true&&
-    probability(s.challengerHomeProbability)&&Number.isFinite(built)&&
-    built<=captured+60000&&built<kick? s.challengerHomeProbability:s.marketHomeProbability;
+  return isEligibleChallengerSnapshot(s)?s.challengerHomeProbability:s.marketHomeProbability;
 }
+
 function eligible(j){
   const first=new Map();
   const exclusions={noEligiblePregameQuote:0,noSettlement:0,tie:0,uncorroboratedSettlement:0};

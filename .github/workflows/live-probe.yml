@@ -20,9 +20,9 @@ jobs:
           node --input-type=module <<'NODE'
           const base = 'https://betq-ai.onrender.com';
           const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-          async function read(path) {
+          async function read(path, allowPaid = false) {
             const res = await fetch(base + path, {
-              headers: { Accept: 'application/json' },
+              headers: { Accept: 'application/json', ...(allowPaid ? { 'x-betq-paid-request': 'true' } : {}) },
               signal: AbortSignal.timeout(95000)
             });
             const raw = await res.text();
@@ -54,7 +54,7 @@ jobs:
           }
           // Request one live NFL moneyline snapshot. This may cost one provider credit.
           let result;
-          try { result = await read('/api/slate?sport=americanfootball_nfl&market=h2h&mode=live'); }
+          try { result = await read('/api/slate?sport=americanfootball_nfl&market=h2h&mode=live', true); }
           catch {
             console.error('LIVE DATA: network error');
             process.exit(1);
