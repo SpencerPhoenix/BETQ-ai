@@ -1,10 +1,6 @@
 name: BETQ nested market challenge
 on:
-  push:
-    paths:
-      - 'src/market-challenge.mjs'
-      - 'scripts/run-market-challenge.mjs'
-      - '.github/workflows/market-challenge.yml'
+  # Code publication must not run research or publish generated artifacts.
   workflow_dispatch:
 permissions:
   contents: write
@@ -13,6 +9,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   compare:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 18
     steps:
@@ -20,6 +17,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Enforce model/future-data isolation, correctness and arithmetic
         run: |
           npm run check

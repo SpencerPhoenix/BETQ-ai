@@ -1,10 +1,6 @@
 name: BETQ preregistered NFL margin residual evaluation
 on:
-  push:
-    paths:
-      - 'src/margin-research.mjs'
-      - 'scripts/run-margin-study.mjs'
-      - '.github/workflows/margin-research.yml'
+  # Code publication must not run research or publish generated artifacts.
   workflow_dispatch:
 permissions:
   contents: write
@@ -13,6 +9,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   experiment:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -20,6 +17,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Run syntax, regression and margin integrity tests
         run: |
           npm run check
