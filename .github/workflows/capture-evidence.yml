@@ -20,6 +20,8 @@ jobs:
   collect:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    env:
+      BETQ_OPERATOR_REFRESH_TOKEN: ${{ secrets.BETQ_OPERATOR_REFRESH_TOKEN }}
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
@@ -28,22 +30,28 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install locked dependencies without lifecycle scripts
+        env:
+          BETQ_OPERATOR_REFRESH_TOKEN: ''
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Validate quant and evidence boundaries
         run: |
           npm run check
           npm test
       - name: Check compatible production runtime before requesting paid odds
+        if: env.BETQ_OPERATOR_REFRESH_TOKEN != ''
         shell: bash
         run: |
-          for attempt in {1..12}; do
-            if curl --max-time 45 -fsS https://betq-ai.onrender.com/api/health |
+          for attempt in {1..3}; do
+            if curl --max-time 20 -fsS https://betq-ai.onrender.com/api/health |
               node scripts/verify-evidence-health.mjs; then
               exit 0
             fi
-            sleep 12
+            if [[ "$attempt" -lt 3 ]]; then sleep 5; fi
           done
-          echo 'Compatible production unavailable; no paid odds requested.' >&2
-          exit 1
+          echo 'Compatible production unavailable; skipping paid capture, reconciling results only.' >&2
+          echo 'BETQ_CAPTURE_SKIP_REASON=PRODUCTION_PREFLIGHT_UNAVAILABLE' >> "$GITHUB_ENV"
+          exit 0
       - name: Capture only genuine pregame observations and reconcile results
         run: node scripts/capture-evidence.mjs
       - name: Verify immutable journal and no raw odds/secrets

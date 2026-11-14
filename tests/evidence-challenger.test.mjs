@@ -71,13 +71,15 @@ test('Paired prospective Elo vs EPA scores require 30 finalized challenger games
       commenceTime:iso(NOW+5*86400000),capturedAt:iso(NOW+1000+i),
       gameDate:'2026-11-07',home:'KC',away:'LV',
       modelHomeProbability:0.55,challengerHomeProbability:0.64,
+      independentModel:true,researchOnly:true,sourceReceivedAt:iso(NOW),
+      modelBuiltAt:iso(NOW-3600000),modelLastResultDate:'2026-10-31',
       challengerResearchOnly:true,challengerModelVersion:'nfl-efficiency-1',
       challengerBuiltAt:iso(NOW-3600000),
       marketHomeProbability:null
     });
     const score=i%2===0?1:0;
     j.settlements.push(withSyntheticCorroboration({
-      gameDate:'2026-11-07',gameId:'game-'+i,outcome:score?'HOME':'AWAY',
+      gameDate:'2026-11-07',commenceTime:iso(NOW+5*86400000),gameId:'game-'+i,outcome:score?'HOME':'AWAY',
       homeScore:score?27:17,awayScore:score?17:27,revision:1
     },iso(NOW+10*86400000)));
   }
