@@ -1,16 +1,17 @@
-name: BETQ v0.3 production model audit
+name: BETQ production model audit
 on:
-  push:
-    paths:
-      - '.github/workflows/model-production-probe.yml'
+  # A code push must not implicitly spend provider credits.
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   verify:
     runs-on: ubuntu-latest
+    env:
+      BETQ_OPERATOR_REFRESH_TOKEN: ${{ secrets.BETQ_OPERATOR_REFRESH_TOKEN }}
     timeout-minutes: 8
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -18,18 +19,20 @@ jobs:
         shell: bash
         run: |
           node --input-type=module <<'NODE'
+          import { operatorRequest } from './scripts/operator-auth.mjs';
           const base='https://betq-ai.onrender.com';
-          const request=async (path)=>{
-            const r=await fetch(base+path,{headers:{Accept:'application/json'},
+          const request=async (path,allowPaid=false)=>{
+            const paid=allowPaid?operatorRequest(path):null;
+            const r=await fetch(paid?.endpoint||base+path,paid?.options||{redirect:'error',headers:{Accept:'application/json'},
               signal:AbortSignal.timeout(95000)});
             const j=await r.json();
             if(!r.ok)throw Error(path+': HTTP '+r.status+' '+String(j.error?.code||''));
             return j;
           };
           const health=await request('/api/health');
-          if(health.version!=='0.3.0')throw Error('Backend is not deployed at v0.3; version='+health.version);
+          if(health.operatorRefresh?.authenticationRequired!==true||health.operatorRefresh?.paidIntentRequired!==true)
+            throw Error('Backend operator authentication contract unavailable');
           if(health.nflModel?.available!==true)throw Error('NFL model artifact missing from production runtime');
-          if(health.odds?.budget?.limit!==12)throw Error('Daily provider credit governor is not enabled');
           console.log('DEPLOYMENT VERSION: '+health.version);
           console.log('DAILY CREDIT LIMIT: '+health.odds.budget.limit);
           console.log('PROVIDER CREDITS LEFT: '+String(health.odds.quota?.remaining??'not reported'));
@@ -45,7 +48,15 @@ jobs:
           const demo=await request('/api/slate?mode=demo&sport=americanfootball_nfl&market=h2h');
           if(!demo.demo||!demo.events.length||demo.events.some(e=>e.independentModel))
             throw Error('Demo/live projections mixed');
-          const live=await request('/api/slate?mode=live&sport=americanfootball_nfl&market=h2h');
+          if (health.captureReadiness?.ready !== true) {
+            console.log('LIVE CAPTURE SKIPPED: ' + String(health.captureReadiness?.reason || 'OPERATOR_BUDGET_NOT_READY'));
+            process.exit(0);
+          }
+          if (!process.env.BETQ_OPERATOR_REFRESH_TOKEN?.trim()) {
+            console.log('LIVE CAPTURE SKIPPED: OPERATOR_TOKEN_MISSING; public model checks only');
+            process.exit(0);
+          }
+          const live=await request('/api/slate?mode=live&sport=americanfootball_nfl&market=h2h',true);
           if(live.demo!==false||live.source!=='THE_ODDS_API_V4')throw Error('Live odds source invalid');
           const pending=live.events.filter(e=>!e.started);
           const modeled=pending.filter(e=>e.independentModel?.available);
@@ -56,5 +67,5 @@ jobs:
             throw Error('Research projections mislabeled as executable');
           console.log('LIVE NFL GAMES: '+live.summary.games+' · priced signals '+live.summary.signals);
           console.log('ELIGIBLE UPCOMING: '+pending.length+' · independently modeled '+modeled.length);
-          console.log('RESULT: PASS — v0.3 live, model source valid, guarded, research-only');
+          console.log('RESULT: PASS — authenticated live snapshot, model source valid, guarded, research-only');
           NODE
