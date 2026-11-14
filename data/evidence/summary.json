@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "season": 2026,
-  "generatedAt": "2026-11-13T18:43:06.053Z",
+  "generatedAt": "2026-11-14T17:17:30.911Z",
   "provenance": {
     "model": "BETQ_NFL_ELO",
     "market": "THE_ODDS_API_V4_DERIVED",
@@ -16,7 +16,7 @@
   "realizedROI": null,
   "verifiedCLV": null,
   "minimumScoredSample": 30,
-  "totalSnapshots": 297,
+  "totalSnapshots": 323,
   "prospectiveGames": 44,
   "settledGames": 18,
   "pendingGames": 26,
