@@ -56,7 +56,8 @@ with sync_playwright() as p:
     context=browser.new_context(viewport={'width':1440,'height':1000},reduced_motion='reduce',service_workers='block')
     context.route('**/*',route_all)
     page=context.new_page();page.on('pageerror',lambda e:errors.append(str(e)))
-    page.clock.install(time=fixtures['now'])
+    # Python Playwright numeric clock times are seconds; journal values are JS milliseconds.
+    page.clock.install(time=fixtures['now']/1000)
     page.goto('http://betq.test/')
     page.locator('.nav-item[data-tab="games"]').click()
     root=page.locator('#retained-forecasts')
@@ -79,9 +80,9 @@ with sync_playwright() as p:
     assert root.locator('[data-paper],input,form').count()==0
     before=root.inner_text()
     page.locator('.mode-toggle [data-mode="demo"]').click()
-    expect(root).to_have_text(before)
+    expect(root).to_have_text(before,use_inner_text=True)
     page.locator('[data-sport="basketball_nba"]').click()
-    expect(root).to_have_text(before)
+    expect(root).to_have_text(before,use_inner_text=True)
     no_overflow(page)
     root.scroll_into_view_if_needed();page.screenshot(path=str(OUT/'desktop-retained-forecasts.png'))
     page.locator('.nav-item[data-tab="evidence"]').click()

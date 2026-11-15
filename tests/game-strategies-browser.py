@@ -63,7 +63,7 @@ with sync_playwright() as p:
     assert len(requests)==before
     no_overflow(page)
     page.screenshot(path=str(OUT/'desktop-moneyline-strategies.png'),full_page=True)
-    page.keyboard.press('Space');assert details.get_attribute('open') is None
+    summary.press('Space');expect(details).not_to_have_attribute('open','')
     page.keyboard.press('Enter');expect(details).to_have_attribute('open','')
     for market,expected in [('spreads','adjusted margin'),('totals','Combined score')]:
         page.locator('#market-filters [data-market="'+market+'"]').click()

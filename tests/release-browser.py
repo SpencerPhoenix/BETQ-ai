@@ -79,7 +79,8 @@ with sync_playwright() as p:
     context=browser.new_context(viewport={'width':1440,'height':1000},reduced_motion='reduce',service_workers='block')
     context.route('**/*',route_all)
     page=context.new_page(); page.on('pageerror',lambda e:errors.append(str(e)))
-    page.clock.install(time=fixtures['now'])
+    # Python Playwright numeric clock times are seconds; journal values are JS milliseconds.
+    page.clock.install(time=fixtures['now']/1000)
     page.goto('http://betq.test/')
     navigate(page,'games')
     grades=page.locator('#game-grades')
@@ -97,7 +98,7 @@ with sync_playwright() as p:
     page.screenshot(path=str(OUT/'desktop-real-retained-grades.png'))
     before=grades.inner_text()
     page.locator('.mode-toggle [data-mode="demo"]').click()
-    expect(grades).to_have_text(before)
+    expect(grades).to_have_text(before,use_inner_text=True)
     for width in [320,390,768]:
         page.set_viewport_size({'width':width,'height':844}); no_overflow(page)
         region=grades.locator('.game-grades-scroll')

@@ -156,7 +156,7 @@ with sync_playwright() as p:
             if width==375 and tab in ['games','execution']:
                 page.screenshot(path=str(OUT/f'mobile-{tab}.png'),full_page=True)
         page.set_viewport_size({'width':1440,'height':1000})
-        assert not page.locator('#sidebar').evaluate('(el)=>el.inert')
+        expect(page.locator('#sidebar')).to_have_js_property('inert',False)
         expect(page.locator('#sidebar')).not_to_have_attribute('aria-hidden','true')
     assert not unexpected, unexpected
     assert not errors, errors
