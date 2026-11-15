@@ -24,7 +24,7 @@ function assertPublicDerived(value,depth=0){
     assertPublicDerived(child,depth+1);
   }
 }
-function validatePublicJournal(journal){
+export function validatePublicJournal(journal){
   assertPublicDerived(journal);
   validateJournal(journal);
   if(journal.season!==2026||!isDeepStrictEqual(journal.provenance,emptyJournal(2026).provenance)||
@@ -53,7 +53,7 @@ export function assertAppendOnlyEvidence(previous,next){
     throw Error('SETTLEMENT_HISTORY_CHANGED');
   return next;
 }
-function assertNoFutureRecords(journal,now){
+export function assertNoFutureRecords(journal,now){
   if(!Number.isFinite(now)||journal.snapshots.some(s=>Date.parse(s.capturedAt)>now+60000)||
     journal.settlements.some(r=>r.verifiedAt!==undefined&&
       (!Number.isFinite(Date.parse(r.verifiedAt))||Date.parse(r.verifiedAt)>now+120000)))

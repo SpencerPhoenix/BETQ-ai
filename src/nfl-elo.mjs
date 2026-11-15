@@ -182,8 +182,12 @@ export function predictNflEvent(event,artifact,now=Date.now()){
   const home=NFL_TEAMS[event?.home_team],away=NFL_TEAMS[event?.away_team];
   if(!home||!away||home===away||!Number.isFinite(artifact.ratings[home])||!Number.isFinite(artifact.ratings[away]))
     return {available:false,reason:'TEAM_MAPPING_UNAVAILABLE'};
+  // Never coerce provider strings or objects into venue flags. In particular,
+  // Boolean('false') would silently remove the fitted home-field advantage.
+  if (event.neutralSite !== undefined && typeof event.neutralSite !== 'boolean')
+    return {available:false,reason:'INVALID_NEUTRAL_SITE'};
   const p=calibrate(eloProbability(artifact.ratings[home],artifact.ratings[away],artifact.params.homeAdv,
-    Boolean(event.neutralSite)),artifact.params.scale);
+    event.neutralSite === true),artifact.params.scale);
   return {
     available:true,method:'NFL_ELO_HISTORICAL_OUTCOMES',modelVersion:MODEL_VERSION,
     source:'NFLVERSE_SCHEDULES',independentOfOdds:true,

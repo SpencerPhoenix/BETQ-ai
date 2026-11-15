@@ -10,6 +10,7 @@
  */
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
+import {verifiedPostgresOptions,handleIdlePoolErrors} from '../src/postgres-security.mjs';
 import {applyPrivateSchema,postgresShadowStore} from '../src/shadow-store.mjs';
 import {makeQBCandidateNews,reviewQBCandidate} from '../src/shadow-latency.mjs';
 
@@ -24,13 +25,13 @@ let name='';
 try{name=decodeURIComponent(new URL(u).pathname.slice(1));}catch{}
 if(!/^betq_[a-z0-9_]{2,60}$/.test(name))
   throw Error('Refusing non-BETQ database; name must begin betq_.');
+const databaseOptions=verifiedPostgresOptions(u);
 const pkg=await import('pg');
 const {Pool}=pkg.default||pkg;
-const pool=new Pool({
-  connectionString:u,
-  ssl:{rejectUnauthorized:true},max:2,
+const pool=handleIdlePoolErrors(new Pool({
+  ...databaseOptions,max:2,
   connectionTimeoutMillis:3000
-});
+}));
 try{
   if(command==='init'){
     await applyPrivateSchema(pool);

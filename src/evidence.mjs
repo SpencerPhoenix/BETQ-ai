@@ -5,7 +5,8 @@
  */
 import {OUTCOME_SCORING_POLICY,isSourceCorroboratedSettlement,latestSettlementsByRevision,unambiguousFrozenGameIds} from './settlement-qualification.mjs';
 import {pairedWeekBootstrap} from './statistical-audit.mjs';
-import {timestamp, isProbability, validDay} from './integrity.mjs';
+import {isProbability, validDay} from './integrity.mjs';
+import {validSnapshotChronology,validFrozenIdentity,sameFrozenIdentity,isEligibleModelSnapshot,isEligibleMarketSnapshot,isEligibleChallengerSnapshot,validNewFinalResult} from './evidence-integrity.mjs';
 import { createHash } from 'node:crypto';
 import { NFL_TEAMS, canonicalTeam } from './nfl-elo.mjs';
 
@@ -38,13 +39,10 @@ export function validateJournal(j) {
 }
 function validObservation(s,season){
   if(!s||typeof s.id!=='string'||typeof s.gameId!=='string'||s.season!==season||!isProbability(s.modelHomeProbability))return false;
-  const at=timestamp(s.capturedAt),kick=timestamp(s.commenceTime);
-  if(!Number.isFinite(at)||!Number.isFinite(kick)||at>=kick)return false;
-  for(const key of ['modelBuiltAt','sourceReceivedAt'])
-    if(s[key]!==undefined&&(!Number.isFinite(timestamp(s[key]))||timestamp(s[key])>at+60000||timestamp(s[key])>=kick))return false;
+  if(!validSnapshotChronology(s))return false;
   if(s.marketHomeProbability!=null&&!isProbability(s.marketHomeProbability))return false;
   if(s.challengerHomeProbability!=null&&(!isProbability(s.challengerHomeProbability)||s.challengerResearchOnly!==true||
-     !Number.isFinite(timestamp(s.challengerBuiltAt))||timestamp(s.challengerBuiltAt)>at+60000||timestamp(s.challengerBuiltAt)>=kick))return false;
+     s.challengerBuiltAt==null))return false;
   return true;
 }
 function validResult(r){
@@ -63,7 +61,7 @@ export function matchSchedule(event,rows,season) {
     Math.abs(kick-parsed(r.gameday+'T12:00:00Z'))<=36*3600000
   ).sort((a,b)=>Math.abs(kick-parsed(a.gameday+'T12:00:00Z'))-
                  Math.abs(kick-parsed(b.gameday+'T12:00:00Z')));
-  if(matches.length>1&&matches[0].gameday===matches[1].gameday) return null;
+  if(matches.length>1) return null;
   return matches[0]||null;
 }
 
@@ -72,7 +70,7 @@ export function observationsFromSlate(slate,rows,now=Date.now(),season=new Date(
       slate.sport!=='americanfootball_nfl'||slate.market!=='h2h'||
       !Array.isArray(slate.events)||!Array.isArray(rows)) throw Error('Real NFL moneylines only');
   const received=parsed(slate.receivedAt);
-  if (!Number.isFinite(received)||received>now+60000||now-received>15*60000)
+  if (!Number.isFinite(received)||received>now+60000||now-received>10*60000)
     throw Error('Provider snapshot timestamp stale');
   const accepted=[],skipped=[];
   for(const event of slate.events) {
@@ -91,7 +89,8 @@ export function observationsFromSlate(slate,rows,now=Date.now(),season=new Date(
     const c=event.marketConsensus;
     const validMarket=c?.available&&c.method==='ALL_BOOKS_MEDIAN_DE_VIG'&&c.books>=3&&
       Number.isFinite(c.homeProbability)&&c.homeProbability>0&&c.homeProbability<1&&
-      c.oldestQuoteAgeSeconds<=600&&parsed(c.latestQuoteAt)<=now+60000&&
+      Number.isFinite(c.oldestQuoteAgeSeconds)&&c.oldestQuoteAgeSeconds>=0&&c.oldestQuoteAgeSeconds<=600&&
+      parsed(c.latestQuoteAt)>=now-600000&&parsed(c.latestQuoteAt)<=received+60000&&parsed(c.latestQuoteAt)<=now+60000&&
       parsed(c.latestQuoteAt)<kick;
     const cModel=event.efficiencyChallenger;
     const validChallenger=cModel?.available===true &&
@@ -109,7 +108,7 @@ export function observationsFromSlate(slate,rows,now=Date.now(),season=new Date(
     const key=[season,row.game_id,new Date(now).toISOString().slice(0,10),window];
     if(validChallenger)key.push('CHALLENGER:'+cModel.modelVersion);
     const id=hash(key.join('|'));
-    accepted.push({
+    const snapshot={
       id,gameId:row.game_id,providerEventId:String(event.id),
       season,home:canonicalTeam(row.home_team),away:canonicalTeam(row.away_team),
       gameDate:row.gameday,commenceTime:new Date(kick).toISOString(),
@@ -129,35 +128,50 @@ export function observationsFromSlate(slate,rows,now=Date.now(),season=new Date(
       marketNewestQuoteAt:validMarket?c.latestQuoteAt:null,
       marketBasis:validMarket?'NO_VIG_MULTI_BOOK_MEDIAN':'UNAVAILABLE',
       independentModel:true,researchOnly:true,verifiedInjuryAdjustment:false
-    });
+    };
+    if(!validObservation(snapshot,season)||!isEligibleModelSnapshot(snapshot)){
+      skipped.push({eventId:String(event.id||''),reason:'INVALID_FORECAST_PROVENANCE'});continue;
+    }
+    accepted.push(snapshot);
   }
   return {accepted,skipped};
 }
 
-export function resultsFromSchedule(journal,rows,now=Date.now()) {
+export function resultsFromSchedule(journal,rows,now=Date.now(),{sourceReceipt=null}={}) {
   validateJournal(journal);
-  const tracked=new Set(journal.snapshots.map(s=>s.gameId));
-  const today=new Date(now).toISOString().slice(0,10),results=[];
-  for(const row of rows) {
-    if(!row || !tracked.has(row.game_id)||Number(row.season)!==journal.season||
-       !gameTypes.has(row.game_type)||!/^\d{4}-\d{2}-\d{2}$/.test(row.gameday)||
-       row.gameday>=today||row.home_score===''||row.away_score==='')continue;
+  if(!Array.isArray(rows)||!Number.isFinite(now))throw Error('Invalid result source');
+  const unambiguous=unambiguousFrozenGameIds(journal.snapshots),results=[];
+  for(const gameId of unambiguous){
+    const snapshot=journal.snapshots.find(s=>s.gameId===gameId);
+    // Duplicate source identities, including conflicting scores or reschedules,
+    // cannot be resolved by arbitrary row order.
+    const matches=rows.filter(row=>row?.game_id===gameId);
+    if(matches.length!==1)continue;
+    const row=matches[0];
+    if(Number(row.season)!==journal.season||!gameTypes.has(row.game_type)||
+       !validDay(row.gameday)||row.home_score==null||row.away_score==null||
+       ![row.home_score,row.away_score].every(value=>(typeof value==='number'||typeof value==='string')&&/^\d{1,3}$/.test(String(value))))continue;
     const homeScore=Number(row.home_score),awayScore=Number(row.away_score);
-    if(!Number.isInteger(homeScore)||!Number.isInteger(awayScore)||
-       homeScore<0||awayScore<0||homeScore>100||awayScore>100)continue;
-    results.push({gameId:row.game_id,gameDate:row.gameday,homeScore,awayScore,
+    const result={gameId,season:Number(row.season),gameDate:row.gameday,
+      home:canonicalTeam(row.home_team),away:canonicalTeam(row.away_team),
+      commenceTime:row.commenceTime,homeScore,awayScore,
       outcome:homeScore===awayScore?'TIE':homeScore>awayScore?'HOME':'AWAY',
-      source:'NFLVERSE_SCHEDULES',resultHash:hash(row.game_id+'|'+homeScore+'|'+awayScore)});
+      source:'NFLVERSE_SCHEDULES',resultHash:hash(gameId+'|'+homeScore+'|'+awayScore),
+      terminalStatusReceipt:sourceReceipt&&{source:'NFLVERSE_SCHEDULES',status:row.status,
+        observedAt:sourceReceipt.observedAt,sha256:sourceReceipt.sha256}};
+    if(validResult(result)&&validNewFinalResult(result,snapshot,now))results.push(result);
   }
   return results;
 }
 
 export function updateJournal(existing,captures,results,now=Date.now()) {
+  if(!Number.isFinite(now))throw Error('Invalid journal write time');
   const journal=structuredClone(validateJournal(existing));
   const ids=new Set(journal.snapshots.map(x=>x.id));
+  const captureFloor=existing.snapshots.reduce((max,s)=>Math.max(max,parsed(s.capturedAt)),-Infinity);
   let added=0,revisions=0;
   for(const s of captures){
-    if(!validObservation(s,journal.season))throw Error('Invalid/post-kickoff forecast');
+    if(!validObservation(s,journal.season)||parsed(s.capturedAt)>now+60000)throw Error('Invalid/future/post-kickoff forecast');
     if(s.season!==journal.season||!s.id||!s.gameId||!Number.isFinite(s.modelHomeProbability)||
        s.modelHomeProbability<=0||s.modelHomeProbability>=1||
        parsed(s.capturedAt)>=parsed(s.commenceTime)||
@@ -168,15 +182,34 @@ export function updateJournal(existing,captures,results,now=Date.now()) {
           !Number.isFinite(parsed(s.challengerBuiltAt))||
           parsed(s.challengerBuiltAt)>parsed(s.capturedAt)+60000)))
       throw Error('Invalid/post-kickoff forecast');
-    if(!ids.has(s.id)){journal.snapshots.push(structuredClone(s));ids.add(s.id);added++;}
+    // Scheduled recaptures reuse the deterministic daily/window ID. Keep the
+    // first record exactly as stored, even when the later quote has changed.
+    if(!ids.has(s.id)){
+      if(parsed(s.capturedAt)<captureFloor||existing.snapshots.some(old=>old.gameId===s.gameId&&
+        old.capturedAt===s.capturedAt&&(s.id<old.id||s.id.localeCompare(old.id)<0)))throw Error('Backdated forecast addition');
+      if(!isEligibleModelSnapshot(s)||!validFrozenIdentity(s)||journal.snapshots.some(old=>
+        old.gameId===s.gameId&&!sameFrozenIdentity(old,s)))throw Error('Invalid/conflicting frozen identity or provenance');
+      journal.snapshots.push(structuredClone(s));ids.add(s.id);added++;
+    }
   }
   const tracked=new Set(journal.snapshots.map(x=>x.gameId));
-  const latest=new Map(journal.settlements.map(s=>[s.gameId,s]));
+  const latest=latestSettlementsByRevision(journal.settlements);
+  const unambiguous=unambiguousFrozenGameIds(journal.snapshots);
   for(const result of results){
     if(!validResult(result))throw Error('Invalid result outcome / score');
-    if(!tracked.has(result.gameId)||latest.get(result.gameId)?.resultHash===result.resultHash)continue;
-    const revised={...structuredClone(result),verifiedAt:new Date(now).toISOString(),
-      revision:(latest.get(result.gameId)?.revision||0)+1};
+    if(!tracked.has(result.gameId))continue;
+    if(!unambiguous.has(result.gameId)||!validNewFinalResult(result,journal.snapshots.find(s=>s.gameId===result.gameId),now))
+      throw Error('Invalid result identity or finality receipt');
+    const prior=latest.get(result.gameId);
+    const revised={...structuredClone(result),
+      resultHash:hash(result.gameId+'|'+result.homeScore+'|'+result.awayScore),
+      verifiedAt:new Date(now).toISOString(),
+      revision:(prior?.revision||0)+1};
+    // A real provenance upgrade may append a revision without changing scores.
+    // Routine repeats must not manufacture new outcome samples or revisions.
+    const snapshot=journal.snapshots.find(s=>s.gameId===result.gameId);
+    if(prior&&['homeScore','awayScore','outcome'].every(key=>prior[key]===result[key])&&prior.terminalStatusReceipt&&
+      (!isSourceCorroboratedSettlement(revised,snapshot)||isSourceCorroboratedSettlement(prior,snapshot)))continue;
     journal.settlements.push(revised);latest.set(result.gameId,revised);revisions++;
   }
   journal.snapshots.sort((a,b)=>a.capturedAt.localeCompare(b.capturedAt)||a.id.localeCompare(b.id));
@@ -224,8 +257,8 @@ export function summarizeEvidence(journal,now=Date.now()) {
       return {s,final,y,model:loss(s.modelHomeProbability,y),
         market:Number.isFinite(s.marketHomeProbability)?loss(s.marketHomeProbability,y):null};});
   const paired=observed.filter(x=>x.market);
-  const scored=observed.filter(x=>(unambiguous.has(x.s.gameId)&&isSourceCorroboratedSettlement(x.final,x.s)));
-  const scoredPaired=scored.filter(x=>x.market);
+  const scored=observed.filter(x=>(unambiguous.has(x.s.gameId)&&isEligibleModelSnapshot(x.s)&&isSourceCorroboratedSettlement(x.final,x.s)));
+  const scoredPaired=scored.filter(x=>x.market&&isEligibleMarketSnapshot(x.s));
   const challengerPaired=[];
   for(const [gameId,shots] of byGame){
     const result=settled.get(gameId);
@@ -237,7 +270,7 @@ export function summarizeEvidence(journal,now=Date.now()) {
     const y=result.outcome==='HOME'?1:0;
     challengerPaired.push({
       gameId,gameDate:s.gameDate,modelVersion:s.challengerModelVersion,
-      sourceCorroborated:unambiguous.has(gameId)&&isSourceCorroboratedSettlement(result,s),
+      sourceCorroborated:unambiguous.has(gameId)&&isEligibleChallengerSnapshot(s)&&isSourceCorroboratedSettlement(result,s),
       baselineProbability:s.modelHomeProbability,challengerProbability:s.challengerHomeProbability,outcome:y,
       baseline:loss(s.modelHomeProbability,y),
       challenger:loss(s.challengerHomeProbability,y)
@@ -249,10 +282,10 @@ export function summarizeEvidence(journal,now=Date.now()) {
   const movement=[];
   for(const [gameId,shots] of byGame){
     const firstShot=first.get(gameId);
-    const near=shots.filter(s=>s.window==='NEAR_KICKOFF'&&s.id!==firstShot.id&&
+    const near=shots.filter(s=>unambiguous.has(gameId)&&isEligibleMarketSnapshot(s)&&s.window==='NEAR_KICKOFF'&&s.id!==firstShot.id&&
       Number.isFinite(s.marketHomeProbability)&&parsed(s.capturedAt)<parsed(s.commenceTime))
       .sort((a,b)=>b.capturedAt.localeCompare(a.capturedAt))[0];
-    if(near&&Number.isFinite(firstShot.marketHomeProbability))
+    if(near&&isEligibleMarketSnapshot(firstShot))
       movement.push((near.marketHomeProbability-firstShot.marketHomeProbability)*100);
   }
   const pending=[...first.values()].filter(s=>!settled.has(s.gameId));
@@ -307,8 +340,8 @@ export function summarizeEvidence(journal,now=Date.now()) {
       result:x.final.outcome,modelHomeProbability:x.s.modelHomeProbability,
       marketHomeProbability:x.s.marketHomeProbability,
       capturedAt:x.s.capturedAt,
-      sourceCorroborated:(unambiguous.has(x.s.gameId)&&isSourceCorroboratedSettlement(x.final,x.s)),
-      brier:(unambiguous.has(x.s.gameId)&&isSourceCorroboratedSettlement(x.final,x.s))?round(x.model.brier):null
+      sourceCorroborated:(unambiguous.has(x.s.gameId)&&isEligibleModelSnapshot(x.s)&&isSourceCorroboratedSettlement(x.final,x.s)),
+      brier:(unambiguous.has(x.s.gameId)&&isEligibleModelSnapshot(x.s)&&isSourceCorroboratedSettlement(x.final,x.s))?round(x.model.brier):null
     })),
     pendingPreview:pending.slice(0,12).map(x=>({
       gameId:x.gameId,home:x.home,away:x.away,gameDate:x.gameDate,

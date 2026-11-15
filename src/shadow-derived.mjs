@@ -9,7 +9,10 @@
  * story affected a wagerable price.
  */
 import {readBoundedText} from './integrity.mjs';
-import {validateJournal} from './evidence.mjs';
+import {validateJournal,emptyJournal} from './evidence.mjs';
+import {isEligibleMarketSnapshot} from './evidence-integrity.mjs';
+import {unambiguousFrozenGameIds} from './settlement-qualification.mjs';
+import {assertAppendOnlyEvidence,assertNoFutureRecords} from './evidence-journal-feed.mjs';
 import {summarizeProspectiveDirection} from './prospective-direction.mjs';
 import {calculateSequentialEvidence} from './market-sequential.mjs';
 
@@ -26,26 +29,22 @@ const timestamp=x=>typeof x==='string'&&x.trim()?Date.parse(x):NaN;
 
 export function summarizeDerivedForwardMarkets(journal){
   validateJournal(journal);
-  const grouped=new Map();
+  const grouped=new Map(),unambiguous=unambiguousFrozenGameIds(journal.snapshots);
   let priced=0;
   for(const item of journal.snapshots){
-    if(!Number.isFinite(item.marketHomeProbability)||
-      item.marketHomeProbability<=0||item.marketHomeProbability>=1||
-      item.marketBasis!=='NO_VIG_MULTI_BOOK_MEDIAN'||
-      item.researchOnly!==true||!item.gameId)continue;
-    const seen=timestamp(item.capturedAt),kick=timestamp(item.commenceTime);
-    if(!Number.isFinite(seen)||!Number.isFinite(kick)||seen>=kick)continue;
+    if(!unambiguous.has(item.gameId)||!isEligibleMarketSnapshot(item))continue;
     priced++;
     if(!grouped.has(item.gameId))grouped.set(item.gameId,[]);
     grouped.get(item.gameId).push(item);
   }
   const movements=[];
   for(const [gameId,arr] of grouped){
-    arr.sort((a,b)=>timestamp(a.capturedAt)-timestamp(b.capturedAt));
+    arr.sort((a,b)=>timestamp(a.capturedAt)-timestamp(b.capturedAt)||a.id.localeCompare(b.id));
     const first=arr[0],latest=arr.at(-1);
     if(arr.length<2)continue;
     const span=timestamp(latest.capturedAt)-timestamp(first.capturedAt);
-    if(span<600000)continue; // never turn repeated near-simultaneous polls into a move
+    if(span<600000||first.providerEventId!==latest.providerEventId||
+      timestamp(latest.marketNewestQuoteAt)<=timestamp(first.marketNewestQuoteAt))continue; // never turn repeated near-simultaneous polls into a move
     const delta=(latest.marketHomeProbability-first.marketHomeProbability)*100;
     movements.push({
       gameId,matchup:first.away+' @ '+first.home,
@@ -97,34 +96,38 @@ const unavailable=(reason)=>({
 });
 export function createDerivedForwardMarketFeed({
   fetchImpl=globalThis.fetch,clock=Date.now,ttlMs=300000,
-  fixedUrl=FIXED_JOURNAL
+  fixedUrl=FIXED_JOURNAL,fallbackJournal=emptyJournal(2026)
 }={}){
-  let cache=null,expires=0,inflight=null;
+  let retained=structuredClone(assertAppendOnlyEvidence(emptyJournal(2026),fallbackJournal));
+  assertNoFutureRecords(retained,clock());
+  let cache=retained.snapshots.length?summarizeDerivedForwardMarkets(retained):null,expires=0,inflight=null;
+  const copy=()=>structuredClone(cache);
   return {
     async get(){
       const now=clock();
-      if(cache&&now<expires)return cache;
-      if(inflight)return inflight;
+      if(cache&&now<expires)return copy();
+      if(inflight){await inflight;return copy();}
       inflight=(async()=>{
         try{
           const response=await fetchImpl(fixedUrl,{
-            headers:{Accept:'application/json'},signal:AbortSignal.timeout(15000)
+            method:'GET',headers:{Accept:'application/json'},credentials:'omit',redirect:'error',signal:AbortSignal.timeout(15000)
           });
           if(!response.ok)throw Error('SOURCE_NOT_READY');
           const raw=await readBoundedText(response,5000000);
-          // Defense in depth: prohibit private raw provider odds in a public feed.
-          if(/"(?:bookmakers|bookmakerKey|americanOdds|decimalOdds|apiKey|ODDS_API_KEY)"\s*:/.test(raw))
-            throw Error('RAW_ODDS_IN_PUBLIC_EVIDENCE');
-          const data=summarizeDerivedForwardMarkets(JSON.parse(raw));
+          const candidate=assertAppendOnlyEvidence(retained,JSON.parse(raw));
+          assertNoFutureRecords(candidate,clock());
+          const data=summarizeDerivedForwardMarkets(candidate);
+          retained=structuredClone(candidate);
           cache=data;expires=now+Math.max(15000,ttlMs);
-          return data;
+          return copy();
         }catch{
-          cache=unavailable('DERIVED_JOURNAL_CURRENTLY_UNAVAILABLE');
+          cache=cache?{...cache,refreshStatus:'REFRESH_FAILED_USING_RETAINED_EVIDENCE'}:
+            unavailable('DERIVED_JOURNAL_CURRENTLY_UNAVAILABLE');
           expires=now+60000;
-          return cache;
+          return copy();
         }finally{inflight=null;}
       })();
-      return inflight;
+      await inflight;return copy();
     }
   };
 }

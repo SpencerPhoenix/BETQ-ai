@@ -1,6 +1,7 @@
 name: BETQ pre-registered residual and winner's-curse research
 on:
   push:
+    branches: [main]
     paths:
       - '.github/workflows/residual-research.yml'
       - 'src/residual-research.mjs'
@@ -13,6 +14,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   measure:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -20,6 +22,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Check code and independent anti-hindsight tests
         run: |
           npm run check

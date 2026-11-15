@@ -1,6 +1,7 @@
 name: BETQ lock optional private PostgreSQL adapter dependencies
 on:
   push:
+    branches: [main]
     paths:
       - '.github/workflows/shadow-lock.yml'
   workflow_dispatch:
@@ -8,6 +9,7 @@ permissions:
   contents: write
 jobs:
   lock:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 9
     steps:
