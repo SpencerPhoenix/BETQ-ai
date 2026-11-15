@@ -1,0 +1,55 @@
+name: BETQ manual private result sample
+
+on:
+  workflow_dispatch:
+    inputs:
+      game_id:
+        description: One retained, unquarantined game, at least 24 hours after kickoff
+        required: true
+        default: '2026_09_NYG_PHI'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: betq-manual-private-result-sample
+  cancel-in-progress: false
+
+jobs:
+  sample:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Offline syntax and regression gates without provider credentials
+        run: |
+          npm run check
+          npm test
+      - name: Capture one bounded free Games sample into ciphertext
+        env:
+          BALLDONTLIE_API_KEY: ${{ secrets.Balldontlie_api_key }}
+          BETQ_SAMPLE_GAME_ID: ${{ inputs.game_id }}
+        run: >-
+          node scripts/collect-bdl-sample.mjs
+          --game-id "$BETQ_SAMPLE_GAME_ID"
+          --recipient-public-key config/bdl-sample-recipient.pem
+          --output "$RUNNER_TEMP/betq-bdl-sample"
+      - name: Preserve only encrypted bytes and sanitized diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: betq-private-result-sample-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/betq-bdl-sample/envelope.json
+            ${{ runner.temp }}/betq-bdl-sample/summary.json
+          retention-days: 14
+          if-no-files-found: warn

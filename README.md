@@ -156,4 +156,8 @@ Deployment and configuration require separate approval. Check the service's auto
 
 ## Documentation
 
+An isolated [offline BALLDONTLIE receipt preparation tool](docs/BDL_OFFLINE_RECEIPTS.md) can archive and replay explicitly supplied source files in a private directory. It does not acquire data, activate the collector, qualify results, or change the frozen journal. All example/test observations are fabricated.
+
 See `docs/ARCHITECTURE.md` and `docs/MODEL.md` for data lineage, caveats, reproducibility, and next-phase milestones.
+
+Manual-only provider compatibility review: [encrypted BDL result sample](docs/BDL_MANUAL_SAMPLE.md). Publishing it does not collect data or activate grading.
