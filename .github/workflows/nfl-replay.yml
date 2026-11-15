@@ -1,10 +1,6 @@
 name: BETQ historical NFL as-of replay
 on:
-  push:
-    paths:
-      - 'src/historical-replay.mjs'
-      - 'scripts/generate-replay.mjs'
-      - '.github/workflows/nfl-replay.yml'
+  # Code publication must not run research or publish generated artifacts.
   workflow_dispatch:
 permissions:
   contents: write
@@ -13,6 +9,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   replay:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 14
     steps:
@@ -20,6 +17,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Gate replay arithmetic, outcome chronology and UI integrity
         run: |
           npm run check

@@ -1,10 +1,6 @@
 name: BETQ preregistered model promotion power study
 on:
-  push:
-    paths:
-      - 'src/promotion-power.mjs'
-      - 'scripts/run-promotion-power.mjs'
-      - '.github/workflows/promotion-power.yml'
+  # Code publication must not run research or publish generated artifacts.
   workflow_dispatch:
 permissions:
   contents: write
@@ -13,6 +9,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   experiment:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 55
     steps:
@@ -20,6 +17,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Verify frozen protocol and synthetic model-approval tests
         run: |
           test -s docs/RESEARCH_PROTOCOL_POWER_MARGIN_2026_11_02.md

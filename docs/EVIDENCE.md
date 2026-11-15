@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The historical 2025 NFL Elo backtest is separate from actual **forward-recorded predictions**. Phase 3 freezes new independent predictions before NFL kickoff, tracks source timestamps, and joins subsequent final results. It does not record sportsbook orders, private customer data, real-money performance, or raw bookmaker odds.
+The historical 2025 NFL Elo backtest is separate from actual **forward-recorded predictions**. Phase 3 freezes new independent predictions before NFL kickoff, tracks source timestamps, and joins subsequent source-corroborated final results when qualifying receipts exist. It does not record sportsbook orders, private customer data, real-money performance, or raw bookmaker odds.
 
 ## Sources and attribution
 
@@ -17,12 +17,12 @@ Records are stored in the public derived-research journal at data/evidence/nfl-Y
 - Captures are rejected if kickoff already passed, the model/source is stale, schedule match is ambiguous, or source is synthetic demo.
 - The original forecast is append-only; corrections to final game scores are separately revisioned.
 - The earliest frozen pregame forecast per scheduled game is the scored cohort.
-- The model-training result vintage cannot be later than the capture.
+- Every supplied timestamp must be canonical UTC. Source receipts and market quotes must be no more than ten minutes old at capture (one minute of future clock skew is tolerated before kickoff). The entire date-only model result cutoff must precede both capture and model build.
 - No retroactive reconstruction of an uncaptured forecast is permitted.
 
 ## Proper scoring and uncertainty
 
-The Evidence Lab shows counts immediately but withholds aggregate performance until at least **30** subsequent completed, non-tied games have a frozen prior prediction. Thirty is a reporting threshold, not evidence of profitability.
+The Evidence Lab shows counts immediately but withholds aggregate performance until at least **30** source-corroborated, non-tied games have an eligible frozen prior prediction. Raw community scores alone do not count. Thirty is a reporting threshold, not evidence of profitability.
 
 When the sample exists, metrics are Brier score, log loss, winner accuracy, probability calibration by ten bins, and paired Brier difference against the **same-time** market median on games with both references. A deterministic 1,200-resample paired bootstrap interval shows uncertainty. Positive market-minus-model Brier difference favors the model on the sample, but alone does not establish financial value.
 
@@ -42,7 +42,7 @@ Beginning with BETQ.ai v0.4, any independently trained EPA challenger is recorde
 - The earliest genuine pregame challenger observation for a game is the challenger comparison cohort.
 - The Elo forecast recorded **at that same timestamp** is the paired baseline, avoiding a comparison between mismatched model vintages.
 - A challenger not available before kickoff cannot be reconstructed after the event, even if its historical feature file exists later.
-- The summary reports prospective challenger games and finalized paired challenger games immediately, but suppresses all challenger performance aggregates until at least **30** previously frozen predictions have independently verified non-tie outcomes.
+- The summary reports prospective challenger games and finalized paired challenger games immediately, but suppresses all challenger performance aggregates until at least **30** previously frozen predictions have source-corroborated non-tie outcomes. Cross-source agreement is not verified upstream independence.
 - After that threshold, paired Elo/challenger Brier, log loss, Brier difference, and deterministic 95% bootstrap uncertainty become available. This is outcome probability calibration, **not** sportsbook profitability, CLV, or automatic model promotion.
 - The untampered 2025 backtest and the post-v0.4 forward cohort are always labeled separately.
 
@@ -51,3 +51,13 @@ This closes the evaluation loop for a challenger that performed modestly better 
 ## Forward roadmap
 
 Add verified injury/starting quarterback feed; lagged EPA, success rate and opponent-strength features; weather/rest/travel provenance; season-forward validation; source freshness monitoring; and a model promotion process requiring holdout tests plus actual prospective market improvements. Real betting and autonomous execution remain disabled.
+
+## Strict finality and legacy handling
+
+The journal, sequential comparison, direction study, and derived market observer share the same chronology and provenance eligibility checks. Missing legacy provenance is not synthesized: those observations remain recorded but cannot qualify for outcome metrics or market-movement analysis. Malformed supplied timestamps fail validation. Conflicting frozen team, season, date, or kickoff identities cannot qualify. Derived remote reads apply the same decoded private-data rejection, append-only history check, and future-record limits as the evidence summary reader, retaining the last accepted journal on a failed refresh.
+
+New final-result ingestion requires exactly one source row with the frozen game ID, season, home/away teams, schedule date, and canonical kickoff. It also requires an explicit `FINAL` status and a hashed source receipt observed at least 24 hours after kickoff, no more than one hour before reconciliation. Score-only rows, ambiguous rows, missing receipts, and rescheduled identities are skipped rather than called final. Direct journal writes enforce the same policy.
+
+The current nflverse CSV collector does not supply a terminal-state receipt and therefore cannot append new finals through this stricter path. Existing raw score records remain unchanged and visible but unqualified. A future authorized source adapter must supply real matching status/identity and receipt data; it must not invent `FINAL` from scores or copy missing source identity from the frozen forecast. The stronger two-source scoring contract additionally binds the result and corroborating receipt to that same full frozen identity and 24-hour minimum. Neither receipt hashes nor source agreement constitute a durable raw-data archive or proof of independent source lineage.
+
+No model/input/code hash archive is introduced by this boundary patch. Durable forecast replay, source licensing and lineage verification remain separate unfinished work.

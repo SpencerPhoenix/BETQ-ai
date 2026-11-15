@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { analyzeEvents, noVigPair, expectedValue, kellyFraction } from '../src/engine.mjs';
-import { createOddsSource } from '../src/odds.mjs';
+import {createTestOddsSource as createOddsSource} from './helpers/mock-budget.mjs';
 import { demoEvents } from '../src/demo.mjs';
 
 const NOW = Date.parse('2026-11-01T20:00:00Z');
@@ -78,7 +78,7 @@ test('50 simultaneous feed calls are coalesced to one provider request', async (
     }
   });
   const results = await Promise.all(Array.from({ length: 50 },
-    () => source.getOdds('americanfootball_nfl', 'h2h')));
+    () => source.getOdds('americanfootball_nfl','h2h',{allowPaid:true})));
   assert.equal(count, 1);
   assert.equal(results.length, 50);
   assert.ok(results.every(r => r.events.length === 3));
@@ -87,8 +87,8 @@ test('50 simultaneous feed calls are coalesced to one provider request', async (
 test('Provider malformed payloads fail with safe explicit errors', async () => {
   const wrong = createOddsSource({ apiKey: 'SAFE_TEST_KEY', fetchImpl: async () =>
     new Response(JSON.stringify({ events: [] }), { status: 200 }) });
-  await assert.rejects(wrong.getOdds('americanfootball_nfl', 'h2h'), { code: 'INVALID_PROVIDER_DATA' });
+  await assert.rejects(wrong.getOdds('americanfootball_nfl','h2h',{allowPaid:true}), { code: 'INVALID_PROVIDER_DATA' });
   const broken = createOddsSource({ apiKey: 'SAFE_TEST_KEY', fetchImpl: async () =>
     new Response('{broken', { status: 200 }) });
-  await assert.rejects(broken.getOdds('americanfootball_nfl', 'h2h'), { code: 'INVALID_PROVIDER_JSON' });
+  await assert.rejects(broken.getOdds('americanfootball_nfl','h2h',{allowPaid:true}), { code: 'INVALID_PROVIDER_JSON' });
 });

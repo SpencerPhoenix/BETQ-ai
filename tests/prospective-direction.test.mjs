@@ -14,7 +14,7 @@ function shot(game,index,model=.62,market=.52,{receivedDelayMs=0,marketDelayMs=0
     commenceTime:iso(BASE+kickDelay),
     capturedAt:iso(captured),sourceReceivedAt:iso(captured+receivedDelayMs),
     marketNewestQuoteAt:iso(captured-5000+marketDelayMs),
-    modelBuiltAt:modelBuiltAt||iso(BASE-300000),modelVersion,
+    modelBuiltAt:modelBuiltAt||iso(BASE-300000),modelVersion,modelLastResultDate:'2026-11-04',
     modelHomeProbability:model,marketHomeProbability:market,
     marketBookCount,marketBasis:'NO_VIG_MULTI_BOOK_MEDIAN',
     researchOnly:true,independentModel:true

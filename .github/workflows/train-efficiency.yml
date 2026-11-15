@@ -1,8 +1,6 @@
 name: NFL EPA efficiency challenger backtest
 on:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/train-efficiency.yml', 'scripts/train-efficiency.mjs', 'src/pbp.mjs', 'src/nfl-efficiency.mjs', 'src/statistical-audit.mjs']
+  # Code publication must not run research or publish generated artifacts.
   workflow_dispatch:
   schedule:
     - cron: '37 10 * * 2'
@@ -23,6 +21,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Verify lagged feature and adversarial model tests
         run: |
           npm run check
