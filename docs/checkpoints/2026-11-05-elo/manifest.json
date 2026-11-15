@@ -1,0 +1,1153 @@
+{
+  "schema": 1,
+  "trialId": "betq-2026-11-05-pending-elo-v1",
+  "preparedAt": "2026-11-05T16:10:14.272Z",
+  "verificationScript": {
+    "path": "scripts/pregame-checkpoint.mjs",
+    "sha256": "c064b4c8f4e5d0051d47b03ef2b79f6097138ededf7ced58169c507a717ee299"
+  },
+  "purpose": "FIXED_COHORT_PREGAME_COMMITMENT_AND_OPERATIONAL_TRIAL",
+  "source": {
+    "repository": "SpencerPhoenix/BETQ-ai",
+    "commit": "607366752c0d32410caf23fc068335acb06f858e",
+    "journalPath": "data/evidence/nfl-2026.json",
+    "journalSha256": "94625a292147c8806fe9a66af2df58cc6b081f1b2f04d8387887d4e39d4d5441",
+    "observedPublicationRun": 42056770119,
+    "publicBytesObservedNoLaterThan": "2026-11-05T15:37:40.000Z",
+    "publicationReceiptUrl": "https://github.com/SpencerPhoenix/BETQ-ai/actions/runs/42056770119"
+  },
+  "selection": {
+    "rule": "ALL_PENDING_UPCOMING_GAMES_IN_PINNED_JOURNAL_FIRST_ELO_SNAPSHOT",
+    "cohortSize": 29,
+    "cohortSha256": "ef8afa857ca3bcf2ebb81bcb6e1d45eeea2dbcca4f9ed584bcfae5ad76485cc7",
+    "closedMembership": true,
+    "laterSnapshotsReplaceSelection": false,
+    "laterChallengersMayBeAdded": false,
+    "historicalResultsIncluded": false,
+    "missingOrPostponedGames": "RETAIN_AND_REPORT_SEPARATELY_NEVER_SUBSTITUTE",
+    "ties": "RETAIN_AND_REPORT_SEPARATELY_NO_BINARY_SCORE",
+    "duplicateGameCounting": false
+  },
+  "cohort": [
+    {
+      "gameId": "2026_09_JAX_BAL",
+      "snapshotId": "1f4bc657f670fcd10bbff447",
+      "snapshotSha256": "c1efb056d8434a0ffe8f0693d043989e06e3de764f4025d54e4a74610a07d55c",
+      "home": "BAL",
+      "away": "JAX",
+      "gameDate": "2026-11-05",
+      "frozenKickoff": "2026-11-06T01:15:00.000Z",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T00:37:03.355Z",
+      "homeProbability": 0.401566,
+      "derivedMarketReference": {
+        "homeProbability": 0.239418,
+        "asOf": "2026-11-02T01:07:11.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_09_CIN_ATL",
+      "snapshotId": "bb9b209515482af91f708210",
+      "snapshotSha256": "52bd82e013bc898052e6560f5178b957a02e77e8f6d2c1da4aa1807355a986a6",
+      "home": "ATL",
+      "away": "CIN",
+      "gameDate": "2026-11-08",
+      "frozenKickoff": "2026-11-08T14:30:00.000Z",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T00:37:03.355Z",
+      "homeProbability": 0.442978,
+      "derivedMarketReference": {
+        "homeProbability": 0.380086,
+        "asOf": "2026-11-02T01:07:11.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_09_CLE_NO",
+      "snapshotId": "7ca934c542d530b3a2b8ca4b",
+      "snapshotSha256": "5b76c10c0e992218a020cd6e04e1433bb9a390810530e189f2b442c7e00d4b6c",
+      "home": "NO",
+      "away": "CLE",
+      "gameDate": "2026-11-08",
+      "frozenKickoff": "2026-11-08T18:00:00.000Z",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T00:37:03.355Z",
+      "homeProbability": 0.4334,
+      "derivedMarketReference": {
+        "homeProbability": 0.567101,
+        "asOf": "2026-11-02T01:07:11.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_09_DAL_IND",
+      "snapshotId": "d48a33dff773f8666168e815",
+      "snapshotSha256": "ac584f096f527f22bd6983b50e953b86b944acb242a353f0245953d111709c73",
+      "home": "IND",
+      "away": "DAL",
+      "gameDate": "2026-11-08",
+      "frozenKickoff": "2026-11-08T18:00:00.000Z",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T00:37:03.355Z",
+      "homeProbability": 0.499108,
+      "derivedMarketReference": {
+        "homeProbability": 0.302668,
+        "asOf": "2026-11-02T01:07:11.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_09_DEN_CAR",
+      "snapshotId": "7e7f4aa27f18797b8378b4ac",
+      "snapshotSha256": "5c71821052c78ee6c0b87704856d30156c66bdf253dd2d8eb76b200b0fd10126",
+      "home": "CAR",
+      "away": "DEN",
+      "gameDate": "2026-11-08",
+      "frozenKickoff": "2026-11-08T18:00:00.000Z",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T00:37:03.355Z",
+      "homeProbability": 0.262051,
+      "derivedMarketReference": {
+        "homeProbability": 0.424887,
+        "asOf": "2026-11-02T01:07:11.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_09_DET_MIA",
+      "snapshotId": "7d3d487ba96675b4e84db46f",
+      "snapshotSha256": "1319557c862fc0eb4a275d52e51935de4c753c1c610db59fea88fa76eb646cf1",
+      "home": "MIA",
+      "away": "DET",
+      "gameDate": "2026-11-08",
+      "frozenKickoff": "2026-11-08T18:00:00.000Z",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T00:37:03.355Z",
+      "homeProbability": 0.284464,
+      "derivedMarketReference": {
+        "homeProbability": 0.259779,
+        "asOf": "2026-11-02T01:07:11.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_09_LA_WAS",
+      "snapshotId": "600c76d0cb69c171c6f34204",
+      "snapshotSha256": "117682d7d5fd8f7507c5a734c41e8282698b158c8e38f51aad5d0adf8932c9e0",
+      "home": "WAS",
+      "away": "LA",
+      "gameDate": "2026-11-08",
+      "frozenKickoff": "2026-11-08T18:00:00.000Z",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T00:37:03.355Z",
+      "homeProbability": 0.35465,
+      "derivedMarketReference": {
+        "homeProbability": 0.32515,
+        "asOf": "2026-11-02T01:07:11.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_09_NYG_PHI",
+      "snapshotId": "752fffbe960a7b36c084e47d",
+      "snapshotSha256": "a61bb5e9082b1a3964aab995720bd61068b2516aa6536069de83074b3d54fa06",
+      "home": "PHI",
+      "away": "NYG",
+      "gameDate": "2026-11-08",
+      "frozenKickoff": "2026-11-08T18:00:00.000Z",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T00:37:03.355Z",
+      "homeProbability": 0.572526,
+      "derivedMarketReference": {
+        "homeProbability": 0.440833,
+        "asOf": "2026-11-02T01:07:11.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_09_NYJ_KC",
+      "snapshotId": "15cadf6e857932013fdb2e8c",
+      "snapshotSha256": "99e0689920d64f977616c4267f1047866764c93dc553bbec4dc6595415654a19",
+      "home": "KC",
+      "away": "NYJ",
+      "gameDate": "2026-11-08",
+      "frozenKickoff": "2026-11-08T18:00:00.000Z",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T00:37:03.355Z",
+      "homeProbability": 0.807551,
+      "derivedMarketReference": {
+        "homeProbability": 0.804293,
+        "asOf": "2026-11-02T01:07:11.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_09_HOU_LAC",
+      "snapshotId": "aa30a860173f7602e665a652",
+      "snapshotSha256": "f57916d8460a2a122c979ec09448b768554d61ae7f4394a9cd13d0e85b1e1b05",
+      "home": "LAC",
+      "away": "HOU",
+      "gameDate": "2026-11-08",
+      "frozenKickoff": "2026-11-08T21:05:00.000Z",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T00:37:03.355Z",
+      "homeProbability": 0.41394,
+      "derivedMarketReference": {
+        "homeProbability": 0.378998,
+        "asOf": "2026-11-02T01:07:11.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_09_LV_SF",
+      "snapshotId": "37fd85fde94b4b5014785913",
+      "snapshotSha256": "93ac83e3fcec1f3c1f10d3df889d6702a839c892961fcbb547836816b9279fba",
+      "home": "SF",
+      "away": "LV",
+      "gameDate": "2026-11-08",
+      "frozenKickoff": "2026-11-08T21:05:00.000Z",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T00:37:03.355Z",
+      "homeProbability": 0.808528,
+      "derivedMarketReference": {
+        "homeProbability": 0.800826,
+        "asOf": "2026-11-02T01:07:11.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_09_ARI_SEA",
+      "snapshotId": "ded2af22ea606cfe53d94b22",
+      "snapshotSha256": "41e640272eba1f8f65a57d64e104ddd3029a837a28d20267cfc5bdc9f2b5f9c9",
+      "home": "SEA",
+      "away": "ARI",
+      "gameDate": "2026-11-08",
+      "frozenKickoff": "2026-11-08T21:25:00.000Z",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T00:37:03.355Z",
+      "homeProbability": 0.814248,
+      "derivedMarketReference": {
+        "homeProbability": 0.8467,
+        "asOf": "2026-11-02T01:07:11.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_09_GB_NE",
+      "snapshotId": "13b305e9509496dc35db3337",
+      "snapshotSha256": "7b8e0fbfc4377af120ba74c587b82363c31a2e9e9b6470ad154d53245a911258",
+      "home": "NE",
+      "away": "GB",
+      "gameDate": "2026-11-08",
+      "frozenKickoff": "2026-11-08T21:25:00.000Z",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T00:37:03.355Z",
+      "homeProbability": 0.622501,
+      "derivedMarketReference": {
+        "homeProbability": 0.555446,
+        "asOf": "2026-11-02T01:07:11.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_09_TB_CHI",
+      "snapshotId": "f75d7f9d9d13c7077bd24e61",
+      "snapshotSha256": "0fc4b919edfb6af203f1e696bbe6ad6e08fafbb490d4a72494fd927ad113df81",
+      "home": "CHI",
+      "away": "TB",
+      "gameDate": "2026-11-08",
+      "frozenKickoff": "2026-11-09T01:20:00.000Z",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T00:37:03.355Z",
+      "homeProbability": 0.714279,
+      "derivedMarketReference": {
+        "homeProbability": 0.701195,
+        "asOf": "2026-11-02T01:07:11.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_09_BUF_MIN",
+      "snapshotId": "2212c123dd91e774c2daf14a",
+      "snapshotSha256": "a20b1470ae54e7ee7d31334738a07d0823fa43027a872927777374ef961b81a1",
+      "home": "MIN",
+      "away": "BUF",
+      "gameDate": "2026-11-09",
+      "frozenKickoff": "2026-11-10T01:15:00.000Z",
+      "capturedAt": "2026-11-02T01:07:26.939Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T00:37:03.355Z",
+      "homeProbability": 0.469159,
+      "derivedMarketReference": {
+        "homeProbability": 0.41959,
+        "asOf": "2026-11-02T01:07:11.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_10_WAS_NYG",
+      "snapshotId": "d4d69307f73f763f05d6d648",
+      "snapshotSha256": "901ef67fb21a281f93d1b31a8aeab5132ab3ea6124603c77de25c245eaec3b21",
+      "home": "NYG",
+      "away": "WAS",
+      "gameDate": "2026-11-12",
+      "frozenKickoff": "2026-11-13T01:15:00.000Z",
+      "capturedAt": "2026-11-04T18:50:46.512Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T20:45:01.010Z",
+      "homeProbability": 0.541207,
+      "derivedMarketReference": {
+        "homeProbability": 0.522678,
+        "asOf": "2026-11-04T18:50:43.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_10_NE_DET",
+      "snapshotId": "1da6aa5b661995e48bc0288b",
+      "snapshotSha256": "fde3e3c87b65d20b4411f99e722d61d8c5ca13a4794465d5df00de8416b3a4e3",
+      "home": "DET",
+      "away": "NE",
+      "gameDate": "2026-11-15",
+      "frozenKickoff": "2026-11-15T14:30:00.000Z",
+      "capturedAt": "2026-11-04T18:50:46.512Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T20:45:01.010Z",
+      "homeProbability": 0.507194,
+      "derivedMarketReference": {
+        "homeProbability": null,
+        "asOf": null,
+        "basis": "UNAVAILABLE",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_10_BUF_NYJ",
+      "snapshotId": "e61076baaf9b56a3c7d57d6a",
+      "snapshotSha256": "fc67853b20caf0aa8bb6a4ee0b3a59b482c0e975509496597f591a3d2f42c34b",
+      "home": "NYJ",
+      "away": "BUF",
+      "gameDate": "2026-11-15",
+      "frozenKickoff": "2026-11-15T18:00:00.000Z",
+      "capturedAt": "2026-11-04T18:50:46.512Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T20:45:01.010Z",
+      "homeProbability": 0.149525,
+      "derivedMarketReference": {
+        "homeProbability": 0.211679,
+        "asOf": "2026-11-04T18:50:43.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_10_CAR_NO",
+      "snapshotId": "b632547636c32ebf8603f26c",
+      "snapshotSha256": "1351b9109f1bebb5192b4077f5efa01a017d79e3d957f643a72fd51c018268f1",
+      "home": "NO",
+      "away": "CAR",
+      "gameDate": "2026-11-15",
+      "frozenKickoff": "2026-11-15T18:00:00.000Z",
+      "capturedAt": "2026-11-04T18:50:46.512Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T20:45:01.010Z",
+      "homeProbability": 0.487433,
+      "derivedMarketReference": {
+        "homeProbability": 0.477322,
+        "asOf": "2026-11-04T18:50:43.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_10_HOU_CLE",
+      "snapshotId": "53cb8e220928e83f732b3d76",
+      "snapshotSha256": "43e8681ab4b6547a545b6343f6d20f89d1c777647f12fc2a2b00c2f763ed397e",
+      "home": "CLE",
+      "away": "HOU",
+      "gameDate": "2026-11-15",
+      "frozenKickoff": "2026-11-15T18:00:00.000Z",
+      "capturedAt": "2026-11-04T18:50:46.512Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T20:45:01.010Z",
+      "homeProbability": 0.511427,
+      "derivedMarketReference": {
+        "homeProbability": 0.359564,
+        "asOf": "2026-11-04T18:50:43.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_10_JAX_TEN",
+      "snapshotId": "cfe8b09342f22e5d2c68f8c6",
+      "snapshotSha256": "9fd1f69e6cde2c0b2b6ca21f99e58c681952da443141d26ae0597603f10f4367",
+      "home": "TEN",
+      "away": "JAX",
+      "gameDate": "2026-11-15",
+      "frozenKickoff": "2026-11-15T18:00:00.000Z",
+      "capturedAt": "2026-11-04T18:50:46.512Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T20:45:01.010Z",
+      "homeProbability": 0.178211,
+      "derivedMarketReference": {
+        "homeProbability": 0.198488,
+        "asOf": "2026-11-04T18:50:43.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_10_KC_ATL",
+      "snapshotId": "e8599392908726886c7fe4f6",
+      "snapshotSha256": "dfe4bada0a3a11b12175ea24e03a6521ec7d54ff7a931b2a25247e681c7980aa",
+      "home": "ATL",
+      "away": "KC",
+      "gameDate": "2026-11-15",
+      "frozenKickoff": "2026-11-15T18:00:00.000Z",
+      "capturedAt": "2026-11-04T18:50:46.512Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T20:45:01.010Z",
+      "homeProbability": 0.423029,
+      "derivedMarketReference": {
+        "homeProbability": 0.385463,
+        "asOf": "2026-11-04T18:50:43.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_10_MIA_IND",
+      "snapshotId": "d7f2d5f0af6032213639c661",
+      "snapshotSha256": "2cc7b6bc756a941cea7a095945480a4960ea5b62916ce3cd9ea119c66d580018",
+      "home": "IND",
+      "away": "MIA",
+      "gameDate": "2026-11-15",
+      "frozenKickoff": "2026-11-15T18:00:00.000Z",
+      "capturedAt": "2026-11-04T18:50:46.512Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T20:45:01.010Z",
+      "homeProbability": 0.55635,
+      "derivedMarketReference": {
+        "homeProbability": 0.545984,
+        "asOf": "2026-11-04T18:50:43.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_10_MIN_GB",
+      "snapshotId": "fd645ceca994b1ae60572e59",
+      "snapshotSha256": "701f1c91bf933cbb36298e1d86c58cfad9df4c6dd98d130103a19bffa5427daf",
+      "home": "GB",
+      "away": "MIN",
+      "gameDate": "2026-11-15",
+      "frozenKickoff": "2026-11-15T18:00:00.000Z",
+      "capturedAt": "2026-11-04T18:50:46.512Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T20:45:01.010Z",
+      "homeProbability": 0.435808,
+      "derivedMarketReference": {
+        "homeProbability": 0.563492,
+        "asOf": "2026-11-04T18:50:43.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_10_LA_ARI",
+      "snapshotId": "3e5e5e5d2e912170141c2aa5",
+      "snapshotSha256": "d33d89a069db442b666465fcfde2b994780b8f2e8f3a066a6818d842a072ca3a",
+      "home": "ARI",
+      "away": "LA",
+      "gameDate": "2026-11-15",
+      "frozenKickoff": "2026-11-15T21:05:00.000Z",
+      "capturedAt": "2026-11-04T18:50:46.512Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T20:45:01.010Z",
+      "homeProbability": 0.331047,
+      "derivedMarketReference": {
+        "homeProbability": 0.252217,
+        "asOf": "2026-11-04T18:50:43.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_10_SEA_LV",
+      "snapshotId": "27f935a6791fb3301db532bd",
+      "snapshotSha256": "a7d0eab07570bc0cfc90a03a610749c0cce1f700da8134bbd3c10aaf23e0d7dd",
+      "home": "LV",
+      "away": "SEA",
+      "gameDate": "2026-11-15",
+      "frozenKickoff": "2026-11-15T21:05:00.000Z",
+      "capturedAt": "2026-11-04T18:50:46.512Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T20:45:01.010Z",
+      "homeProbability": 0.244047,
+      "derivedMarketReference": {
+        "homeProbability": 0.318182,
+        "asOf": "2026-11-04T18:50:43.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_10_SF_DAL",
+      "snapshotId": "c0a56de22a50ee0cad34bf61",
+      "snapshotSha256": "52b66c3a1b07848716ecda98ec5fd303b27ee526435b41778b12712300788487",
+      "home": "DAL",
+      "away": "SF",
+      "gameDate": "2026-11-15",
+      "frozenKickoff": "2026-11-15T21:25:00.000Z",
+      "capturedAt": "2026-11-04T18:50:46.512Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T20:45:01.010Z",
+      "homeProbability": 0.267679,
+      "derivedMarketReference": {
+        "homeProbability": 0.348471,
+        "asOf": "2026-11-04T18:50:43.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_10_PIT_CIN",
+      "snapshotId": "f1787cb2815950103bd7dd39",
+      "snapshotSha256": "fe13d8ba53f2f7bb2c80c73b932afb087fd7fda2a759e15423bc838ffc083594",
+      "home": "CIN",
+      "away": "PIT",
+      "gameDate": "2026-11-15",
+      "frozenKickoff": "2026-11-16T01:20:00.000Z",
+      "capturedAt": "2026-11-04T18:50:46.512Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T20:45:01.010Z",
+      "homeProbability": 0.453087,
+      "derivedMarketReference": {
+        "homeProbability": 0.608265,
+        "asOf": "2026-11-04T18:50:43.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    },
+    {
+      "gameId": "2026_10_LAC_BAL",
+      "snapshotId": "0bed759ea30cf413577a1f3d",
+      "snapshotSha256": "9ede1fed7661ffa113dc3b9a49a57218f55aafd0811de5887b70288ecbae79b6",
+      "home": "BAL",
+      "away": "LAC",
+      "gameDate": "2026-11-16",
+      "frozenKickoff": "2026-11-17T01:15:00.000Z",
+      "capturedAt": "2026-11-04T18:50:46.512Z",
+      "modelVersion": "nfl-elo-1",
+      "modelBuiltAt": "2026-11-02T20:45:01.010Z",
+      "homeProbability": 0.655976,
+      "derivedMarketReference": {
+        "homeProbability": 0.460829,
+        "asOf": "2026-11-04T18:50:43.000Z",
+        "basis": "NO_VIG_MULTI_BOOK_MEDIAN",
+        "currentOdds": false,
+        "rawQuoteReconstructionAvailable": false
+      },
+      "challengerIncluded": false
+    }
+  ],
+  "inputSha256": {
+    "plan.md": "fe750559c4d9d91eb81daea827448fdaa8f6b02186adb5756dfdabf434fbf325",
+    "source-journal.json": "94625a292147c8806fe9a66af2df58cc6b081f1b2f04d8387887d4e39d4d5441",
+    "jax-bal-historical-model.json": "a741d7e748ff00f9530a9d60c1f669007f1a2d1163705ff41aa74e9e4e375c9e",
+    "jax-bal-historical-scorer.mjs": "e354d3ed4bd76ca6be6ca1caf57a84507ac3b2740b7348e4abff6c690fe931d4",
+    "evening-historical-model.json": "4bf3c3fb72b7e4289206974e314ad5acfa552a6d320b5645a4bb47feccebcf98",
+    "evening-historical-scorer.mjs": "52d868e664a48d28ef6354b65402f7baedbb689c82f836991205b6c4af3dfbcb",
+    "evening-historical-integrity.mjs": "031aadc2fe489be8e8cabd8b25e051b17c67e10b8b76c7eba131043ff1aebccf"
+  },
+  "inferenceReplay": {
+    "count": 29,
+    "records": [
+      {
+        "gameId": "2026_09_JAX_BAL",
+        "snapshotId": "1f4bc657f670fcd10bbff447",
+        "bindingId": "nov2-morning",
+        "historicalCommit": "11abbcb9859059e34b7a0dadc7d661565b658bd1",
+        "modelFile": "jax-bal-historical-model.json",
+        "scorerFile": "jax-bal-historical-scorer.mjs",
+        "helperFile": null,
+        "inferenceInput": {
+          "home_team": "Baltimore Ravens",
+          "away_team": "Jacksonville Jaguars",
+          "commence_time": "2026-11-06T01:15:00.000Z"
+        },
+        "replayClock": "2026-11-02T01:07:26.939Z",
+        "homeProbability": 0.401566
+      },
+      {
+        "gameId": "2026_09_CIN_ATL",
+        "snapshotId": "bb9b209515482af91f708210",
+        "bindingId": "nov2-morning",
+        "historicalCommit": "11abbcb9859059e34b7a0dadc7d661565b658bd1",
+        "modelFile": "jax-bal-historical-model.json",
+        "scorerFile": "jax-bal-historical-scorer.mjs",
+        "helperFile": null,
+        "inferenceInput": {
+          "home_team": "Atlanta Falcons",
+          "away_team": "Cincinnati Bengals",
+          "commence_time": "2026-11-08T14:30:00.000Z"
+        },
+        "replayClock": "2026-11-02T01:07:26.939Z",
+        "homeProbability": 0.442978
+      },
+      {
+        "gameId": "2026_09_CLE_NO",
+        "snapshotId": "7ca934c542d530b3a2b8ca4b",
+        "bindingId": "nov2-morning",
+        "historicalCommit": "11abbcb9859059e34b7a0dadc7d661565b658bd1",
+        "modelFile": "jax-bal-historical-model.json",
+        "scorerFile": "jax-bal-historical-scorer.mjs",
+        "helperFile": null,
+        "inferenceInput": {
+          "home_team": "New Orleans Saints",
+          "away_team": "Cleveland Browns",
+          "commence_time": "2026-11-08T18:00:00.000Z"
+        },
+        "replayClock": "2026-11-02T01:07:26.939Z",
+        "homeProbability": 0.4334
+      },
+      {
+        "gameId": "2026_09_DAL_IND",
+        "snapshotId": "d48a33dff773f8666168e815",
+        "bindingId": "nov2-morning",
+        "historicalCommit": "11abbcb9859059e34b7a0dadc7d661565b658bd1",
+        "modelFile": "jax-bal-historical-model.json",
+        "scorerFile": "jax-bal-historical-scorer.mjs",
+        "helperFile": null,
+        "inferenceInput": {
+          "home_team": "Indianapolis Colts",
+          "away_team": "Dallas Cowboys",
+          "commence_time": "2026-11-08T18:00:00.000Z"
+        },
+        "replayClock": "2026-11-02T01:07:26.939Z",
+        "homeProbability": 0.499108
+      },
+      {
+        "gameId": "2026_09_DEN_CAR",
+        "snapshotId": "7e7f4aa27f18797b8378b4ac",
+        "bindingId": "nov2-morning",
+        "historicalCommit": "11abbcb9859059e34b7a0dadc7d661565b658bd1",
+        "modelFile": "jax-bal-historical-model.json",
+        "scorerFile": "jax-bal-historical-scorer.mjs",
+        "helperFile": null,
+        "inferenceInput": {
+          "home_team": "Carolina Panthers",
+          "away_team": "Denver Broncos",
+          "commence_time": "2026-11-08T18:00:00.000Z"
+        },
+        "replayClock": "2026-11-02T01:07:26.939Z",
+        "homeProbability": 0.262051
+      },
+      {
+        "gameId": "2026_09_DET_MIA",
+        "snapshotId": "7d3d487ba96675b4e84db46f",
+        "bindingId": "nov2-morning",
+        "historicalCommit": "11abbcb9859059e34b7a0dadc7d661565b658bd1",
+        "modelFile": "jax-bal-historical-model.json",
+        "scorerFile": "jax-bal-historical-scorer.mjs",
+        "helperFile": null,
+        "inferenceInput": {
+          "home_team": "Miami Dolphins",
+          "away_team": "Detroit Lions",
+          "commence_time": "2026-11-08T18:00:00.000Z"
+        },
+        "replayClock": "2026-11-02T01:07:26.939Z",
+        "homeProbability": 0.284464
+      },
+      {
+        "gameId": "2026_09_LA_WAS",
+        "snapshotId": "600c76d0cb69c171c6f34204",
+        "bindingId": "nov2-morning",
+        "historicalCommit": "11abbcb9859059e34b7a0dadc7d661565b658bd1",
+        "modelFile": "jax-bal-historical-model.json",
+        "scorerFile": "jax-bal-historical-scorer.mjs",
+        "helperFile": null,
+        "inferenceInput": {
+          "home_team": "Washington Commanders",
+          "away_team": "Los Angeles Rams",
+          "commence_time": "2026-11-08T18:00:00.000Z"
+        },
+        "replayClock": "2026-11-02T01:07:26.939Z",
+        "homeProbability": 0.35465
+      },
+      {
+        "gameId": "2026_09_NYG_PHI",
+        "snapshotId": "752fffbe960a7b36c084e47d",
+        "bindingId": "nov2-morning",
+        "historicalCommit": "11abbcb9859059e34b7a0dadc7d661565b658bd1",
+        "modelFile": "jax-bal-historical-model.json",
+        "scorerFile": "jax-bal-historical-scorer.mjs",
+        "helperFile": null,
+        "inferenceInput": {
+          "home_team": "Philadelphia Eagles",
+          "away_team": "New York Giants",
+          "commence_time": "2026-11-08T18:00:00.000Z"
+        },
+        "replayClock": "2026-11-02T01:07:26.939Z",
+        "homeProbability": 0.572526
+      },
+      {
+        "gameId": "2026_09_NYJ_KC",
+        "snapshotId": "15cadf6e857932013fdb2e8c",
+        "bindingId": "nov2-morning",
+        "historicalCommit": "11abbcb9859059e34b7a0dadc7d661565b658bd1",
+        "modelFile": "jax-bal-historical-model.json",
+        "scorerFile": "jax-bal-historical-scorer.mjs",
+        "helperFile": null,
+        "inferenceInput": {
+          "home_team": "Kansas City Chiefs",
+          "away_team": "New York Jets",
+          "commence_time": "2026-11-08T18:00:00.000Z"
+        },
+        "replayClock": "2026-11-02T01:07:26.939Z",
+        "homeProbability": 0.807551
+      },
+      {
+        "gameId": "2026_09_HOU_LAC",
+        "snapshotId": "aa30a860173f7602e665a652",
+        "bindingId": "nov2-morning",
+        "historicalCommit": "11abbcb9859059e34b7a0dadc7d661565b658bd1",
+        "modelFile": "jax-bal-historical-model.json",
+        "scorerFile": "jax-bal-historical-scorer.mjs",
+        "helperFile": null,
+        "inferenceInput": {
+          "home_team": "Los Angeles Chargers",
+          "away_team": "Houston Texans",
+          "commence_time": "2026-11-08T21:05:00.000Z"
+        },
+        "replayClock": "2026-11-02T01:07:26.939Z",
+        "homeProbability": 0.41394
+      },
+      {
+        "gameId": "2026_09_LV_SF",
+        "snapshotId": "37fd85fde94b4b5014785913",
+        "bindingId": "nov2-morning",
+        "historicalCommit": "11abbcb9859059e34b7a0dadc7d661565b658bd1",
+        "modelFile": "jax-bal-historical-model.json",
+        "scorerFile": "jax-bal-historical-scorer.mjs",
+        "helperFile": null,
+        "inferenceInput": {
+          "home_team": "San Francisco 49ers",
+          "away_team": "Las Vegas Raiders",
+          "commence_time": "2026-11-08T21:05:00.000Z"
+        },
+        "replayClock": "2026-11-02T01:07:26.939Z",
+        "homeProbability": 0.808528
+      },
+      {
+        "gameId": "2026_09_ARI_SEA",
+        "snapshotId": "ded2af22ea606cfe53d94b22",
+        "bindingId": "nov2-morning",
+        "historicalCommit": "11abbcb9859059e34b7a0dadc7d661565b658bd1",
+        "modelFile": "jax-bal-historical-model.json",
+        "scorerFile": "jax-bal-historical-scorer.mjs",
+        "helperFile": null,
+        "inferenceInput": {
+          "home_team": "Seattle Seahawks",
+          "away_team": "Arizona Cardinals",
+          "commence_time": "2026-11-08T21:25:00.000Z"
+        },
+        "replayClock": "2026-11-02T01:07:26.939Z",
+        "homeProbability": 0.814248
+      },
+      {
+        "gameId": "2026_09_GB_NE",
+        "snapshotId": "13b305e9509496dc35db3337",
+        "bindingId": "nov2-morning",
+        "historicalCommit": "11abbcb9859059e34b7a0dadc7d661565b658bd1",
+        "modelFile": "jax-bal-historical-model.json",
+        "scorerFile": "jax-bal-historical-scorer.mjs",
+        "helperFile": null,
+        "inferenceInput": {
+          "home_team": "New England Patriots",
+          "away_team": "Green Bay Packers",
+          "commence_time": "2026-11-08T21:25:00.000Z"
+        },
+        "replayClock": "2026-11-02T01:07:26.939Z",
+        "homeProbability": 0.622501
+      },
+      {
+        "gameId": "2026_09_TB_CHI",
+        "snapshotId": "f75d7f9d9d13c7077bd24e61",
+        "bindingId": "nov2-morning",
+        "historicalCommit": "11abbcb9859059e34b7a0dadc7d661565b658bd1",
+        "modelFile": "jax-bal-historical-model.json",
+        "scorerFile": "jax-bal-historical-scorer.mjs",
+        "helperFile": null,
+        "inferenceInput": {
+          "home_team": "Chicago Bears",
+          "away_team": "Tampa Bay Buccaneers",
+          "commence_time": "2026-11-09T01:20:00.000Z"
+        },
+        "replayClock": "2026-11-02T01:07:26.939Z",
+        "homeProbability": 0.714279
+      },
+      {
+        "gameId": "2026_09_BUF_MIN",
+        "snapshotId": "2212c123dd91e774c2daf14a",
+        "bindingId": "nov2-morning",
+        "historicalCommit": "11abbcb9859059e34b7a0dadc7d661565b658bd1",
+        "modelFile": "jax-bal-historical-model.json",
+        "scorerFile": "jax-bal-historical-scorer.mjs",
+        "helperFile": null,
+        "inferenceInput": {
+          "home_team": "Minnesota Vikings",
+          "away_team": "Buffalo Bills",
+          "commence_time": "2026-11-10T01:15:00.000Z"
+        },
+        "replayClock": "2026-11-02T01:07:26.939Z",
+        "homeProbability": 0.469159
+      },
+      {
+        "gameId": "2026_10_WAS_NYG",
+        "snapshotId": "d4d69307f73f763f05d6d648",
+        "bindingId": "nov2-evening",
+        "historicalCommit": "d5e84e936fd98dc3b334c1a02e74138b743ed594",
+        "modelFile": "evening-historical-model.json",
+        "scorerFile": "evening-historical-scorer.mjs",
+        "helperFile": "evening-historical-integrity.mjs",
+        "inferenceInput": {
+          "home_team": "New York Giants",
+          "away_team": "Washington Commanders",
+          "commence_time": "2026-11-13T01:15:00.000Z"
+        },
+        "replayClock": "2026-11-04T18:50:46.512Z",
+        "homeProbability": 0.541207
+      },
+      {
+        "gameId": "2026_10_NE_DET",
+        "snapshotId": "1da6aa5b661995e48bc0288b",
+        "bindingId": "nov2-evening",
+        "historicalCommit": "d5e84e936fd98dc3b334c1a02e74138b743ed594",
+        "modelFile": "evening-historical-model.json",
+        "scorerFile": "evening-historical-scorer.mjs",
+        "helperFile": "evening-historical-integrity.mjs",
+        "inferenceInput": {
+          "home_team": "Detroit Lions",
+          "away_team": "New England Patriots",
+          "commence_time": "2026-11-15T14:30:00.000Z"
+        },
+        "replayClock": "2026-11-04T18:50:46.512Z",
+        "homeProbability": 0.507194
+      },
+      {
+        "gameId": "2026_10_BUF_NYJ",
+        "snapshotId": "e61076baaf9b56a3c7d57d6a",
+        "bindingId": "nov2-evening",
+        "historicalCommit": "d5e84e936fd98dc3b334c1a02e74138b743ed594",
+        "modelFile": "evening-historical-model.json",
+        "scorerFile": "evening-historical-scorer.mjs",
+        "helperFile": "evening-historical-integrity.mjs",
+        "inferenceInput": {
+          "home_team": "New York Jets",
+          "away_team": "Buffalo Bills",
+          "commence_time": "2026-11-15T18:00:00.000Z"
+        },
+        "replayClock": "2026-11-04T18:50:46.512Z",
+        "homeProbability": 0.149525
+      },
+      {
+        "gameId": "2026_10_CAR_NO",
+        "snapshotId": "b632547636c32ebf8603f26c",
+        "bindingId": "nov2-evening",
+        "historicalCommit": "d5e84e936fd98dc3b334c1a02e74138b743ed594",
+        "modelFile": "evening-historical-model.json",
+        "scorerFile": "evening-historical-scorer.mjs",
+        "helperFile": "evening-historical-integrity.mjs",
+        "inferenceInput": {
+          "home_team": "New Orleans Saints",
+          "away_team": "Carolina Panthers",
+          "commence_time": "2026-11-15T18:00:00.000Z"
+        },
+        "replayClock": "2026-11-04T18:50:46.512Z",
+        "homeProbability": 0.487433
+      },
+      {
+        "gameId": "2026_10_HOU_CLE",
+        "snapshotId": "53cb8e220928e83f732b3d76",
+        "bindingId": "nov2-evening",
+        "historicalCommit": "d5e84e936fd98dc3b334c1a02e74138b743ed594",
+        "modelFile": "evening-historical-model.json",
+        "scorerFile": "evening-historical-scorer.mjs",
+        "helperFile": "evening-historical-integrity.mjs",
+        "inferenceInput": {
+          "home_team": "Cleveland Browns",
+          "away_team": "Houston Texans",
+          "commence_time": "2026-11-15T18:00:00.000Z"
+        },
+        "replayClock": "2026-11-04T18:50:46.512Z",
+        "homeProbability": 0.511427
+      },
+      {
+        "gameId": "2026_10_JAX_TEN",
+        "snapshotId": "cfe8b09342f22e5d2c68f8c6",
+        "bindingId": "nov2-evening",
+        "historicalCommit": "d5e84e936fd98dc3b334c1a02e74138b743ed594",
+        "modelFile": "evening-historical-model.json",
+        "scorerFile": "evening-historical-scorer.mjs",
+        "helperFile": "evening-historical-integrity.mjs",
+        "inferenceInput": {
+          "home_team": "Tennessee Titans",
+          "away_team": "Jacksonville Jaguars",
+          "commence_time": "2026-11-15T18:00:00.000Z"
+        },
+        "replayClock": "2026-11-04T18:50:46.512Z",
+        "homeProbability": 0.178211
+      },
+      {
+        "gameId": "2026_10_KC_ATL",
+        "snapshotId": "e8599392908726886c7fe4f6",
+        "bindingId": "nov2-evening",
+        "historicalCommit": "d5e84e936fd98dc3b334c1a02e74138b743ed594",
+        "modelFile": "evening-historical-model.json",
+        "scorerFile": "evening-historical-scorer.mjs",
+        "helperFile": "evening-historical-integrity.mjs",
+        "inferenceInput": {
+          "home_team": "Atlanta Falcons",
+          "away_team": "Kansas City Chiefs",
+          "commence_time": "2026-11-15T18:00:00.000Z"
+        },
+        "replayClock": "2026-11-04T18:50:46.512Z",
+        "homeProbability": 0.423029
+      },
+      {
+        "gameId": "2026_10_MIA_IND",
+        "snapshotId": "d7f2d5f0af6032213639c661",
+        "bindingId": "nov2-evening",
+        "historicalCommit": "d5e84e936fd98dc3b334c1a02e74138b743ed594",
+        "modelFile": "evening-historical-model.json",
+        "scorerFile": "evening-historical-scorer.mjs",
+        "helperFile": "evening-historical-integrity.mjs",
+        "inferenceInput": {
+          "home_team": "Indianapolis Colts",
+          "away_team": "Miami Dolphins",
+          "commence_time": "2026-11-15T18:00:00.000Z"
+        },
+        "replayClock": "2026-11-04T18:50:46.512Z",
+        "homeProbability": 0.55635
+      },
+      {
+        "gameId": "2026_10_MIN_GB",
+        "snapshotId": "fd645ceca994b1ae60572e59",
+        "bindingId": "nov2-evening",
+        "historicalCommit": "d5e84e936fd98dc3b334c1a02e74138b743ed594",
+        "modelFile": "evening-historical-model.json",
+        "scorerFile": "evening-historical-scorer.mjs",
+        "helperFile": "evening-historical-integrity.mjs",
+        "inferenceInput": {
+          "home_team": "Green Bay Packers",
+          "away_team": "Minnesota Vikings",
+          "commence_time": "2026-11-15T18:00:00.000Z"
+        },
+        "replayClock": "2026-11-04T18:50:46.512Z",
+        "homeProbability": 0.435808
+      },
+      {
+        "gameId": "2026_10_LA_ARI",
+        "snapshotId": "3e5e5e5d2e912170141c2aa5",
+        "bindingId": "nov2-evening",
+        "historicalCommit": "d5e84e936fd98dc3b334c1a02e74138b743ed594",
+        "modelFile": "evening-historical-model.json",
+        "scorerFile": "evening-historical-scorer.mjs",
+        "helperFile": "evening-historical-integrity.mjs",
+        "inferenceInput": {
+          "home_team": "Arizona Cardinals",
+          "away_team": "Los Angeles Rams",
+          "commence_time": "2026-11-15T21:05:00.000Z"
+        },
+        "replayClock": "2026-11-04T18:50:46.512Z",
+        "homeProbability": 0.331047
+      },
+      {
+        "gameId": "2026_10_SEA_LV",
+        "snapshotId": "27f935a6791fb3301db532bd",
+        "bindingId": "nov2-evening",
+        "historicalCommit": "d5e84e936fd98dc3b334c1a02e74138b743ed594",
+        "modelFile": "evening-historical-model.json",
+        "scorerFile": "evening-historical-scorer.mjs",
+        "helperFile": "evening-historical-integrity.mjs",
+        "inferenceInput": {
+          "home_team": "Las Vegas Raiders",
+          "away_team": "Seattle Seahawks",
+          "commence_time": "2026-11-15T21:05:00.000Z"
+        },
+        "replayClock": "2026-11-04T18:50:46.512Z",
+        "homeProbability": 0.244047
+      },
+      {
+        "gameId": "2026_10_SF_DAL",
+        "snapshotId": "c0a56de22a50ee0cad34bf61",
+        "bindingId": "nov2-evening",
+        "historicalCommit": "d5e84e936fd98dc3b334c1a02e74138b743ed594",
+        "modelFile": "evening-historical-model.json",
+        "scorerFile": "evening-historical-scorer.mjs",
+        "helperFile": "evening-historical-integrity.mjs",
+        "inferenceInput": {
+          "home_team": "Dallas Cowboys",
+          "away_team": "San Francisco 49ers",
+          "commence_time": "2026-11-15T21:25:00.000Z"
+        },
+        "replayClock": "2026-11-04T18:50:46.512Z",
+        "homeProbability": 0.267679
+      },
+      {
+        "gameId": "2026_10_PIT_CIN",
+        "snapshotId": "f1787cb2815950103bd7dd39",
+        "bindingId": "nov2-evening",
+        "historicalCommit": "d5e84e936fd98dc3b334c1a02e74138b743ed594",
+        "modelFile": "evening-historical-model.json",
+        "scorerFile": "evening-historical-scorer.mjs",
+        "helperFile": "evening-historical-integrity.mjs",
+        "inferenceInput": {
+          "home_team": "Cincinnati Bengals",
+          "away_team": "Pittsburgh Steelers",
+          "commence_time": "2026-11-16T01:20:00.000Z"
+        },
+        "replayClock": "2026-11-04T18:50:46.512Z",
+        "homeProbability": 0.453087
+      },
+      {
+        "gameId": "2026_10_LAC_BAL",
+        "snapshotId": "0bed759ea30cf413577a1f3d",
+        "bindingId": "nov2-evening",
+        "historicalCommit": "d5e84e936fd98dc3b334c1a02e74138b743ed594",
+        "modelFile": "evening-historical-model.json",
+        "scorerFile": "evening-historical-scorer.mjs",
+        "helperFile": "evening-historical-integrity.mjs",
+        "inferenceInput": {
+          "home_team": "Baltimore Ravens",
+          "away_team": "Los Angeles Chargers",
+          "commence_time": "2026-11-17T01:15:00.000Z"
+        },
+        "replayClock": "2026-11-04T18:50:46.512Z",
+        "homeProbability": 0.655976
+      }
+    ],
+    "neutralSiteArgument": "OMITTED_DEFAULT_FALSE",
+    "originalEventPayloadArchived": false,
+    "originalDeployedScorerIdentityVerified": false,
+    "trainingReproduced": false,
+    "exactRoundedProbabilitiesReproduced": true
+  },
+  "jaxBalPublicationExample": {
+    "gameId": "2026_09_JAX_BAL",
+    "snapshotId": "1f4bc657f670fcd10bbff447",
+    "historicalCommit": "11abbcb9859059e34b7a0dadc7d661565b658bd1",
+    "homeProbability": 0.401566,
+    "originalFirstSnapshotHasChallenger": false,
+    "observedPublicationRun": 41370765405,
+    "observedPublicationJob": 125040545250,
+    "publicBytesObservedNoLaterThan": "2026-11-02T01:07:32.000Z",
+    "publicationReceiptUrl": "https://github.com/SpencerPhoenix/BETQ-ai/actions/runs/41370765405"
+  },
+  "checkpointPublication": {
+    "verified": false,
+    "requiredBefore": "2026-11-06T01:15:00.000Z",
+    "requirement": "SUCCESSFUL_GITHUB_SERVER_TIMESTAMPED_RUN_BOUND_TO_EXACT_PUBLISHED_BUNDLE",
+    "preparedAtIsPublicationProof": false
+  },
+  "safeguards": {
+    "researchOnly": true,
+    "sourceIndependenceVerified": false,
+    "qualifyingOutcomesAdded": 0,
+    "existingJournalOrMetricMembershipChanged": false,
+    "settlementGateChanged": false,
+    "wageringAuthorized": false,
+    "profitabilityEstablished": false,
+    "postgameComparison": "SEPARATE_AUTHORIZATION_REQUIRED_CROSS_CHECKED_INDEPENDENCE_UNVERIFIED_ONLY",
+    "currentOddsOrExecutablePriceClaim": false
+  }
+}

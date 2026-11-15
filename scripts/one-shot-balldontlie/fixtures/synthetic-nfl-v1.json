@@ -1,0 +1,34 @@
+{
+  "schema": "betq-synthetic-balldontlie-v1",
+  "fixtureOrigin": "FABRICATED_REPOSITORY_FIXTURE",
+  "evaluatedAt": "2026-11-04T12:30:00.000Z",
+  "nflverseObservedAt": "2026-11-04T12:29:00.000Z",
+  "balldontlieObservedAt": "2026-11-04T12:29:30.000Z",
+  "journal": {
+    "schema": 1,
+    "season": 2026,
+    "sport": "americanfootball_nfl",
+    "provenance": {
+      "model": "SYNTHETIC_MODEL",
+      "market": "SYNTHETIC_MARKET",
+      "results": "SYNTHETIC_RESULTS"
+    },
+    "snapshots": [
+      {
+        "id": "fabricated-first",
+        "gameId": "synthetic-2026-SEA-CHI",
+        "season": 2026,
+        "home": "SEA",
+        "away": "CHI",
+        "gameDate": "2026-11-02",
+        "commenceTime": "2026-11-03T01:20:00.000Z",
+        "capturedAt": "2026-11-02T12:00:00.000Z",
+        "modelHomeProbability": 0.61,
+        "researchOnly": true
+      }
+    ],
+    "settlements": []
+  },
+  "nflverseCsv": "game_id,season,game_type,gameday,away_team,home_team,away_score,home_score,location\nsynthetic-2026-SEA-CHI,2026,REG,2026-11-02,CHI,SEA,34,17,Home\n",
+  "balldontlieJson": "{\n  \"data\": [\n    {\n      \"id\": 990000001,\n      \"season\": 2026,\n      \"week\": 9,\n      \"postseason\": false,\n      \"date\": \"2026-11-03T01:20:00.000Z\",\n      \"updated_at\": \"2026-11-03T04:45:00.000Z\",\n      \"status\": \"Final\",\n      \"status_state\": \"final\",\n      \"home_team\": {\n        \"id\": 990001,\n        \"abbreviation\": \"SEA\"\n      },\n      \"visitor_team\": {\n        \"id\": 990002,\n        \"abbreviation\": \"CHI\"\n      },\n      \"home_team_score\": 17,\n      \"visitor_team_score\": 34\n    }\n  ],\n  \"meta\": {\n    \"next_cursor\": null,\n    \"per_page\": 100\n  }\n}\n"
+}
