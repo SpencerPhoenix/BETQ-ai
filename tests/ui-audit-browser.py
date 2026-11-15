@@ -137,10 +137,10 @@ with sync_playwright() as p:
     for width in [320,375,768]:
         page.set_viewport_size({'width':width,'height':850})
         expect(page.locator('#menu-toggle')).to_have_attribute('aria-expanded','false')
-        assert page.locator('#sidebar').evaluate('(el)=>el.inert')
+        expect(page.locator('#sidebar')).to_have_js_property('inert',True)
         page.locator('#menu-toggle').click()
         expect(page.locator('#sidebar')).to_have_attribute('role','dialog')
-        assert page.locator('#workspace').evaluate('(el)=>el.inert')
+        expect(page.locator('#workspace')).to_have_js_property('inert',True)
         page.locator('.nav-item').last.focus()
         page.keyboard.press('Tab')
         expect(page.locator('#menu-close')).to_be_focused()

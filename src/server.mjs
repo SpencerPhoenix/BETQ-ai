@@ -90,6 +90,7 @@ const ASSETS = new Map([
   ['/app.js', ['app.js', 'text/javascript; charset=utf-8']],
   ['/game-strategies.js', ['game-strategies.js', 'text/javascript; charset=utf-8']],
   ['/retained-forecasts.js', ['retained-forecasts.js', 'text/javascript; charset=utf-8']],
+  ['/game-grades.js', ['game-grades.js', 'text/javascript; charset=utf-8']],
   ['/historical-2025', ['historical-evaluation.html', 'text/html; charset=utf-8']],
   ['/historical-evaluation.js', ['historical-evaluation.js', 'text/javascript; charset=utf-8']],
   ['/historical-evaluation.css', ['historical-evaluation.css', 'text/css; charset=utf-8']],
