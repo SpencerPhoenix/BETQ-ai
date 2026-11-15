@@ -10,11 +10,16 @@ try{
     source+=part.toString('utf8');
     if(source.length>32000)throw Error('HEALTH_BODY_TOO_LARGE');
   }
-  const value=compatibleEvidenceHealth(JSON.parse(source));
+  const health=JSON.parse(source);
+  const value=compatibleEvidenceHealth(health);
   if(!value.compatible){
     console.error('BETQ prospective collector stopped before paid odds: '+value.reason);
     process.exitCode=1;
+  }else if(health.captureReadiness?.ready!==true){
+    console.error('BETQ paid capture prerequisites unavailable: '+String(health.captureReadiness?.reason||'OPERATOR_BUDGET_CONTRACT_MISSING'));
+    process.exitCode=1;
   }else{
+    if(health.collectionHealth?.liveFreshnessVerified!==true)console.warn('Collector health is unverified; provider readiness does not prove fresh collection.');
     console.log('BETQ evidence collector source contract verified ('+value.version+
       '), no paid credits used by compatibility check.');
   }
