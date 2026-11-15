@@ -6,7 +6,7 @@ BETQ.ai is a self-hosted, data-first sports odds research terminal. It compares 
 
 ## Quick start
 
-Requires Node.js 22+; no npm dependencies.
+Requires Node.js 22+. Run `npm ci --ignore-scripts` to install the locked PostgreSQL client dependency.
 
 ```bash
 cp .env.example .env  # optional; environment variable loading described below
@@ -17,11 +17,42 @@ Open http://localhost:3000. Without the key, use **Demo** to explore synthetic, 
 
 Run `npm test` for the offline quant and HTTP/security tests. Run `npm run check` for syntax validation.
 
+## Frozen 2025 evaluation
+
+The **2025 Evaluation** navigation entry and Game Monitor link open `/historical-2025`: all 285 previously evaluated games, actual/market/model margins, error, prior inputs and 50 descriptive analogs per game. It uses only hash-verified bundled artifacts, never live odds or new model execution. The correction did not beat the recorded market benchmark; historical quote timing, availability and edge remain unverified.
+
+For a standalone loopback-only viewer with no provider configuration, run `npm run historical:local`. See [historical evaluation integration, source licensing and verification](docs/HISTORICAL_2025_LOCAL_EVALUATION.md). Release verification and remaining operating boundaries are recorded in [the reviewed workspace release](docs/RELEASE_20261115.md).
+
 ## Live configuration
 
 Set `ODDS_API_KEY` as an **environment variable of the running web service**; a GitHub Actions secret does not automatically become a production runtime secret. The supported source is [The Odds API v4](https://the-odds-api.com/liveapi/guides/v4/). NFL, NBA, MLB, NHL and NCAAF are selectable. The standard odds feed supports moneyline, spreads and totals when the operator's plan provides them. Requests are cached to conserve credits.
 
-`PORT` (default 3000), `CACHE_TTL_MS` (default 300000), `ODDS_MAX_AGE_MS` (default 600000), `ODDS_DAILY_CREDIT_LIMIT` (default 12) and `ODDS_MIN_CREDITS_RESERVE` (default 50) are optional. Paid odds data refresh is **manual only** from the terminal to avoid depleting credits. A per-day, in-memory upstream budget is enforced; this guard resets if Render restarts, so it is a safeguard rather than durable accounting. No API key is embedded in client code, logs, or repository files.
+`PORT` (default 3000), `CACHE_TTL_MS` (default 300000), and `ODDS_MAX_AGE_MS` (default 600000) are optional. Public page loads, navigation, refresh and scores controls **only read the existing fresh cache**. On an empty or expired cache the API returns `409 PAID_REFRESH_REQUIRED` without a provider request. The browser has no paid refresh permission or credential field. A failed reload preserves the prior snapshot for the same selection and marks it retained; it does not relabel it fresh.
+
+Paid refresh requires **both** `x-betq-paid-request: true` and a matching `Authorization: Bearer …` using the server-only `BETQ_OPERATOR_REFRESH_TOKEN`. Tokens must be 32–512 characters from letters, digits, `.`, `_`, `~` and `-`. No credential is shipped in browser code or localStorage. `HEAD`, query parameters, a paid-intent header alone and a bearer alone cannot authorize upstream calls. The default source API is also cache-only unless an authenticated server path opts in.
+
+A paid request also requires a dedicated configured PostgreSQL ledger (`BETQ_BUDGET_DATABASE_URL`, `BETQ_BUDGET_ACCOUNT_ID`) with an explicitly seeded, verified provider balance. `BETQ_BUDGET_BASELINE_MAX_AGE_SECONDS` is required: a positive integer chosen by the operator, with no default. Missing, invalid, expired or future-dated baseline policy/state blocks new spending; reconciliation remains possible. All consumers must use the same approved maximum age. Database URLs must be TCP PostgreSQL URLs without query or fragment options. The application supplies verified TLS explicitly; URL SSL modes, certificate-file overrides and socket-host overrides are rejected before a connection is attempted. There is no process-local fallback and no automatic migration or quota discovery. `ODDS_DAILY_CREDIT_LIMIT` defaults to 12 only when absent; explicit zero disables paid requests, and malformed or fractional settings fail closed. `ODDS_MIN_CREDITS_RESERVE` defaults to 50 only when absent. Large valid reserve floors are never lowered by a clamp. The stored account policy can only tighten the process cap/floor. All instances using one provider account must share the same ledger and account identity.
+
+Reservations commit before provider requests, survive restarts, and stay charged on failure. An unresolved request blocks further spending even after midnight until its outcome is reconciled; missing or malformed quota cannot silently release it. Remaining balance never automatically increases. See [durable budget setup, recovery and verification boundaries](docs/PROVIDER_BUDGET.md). **Isolated PostgreSQL 17.11 transport, concurrency, crash/recovery and uncertain-COMMIT checks passed; production configuration and deployment remain unverified.** See [transport hardening and verification](docs/POSTGRES_TRANSPORT_REVIEW.md). These changes are local implementation, not a configured production rollout.
+
+The three operator workflows explicitly map the repository secret `BETQ_OPERATOR_REFRESH_TOKEN`; configuring it and the corresponding runtime secret is a separate operator action. The collector skips paid capture when its token or preflight is unavailable and still reconciles public schedule results. Operator requests default to `https://betq-ai.onrender.com`, require HTTPS, and reject redirects. An alternate `BETQ_PRODUCTION_URL` needs the exact bare HTTPS origin also set as `BETQ_OPERATOR_APPROVED_ORIGIN`; changing a URL alone does not authorize a credential destination.
+
+`/api/health` distinguishes a running web server from blocked provider refresh prerequisites. Its source/ledger check has a 500 ms deadline and coalesces concurrent probes; a timeout reports not-ready without accumulating background checks or reusing an old ready result. `captureReadiness` covers only authentication and budget readiness; `collectionHealth` separately reports that the web service does not observe scheduled attempts, plus the latest bundled capture time/age. Bundled evidence may lag the collector and does not establish that collection is healthy. Collector logs explicitly report skipped or zero-eligible capture runs. No API keys or operator tokens appear in these diagnostics.
+
+
+## Per-game retained research dossier
+
+The Game Monitor includes a **retained NFL dossier index** that works without a live odds cache. Each dossier reads the complete bundled derived journal, not the aggregate summary preview. It shows the original first frozen forecast separately from the latest retained observation, model versions and build/result-cutoff dates, same-capture market consensus, source receipt and quote timestamps, missing fields, and retained result qualification. Market-derived consensus is not an independent BETQ model. A source-corroborated result is not official league certification or proof of independent sources; ties remain excluded from binary model scoring.
+
+`GET /api/research/games` lists retained games. `GET /api/research/game?gameId=…` or `?providerEventId=…` reads exactly one unambiguous retained game. These routes do not request odds, refresh a remote journal, recompute forecasts, or write outcomes. The response generation time is separate from the actual bundled capture time. Missing, contradictory, malformed, ambiguous or future-dated evidence fails closed. Opening a dossier never unlocks paper staging or wagering.
+
+The view is specifically archived NFL full-game moneyline research, separate from current sport/market/demo filters. Starting-quarterback, injury and weather adjustments remain unverified. Comparable games are explicitly unavailable because no validated comparability method is implemented; no similar-game win rate or profitable edge is invented. See [dossier contract and verification boundaries](docs/GAME_DOSSIER.md).
+
+### Saved outright forecasts
+
+The Game Monitor also shows **BETQ saved NFL forecasts**, read from `GET /api/research/forecasts`. Each game uses its latest retained capture, with both teams' frozen Elo probability, the selected side's same-capture market reference, snapshot identity, capture/source/quote times, and model build/result-cutoff dates. The original first forecast used for evidence scoring is unchanged. Elo remains the fixed primary model; no larger challenger probability or older eligible capture is substituted.
+
+Outright probability rankings are within each recorded game date, not betting confidence, value or expected profit. Captures older than 24 hours, stale model vintages, recorded results, passed recorded kickoff, 50/50 forecasts, missing Elo provenance and known schedule conflicts are unranked. These display checks do not certify a current schedule, model accuracy or executable odds. Binary Elo excludes tied-game probability; spread-cover and total probabilities, uncertainty intervals and calibrated confidence grades remain unavailable. No risk rule, stake or wagering authorization changes. See [display contract and offline checks](docs/RETAINED_FORECAST_DISPLAY.md).
 
 ## Decision policy
 
@@ -119,7 +150,9 @@ Only existing forward-derived journal data are read; **no additional Odds API re
 
 ## Deploy
 
-`render.yaml` describes an optional Render Node web service. Link the repository in Render, then enter `ODDS_API_KEY` in the service environment. Deployment is managed separately in Render; a GitHub commit does not guarantee that the service successfully redeployed. Verify the production version at `GET /api/health`.
+`render.yaml` describes an optional Render Node web service, not a complete paid-collection setup. A research-only release can keep provider spending disabled. Enabling paid access separately requires approved operator authentication, a verified-TLS PostgreSQL ledger, an explicitly seeded current baseline, scoped runtime privileges, and an operator-chosen `BETQ_BUDGET_BASELINE_MAX_AGE_SECONDS` with no default. Missing or invalid age policy blocks new spending without blocking reconciliation. See [budget setup and freshness requirements](docs/PROVIDER_BUDGET.md). Do not weaken TLS to fit a database endpoint.
+
+Deployment and configuration require separate approval. Check the service's automatic-deployment behavior before merging; a GitHub commit does not prove successful deployment. Verify the exact revision in deployment metadata as well as `/api/health`; the health version is not a commit identity. A running web server does not certify collection readiness or successful fresh collection.
 
 ## Documentation
 

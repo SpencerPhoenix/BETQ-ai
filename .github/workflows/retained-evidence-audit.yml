@@ -1,0 +1,51 @@
+name: BETQ scheduled retained evidence audit
+on:
+  # GITHUB_TOKEN collector commits do not trigger ordinary push workflows.
+  # An independent clock inspects the latest default-branch journal instead.
+  schedule:
+    - cron: '53 */6 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: betq-retained-evidence-audit-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Record exact checked-out provenance
+        run: |
+          mkdir -p audit-output
+          git rev-parse HEAD > audit-output/source-commit.txt
+          sha256sum data/evidence/nfl-2026.json > audit-output/journal-before.sha256
+      - name: Audit retained game coverage and missing evidence without provider requests
+        run: node scripts/audit-retained-game-grades.mjs
+      - name: Audit retained forward direction and market-relative evidence
+        run: |
+          npm run audit:direction
+          npm run audit:sequential
+      - name: Verify syntax and regressions
+        run: |
+          npm run check
+          npm test
+      - name: Confirm retained evidence stayed byte-identical
+        if: always()
+        run: |
+          sha256sum --check audit-output/journal-before.sha256
+          git diff --exit-code -- data/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: betq-retained-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: audit-output/
+          retention-days: 30

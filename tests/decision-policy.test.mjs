@@ -18,7 +18,7 @@ const raw={
   }))
 };
 const elo={
-  schema:1,version:MODEL_VERSION,readyForResearch:true,
+  source:{project:'nflverse/nflverse-data'},schema:1,version:MODEL_VERSION,readyForResearch:true,
   generatedAt:iso(NOW-3600000),lastGameDate:'2026-11-01',
   params:{homeAdv:25,scale:1.1},ratings:{KC:1550,LV:1450},
   holdout:{n:284,brier:0.22235,ece:.053}

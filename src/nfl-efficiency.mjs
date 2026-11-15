@@ -7,7 +7,8 @@
  * calibration/holdout windows remain disjoint.
  */
 import {pairedWeekBootstrap} from './statistical-audit.mjs';
-import {timestamp, sourceDateFresh, nflGameDate, isProbability} from './integrity.mjs';
+import {sourceDateFresh, nflGameDate, isProbability} from './integrity.mjs';
+import {scheduledInstant} from './schedule-review.mjs';
 import { walkForward, eloProbability, calibrate, NFL_TEAMS, canonicalTeam } from './nfl-elo.mjs';
 
 const rounded=(n,d=6)=>Number.isFinite(n)?Number(n.toFixed(d)):null;
@@ -194,7 +195,7 @@ export function challengerResearchForEvent(event,eloHomeProbability,artifact,now
   const at=Date.parse(artifact.generatedAt);
   if(!Number.isFinite(at)||at>now+60000||now-at>7*86400000)
     return {available:false,reason:'FEATURE_SOURCE_STALE'};
-  const kick=timestamp(event?.commence_time);
+  const kick=scheduledInstant(event?.commence_time);
   if(!Number.isFinite(now)||!Number.isFinite(kick)||kick<=now) return {available:false,reason:'INVALID_OR_STARTED_EVENT'};
   const home=NFL_TEAMS[event?.home_team],away=NFL_TEAMS[event?.away_team];
   if(!home||!away||home===away||!isProbability(eloHomeProbability)||!artifact.teamFeatures)

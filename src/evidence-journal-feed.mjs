@@ -7,6 +7,8 @@ import {isDeepStrictEqual} from 'node:util';
 import {emptyJournal,validateJournal,summarizeEvidence} from './evidence.mjs';
 import {isValidEvidenceSummary} from './evidence-feed.mjs';
 import {readBoundedText} from './integrity.mjs';
+import {providerContinuityConflicts} from './evidence-integrity.mjs';
+import {assertRetainedObservationTimes,validateRetainedIdentityState,scheduleQuarantineMetadata} from './retained-schedule-quarantine.mjs';
 
 export const PUBLIC_EVIDENCE_JOURNAL_URL=
   'https://raw.githubusercontent.com/SpencerPhoenix/BETQ-ai/main/data/evidence/nfl-2026.json';
@@ -24,7 +26,7 @@ function assertPublicDerived(value,depth=0){
     assertPublicDerived(child,depth+1);
   }
 }
-function validatePublicJournal(journal){
+export function validatePublicJournal(journal){
   assertPublicDerived(journal);
   validateJournal(journal);
   if(journal.season!==2026||!isDeepStrictEqual(journal.provenance,emptyJournal(2026).provenance)||
@@ -38,9 +40,11 @@ export function assertAppendOnlyEvidence(previous,next){
   validatePublicJournal(previous);validatePublicJournal(next);
   const snapshots=new Map(next.snapshots.map(s=>[s.id,s]));
   const oldIds=new Set(previous.snapshots.map(s=>s.id));
+  const providerConflicts=providerContinuityConflicts(next.snapshots);
   const captureFloor=previous.snapshots.reduce((max,s)=>Math.max(max,Date.parse(s.capturedAt)),-Infinity);
   for(const shot of next.snapshots){
     if(oldIds.has(shot.id))continue;
+    if(providerConflicts.has(shot.gameId))throw Error('PROVIDER_EVENT_ID_CONTINUITY_REQUIRED');
     const captured=Date.parse(shot.capturedAt);
     if(captured<captureFloor||previous.snapshots.some(old=>old.gameId===shot.gameId&&
       Date.parse(old.capturedAt)===captured&&(shot.id<old.id||shot.id.localeCompare(old.id)<0)))
@@ -53,17 +57,32 @@ export function assertAppendOnlyEvidence(previous,next){
     throw Error('SETTLEMENT_HISTORY_CHANGED');
   return next;
 }
-function assertNoFutureRecords(journal,now){
-  if(!Number.isFinite(now)||journal.snapshots.some(s=>Date.parse(s.capturedAt)>now+60000)||
-    journal.settlements.some(r=>r.verifiedAt!==undefined&&
-      (!Number.isFinite(Date.parse(r.verifiedAt))||Date.parse(r.verifiedAt)>now+120000)))
-    throw Error('FUTURE_OR_INVALID_OBSERVATION_TIME');
+export function assertNoFutureRecords(journal,now){
+  return assertRetainedObservationTimes(journal,now);
+}
+/** Validate every raw record before deriving any quarantine projection. */
+function retainedJournalState(journal,now){
+  validatePublicJournal(journal);
+  return validateRetainedIdentityState(journal,now);
+}
+/** One retained-structure/identity/time gate; schedule-only conflicts stay quarantined. */
+export function validateRetainedJournal(journal,now=Date.now()){
+  return retainedJournalState(journal,now).latest;
+}
+/** Detached read projection. The caller retains the complete source and its digest. */
+export function retainedJournalProjection(journal,now=Date.now()){
+  const {latest,schedules}=retainedJournalState(journal,now);
+  const quarantine=scheduleQuarantineMetadata(journal,schedules);
+  const projected=structuredClone({...journal,
+    snapshots:journal.snapshots.filter(s=>!schedules.blocked.has(s.gameId)),
+    settlements:journal.settlements.filter(r=>!schedules.blocked.has(r.gameId))});
+  return {journal:projected,quarantine,latest:new Map([...latest].filter(([id])=>!schedules.blocked.has(id))
+    .map(([id,record])=>[id,structuredClone(record)]))};
 }
 /** Same pure boundary for startup fallback and remotely read journals. */
 export function recomputeJournalEvidence(journal,now=Date.now()){
-  validatePublicJournal(journal);
-  assertNoFutureRecords(journal,now);
-  const summary=summarizeEvidence(journal,now);
+  const projected=retainedJournalProjection(journal,now);
+  const summary={...summarizeEvidence(projected.journal,now),quarantine:projected.quarantine};
   if(!isValidEvidenceSummary(summary))throw Error('UNSAFE_RECOMPUTED_SUMMARY');
   return summary;
 }
@@ -81,10 +100,20 @@ export function createJournalEvidenceFeed({fallbackJournal,fetchImpl=globalThis.
       origin==='BUNDLED_JOURNAL'?'BUNDLED_FALLBACK':'PUBLIC_JOURNAL_READ',
     sourcePublicationTimeVerified:false,lastAttemptAt,lastSuccessfulFetchAt,
     latestSnapshotAt:latestCapture(journal),journalSha256,lastError});
+  // Recheck the current clock even on a cache hit: a wall-clock rollback must
+  // not make cached future evidence visible in one view but not another.
+  const peekSnapshot=()=>{
+    const publication=metadata();
+    try{validateRetainedJournal(journal,clock());}catch{
+      return {journal:null,summary:null,publication:{...publication,
+        status:'RETAINED_EVIDENCE_NOT_YET_AVAILABLE',lastError:'RETAINED_EVIDENCE_READER_TIME_INVALID'}};
+    }
+    return {journal:structuredClone(journal),summary:{...structuredClone(data),publication},publication};
+  };
   // Callers cannot modify the retained baseline or its summary through a reply.
-  const result=()=>({...structuredClone(data),publication:metadata()});
+  const result=()=>peekSnapshot().summary;
   async function get(){
-    if(clock()<expires)return result();
+    if(typeof fetchImpl!=='function'||clock()<expires)return result();
     if(pending){await pending;return result();}
     pending=(async()=>{
       try{
@@ -109,5 +138,8 @@ export function createJournalEvidenceFeed({fallbackJournal,fetchImpl=globalThis.
     try{await pending;}finally{pending=null;}
     return result();
   }
-  return {get,status:()=>({...metadata(),cacheSecondsRemaining:Math.max(0,Math.floor((expires-clock())/1000))})};
+  // One synchronous snapshot binds the full journal, recomputed summary and digest.
+  // It is internal-only; HTTP callers still use allowlisted dossier projections.
+  const getSnapshot=async()=>{await get();return peekSnapshot();};
+  return {get,getSnapshot,peekSnapshot,status:()=>({...metadata(),cacheSecondsRemaining:Math.max(0,Math.floor((expires-clock())/1000))})};
 }

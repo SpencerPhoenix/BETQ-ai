@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Read-only inspection of BETQ's frozen 2025 historical development evaluation.">
+  <title>BETQ | Historical 2025 Evaluation</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/historical-evaluation.css">
+  <script type="module" src="/historical-evaluation.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to evaluation</a>
+  <header class="topbar"><span class="brand">BETQ<span>.ai</span></span><a id="return-terminal" href="/" class="terminal-link" hidden>← Back to terminal</a><span class="badge">HISTORICAL · READ ONLY</span></header>
+  <main id="main" tabindex="-1">
+    <section class="intro" aria-labelledby="page-title">
+      <p class="eyebrow">FROZEN RESEARCH / 2025 NFL SEASON</p>
+      <h1 id="page-title">Historical 2025 Evaluation</h1>
+      <p class="lede">Inspect what the models estimated, what the recorded market line implied, and what actually happened.</p>
+      <div class="notice"><strong>Development evidence, not a verified betting edge.</strong> These seasons were already inspected. Historical prices and input availability are not authenticated at decision time. This view is separate from live odds and prospective game dossiers.</div>
+    </section>
+    <p id="index-status" role="status">Reading the frozen experiment…</p>
+    <button id="retry-index" type="button" hidden>Retry frozen-data read</button>
+    <section id="summary" aria-label="Complete 2025 cohort scorecard"></section>
+    <section id="browser" class="panel" aria-labelledby="browse-title" hidden>
+      <h2 id="browse-title">Inspect a game</h2>
+      <p>Chronological order by default. Filters change this game picker, not the complete-cohort scorecard above.</p>
+      <div class="filters">
+        <label>Find a team or game<input id="search" type="search" placeholder="Team abbreviation, date or game ID" autocomplete="off"></label>
+        <label>Week<select id="week"><option value="">All weeks</option></select></label>
+        <label>Season phase<select id="phase"><option value="">All games</option><option value="REG">Regular season</option><option value="POST">Playoffs</option></select></label>
+      </div>
+      <p id="filter-status" role="status"></p>
+      <div class="game-picker"><label>Game<select id="game"></select></label><button id="previous" type="button">← Previous</button><button id="next" type="button">Next →</button></div>
+      <button id="clear-filters" type="button" class="subtle">Clear filters</button>
+    </section>
+    <section id="game-panel" class="panel" aria-labelledby="game-heading" hidden>
+      <h2 id="game-heading" tabindex="-1">Game evaluation</h2>
+      <p id="game-status" role="status"></p>
+      <button id="retry-game" type="button" hidden>Retry this game</button>
+      <div id="game-detail"></div>
+    </section>
+    <section id="limitations" class="panel" aria-label="Limitations and provenance"></section>
+    <footer>No wagers, paper tickets, source refreshes, forecast creation or journal writes. All values come from the frozen experiment.</footer>
+  </main>
+</body>
+</html>

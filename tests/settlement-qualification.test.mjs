@@ -99,7 +99,7 @@ for(const [key,value] of [['home','BUF'],['away','BAL'],['gameDate','2026-11-09'
 test('Feed rejects legacy/public summary metric bypasses and retains its safe fallback',async()=>{
   const valid=summary(syntheticScoringJournal(30)),fallback=summary(syntheticScoringJournal(0));
   const legacy={...valid};delete legacy.outcomeScoringPolicy;
-  const bypasses=[legacy,{...valid,sourceCorroboratedSettledGames:0},
+  const bypasses=[legacy,{...valid,outcomeScoringPolicy:'SOURCE_CORROBORATED_SETTLEMENT_V1'},{...valid,sourceCorroboratedSettledGames:0},
     {...valid,sourceUncorroboratedSettledGames:1},{...valid,sourceCorroboratedMarketGames:31},
     {...valid,forwardMetrics:{...valid.forwardMetrics,n:31}},
     {...valid,marketComparison:{...valid.marketComparison,n:31}},
@@ -113,8 +113,8 @@ test('Feed rejects legacy/public summary metric bypasses and retains its safe fa
     assert.equal(feed.status().lastError,'PUBLICATION_UNAVAILABLE_OR_INVALID');
   }
 });
-test('Checked-in real journal remains unchanged: community scores do not qualify',async()=>{
-  const path=new URL('../data/evidence/nfl-2026.json',import.meta.url),before=await readFile(path,'utf8'),j=JSON.parse(before);
+test('Pinned real journal remains unchanged: community scores do not qualify',async()=>{
+  const path=new URL('./fixtures/retained-20261114/nfl-2026.json',import.meta.url),before=await readFile(path,'utf8'),j=JSON.parse(before);
   const out=summary(j);
   assert.equal(out.sourceCorroboratedSettledGames,0);
   assert.equal(out.forwardMetrics,null);

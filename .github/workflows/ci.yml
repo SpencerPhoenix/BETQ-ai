@@ -34,3 +34,41 @@ jobs:
           curl -fsS http://127.0.0.1:3000/ >/dev/null
           curl -fsS 'http://127.0.0.1:3000/api/slate?mode=demo' > /tmp/demo.json
           node -e "const d=require('/tmp/demo.json'); if(!d.demo || d.summary.games!==3) process.exit(1)"
+  offline-browser:
+    name: Offline browser release QA
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reproducible application dependency installation
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install pinned browser test tooling
+        run: |
+          python -m venv .browser-venv
+          .browser-venv/bin/python -m pip install playwright==1.62.0
+          .browser-venv/bin/python -m playwright install --with-deps chromium
+      - name: Run intercepted offline desktop and mobile checks
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p browser-output
+          git rev-parse HEAD > browser-output/source-commit.txt
+          status=0
+          for script in ui-audit-browser game-strategies-browser retained-forecasts-browser release-browser; do
+            .browser-venv/bin/python "tests/${script}.py" "browser-output/${script}" 2>&1 | tee "browser-output/${script}.log" || status=1
+          done
+          exit "$status"
+      - name: Preserve browser screenshots, reports and failure logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: betq-offline-browser-${{ github.run_id }}
+          path: browser-output/
+          retention-days: 14
+          if-no-files-found: warn

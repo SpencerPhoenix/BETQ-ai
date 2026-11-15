@@ -1,3 +1,4 @@
+import {scheduledInstant,eventScheduleReview} from './schedule-review.mjs';
 /**
  * BETQ.ai's transparent, market-only price scanner.
  * NOT an independent outcome prediction model or a validated betting edge.
@@ -96,7 +97,7 @@ function toPair(event, bookmaker, marketKey, now, maxAgeMs) {
 }
 
 function analyzeContract(event, market, contractId, quotes, now) {
-  const gameStart = Date.parse(event.commence_time);
+  const gameStart = scheduledInstant(event.commence_time);
   const started = !Number.isFinite(gameStart) || gameStart <= now;
   const close = Number.isFinite(gameStart) && gameStart - now < 5 * 60000;
   const picks = [];
@@ -169,7 +170,8 @@ export function analyzeEvents(events, { sport, market = 'h2h', asOf = Date.now()
   for (const event of Array.isArray(events) ? events : []) {
     if (!event || !event.id || !event.home_team || !event.away_team
         || !Array.isArray(event.bookmakers) || event.home_team === event.away_team
-        || !Number.isFinite(Date.parse(event.commence_time || ''))) continue;
+        || !Number.isFinite(scheduledInstant(event.commence_time))) continue;
+    const scheduleReview = eventScheduleReview({...event,sport_key:event.sport_key || sport},now);
     const groups = new Map();
     for (const book of event.bookmakers) {
       const quote = toPair(event, book, market, now, maxAgeMs);
@@ -182,13 +184,17 @@ export function analyzeEvents(events, { sport, market = 'h2h', asOf = Date.now()
       const quotes = [...books.values()];
       if (quotes.length) opportunities.push(...analyzeContract(event, market, contractId, quotes, now));
     }
+    if (['SCHEDULE_RECONCILIATION_REQUIRED','SCHEDULE_REVIEW_IDENTITY_MISMATCH'].includes(scheduleReview.status)) {
+      for (const pick of opportunities) { pick.status='PASS'; pick.theoreticalUnits=0; pick.reasons.push(scheduleReview.status); }
+    }
     opportunities.sort((a, b) =>
       (b.status === 'WATCH') - (a.status === 'WATCH')
       || (b.evPercent ?? -999) - (a.evPercent ?? -999));
     analyzed.push({
       id: String(event.id), sport: event.sport_key || sport,
       homeTeam: event.home_team, awayTeam: event.away_team,
-      commenceTime: event.commence_time,
+      commenceTime: event.commence_time, scheduleReview,
+      kickoffSource:'PROVIDER_REPORTED_NOT_OFFICIALLY_VERIFIED',
       started: Date.parse(event.commence_time) <= now,
       bookmakerCount: new Set(event.bookmakers.filter(b=>b && typeof b==='object').map(b => b.key).filter(Boolean)).size,
       totalMarkets: groups.size, opportunities: opportunities.slice(0, 20),

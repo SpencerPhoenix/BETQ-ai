@@ -1,0 +1,2 @@
+# Preserve the retained upstream license verbatim, including its original trailing space.
+data/historical-2025/SOURCE-LICENSE.txt -text whitespace=-blank-at-eol

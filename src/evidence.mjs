@@ -1,3 +1,4 @@
+import {validProjectionDelivery} from './model-delivery.mjs';
 /**
  * Phase 3 forward evidence. Only independent model forecasts and aggregated
  * no-vig consensus are stored. Raw odds/bookmaker identities are never stored.
@@ -5,9 +6,12 @@
  */
 import {OUTCOME_SCORING_POLICY,isSourceCorroboratedSettlement,latestSettlementsByRevision,unambiguousFrozenGameIds} from './settlement-qualification.mjs';
 import {pairedWeekBootstrap} from './statistical-audit.mjs';
-import {timestamp, isProbability, validDay} from './integrity.mjs';
+import {isProbability, validDay} from './integrity.mjs';
+import {validSnapshotChronology,validFrozenIdentity,sameFrozenIdentity,isEligibleModelSnapshot,isEligibleMarketSnapshot,isEligibleChallengerSnapshot,validNewFinalResult,FINAL_RECEIPT_BINDING_POLICY,validMarketQuoteWindow,MARKET_FRESHNESS_POLICY,validProviderEventId,providerContinuityConflicts} from './evidence-integrity.mjs';
 import { createHash } from 'node:crypto';
 import { NFL_TEAMS, canonicalTeam } from './nfl-elo.mjs';
+import {scheduledInstant,scheduleReviewFor} from './schedule-review.mjs';
+import {validateRetainedIdentityState,scheduleQuarantineMetadata} from './retained-schedule-quarantine.mjs';
 
 export const MIN_SAMPLE = 30;
 const round = (n,d=5) => Number.isFinite(n)?Number(n.toFixed(d)):null;
@@ -38,13 +42,10 @@ export function validateJournal(j) {
 }
 function validObservation(s,season){
   if(!s||typeof s.id!=='string'||typeof s.gameId!=='string'||s.season!==season||!isProbability(s.modelHomeProbability))return false;
-  const at=timestamp(s.capturedAt),kick=timestamp(s.commenceTime);
-  if(!Number.isFinite(at)||!Number.isFinite(kick)||at>=kick)return false;
-  for(const key of ['modelBuiltAt','sourceReceivedAt'])
-    if(s[key]!==undefined&&(!Number.isFinite(timestamp(s[key]))||timestamp(s[key])>at+60000||timestamp(s[key])>=kick))return false;
+  if(!validSnapshotChronology(s))return false;
   if(s.marketHomeProbability!=null&&!isProbability(s.marketHomeProbability))return false;
   if(s.challengerHomeProbability!=null&&(!isProbability(s.challengerHomeProbability)||s.challengerResearchOnly!==true||
-     !Number.isFinite(timestamp(s.challengerBuiltAt))||timestamp(s.challengerBuiltAt)>at+60000||timestamp(s.challengerBuiltAt)>=kick))return false;
+     s.challengerBuiltAt==null))return false;
   return true;
 }
 function validResult(r){
@@ -55,15 +56,15 @@ function validResult(r){
 
 export function matchSchedule(event,rows,season) {
   if (!event || !Array.isArray(rows)) return null;
-  const home=NFL_TEAMS[event.homeTeam],away=NFL_TEAMS[event.awayTeam],kick=parsed(event.commenceTime);
+  const home=NFL_TEAMS[event.homeTeam],away=NFL_TEAMS[event.awayTeam],kick=scheduledInstant(event.commenceTime);
   if (!home||!away||!Number.isFinite(kick)||home===away) return null;
   const matches=rows.filter(r => r && Number(r.season)===season&&gameTypes.has(r.game_type)&&
     canonicalTeam(r.home_team)===home&&canonicalTeam(r.away_team)===away&&
-    r.game_id&&/^\d{4}-\d{2}-\d{2}$/.test(r.gameday)&&
+    r.game_id&&validDay(r.gameday)&&
     Math.abs(kick-parsed(r.gameday+'T12:00:00Z'))<=36*3600000
   ).sort((a,b)=>Math.abs(kick-parsed(a.gameday+'T12:00:00Z'))-
                  Math.abs(kick-parsed(b.gameday+'T12:00:00Z')));
-  if(matches.length>1&&matches[0].gameday===matches[1].gameday) return null;
+  if(matches.length>1) return null;
   return matches[0]||null;
 }
 
@@ -72,26 +73,31 @@ export function observationsFromSlate(slate,rows,now=Date.now(),season=new Date(
       slate.sport!=='americanfootball_nfl'||slate.market!=='h2h'||
       !Array.isArray(slate.events)||!Array.isArray(rows)) throw Error('Real NFL moneylines only');
   const received=parsed(slate.receivedAt);
-  if (!Number.isFinite(received)||received>now+60000||now-received>15*60000)
+  if (!Number.isFinite(received)||received>now+60000||now-received>10*60000)
     throw Error('Provider snapshot timestamp stale');
   const accepted=[],skipped=[];
   for(const event of slate.events) {
     if(!event || typeof event!=='object') { skipped.push({reason:'INVALID_EVENT'});continue; }
-    const kick=parsed(event.commenceTime),m=event.independentModel;
+    if(!validProviderEventId(event.id)){skipped.push({eventId:'',reason:'INVALID_PROVIDER_EVENT_ID'});continue;}
+    const kick=scheduledInstant(event.commenceTime),m=event.independentModel;
     if (!Number.isFinite(kick)||kick-now<5*60000||kick-now>14*86400000||
-        !m?.available||m.method!=='NFL_ELO_HISTORICAL_OUTCOMES'||
+        m?.available!==true||m.method!=='NFL_ELO_HISTORICAL_OUTCOMES'||
         !m.independentOfOdds||m.use!=='RESEARCH_ONLY'||
         !Number.isFinite(m.homeWinProbability)||m.homeWinProbability<=0||
         m.homeWinProbability>=1||!Number.isFinite(parsed(m.modelBuiltAt))||
         parsed(m.modelBuiltAt)>now+60000) {
       skipped.push({eventId:String(event.id||''),reason:'PREGAME_MODEL_GATE'});continue;
     }
+    if((m.deliveryIdentity!=null||slate.nflModelDelivery!=null)&&!validProjectionDelivery(m,slate.nflModelDelivery)){
+      skipped.push({eventId:event.id,reason:'MODEL_DELIVERY_BINDING_INVALID'});continue;
+    }
     const row=matchSchedule(event,rows,season);
     if(!row){skipped.push({eventId:String(event.id||''),reason:'NO_UNIQUE_SCHEDULE_MATCH'});continue;}
     const c=event.marketConsensus;
-    const validMarket=c?.available&&c.method==='ALL_BOOKS_MEDIAN_DE_VIG'&&c.books>=3&&
+    const validMarket=c?.available&&c.method==='ALL_BOOKS_MEDIAN_DE_VIG'&&Number.isInteger(c.books)&&c.books>=3&&
       Number.isFinite(c.homeProbability)&&c.homeProbability>0&&c.homeProbability<1&&
-      c.oldestQuoteAgeSeconds<=600&&parsed(c.latestQuoteAt)<=now+60000&&
+      validMarketQuoteWindow({capturedAt:new Date(now).toISOString(),sourceReceivedAt:slate.receivedAt,
+        marketOldestQuoteAt:c.oldestQuoteAt,marketNewestQuoteAt:c.latestQuoteAt})&&
       parsed(c.latestQuoteAt)<kick;
     const cModel=event.efficiencyChallenger;
     const validChallenger=cModel?.available===true &&
@@ -109,13 +115,15 @@ export function observationsFromSlate(slate,rows,now=Date.now(),season=new Date(
     const key=[season,row.game_id,new Date(now).toISOString().slice(0,10),window];
     if(validChallenger)key.push('CHALLENGER:'+cModel.modelVersion);
     const id=hash(key.join('|'));
-    accepted.push({
+    const snapshot={
       id,gameId:row.game_id,providerEventId:String(event.id),
       season,home:canonicalTeam(row.home_team),away:canonicalTeam(row.away_team),
       gameDate:row.gameday,commenceTime:new Date(kick).toISOString(),
       capturedAt:new Date(now).toISOString(),sourceReceivedAt:new Date(received).toISOString(),
       window,hoursBeforeKickoff:round((kick-now)/3600000,2),
       modelVersion:String(m.modelVersion),modelBuiltAt:m.modelBuiltAt,
+      modelArtifactCanonicalSha256:m.deliveryIdentity?.artifactCanonicalSha256??null,
+      modelDeliveryPolicy:m.deliveryIdentity?.policy??null,
       modelLastResultDate:m.throughGameDate,
       modelHomeProbability:round(m.homeWinProbability,6),
       challengerHomeProbability:validChallenger?
@@ -127,37 +135,143 @@ export function observationsFromSlate(slate,rows,now=Date.now(),season=new Date(
       marketBookCount:validMarket?c.books:0,
       marketDisagreementPoints:validMarket?c.disagreementPoints:null,
       marketNewestQuoteAt:validMarket?c.latestQuoteAt:null,
+      marketOldestQuoteAt:validMarket?c.oldestQuoteAt:null,
       marketBasis:validMarket?'NO_VIG_MULTI_BOOK_MEDIAN':'UNAVAILABLE',
       independentModel:true,researchOnly:true,verifiedInjuryAdjustment:false
-    });
+    };
+    if(!validObservation(snapshot,season)||!isEligibleModelSnapshot(snapshot)){
+      skipped.push({eventId:String(event.id||''),reason:'INVALID_FORECAST_PROVENANCE'});continue;
+    }
+    // Recompute the dated local review from the observed identity. Caller-supplied
+    // slate flags cannot authorize new captures against a known stale schedule.
+    if(scheduleReviewFor(snapshot,now).status==='SCHEDULE_RECONCILIATION_REQUIRED'){
+      skipped.push({eventId:String(event.id||''),reason:'SCHEDULE_RECONCILIATION_REQUIRED'});continue;
+    }
+    accepted.push(snapshot);
   }
   return {accepted,skipped};
 }
 
-export function resultsFromSchedule(journal,rows,now=Date.now()) {
+/**
+ * Quarantine a conflicting game's whole capture batch before daily-ID deduplication.
+ * This is not schedule reconciliation: no time tolerance, identity merge or rewrite.
+ * Malformed input and non-schedule identity corruption remain hard failures. Reason
+ * counts describe affected captures; one capture can have more than one reason.
+ * Same-ID recaptures of the same frozen identity are routine duplicates, even
+ * when receipt times or quotes change. The writer keeps the first record intact.
+ */
+export function prepareCaptureAdmission(existing,captures,now=Date.now()) {
+  validateJournal(existing);
+  if(!Array.isArray(captures)||captures.length>10000||!Number.isFinite(now))
+    throw Error('Invalid capture admission input');
+  const byGame=new Map(),byId=new Map(),conflicts=new Map();
+  const reasonOrder=['FROZEN_GAME_IDENTITY_CONFLICT','SNAPSHOT_ID_PAYLOAD_CONFLICT',
+    'PROVIDER_EVENT_ID_UNVERIFIED','PROVIDER_EVENT_ID_CHANGED','PROVIDER_EVENT_ID_REUSED'];
+  const mark=(gameId,reason)=>{
+    if(!conflicts.has(gameId))conflicts.set(gameId,new Set());
+    conflicts.get(gameId).add(reason);
+  };
+  let retainedSchedules;
+  try{retainedSchedules=validateRetainedIdentityState(existing,now).schedules;}
+  catch(error){
+    if(error?.message==='INVALID_RETAINED_GAME_IDENTITY')throw Error('Invalid/conflicting retained frozen identity');
+    throw error;
+  }
+  for(const gameId of retainedSchedules.blocked)mark(gameId,'FROZEN_GAME_IDENTITY_CONFLICT');
+  for(const s of existing.snapshots){
+    if(!validFrozenIdentity(s)||(byGame.has(s.gameId)&&!sameFrozenIdentity(byGame.get(s.gameId),s)&&!retainedSchedules.blocked.has(s.gameId)))
+      throw Error('Invalid/conflicting retained frozen identity');
+    if(!byGame.has(s.gameId))byGame.set(s.gameId,s);
+    byId.set(s.id,s);
+  }
+  // Do not disguise contradictory retained results as an ordinary capture skip.
+  latestSettlementsByRevision(existing.settlements);
+  const captureFloor=existing.snapshots.reduce((max,s)=>Math.max(max,parsed(s.capturedAt)),-Infinity);
+  for(const s of captures){
+    if(!validObservation(s,existing.season)||!s.id||s.id.length>200||
+       !validFrozenIdentity(s)||!isEligibleModelSnapshot(s)||parsed(s.capturedAt)>now+60000)
+      throw Error('Invalid/future/post-kickoff capture admission');
+    if(!byId.has(s.id)&&(parsed(s.capturedAt)<captureFloor||existing.snapshots.some(old=>
+      old.gameId===s.gameId&&old.capturedAt===s.capturedAt&&
+      (s.id<old.id||s.id.localeCompare(old.id)<0))))throw Error('Backdated capture admission');
+    const game=byGame.get(s.gameId),previous=byId.get(s.id);
+    if(game&&!sameFrozenIdentity(game,s))mark(s.gameId,'FROZEN_GAME_IDENTITY_CONFLICT');
+    if(previous&&!sameFrozenIdentity(previous,s)){
+      mark(previous.gameId,'SNAPSHOT_ID_PAYLOAD_CONFLICT');
+      mark(s.gameId,'SNAPSHOT_ID_PAYLOAD_CONFLICT');
+    }
+    if(!game)byGame.set(s.gameId,s);
+    if(!previous)byId.set(s.id,s);
+  }
+  for(const [gameId,reasons] of providerContinuityConflicts([...existing.snapshots,...captures]))
+    for(const reason of reasons)mark(gameId,reason);
+  const accepted=[],skipped=[],reasonCounts=Object.fromEntries(reasonOrder.map(reason=>[reason,0]));
+  const affectedGames=new Set(),admittedIds=new Set(existing.snapshots.map(s=>s.id));
+  let routineDuplicateCaptures=0;
+  for(const s of captures){
+    if(!conflicts.has(s.gameId)){
+      if(admittedIds.has(s.id))routineDuplicateCaptures++;
+      admittedIds.add(s.id);accepted.push(s);continue;
+    }
+    const reasons=reasonOrder.filter(reason=>conflicts.get(s.gameId).has(reason));
+    for(const reason of reasons)reasonCounts[reason]++;
+    affectedGames.add(s.gameId);
+    skipped.push({gameId:s.gameId,snapshotId:s.id,reasons});
+  }
+  return {accepted,skipped,diagnostics:{policy:'FROZEN_CAPTURE_IDENTITY_V2',
+    consideredCaptures:captures.length,admissibleCaptures:accepted.length,
+    routineDuplicateCaptures,quarantinedCaptures:skipped.length,quarantinedGames:affectedGames.size,reasonCounts,
+    retainedScheduleQuarantine:scheduleQuarantineMetadata(existing,retainedSchedules)}};
+}
+
+export function resultsFromSchedule(journal,rows,now=Date.now(),{sourceReceipt=null}={}) {
   validateJournal(journal);
-  const tracked=new Set(journal.snapshots.map(s=>s.gameId));
-  const today=new Date(now).toISOString().slice(0,10),results=[];
-  for(const row of rows) {
-    if(!row || !tracked.has(row.game_id)||Number(row.season)!==journal.season||
-       !gameTypes.has(row.game_type)||!/^\d{4}-\d{2}-\d{2}$/.test(row.gameday)||
-       row.gameday>=today||row.home_score===''||row.away_score==='')continue;
+  if(!Array.isArray(rows)||!Number.isFinite(now))throw Error('Invalid result source');
+  const unambiguous=unambiguousFrozenGameIds(journal.snapshots),results=[];
+  for(const gameId of unambiguous){
+    const snapshot=journal.snapshots.find(s=>s.gameId===gameId);
+    // Duplicate source identities, including conflicting scores or reschedules,
+    // cannot be resolved by arbitrary row order.
+    const matches=rows.filter(row=>row?.game_id===gameId);
+    if(matches.length!==1)continue;
+    const row=matches[0];
+    if(Number(row.season)!==journal.season||!gameTypes.has(row.game_type)||
+       !validDay(row.gameday)||row.home_score==null||row.away_score==null||
+       ![row.home_score,row.away_score].every(value=>(typeof value==='number'||typeof value==='string')&&/^\d{1,3}$/.test(String(value))))continue;
     const homeScore=Number(row.home_score),awayScore=Number(row.away_score);
-    if(!Number.isInteger(homeScore)||!Number.isInteger(awayScore)||
-       homeScore<0||awayScore<0||homeScore>100||awayScore>100)continue;
-    results.push({gameId:row.game_id,gameDate:row.gameday,homeScore,awayScore,
+    const result={gameId,season:Number(row.season),gameDate:row.gameday,
+      home:canonicalTeam(row.home_team),away:canonicalTeam(row.away_team),
+      commenceTime:row.commenceTime,homeScore,awayScore,
       outcome:homeScore===awayScore?'TIE':homeScore>awayScore?'HOME':'AWAY',
-      source:'NFLVERSE_SCHEDULES',resultHash:hash(row.game_id+'|'+homeScore+'|'+awayScore)});
+      source:'NFLVERSE_SCHEDULES',resultHash:hash(gameId+'|'+homeScore+'|'+awayScore),
+      terminalStatusReceipt:sourceReceipt?.source==='NFLVERSE_SCHEDULES'&&{bindingPolicy:FINAL_RECEIPT_BINDING_POLICY,gameId,season:Number(row.season),gameDate:row.gameday,
+        home:canonicalTeam(row.home_team),away:canonicalTeam(row.away_team),commenceTime:row.commenceTime,
+        homeScore,awayScore,source:'NFLVERSE_SCHEDULES',status:row.status,
+        observedAt:sourceReceipt.observedAt,sha256:sourceReceipt.sha256}};
+    if(validResult(result)&&validNewFinalResult(result,snapshot,now))results.push(result);
   }
   return results;
 }
 
 export function updateJournal(existing,captures,results,now=Date.now()) {
+  if(!Number.isFinite(now))throw Error('Invalid journal write time');
+  if(!Array.isArray(captures)||captures.length>10000||!Array.isArray(results)||results.length>1000)
+    throw Error('Invalid journal write input');
   const journal=structuredClone(validateJournal(existing));
+  const retainedSchedules=validateRetainedIdentityState(journal,now).schedules;
+  if(captures.some(s=>retainedSchedules.blocked.has(s?.gameId))||results.some(r=>retainedSchedules.blocked.has(r?.gameId)))
+    throw Error('Quarantined schedule identity cannot receive captures or results');
+  for(const s of captures)if(!validObservation(s,journal.season)||parsed(s.capturedAt)>now+60000)
+    throw Error('Invalid/future/post-kickoff forecast');
   const ids=new Set(journal.snapshots.map(x=>x.id));
+  const captureFloor=existing.snapshots.reduce((max,s)=>Math.max(max,parsed(s.capturedAt)),-Infinity);
+  // Direct callers cannot bypass the provider continuity guard for new records.
+  const providerConflicts=providerContinuityConflicts([...existing.snapshots,...captures]);
+  if(captures.some(s=>!ids.has(s.id)&&providerConflicts.has(s.gameId)))
+    throw Error('Provider event identity requires explicit continuity review');
   let added=0,revisions=0;
   for(const s of captures){
-    if(!validObservation(s,journal.season))throw Error('Invalid/post-kickoff forecast');
+    if(!validObservation(s,journal.season)||parsed(s.capturedAt)>now+60000)throw Error('Invalid/future/post-kickoff forecast');
     if(s.season!==journal.season||!s.id||!s.gameId||!Number.isFinite(s.modelHomeProbability)||
        s.modelHomeProbability<=0||s.modelHomeProbability>=1||
        parsed(s.capturedAt)>=parsed(s.commenceTime)||
@@ -168,15 +282,35 @@ export function updateJournal(existing,captures,results,now=Date.now()) {
           !Number.isFinite(parsed(s.challengerBuiltAt))||
           parsed(s.challengerBuiltAt)>parsed(s.capturedAt)+60000)))
       throw Error('Invalid/post-kickoff forecast');
-    if(!ids.has(s.id)){journal.snapshots.push(structuredClone(s));ids.add(s.id);added++;}
+    // Scheduled recaptures reuse the deterministic daily/window ID. Keep the
+    // first record exactly as stored, even when the later quote has changed.
+    if(!ids.has(s.id)){
+      if(parsed(s.capturedAt)<captureFloor||existing.snapshots.some(old=>old.gameId===s.gameId&&
+        old.capturedAt===s.capturedAt&&(s.id<old.id||s.id.localeCompare(old.id)<0)))throw Error('Backdated forecast addition');
+      if(!isEligibleModelSnapshot(s)||!validFrozenIdentity(s)||journal.snapshots.some(old=>
+        old.gameId===s.gameId&&!sameFrozenIdentity(old,s)))throw Error('Invalid/conflicting frozen identity or provenance');
+      journal.snapshots.push(structuredClone(s));ids.add(s.id);added++;
+    }
   }
   const tracked=new Set(journal.snapshots.map(x=>x.gameId));
-  const latest=new Map(journal.settlements.map(s=>[s.gameId,s]));
+  const latest=latestSettlementsByRevision(journal.settlements);
+  const unambiguous=unambiguousFrozenGameIds(journal.snapshots);
   for(const result of results){
     if(!validResult(result))throw Error('Invalid result outcome / score');
-    if(!tracked.has(result.gameId)||latest.get(result.gameId)?.resultHash===result.resultHash)continue;
-    const revised={...structuredClone(result),verifiedAt:new Date(now).toISOString(),
-      revision:(latest.get(result.gameId)?.revision||0)+1};
+    if(!tracked.has(result.gameId))continue;
+    if(!unambiguous.has(result.gameId)||!validNewFinalResult(result,journal.snapshots.find(s=>s.gameId===result.gameId),now))
+      throw Error('Invalid result identity or finality receipt');
+    const prior=latest.get(result.gameId);
+    const revised={...structuredClone(result),
+      resultHash:hash(result.gameId+'|'+result.homeScore+'|'+result.awayScore),
+      verifiedAt:new Date(now).toISOString(),
+      revision:(prior?.revision||0)+1};
+    // A real provenance upgrade may append a revision without changing scores.
+    // Routine repeats must not manufacture new outcome samples or revisions.
+    const snapshot=journal.snapshots.find(s=>s.gameId===result.gameId);
+    if(prior&&['homeScore','awayScore','outcome'].every(key=>prior[key]===result[key])&&
+      validNewFinalResult(prior,snapshot,parsed(prior.verifiedAt))&&
+      (!isSourceCorroboratedSettlement(revised,snapshot)||isSourceCorroboratedSettlement(prior,snapshot)))continue;
     journal.settlements.push(revised);latest.set(result.gameId,revised);revisions++;
   }
   journal.snapshots.sort((a,b)=>a.capturedAt.localeCompare(b.capturedAt)||a.id.localeCompare(b.id));
@@ -224,8 +358,8 @@ export function summarizeEvidence(journal,now=Date.now()) {
       return {s,final,y,model:loss(s.modelHomeProbability,y),
         market:Number.isFinite(s.marketHomeProbability)?loss(s.marketHomeProbability,y):null};});
   const paired=observed.filter(x=>x.market);
-  const scored=observed.filter(x=>(unambiguous.has(x.s.gameId)&&isSourceCorroboratedSettlement(x.final,x.s)));
-  const scoredPaired=scored.filter(x=>x.market);
+  const scored=observed.filter(x=>(unambiguous.has(x.s.gameId)&&isEligibleModelSnapshot(x.s)&&isSourceCorroboratedSettlement(x.final,x.s)));
+  const scoredPaired=scored.filter(x=>x.market&&isEligibleMarketSnapshot(x.s));
   const challengerPaired=[];
   for(const [gameId,shots] of byGame){
     const result=settled.get(gameId);
@@ -237,7 +371,7 @@ export function summarizeEvidence(journal,now=Date.now()) {
     const y=result.outcome==='HOME'?1:0;
     challengerPaired.push({
       gameId,gameDate:s.gameDate,modelVersion:s.challengerModelVersion,
-      sourceCorroborated:unambiguous.has(gameId)&&isSourceCorroboratedSettlement(result,s),
+      sourceCorroborated:unambiguous.has(gameId)&&isEligibleChallengerSnapshot(s)&&isSourceCorroboratedSettlement(result,s),
       baselineProbability:s.modelHomeProbability,challengerProbability:s.challengerHomeProbability,outcome:y,
       baseline:loss(s.modelHomeProbability,y),
       challenger:loss(s.challengerHomeProbability,y)
@@ -249,10 +383,10 @@ export function summarizeEvidence(journal,now=Date.now()) {
   const movement=[];
   for(const [gameId,shots] of byGame){
     const firstShot=first.get(gameId);
-    const near=shots.filter(s=>s.window==='NEAR_KICKOFF'&&s.id!==firstShot.id&&
+    const near=shots.filter(s=>unambiguous.has(gameId)&&isEligibleMarketSnapshot(s)&&s.window==='NEAR_KICKOFF'&&s.id!==firstShot.id&&
       Number.isFinite(s.marketHomeProbability)&&parsed(s.capturedAt)<parsed(s.commenceTime))
       .sort((a,b)=>b.capturedAt.localeCompare(a.capturedAt))[0];
-    if(near&&Number.isFinite(firstShot.marketHomeProbability))
+    if(near&&isEligibleMarketSnapshot(firstShot))
       movement.push((near.marketHomeProbability-firstShot.marketHomeProbability)*100);
   }
   const pending=[...first.values()].filter(s=>!settled.has(s.gameId));
@@ -260,6 +394,8 @@ export function summarizeEvidence(journal,now=Date.now()) {
     schema:1,season:journal.season,generatedAt:new Date(now).toISOString(),
     provenance:journal.provenance,status:minMet?'FORWARD_SAMPLE_AVAILABLE':'COLLECTING_FORWARD_EVIDENCE',
     outcomeScoringPolicy:OUTCOME_SCORING_POLICY,sourceIndependenceVerified:false,
+    marketFreshnessPolicy:MARKET_FRESHNESS_POLICY,
+    legacyMarketSnapshotsWithoutOldestQuoteTime:journal.snapshots.filter(s=>Number.isFinite(s.marketHomeProbability)&&s.marketOldestQuoteAt==null).length,
     researchOnly:true,noWagering:true,marketBeatingEdgeEstablished:false,
     realizedROI:null,verifiedCLV:null,minimumScoredSample:MIN_SAMPLE,
     totalSnapshots:journal.snapshots.length,prospectiveGames:first.size,
@@ -307,8 +443,8 @@ export function summarizeEvidence(journal,now=Date.now()) {
       result:x.final.outcome,modelHomeProbability:x.s.modelHomeProbability,
       marketHomeProbability:x.s.marketHomeProbability,
       capturedAt:x.s.capturedAt,
-      sourceCorroborated:(unambiguous.has(x.s.gameId)&&isSourceCorroboratedSettlement(x.final,x.s)),
-      brier:(unambiguous.has(x.s.gameId)&&isSourceCorroboratedSettlement(x.final,x.s))?round(x.model.brier):null
+      sourceCorroborated:(unambiguous.has(x.s.gameId)&&isEligibleModelSnapshot(x.s)&&isSourceCorroboratedSettlement(x.final,x.s)),
+      brier:(unambiguous.has(x.s.gameId)&&isEligibleModelSnapshot(x.s)&&isSourceCorroboratedSettlement(x.final,x.s))?round(x.model.brier):null
     })),
     pendingPreview:pending.slice(0,12).map(x=>({
       gameId:x.gameId,home:x.home,away:x.away,gameDate:x.gameDate,
@@ -320,6 +456,7 @@ export function summarizeEvidence(journal,now=Date.now()) {
       'Original forecasts are append-only; corrected results retain settlement revisions',
       'At least 30 source-corroborated non-ties before aggregate outcome performance is displayed',
       'Market consensus is paired at the same as-of snapshot, NOT genuine bookmaker closing-line value',
+      'Market scoring requires absolute oldest quote time fresh at capture; legacy missing timestamps are not reconstructed',
       'Only derived probabilities are journaled; no raw bookmaker prices or identities',
       'Legacy community scores remain recorded but do not qualify for outcome scoring',
       'Cross-source agreement does not establish upstream source independence or official league certification',

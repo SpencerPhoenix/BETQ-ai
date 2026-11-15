@@ -1,8 +1,6 @@
 name: NFL injury report provenance refresh
 on:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/update-injuries.yml', 'scripts/update-injuries.mjs', 'src/injuries.mjs']
+  # Code publication must not run research or publish generated artifacts.
   workflow_dispatch:
   schedule:
     - cron: '24 10 * * *'
@@ -21,6 +19,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Test source timestamp controls
         run: |
           npm run check

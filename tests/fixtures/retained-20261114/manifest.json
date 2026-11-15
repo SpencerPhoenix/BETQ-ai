@@ -1,0 +1,15 @@
+{
+  "sourceCommit": "f53b4b346ed79200d88dacccc648bab3f17c09df",
+  "sourceUrl": "https://github.com/SpencerPhoenix/BETQ-ai/tree/f53b4b346ed79200d88dacccc648bab3f17c09df/data/evidence",
+  "scope": "Public derived research fixture only; not current coverage or qualified performance.",
+  "files": {
+    "nfl-2026.json": {
+      "sha256": "78b66943381466d255321ee21914bc9b6d10bbacbf39696309ce26fc772cbfb9",
+      "bytes": 362322
+    },
+    "summary.json": {
+      "sha256": "97661b79a6b0cab67b96f703a85bd3318ccddf46c2afbc9fbfef7da9f87cb597",
+      "bytes": 8367
+    }
+  }
+}

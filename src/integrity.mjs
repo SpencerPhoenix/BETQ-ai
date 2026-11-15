@@ -1,4 +1,5 @@
 /** Small, dependency-free boundary checks shared by research and HTTP code. */
+import {scheduledInstant} from './schedule-review.mjs';
 export const DAY_MS = 86400000;
 export const timestamp = value => typeof value === 'string' && value.trim() !== '' ? Date.parse(value) : NaN;
 export const isProbability = value => Number.isFinite(value) && value > 0 && value < 1;
@@ -12,7 +13,7 @@ export function sourceDateFresh(day, now, maxAgeDays=28) {
 }
 export function nflGameDate(event) {
   if (validDay(event?.gameDate)) return event.gameDate;
-  const kick=timestamp(event?.commence_time);
+  const kick=scheduledInstant(event?.commence_time);
   if (!Number.isFinite(kick)) return null;
   // NFL schedules use the Eastern local game date, not the following UTC day.
   const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(kick);
