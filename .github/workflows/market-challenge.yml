@@ -1,6 +1,7 @@
 name: BETQ nested market challenge
 on:
   push:
+    branches: [main]
     paths:
       - 'src/market-challenge.mjs'
       - 'scripts/run-market-challenge.mjs'
@@ -13,6 +14,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   compare:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 18
     steps:

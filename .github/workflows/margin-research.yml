@@ -1,6 +1,7 @@
 name: BETQ preregistered NFL margin residual evaluation
 on:
   push:
+    branches: [main]
     paths:
       - 'src/margin-research.mjs'
       - 'scripts/run-margin-study.mjs'
@@ -13,6 +14,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   experiment:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

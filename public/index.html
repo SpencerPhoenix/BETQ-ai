@@ -11,15 +11,17 @@
   <script defer src="/app.js"></script>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
   <div class="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+      <button class="mobile-nav-close" type="button" id="menu-close" aria-label="Close navigation">✕</button>
       <a class="brand" href="/" aria-label="BETQ.ai home">
         <span class="brand-mark">BQ<span class="brand-flare">.</span></span>
         <span class="brand-copy"><strong>BETQ<span>.ai</span></strong><small>QUANT INTELLIGENCE</small></span>
       </a>
       <div class="sidebar-overline">TERMINAL / v0.11.0</div>
       <nav class="nav-list" aria-label="Terminal views">
-        <button class="nav-item active" type="button" data-tab="overview"><span class="nav-icon">◫</span><span>Command Center</span><span class="nav-shortcut">01</span></button>
+        <button class="nav-item active" type="button" data-tab="overview" aria-current="page"><span class="nav-icon">◫</span><span>Command Center</span><span class="nav-shortcut">01</span></button>
         <button class="nav-item" type="button" data-tab="games"><span class="nav-icon">◉</span><span>Game Monitor</span><span class="nav-shortcut">02</span></button>
         <button class="nav-item" type="button" data-tab="signals"><span class="nav-icon">⌁</span><span>Signal Scanner</span><span class="nav-shortcut">03</span></button>
         <button class="nav-item" type="button" data-tab="model"><span class="nav-icon">⊞</span><span>Prediction Lab</span><span class="nav-shortcut">04</span></button>
@@ -36,32 +38,33 @@
         <div class="tiny-row"><span class="pulse-dot" id="sidebar-dot"></span><span id="sidebar-feed">Checking data source</span></div>
         <div class="source-rule"></div>
         <div class="source-line"><span>Model</span><b>MARKET v0.1</b></div>
-        <div class="source-line"><span>Execution</span><b>PAPER ONLY</b></div>
+        <div class="source-line"><span>Paper staging</span><b>LOCKED</b></div>
       </div>
       <div class="sidebar-footer"><span class="sidebar-glyph">✦</span> INTELLIGENCE OVER INSTINCT <span class="copyright">© 2026 BETQ</span></div>
     </aside>
 
-    <div class="workspace">
+    <button type="button" class="nav-backdrop" id="nav-backdrop" aria-label="Close navigation" tabindex="-1" hidden></button>
+    <div class="workspace" id="workspace">
       <header class="topbar">
         <div class="topbar-left">
-          <button class="mobile-nav-button" type="button" id="menu-toggle" aria-label="Toggle navigation">☰</button>
+          <button class="mobile-nav-button" type="button" id="menu-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar">☰</button>
           <div class="breadcrumb">WORKSPACE <span>/</span> <b id="breadcrumb-page">COMMAND CENTER</b></div>
         </div>
         <div class="topbar-right">
           <span class="time-now" id="clock">--:--:--</span>
           <span class="divider-vertical"></span>
           <span class="feed-chip" id="feed-chip"><span class="pulse-dot"></span> CONNECTING</span>
-          <button class="refresh-btn" type="button" data-action="refresh" aria-label="Refresh current slate" title="Refresh current slate">↻</button>
+          <button class="refresh-btn" type="button" data-action="refresh" aria-label="Request real odds (may use API credits)" title="Request real odds (may use API credits)">↻</button>
         </div>
       </header>
 
-      <main class="main-content" id="main-content">
+      <main class="main-content" id="main-content" tabindex="-1">
         <section class="hero">
           <div class="hero-lines" aria-hidden="true"></div>
           <div class="hero-main">
             <div class="eyebrow"><span class="eyebrow-square"></span> BETQ QUANT LAB <span class="eyebrow-slash">//</span> SPORTS MARKET INTELLIGENCE</div>
             <h1>See the <em>edge.</em><br>Question the signal.</h1>
-            <p>Institutional-style price discovery for sports markets. Transparent probabilities, auditable EV, strict data gates, zero blind confidence.</p>
+            <p>Compare sportsbook prices and inspect NFL forecasting research. Market estimates are not verified win probabilities or a proven betting edge.</p>
             <div class="hero-actions">
               <button class="primary-button" data-tab="signals" type="button">Open signal scanner <span>↗</span></button>
               <span class="hero-subtag"><span class="hollow-dot"></span> RESEARCH TERMINAL / NO AUTO-BETTING</span>
@@ -92,14 +95,16 @@
           <div class="toolbar-group mode-group">
             <span class="toolbar-label">DATA MODE</span>
             <div class="choice-bar mode-toggle">
-              <button type="button" data-mode="live" class="chosen">Live</button>
+              <button type="button" data-mode="live" class="chosen">Real odds</button>
               <button type="button" data-mode="demo">Demo</button>
             </div>
           </div>
         </section>
 
+        <p class="capability-note" id="capability-note" aria-live="polite"></p>
+
         <div id="banner" class="notice warning" role="status">
-          <span>◈</span><p>Connecting to market data source…</p>
+          <span>◈</span><p>Checking for a cached odds snapshot…</p>
         </div>
 
         <section class="page active" id="page-overview" aria-label="Command center">
@@ -112,7 +117,7 @@
           <div class="main-grid">
             <section class="panel wide-panel">
               <div class="panel-head"><div><span class="panel-kicker">SIGNALS / RANKED</span><h3>Price opportunity board</h3></div><button type="button" class="text-link" data-tab="signals">Full scanner ↗</button></div>
-              <div class="table-scroll"><table class="data-table"><thead><tr><th>CONTRACT</th><th>BEST BOOK</th><th>FAIR P</th><th>EDGE</th><th>EV</th><th>STATUS</th></tr></thead><tbody id="opportunity-table"></tbody></table></div>
+              <div class="table-scroll"><table class="data-table"><thead><tr><th>CONTRACT</th><th>BOOK / AMERICAN ODDS</th><th>MARKET REF. P</th><th>EDGE</th><th>EV</th><th>STATUS</th></tr></thead><tbody id="opportunity-table"></tbody></table></div>
             </section>
             <section class="panel spotlight-panel">
               <div class="panel-head"><div><span class="panel-kicker">DEEP DIVE / SELECTED</span><h3>Signal anatomy</h3></div><span class="header-mini-icon">⌁</span></div>
@@ -135,14 +140,14 @@
         </section>
 
         <section class="page" id="page-games" aria-label="Game monitor">
-          <div class="section-heading"><div><div class="eyebrow subtle">02 / GAME MONITOR</div><h2>Game intelligence</h2></div><button class="outline-button" type="button" data-action="scores">Load live scores ↗</button></div>
+          <div class="section-heading"><div><div class="eyebrow subtle">02 / GAME MONITOR</div><h2>Game intelligence</h2></div><button class="outline-button" type="button" data-action="scores" title="Request recent scores (may use API credits)">Request scores (may use credits) ↗</button></div>
           <div id="scores" class="scores-panel"></div>
           <div class="game-grid" id="game-grid"></div>
         </section>
 
         <section class="page" id="page-signals" aria-label="Signal scanner">
           <div class="section-heading"><div><div class="eyebrow subtle">03 / MARKET SCANNER</div><h2>All priced outcomes</h2></div><span class="faint-caption">MARKET-ONLY / NOT MODEL PICKS</span></div>
-          <div class="scanner-bar"><input id="signal-search" aria-label="Search teams, selections or books" placeholder="Search team, bookmaker or selection…"><select id="signal-sort" aria-label="Sort signals"><option value="ev">Highest EV estimate</option><option value="quality">Highest data quality</option><option value="edge">Highest price edge</option><option value="soon">Soonest kickoff</option></select><label class="filter-checkbox"><input type="checkbox" id="watch-only"> WATCH only</label></div>
+          <div class="scanner-bar"><input id="signal-search" aria-label="Search teams, selections or books" placeholder="Search team, bookmaker or selection…"><select id="signal-sort" aria-label="Sort signals"><option value="ev">Highest EV estimate</option><option value="quality">Highest data quality</option><option value="edge">Highest price edge</option><option value="soon">Soonest kickoff</option></select><label class="filter-checkbox"><input type="checkbox" id="watch-only"> Saved only</label></div>
           <div class="signal-grid" id="signal-grid"></div>
         </section>
 
@@ -242,7 +247,7 @@
         </section>
 
         <section class="page" id="page-execution" aria-label="Paper execution">
-          <div class="section-heading"><div><div class="eyebrow subtle">09 / RISK LAB</div><h2>Paper execution</h2></div><span class="danger-inline">● NO REAL WAGERS</span></div>
+          <div class="section-heading"><div><div class="eyebrow subtle">09 / RISK LAB</div><h2>Paper ledger</h2></div><span class="danger-inline">● NO REAL WAGERS</span></div>
           <div id="execution-view"></div>
         </section>
 
@@ -257,7 +262,7 @@
             <section class="panel"><div class="panel-head"><div><span class="panel-kicker">PAPER LEDGER</span><h3>Risk preferences</h3></div></div>
               <label class="form-label" for="bankroll">Paper bankroll ($)</label><input id="bankroll" class="setting-input" type="number" min="10" max="10000000" step="10" value="1000">
               <label class="form-label" for="maxrisk">Maximum stake per paper ticket (% bankroll)</label><input id="maxrisk" class="setting-input" type="number" min="0.1" max="1" step="0.1" value="1">
-              <p class="form-help">Paper sizing is capped at 1% per ticket and never triggers sportsbook orders. Saved only in this browser.</p><button type="button" class="primary-button" data-action="save-settings">Save settings</button>
+              <p class="form-help">These saved limits apply to local paper records. New paper staging is locked; no sportsbook orders can be placed.</p><button type="button" class="primary-button" data-action="save-settings">Save settings</button>
             </section>
             <section class="panel"><div class="panel-head"><div><span class="panel-kicker">DATA SERVICES</span><h3>Live API configuration</h3></div></div>
               <p class="settings-paragraph">The Odds API key must be set on the running Node.js server as <code>ODDS_API_KEY</code>. Never paste a private key into a webpage, public GitHub file or the browser console.</p>
@@ -267,7 +272,7 @@
           </div>
         </section>
       </main>
-      <footer class="app-footer"><span>BETQ.ai <span class="footer-faint">/ QUANT INTELLIGENCE TERMINAL</span></span><span>Market-derived estimates · Not independently validated · No real wagering</span></footer>
+      <footer class="app-footer"><span>BETQ.ai <span class="footer-faint">/ QUANT INTELLIGENCE TERMINAL</span></span><span>Research only · No validated betting edge · No real wagering</span></footer>
     </div>
   </div>
   <div class="toast" role="status" id="toast" aria-live="polite"></div>

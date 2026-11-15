@@ -39,7 +39,7 @@ async function getSlate() {
   endpoint.searchParams.set('sport','americanfootball_nfl');
   endpoint.searchParams.set('market','h2h');
   const response=await fetch(endpoint,{signal:AbortSignal.timeout(100000),
-    headers:{Accept:'application/json'}});
+    headers:{Accept:'application/json','x-betq-paid-request':'true'}});
   const result=await response.json().catch(()=>null);
   if(!response.ok)throw Error('Live slate unavailable HTTP '+response.status+
     ' '+String(result?.error?.code||'UNKNOWN'));
@@ -62,14 +62,17 @@ try {
   captureStatus='SKIPPED: '+err.message;
   console.log('Market forecast capture unavailable; continuing results reconciliation:',err.message);
 }
-const newlySettled=resultsFromSchedule(original,schedule,now);
-const result=updateJournal(original,captures,newlySettled,now);
-const updatedResults=resultsFromSchedule(result.journal,schedule,now);
-const combined=updateJournal(result.journal,[],updatedResults,now);
+// Source retrieval and cold starts can take longer than the allowed clock skew.
+// Validate newly received captures against the actual reconciliation time.
+const reconciledAt=Date.now();
+const newlySettled=resultsFromSchedule(original,schedule,reconciledAt);
+const result=updateJournal(original,captures,newlySettled,reconciledAt);
+const updatedResults=resultsFromSchedule(result.journal,schedule,reconciledAt);
+const combined=updateJournal(result.journal,[],updatedResults,reconciledAt);
 const updated=combined.journal;
 const added=result.added+combined.added;
 const settled=result.settlementRevisions+combined.settlementRevisions;
-const summary=summarizeEvidence(updated,now);
+const summary=summarizeEvidence(updated,reconciledAt);
 const changed=added>0||settled>0;
 console.log(JSON.stringify({
   season,captureStatus,eligible:captures.length,skipped:skipped.length,

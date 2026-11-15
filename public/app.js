@@ -28,7 +28,7 @@
     riskStress: null,
     shadowStatus: null, shadowStudy: null, shadowDemo: null, shadowDerived: null, shadowView: 'live', shadowError: null,
     replaySeason: 2025, replayThreshold: 3, replayPage: 0, replayLoading: false,
-    selectedId: null, search: '', sort: 'ev', watchOnly: false,
+    selectedId: null, search: '', sort: 'ev', watchOnly: prefs.watchOnly === true,
     loading: false, ledger: Array.isArray(safeGet(LEDGER, [])) ? safeGet(LEDGER, []) : []
   };
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) =>
@@ -51,10 +51,13 @@
     return mins < 1 ? 'Just now' : mins + 'm ago';
   };
   const persist = () => {
-    localStorage.setItem(STORE, JSON.stringify({
-      sport: state.sport, market: state.market, mode: state.mode,
-      bankroll: state.bankroll, maxRisk: state.maxRisk
-    }));
+    try{
+      localStorage.setItem(STORE, JSON.stringify({
+        sport: state.sport, market: state.market, mode: state.mode,
+        bankroll: state.bankroll, maxRisk: state.maxRisk, watchOnly: state.watchOnly
+      }));
+      return true;
+    }catch{toast('Preferences apply for this session but could not be saved in this browser.');return false;}
   };
   const saveLedger = () => localStorage.setItem(LEDGER, JSON.stringify(state.ledger));
   let toastHandle = 0;
@@ -84,10 +87,43 @@
     '<div class="empty"><div class="empty-icon">◌</div><strong>' + esc(title) +
     '</strong><span>' + esc(detail) + '</span></div>';
 
+  const mobileNavigation=window.matchMedia('(max-width:850px)');
+  function setNavigation(open,returnFocus=true){
+    const sidebar=$('sidebar'),mobile=mobileNavigation.matches;
+    const expanded=mobile&&open;
+    sidebar.classList.toggle('open',expanded);sidebar.inert=mobile&&!expanded;
+    $('workspace').inert=expanded;
+    $('nav-backdrop').hidden=!expanded;
+    $('menu-toggle').setAttribute('aria-expanded',String(expanded));
+    if(mobile){sidebar.setAttribute('aria-hidden',String(!expanded));}
+    else sidebar.removeAttribute('aria-hidden');
+    if(expanded){
+      sidebar.setAttribute('role','dialog');sidebar.setAttribute('aria-modal','true');
+      (sidebar.querySelector('.nav-item.active')||$('menu-close')).focus();
+    }else{
+      sidebar.removeAttribute('role');sidebar.removeAttribute('aria-modal');
+      if(mobile&&returnFocus)$('menu-toggle').focus();
+    }
+  }
+  function retainQuoteFocus(renderFn){
+    const active=document.activeElement;
+    const panel=active?.closest('#signal-grid, #spotlight, #opportunity-table');
+    const attribute=['data-watch','data-pick','data-paper'].find(name=>active?.hasAttribute(name));
+    const value=attribute?active.getAttribute(attribute):null;
+    renderFn();
+    if(panel&&attribute){
+      const replacement=[...panel.querySelectorAll('['+attribute+']')].find(el=>el.getAttribute(attribute)===value);
+      (replacement||$('watch-only')).focus({preventScroll:true});
+    }
+  }
+
   function setTab(tab) {
     if (!allowedTabs.includes(tab)) return;
     state.tab = tab;
-    document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    document.querySelectorAll('.nav-item').forEach(b => {
+      b.classList.toggle('active', b.dataset.tab === tab);
+      if(b.dataset.tab === tab)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
+    });
     document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + tab));
     const header = document.querySelector('.hero');
     header.hidden = tab !== 'overview';
@@ -96,7 +132,7 @@
       overview: 'COMMAND CENTER', games: 'GAME MONITOR', signals: 'SIGNAL SCANNER',
       model: 'PREDICTION LAB', evidence: 'FORWARD EVIDENCE', latency: 'QB LATENCY STUDY', replay: 'HISTORICAL REPLAY', pricing: 'ROI & CLV LAB', execution: 'PAPER EXECUTION', audit: 'AUDIT & QUALITY', settings: 'SETTINGS'
     })[tab];
-    $('sidebar').classList.remove('open');
+    setNavigation(false,false);
     if (tab === 'settings') syncSettings();
     if (tab === 'execution') renderExecution();
     if (tab === 'pricing') renderPricing();
@@ -107,11 +143,15 @@
     if (tab === 'evidence') renderEvidence();
     if (tab === 'signals') renderSignals();
     if (tab === 'games') renderGames();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const heading=$('page-'+tab).querySelector('h2');
+    if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}
+    window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   }
 
-  async function requestJSON(path) {
-    const response = await fetch(path, { cache: 'no-store', headers: { Accept: 'application/json' } });
+  async function requestJSON(path,{paidRequest=false}={}) {
+    const headers={Accept:'application/json'};
+    if(paidRequest)headers['x-betq-paid-request']='true';
+    const response = await fetch(path, { cache: 'no-store', headers });
     let data = null;
     try { data = await response.json(); } catch { /* handled below */ }
     if (!response.ok) {
@@ -127,19 +167,22 @@
     element.classList.remove('hidden', 'info', 'success');
     if (state.loading && !state.slate) {
       element.classList.add('info');
-      element.innerHTML = '<span>◈</span><p>Scanning the market and validating lines…</p>';
+      element.innerHTML = '<span>◈</span><p>Reading the available snapshot and validating lines…</p>';
     } else if (state.mode === 'demo') {
-      element.innerHTML = '<span>◇</span><p><b>SIMULATION MODE.</b> All teams, games, odds and potential edges are fictional. No demo result is a live recommendation. <button type="button" class="text-link" data-mode="live">Switch to live ↗</button></p>';
+      element.innerHTML = '<span>◇</span><p><b>SIMULATION MODE.</b> All teams, games, odds and potential edges are fictional. No demo result is a live recommendation. <button type="button" class="text-link" data-mode="live">Switch to real odds ↗</button></p>';
+    } else if (state.error?.code === 'PAID_REFRESH_REQUIRED') {
+      element.classList.add('info');
+      element.innerHTML='<span>◈</span><p><b>NO FRESH CACHED ODDS.</b> Opening the app and changing filters do not request paid quotes. <button type="button" class="text-link" data-action="refresh">Request real odds (may use API credits) ↻</button></p>';
     } else if (state.error) {
       element.innerHTML = '<span>!</span><p><b>' + esc(state.error.code === 'SETUP_REQUIRED' ? 'LIVE FEED NOT CONFIGURED.' : 'DATA SOURCE UNAVAILABLE.') +
         '</b> ' + esc(state.error.message) +
         ' <button type="button" class="text-link" data-mode="demo">Explore demo ↗</button></p>';
     } else if (state.slate) {
       element.classList.add('info');
-      element.innerHTML = '<span>◇</span><p><b>NO VALIDATED BETTING EDGE · PAPER STAGING LOCKED.</b> ↻ refreshes live quotes manually to protect API credits. NFL Elo and the historical EPA challenger appear separately in <button type="button" class="text-link" data-tab="model">Prediction Lab ↗</button>. Injury status may be stale; confirmed starters are not modeled.</p>';
+      element.innerHTML = '<span>◇</span><p><b>NO VALIDATED BETTING EDGE · PAPER STAGING LOCKED.</b> Opening the app and changing filters use cached odds only. ↻ requests real odds and may use API credits. Quotes are snapshots, not an in-play stream. NFL Elo and the historical EPA challenger appear separately in <button type="button" class="text-link" data-tab="model">Prediction Lab ↗</button>. Injury status may be stale; confirmed starters are not modeled.</p>';
     } else {
       element.classList.add('info');
-      element.innerHTML = '<span>◈</span><p>Connecting to the odds provider…</p>';
+      element.innerHTML = '<span>◈</span><p>Checking for a cached odds snapshot…</p>';
     }
   }
 
@@ -155,7 +198,7 @@
       sidebar.textContent = 'Synthetic sandbox';
     } else if (state.error || !state.slate) {
       badge.classList.add('offline');
-      badge.innerHTML = '<span class="pulse-dot warning"></span> LIVE UNAVAILABLE';
+      badge.innerHTML = '<span class="pulse-dot warning"></span> REAL ODDS UNAVAILABLE';
       dot.classList.add('warning');
       sidebar.textContent = 'Live feed not ready';
     } else if (!Number.isFinite(Date.parse(state.slate.receivedAt)) || Date.now()-Date.parse(state.slate.receivedAt)>600000) {
@@ -163,15 +206,28 @@
       badge.innerHTML='<span class="pulse-dot warning"></span> SNAPSHOT EXPIRED';
       dot.classList.add('warning');sidebar.textContent='Refresh required / expired';
     } else {
-      badge.innerHTML = '<span class="pulse-dot"></span> LIVE API SNAPSHOT';
-      sidebar.textContent = 'The Odds API / active';
+      badge.innerHTML = '<span class="pulse-dot"></span> API SNAPSHOT · NOT STREAMING';
+      sidebar.textContent = 'The Odds API / snapshot';
     }
   }
 
   function renderFilters() {
-    document.querySelectorAll('[data-sport]').forEach(el => el.classList.toggle('chosen', el.dataset.sport === state.sport));
-    document.querySelectorAll('[data-market]').forEach(el => el.classList.toggle('chosen', el.dataset.market === state.market));
-    document.querySelectorAll('[data-mode]').forEach(el => el.classList.toggle('chosen', el.dataset.mode === state.mode));
+    for(const name of ['sport','market','mode'])document.querySelectorAll('.choice-bar [data-'+name+']').forEach(el=>{
+      const selected=el.dataset[name]===state[name];el.classList.toggle('chosen',selected);
+      el.setAttribute('aria-pressed',String(selected));
+    });
+    $('watch-only').checked=state.watchOnly;
+    document.querySelectorAll('[data-action="refresh"]').forEach(el=>{
+      el.disabled=state.loading;
+      el.setAttribute('aria-label',state.mode==='live'?'Request real odds (may use API credits)':'Refresh fictional demo');
+      el.title=state.mode==='live'?'Request real odds (may use API credits)':'Refresh fictional demo';
+    });
+    const modelSelection=state.mode==='live'&&state.sport==='americanfootball_nfl'&&state.market==='h2h';
+    $('capability-note').textContent=state.mode==='demo'?
+      'Fictional demo only. No real games, prices or outcome forecasts.':
+      (modelSelection?'NFL moneyline: full-game odds comparison; separate outcome research appears only when its model and source gates pass.':
+        sportLabels[state.sport]+' '+marketLabels[state.market]+': market-price comparison only. No independent outcome forecast for this selection.')+
+      ' No in-play or halftime predictions, confirmed-starter adjustments or weather model. Odds use American format (+150 / −110).';
   }
 
 
@@ -595,7 +651,7 @@
     const lines=plays.rows.map(p=>
       '<tr><td><strong>'+esc(p.matchup)+'</strong><small>'+
       esc(p.date)+' · Week '+esc(p.week)+'</small></td>'+
-      '<td>'+esc(p.selectedTeam)+'</td><td><span class="odds-pill">'+
+      '<td>'+esc(p.selectedTeam)+'</td><td><span class="odds-pill" title="American odds">'+
       esc(odds(p.selectedAmericanOdds))+'</span></td>'+
       '<td>'+pct(p.modelProbability,1)+'</td>'+
       '<td class="'+(p.estimatedEVPercent>=0?'positive':'negative')+'">'+
@@ -638,7 +694,7 @@
       const selected = state.selectedId === s.id ? ' class="selected"' : '';
       return '<tr' + selected + ' data-pick="' + esc(s.id) + '" tabindex="0"><td><strong>' +
         esc(s.selection) + '</strong><small>' + esc(eventLabel(s.event)) +
-        '</small></td><td><span class="odds-pill">' + esc(odds(s.americanOdds)) +
+        '</small></td><td><span class="odds-pill" title="American odds">' + esc(odds(s.americanOdds)) +
         '</span><small>' + esc(s.bookmaker) + '</small></td><td>' + pct(s.fairProbability) +
         '</td><td class="' + (s.edgePoints > 0 ? 'positive' : 'negative') + '">' +
         signed(s.edgePoints) + 'pp</td><td class="' + (s.evPercent > 0 ? 'positive' : 'negative') +
@@ -665,16 +721,16 @@
       ? '<div class="model-spotlight"><div><span class="panel-kicker">INDEPENDENT NFL ELO</span><strong>' +
         pct(signal.eloBaselineProbability) + ' win probability</strong></div><div><span class="panel-kicker">MODEL vs OFFERED PRICE</span><strong>' +
         signed(signal.eloPriceEdgePoints) + ' pp · ' + signed(signal.eloIndicativeEvPercent) + '% theoretical EV</strong></div>' +
-        '<p>2025 untouched holdout: ' + model.holdoutN + ' games · Brier ' + num(model.holdoutBrier,5) +
+        '<p>2025 historical reference: ' + model.holdoutN + ' games · Brier ' + num(model.holdoutBrier,5) +
         '. No injury, confirmed-starter, weather or player-status adjustment. Research only.</p></div>'
       : '';
     $('spotlight').innerHTML = '<div class="spotlight-body"><div class="spotlight-head">' +
       statusTag(signal.status) + '<span class="faint-caption">QUALITY ' + signal.qualityScore + '/100</span></div>' +
       '<div class="spotlight-match">' + esc(eventLabel(signal.event)) + ' · ' + esc(when(signal.event.commenceTime)) + '</div>' +
       '<div class="spotlight-select">' + esc(signal.selection) + '</div>' +
-      '<div class="spotlight-book">Best observed: <b>' + esc(signal.bookmaker) + '</b> <span class="odds-pill">' +
+      '<div class="spotlight-book">Best observed: <b>' + esc(signal.bookmaker) + '</b> <span class="odds-pill" title="American odds">' +
       esc(odds(signal.americanOdds)) + '</span></div><div class="spotlight-stats">' +
-      '<div class="spotlight-stat"><label>Fair market P</label><strong>' + pct(signal.fairProbability) + '</strong></div>' +
+      '<div class="spotlight-stat"><label>Market reference P</label><strong>' + pct(signal.fairProbability) + '</strong></div>' +
       '<div class="spotlight-stat"><label>Offered implied P</label><strong>' + pct(signal.impliedProbability) + '</strong></div>' +
       '<div class="spotlight-stat"><label>Price edge</label><strong class="' + (signal.edgePoints > 0 ? 'positive' : 'negative') +
       '">' + signed(signal.edgePoints) + ' pp</strong></div>' +
@@ -685,8 +741,8 @@
       'Reference quote age: ' + signal.quoteAgeSeconds + 's. ' +
       'Injury, weather and starting-lineup verification: unavailable. ' +
       'Half-time lean: not modeled.</div><div class="spotlight-actions">' +
-      '<button type="button" class="outline-button" data-watch="' + esc(signal.id) + '">☆ ' +
-      (isWatched(signal.id) ? 'Watching' : 'Add to watchlist') + '</button>' +
+      '<button type="button" class="outline-button" data-watch="' + esc(signal.id) + '" aria-pressed="'+String(isWatched(signal.id))+'">☆ ' +
+      (isWatched(signal.id) ? 'Saved · remove' : 'Save to watchlist') + '</button>' +
       '<button type="button" class="primary-button" data-paper="' + esc(signal.id) + '"' +
       (signal.paperStagingAuthorized === true && state.slate?.executionGate?.bettingAuthorized === true ? '' : ' disabled') + '>Paper staging locked · research only</button></div></div>';
   }
@@ -723,9 +779,9 @@
         (projection?.available ? '<div class="game-model"><span>INDEPENDENT ELO BASELINE</span><b>' +
           esc(event.homeTeam) + ' ' + pct(projection.homeWinProbability) +
           ' · ' + esc(event.awayTeam) + ' ' + pct(projection.awayWinProbability) +
-          '</b><small>2025 holdout Brier ' + num(projection.holdoutBrier,5) + ' · no injury updates</small></div>' : '') +
-        '<div class="game-bottom"><span>' + event.bookmakerCount + ' sportsbooks · '
-        event.totalMarkets + ' matched contract(s)</span>' +
+          '</b><small>2025 historical Brier ' + num(projection.holdoutBrier,5) + ' · no injury updates</small></div>' : '') +
+        '<div class="game-bottom"><span>' + esc(event.bookmakerCount) + ' sportsbooks · ' +
+        esc(event.totalMarkets) + ' matched contract(s)</span>' +
         (top ? '<button type="button" class="text-link" data-pick="' + esc(top.id) + '">Inspect ' +
           esc(signed(top.evPercent)) + '% price scenario (not a bet) ↗</button>' : '<span>No qualifying quotes</span>') + '</div></article>';
     }).join('') || empty('No upcoming games with listed odds', 'The provider may not have posted prices for this market or league yet.');
@@ -737,7 +793,7 @@
     const query = state.search.trim().toLowerCase();
     if (query) signals = signals.filter(s =>
       [s.selection, s.bookmaker, s.event.homeTeam, s.event.awayTeam].some(v => String(v).toLowerCase().includes(query)));
-    if (state.watchOnly) signals = signals.filter(s => s.status === 'WATCH');
+    if (state.watchOnly) signals = signals.filter(s => isWatched(s.id));
     signals.sort((a, b) => {
       if (state.sort === 'quality') return b.qualityScore - a.qualityScore;
       if (state.sort === 'edge') return (b.edgePoints ?? -999) - (a.edgePoints ?? -999);
@@ -748,9 +804,9 @@
       '<article class="signal-card ' + (state.selectedId === s.id ? 'focused' : '') +
       '"><div class="signal-card-top"><span class="signal-card-match">' + esc(eventLabel(s.event)) +
       '</span>' + statusTag(s.status) + '</div><h3>' + esc(s.selection) + '</h3>' +
-      '<div class="signal-book">' + esc(s.bookmaker) + ' <span class="odds-pill">' +
+      '<div class="signal-book">' + esc(s.bookmaker) + ' <span class="odds-pill" title="American odds">' +
       esc(odds(s.americanOdds)) + '</span> · ' + esc(s.contractLabel) + '</div>' +
-      '<div class="signal-numbers"><div><label>FAIR P</label><strong>' + pct(s.fairProbability) +
+      '<div class="signal-numbers"><div><label>MARKET REF. P</label><strong>' + pct(s.fairProbability) +
       '</strong></div><div><label>EDGE</label><strong class="' + (s.edgePoints > 0 ? 'positive' : 'negative') + '">' +
       signed(s.edgePoints) + 'pp</strong></div><div><label>EV</label><strong class="' +
       (s.evPercent > 0 ? 'positive' : 'negative') + '">' + signed(s.evPercent) +
@@ -760,10 +816,13 @@
       (s.reasons.length ? esc(s.reasons[0].replaceAll('_', ' ')) : 'Price gates passed') +
       '</span><span class="signal-actions"><button class="small-button" type="button" data-pick="' + esc(s.id) +
       '">Inspect</button><button class="small-button" type="button" data-watch="' + esc(s.id) +
-      '">' + (isWatched(s.id) ? '★ Saved' : '☆ Watch') +
+      '" aria-pressed="'+String(isWatched(s.id))+'" aria-label="'+esc((isWatched(s.id)?'Remove saved quote for ':'Save quote for ')+s.selection)+'">' + (isWatched(s.id) ? '★ Saved' : '☆ Save') +
       '</button><button class="small-button" type="button" data-paper="' + esc(s.id) + '"' +
       (s.paperStagingAuthorized === true && state.slate?.executionGate?.bettingAuthorized === true ? '' : ' disabled') + '>Paper locked</button></span></div></article>'
-    ).join('') || empty('No matching signals', 'Try a different filter, sport or data mode.');
+    ).join('') || (state.watchOnly ? empty('No saved signals in this snapshot',
+      'Saved quotes are local to this browser and may not appear in the current filters. Clear Saved only to see the available quotes.')+
+      '<button type="button" class="outline-button" data-action="clear-watch-filter">Show all current quotes</button>' :
+      empty('No matching signals', 'Try a different filter, sport or data mode.'));
   }
 
   function isWatched(id) {
@@ -773,9 +832,11 @@
   function toggleWatch(id) {
     const current = safeGet('betq-watch-v1', []);
     const items = new Set(Array.isArray(current) ? current : []);
+    if(!items.has(id)&&items.size>=100)return toast('Watchlist is full (100 quotes). Remove a saved quote before adding another.');
     if (items.has(id)) items.delete(id); else items.add(id);
-    localStorage.setItem('betq-watch-v1', JSON.stringify([...items].slice(0, 100)));
-    renderSignals(); renderSpotlight();
+    try{localStorage.setItem('betq-watch-v1', JSON.stringify([...items].slice(0, 100)));}
+    catch{return toast('Watchlist could not be saved in this browser.');}
+    retainQuoteFocus(()=>{renderSignals(); renderSpotlight();});
     toast(items.has(id) ? 'Signal added to watchlist on this device.' : 'Signal removed from watchlist.');
   }
 
@@ -927,9 +988,9 @@
         esc(ticket.id) + '" data-result="PUSH">Push</button> <button type="button" class="small-button" data-settle="' +
         esc(ticket.id) + '" data-result="VOID">Void</button>' : '<small>MANUAL</small>') + '</td></tr>'
     ).join('');
-    $('execution-view').innerHTML = '<div class="execution-grid">' +
+    $('execution-view').innerHTML = '<div class="notice info"><span>◇</span><p><b>NEW PAPER STAGING IS LOCKED.</b> Existing local tickets remain available for manual bookkeeping. These entries do not verify model performance or real returns.</p></div><div class="execution-grid">' +
       '<article class="panel execution-card"><div class="label-sm">PAPER BANKROLL</div><div class="big-stat">' +
-      usd(state.bankroll) + '</div><div class="risk-details">Configured maximum stake: ' + num(state.maxRisk) +
+      usd(state.bankroll) + '</div><div class="risk-details">Saved risk limit: ' + num(state.maxRisk) +
       '% per paper ticket · 5% portfolio exposure cap.</div><progress class="risk-progress" max="100" value="' +
       ratio + '"></progress><div class="risk-details">Open exposure: ' + usd(exposure) + ' of ' +
       usd(state.bankroll * 0.05) + ' cap · Worst case if all open tickets lose: -' +
@@ -941,7 +1002,8 @@
       '</div><section class="panel top-gap"><div class="panel-head"><div><span class="panel-kicker">PAPER TRADING ONLY</span><h3>Position ledger</h3></div><span class="danger-inline">NO SPORTSBOOK ORDERS</span></div>' +
       '<div class="table-scroll"><table class="execution-table"><thead><tr><th>CONTRACT</th><th>OBSERVED QUOTE</th><th>STAKE</th><th>MODE</th><th>STATUS</th><th>P/L</th><th>MANUAL RESULT</th></tr></thead><tbody>' +
       (tickets || '<tr><td colspan="7">' +
-      empty('No paper tickets yet', 'Open the Signal Scanner and stage a WATCH contract to explore paper risk. No real bets will be placed.') +
+      empty('No paper tickets · staging locked', 'The central research policy does not authorize new paper tickets. You can inspect saved quotes or use the hypothetical odds calculator without placing a bet.')+
+      '<div class="empty-actions"><button type="button" class="outline-button" data-tab="signals">Inspect quotes</button><button type="button" class="outline-button" data-tab="pricing">Open hypothetical calculator</button></div>' +
       '</td></tr>') + '</tbody></table></div></section>' +
       '<div class="notice info top-gap"><span>◇</span><p>Paper results are manually entered, not verified against official results. ' +
       'The baseline is market consensus, not an independent predictive model. No responsible real-money sizing can be inferred from these simulations.</p></div>';
@@ -957,7 +1019,7 @@
     const root = $('model-view');
     if (!root) return;
     const report = state.nflModel;
-    if (!report) { root.innerHTML = empty('Loading independent model', 'Reading NFL outcome model provenance and 2025 holdout evaluation…'); return; }
+    if (!report) { root.innerHTML = empty('Loading independent model', 'Reading NFL outcome model provenance and 2025 historical evaluation…'); return; }
     if (!report.available) {
       root.innerHTML = empty('NFL model not available', 'The training artifact is missing, too old, or did not satisfy validation thresholds. Reason: ' +
         (report.reason || 'unknown') + '. Market-only odds scanning remains available.');
@@ -965,15 +1027,15 @@
     }
     const h = report.holdout, c = report.calibration, t = report.tuning;
     const stats = '<div class="metric-grid">' +
-      metric('2025 HOLDOUT GAMES', String(h.n), 'Untouched test set', '', '◇') +
+      metric('2025 REFERENCE GAMES', String(h.n), 'Repeatedly inspected; not a fresh holdout', '', '◇') +
       metric('WINNER ACCURACY', num(h.accuracy * 100, 2) + '%', '2025 pregame outcomes', 'lime', '⌁') +
       metric('2025 BRIER', num(h.brier, 5), 'Lower is better · 0.25 coin flip', 'violet', '∑') +
       metric('CALIBRATION ERROR', num(h.ece * 100, 2) + '%', '2025 10-bin ECE', 'cyan', '◌') + '</div>';
-    const protocol = '<section class="panel"><div class="panel-head"><div><span class="panel-kicker">NO FUTURE DATA LEAKAGE</span>' +
+    const protocol = '<section class="panel"><div class="panel-head"><div><span class="panel-kicker">CHRONOLOGICAL HISTORICAL RESEARCH</span>' +
       '<h3>Training & backtest</h3></div><span class="status-tag watch">BASELINE BACKTESTED</span></div>' +
       '<div class="model-audit"><div><span>Parameter tuning</span><strong>2018–2022</strong></div>' +
       '<div><span>Calibration</span><strong>2023–2024</strong></div>' +
-      '<div><span>Untouched evaluation</span><strong>2025</strong></div>' +
+      '<div><span>Historical evaluation</span><strong>2025</strong></div>' +
       '<div><span>2018–22 tuning Brier</span><strong>' + num(t.brier,5) + '</strong></div>' +
       '<div><span>2023–24 calibration Brier</span><strong>' + num(c.brier,5) + '</strong></div>' +
       '<div><span>2025 test Brier</span><strong>' + num(h.brier,5) + '</strong></div>' +
@@ -1041,7 +1103,7 @@
           (good?'positive':'')+'">'+num(holdout.challenger?.brier,5)+'</strong></div>'+
         '<div><label>PAIRED IMPROVEMENT</label><strong>'+
           signed(holdout.deltaBrier,5)+'</strong></div></div>'+
-        '<div class="nfl4-intel-body"><p><b>Untouched 2025 test:</b> '+
+        '<div class="nfl4-intel-body"><p><b>Historical 2025 reference (repeatedly inspected):</b> '+
         esc(String(holdout.challenger?.n||0))+' completed games. EPA/success/rest challenger '+
         (good?'passed its predefined historical proper-score gate.':'did not pass the historical promotion gate.')+
         ' The paired 95% bootstrap interval for baseline minus challenger Brier is '+
@@ -1290,7 +1352,7 @@
       auditRow('Exact line matching', 'Spreads and totals compared only at identical points', 'ACTIVE', true),
       auditRow('Quote freshness gate', 'Old quotes excluded; no stale execution labels', 'ACTIVE', true),
       auditRow('NFL independent outcome model',
-        state.nflModel?.available ? 'NFL Elo historical outcomes; 2025 holdout Brier ' +
+        state.nflModel?.available ? 'NFL Elo historical outcomes; 2025 historical Brier ' +
           num(state.nflModel.holdout.brier,5) + '; injury/starting QB adjustment unavailable' :
           'No current source-verified, backtested NFL model available',
         state.nflModel?.available ? 'RESEARCH' : 'UNAVAILABLE', Boolean(state.nflModel?.available)),
@@ -1302,7 +1364,7 @@
         Boolean(evidenceScoringView(state.evidence).forward) ? 'SAMPLE READY' : 'COLLECTING',
         Boolean(evidenceScoringView(state.evidence).forward)),
       auditRow('EPA/success/rest independent challenger',
-        state.efficiency?.available ? '2025 holdout baseline Brier '+
+        state.efficiency?.available ? '2025 historical baseline Brier '+
           num(state.efficiency.holdout?.elo?.brier,5)+' versus feature Brier '+
           num(state.efficiency.holdout?.challenger?.brier,5)+
           '. Not automatically promoted.' : 'Research challenger not available or source stale',
@@ -1334,7 +1396,7 @@
       '</p><p>Last received: ' + esc(s ? when(s.receivedAt) : 'None') +
       ' · source cache: ' + (s?.cacheHit ? 'HIT' : 'MISS / NO DATA') +
       ' · API credits remaining: ' + (q?.remaining ?? 'not reported') +
-      '</p><p>Books required for WATCH: best-price offer plus at least two independent comparator books at the same line. ' +
+      '</p><p>Books required for WATCH: best-price offer plus at least two other comparator books at the same line. ' +
       'Price signals are not outcome predictions; apparent positive EV can disappear after true model calibration.</p></article>' +
       '<article class="panel audit-note"><h3>Audit limitations</h3><p>A quality score measures feed agreement, recency and sample depth—not ' +
       'probability the pick will win. A WATCH means only that a cross-book quotation is worth investigating.</p>' +
@@ -1355,7 +1417,7 @@
     if (!Number.isFinite(maxRisk) || maxRisk < 0.1 || maxRisk > 1)
       return toast('Max paper stake must be between 0.1% and 1%.');
     state.bankroll = bankroll; state.maxRisk = maxRisk;
-    persist(); renderExecution(); toast('Local paper risk preferences updated.');
+    const saved=persist();renderExecution();if(saved)toast('Local paper risk preferences updated.');
   }
 
   function render() {
@@ -1459,7 +1521,7 @@
     catch { state.sourceHealth = null; }
   }
   let loadSerial = 0;
-  async function loadSlate() {
+  async function loadSlate({paidRequest=false}={}) {
     const serial = ++loadSerial;
     state.loading = true; state.error = null;
     state.slate=null;state.selectedId=null;
@@ -1467,7 +1529,7 @@
     try {
       const path = '/api/slate?sport=' + encodeURIComponent(state.sport) +
         '&market=' + encodeURIComponent(state.market) + '&mode=' + encodeURIComponent(state.mode);
-      const slate = await requestJSON(path);
+      const slate = await requestJSON(path,{paidRequest:paidRequest&&state.mode==='live'});
       if (serial !== loadSerial) return;
       state.slate = slate; state.error = null;
       if (!findSignal(state.selectedId)) state.selectedId = null;
@@ -1483,11 +1545,17 @@
     }
   }
 
+  let scoresLoading=false;
   async function loadScores() {
+    if(scoresLoading)return;
     if (state.mode === 'demo') return toast('Demo mode has no real game scores.');
-    $('scores').innerHTML = '<div class="notice info">Retrieving score feed…</div>';
+    const sport=state.sport;
+    scoresLoading=true;
+    document.querySelectorAll('[data-action="scores"]').forEach(el=>el.disabled=true);
+    $('scores').innerHTML = '<div class="notice info">Requesting scores; this may use API credits…</div>';
     try {
-      const data = await requestJSON('/api/scores?sport=' + encodeURIComponent(state.sport));
+      const data = await requestJSON('/api/scores?sport=' + encodeURIComponent(sport),{paidRequest:true});
+      if(state.sport!==sport||state.mode!=='live')return;
       const games = data.games || [];
       $('scores').innerHTML = games.length ? '<section class="panel"><div class="panel-head"><div><span class="panel-kicker">THE ODDS API</span><h3>Scores & game status</h3></div><span class="faint-caption">RECEIVED ' +
         esc(when(data.receivedAt)) + '</span></div><div class="score-rows">' +
@@ -1499,7 +1567,10 @@
         }).join('') + '</div></section>' :
         empty('No scores returned', 'The source reports no recent/active games for this league.');
     } catch (error) {
-      $('scores').innerHTML = '<div class="notice"><span>!</span><p>' + esc(error.message) + '</p></div>';
+      if(state.sport===sport&&state.mode==='live')$('scores').innerHTML = '<div class="notice"><span>!</span><p>' + esc(error.message) + '</p></div>';
+    } finally {
+      scoresLoading=false;
+      document.querySelectorAll('[data-action="scores"]').forEach(el=>el.disabled=false);
     }
   }
 
@@ -1524,7 +1595,7 @@
     const mode = event.target.closest('[data-mode]');
     if (mode) { state.mode = mode.dataset.mode; persist(); $('scores').innerHTML = ''; loadSlate(); return; }
     const pick = event.target.closest('[data-pick]');
-    if (pick) { state.selectedId = pick.dataset.pick; renderSpotlight(); renderOpportunities(); if (state.tab !== 'overview') setTab('overview'); return; }
+    if (pick) { state.selectedId = pick.dataset.pick; retainQuoteFocus(()=>{renderSpotlight(); renderOpportunities();}); if (state.tab !== 'overview') setTab('overview'); return; }
     const watch = event.target.closest('[data-watch]');
     if (watch) { toggleWatch(watch.dataset.watch); return; }
     const paper = event.target.closest('[data-paper]');
@@ -1540,11 +1611,21 @@
         state.replayPage++;loadReplayPlays();
       }return;
     }
-    if (action?.dataset.action === 'refresh') { loadSlate(); loadHealth(); loadEvidence(); return; }
+    if (action?.dataset.action === 'clear-watch-filter') { state.watchOnly=false; persist(); $('watch-only').checked=false; renderSignals(); $('watch-only').focus(); return; }
+    if (action?.dataset.action === 'refresh') { if(state.loading)return; loadSlate({paidRequest:true}); loadHealth(); loadEvidence(); return; }
     if (action?.dataset.action === 'scores') { loadScores(); return; }
     if (action?.dataset.action === 'save-settings') { saveSettings(); return; }
   });
   document.addEventListener('keydown', (event) => {
+    if(mobileNavigation.matches&&$('sidebar').classList.contains('open')){
+      if(event.key==='Escape'){event.preventDefault();setNavigation(false);return;}
+      if(event.key==='Tab'){
+        const focusable=[...$('sidebar').querySelectorAll('a[href],button:not([disabled])')].filter(el=>el.getClientRects().length);
+        const first=focusable[0],last=focusable.at(-1);
+        if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
+        else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+      }
+    }
     const row = event.target.closest('tr[data-pick]');
     if (row && (event.key === 'Enter' || event.key === ' ')) {
       event.preventDefault(); row.click();
@@ -1554,7 +1635,11 @@
     event.preventDefault();
     calculateIllustrativePricing();
   });
-  $('menu-toggle').addEventListener('click', () => $('sidebar').classList.toggle('open'));
+  $('menu-toggle').addEventListener('click', () => setNavigation(!$('sidebar').classList.contains('open')));
+  $('menu-close').addEventListener('click',()=>setNavigation(false));
+  $('nav-backdrop').addEventListener('click',()=>setNavigation(false));
+  mobileNavigation.addEventListener('change',()=>setNavigation(false));
+  setNavigation(false,false);
   $('replay-season').addEventListener('change',e=>{
     state.replaySeason=Number(e.target.value);state.replayPage=0;
     state.replayPlays=null;loadReplayPlays();
@@ -1565,16 +1650,16 @@
   });
   $('signal-search').addEventListener('input', (e) => { state.search = e.target.value; renderSignals(); });
   $('signal-sort').addEventListener('change', (e) => { state.sort = e.target.value; renderSignals(); });
-  $('watch-only').addEventListener('change', (e) => { state.watchOnly = e.target.checked; renderSignals(); });
+  $('watch-only').addEventListener('change', (e) => { state.watchOnly = e.target.checked; persist(); renderSignals(); });
   $('clock').textContent = new Date().toLocaleTimeString();
   setInterval(() => {
     $('clock').textContent = new Date().toLocaleTimeString();
-    if (state.slate) {renderFeed();renderMetrics();renderOpportunities();renderSpotlight();renderSignals();}
+    if (state.slate) retainQuoteFocus(()=>{renderFeed();renderMetrics();renderOpportunities();renderSpotlight();renderSignals();});
     if (state.slate) $('last-refreshed').textContent = 'Received ' + relativeAge(state.slate.receivedAt) +
       (state.slate.cacheHit ? ' · Cached' : '');
   }, 15000);
-  // Paid odds requests are manual-only to protect the limited API credit allowance.
-  // Users may click ↻ or change leagues/markets to request a fresh cached snapshot.
+  // Startup and filter changes read cached data only. Only explicit refresh/score
+  // actions send the cost-intent header; it is not authentication. No polling.
   syncSettings();
   render();
   loadHealth();

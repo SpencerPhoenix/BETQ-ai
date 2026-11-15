@@ -17,7 +17,8 @@ export function createOddsSource({
   fetchImpl = globalThis.fetch,
   clock = Date.now,
   ttlMs = Number(process.env.CACHE_TTL_MS) || 300000,
-  dailyCreditCap = Number(process.env.ODDS_DAILY_CREDIT_LIMIT) || 12,
+  dailyCreditCap = process.env.ODDS_DAILY_CREDIT_LIMIT === undefined
+    ? 12 : Number(process.env.ODDS_DAILY_CREDIT_LIMIT),
   reserveCredits = Number(process.env.ODDS_MIN_CREDITS_RESERVE) || 50
 } = {}) {
   apiKey = typeof apiKey==='string' ? apiKey.trim() : '';
@@ -28,7 +29,9 @@ export function createOddsSource({
   let lastError = null;
   const configured = Boolean(apiKey.trim());
   const headersSnapshot = { remaining: null, used: null, last: null };
-  const safeDailyCap = Number.isFinite(dailyCreditCap) ? Math.max(1,Math.min(100,Math.floor(dailyCreditCap))) : 12;
+  // Only an absent setting receives the default. Zero, blank and invalid
+  // explicit limits must never silently authorize paid provider requests.
+  const safeDailyCap = Number.isFinite(dailyCreditCap) ? Math.max(0,Math.min(100,Math.floor(dailyCreditCap))) : 0;
   const safeReserve = Number.isFinite(reserveCredits) ? Math.max(0,Math.min(5000,Math.floor(reserveCredits))) : 50;
   let pendingProviderCredits = 0;
   const budget = { day: '', used: 0 };
@@ -43,12 +46,16 @@ export function createOddsSource({
     };
   }
 
-  async function request(path, query, cacheId,estimatedCredits=1) {
+  async function request(path, query, cacheId,estimatedCredits=1,{allowPaid=true}={}) {
     if (!configured) throw new OddsError('SETUP_REQUIRED', 503, 'Set ODDS_API_KEY in the running server environment to enable live odds.');
     const fresh = cache.get(cacheId);
     if (fresh && clock() - fresh.storedAt < Math.max(5000, ttlMs)) {
       return { ...fresh.payload, cacheHit: true };
     }
+    // Ordinary page loads may reuse fresh data, never open an upstream request.
+    // Do not treat a still-pending paid request as a cached observation.
+    if (allowPaid !== true) throw new OddsError('PAID_REFRESH_REQUIRED', 409,
+      'No fresh cached data. Use the explicit refresh action to allow a provider request.');
     if (inflight.has(cacheId)) return inflight.get(cacheId);
     budgetStatus();
     if (headersSnapshot.remaining !== null && headersSnapshot.remaining - pendingProviderCredits - estimatedCredits < safeReserve) {
@@ -57,7 +64,8 @@ export function createOddsSource({
     }
     if (budget.used + estimatedCredits > safeDailyCap) {
       throw new OddsError('API_DAILY_BUDGET',429,
-        'Daily provider request budget reached. No new paid data requests until the next UTC day.');
+        safeDailyCap === 0 ? 'Paid provider requests are disabled by the configured daily credit limit.'
+          : 'Daily provider request budget reached. No new paid data requests until the next UTC day.');
     }
     budget.used += estimatedCredits;
     pendingProviderCredits += estimatedCredits;
@@ -112,19 +120,19 @@ export function createOddsSource({
     configured,
     status() { return { configured, lastSuccess, lastError, quota: { ...headersSnapshot },
       budget: budgetStatus(), cacheEntries: cache.size }; },
-    getOdds(sport, market) {
+    getOdds(sport, market, options = {}) {
       if (!Object.hasOwn(SPORTS, sport) || !Object.hasOwn(MARKETS, market)) {
         throw new OddsError('INVALID_FILTER', 400, 'Unsupported sport or market.');
       }
       return request(encodeURIComponent(sport) + '/odds', {
         regions: 'us', markets: market, oddsFormat: 'american', dateFormat: 'iso'
-      }, 'odds:' + sport + ':' + market,1);
+      }, 'odds:' + sport + ':' + market,1,options);
     },
-    getScores(sport) {
+    getScores(sport, options = {}) {
       if (!Object.hasOwn(SPORTS, sport)) throw new OddsError('INVALID_FILTER', 400, 'Unsupported sport.');
       return request(encodeURIComponent(sport) + '/scores', {
         daysFrom: '1', dateFormat: 'iso'
-      }, 'scores:' + sport,2);
+      }, 'scores:' + sport,2,options);
     }
   };
 }

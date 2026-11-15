@@ -1,6 +1,7 @@
 name: BETQ preregistered model promotion power study
 on:
   push:
+    branches: [main]
     paths:
       - 'src/promotion-power.mjs'
       - 'scripts/run-promotion-power.mjs'
@@ -13,6 +14,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   experiment:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 55
     steps:
