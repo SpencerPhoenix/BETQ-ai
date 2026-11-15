@@ -91,5 +91,5 @@ test('Stale model suppresses projections but retains market scanning',async()=>{
     assert.equal(p.events[0].independentModel.reason,'MODEL_SNAPSHOT_STALE');
     assert.equal(p.events[0].opportunities.length,2);
     assert.ok(p.events[0].opportunities.every(x=>x.eloStatus===undefined));
-  },{...artifact,generatedAt:date(now-16*86400000)});
+  },{...artifact,generatedAt:date(now-16*86400000),lastGameDate:'2026-10-15'});
 });

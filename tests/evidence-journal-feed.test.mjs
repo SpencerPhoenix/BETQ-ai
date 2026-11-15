@@ -128,13 +128,15 @@ test('Invalid or private bundled fallback is rejected before any fetch',()=>{
   assert.throws(()=>createJournalEvidenceFeed({fallbackJournal:bad,fetchImpl:()=>calls++}),/PRIVATE_OR_RAW_DATA/);
   assert.equal(calls,0);
 });
-test('Actual checked-in journal is read and recomputed without changing it or the stored summary',async()=>{
-  const paths=['nfl-2026.json','summary.json'].map(p=>new URL('../data/evidence/'+p,import.meta.url));
+test('Pinned real-data journal is read and recomputed without changing it or the stored summary',async()=>{
+  const paths=['nfl-2026.json','summary.json'].map(p=>new URL('./fixtures/retained-20261114/'+p,import.meta.url));
   const before=await Promise.all(paths.map(p=>readFile(p,'utf8'))),real=JSON.parse(before[0]);
   const baseline=emptyJournal(2026);
   const feed=createJournalEvidenceFeed({fallbackJournal:baseline,clock:()=>NOW,fetchImpl:async()=>new Response(before[0])});
   const out=await feed.get();
-  assert.equal(out.totalSnapshots,real.snapshots.length);assert.equal(out.sourceCorroboratedSettledGames,0);
+  assert.equal(out.totalSnapshots,314);assert.equal(out.prospectiveGames,43);assert.equal(out.settledGames,17);
+  assert.equal(out.quarantine.rawSnapshotCount,real.snapshots.length);assert.equal(out.quarantine.excludedSnapshotCount,9);
+  assert.equal(out.sourceCorroboratedSettledGames,0);
   assert.equal(out.publication.source,'PUBLIC_JOURNAL');assert.equal(out.publication.journalSha256,hash(before[0]));
   assert.deepEqual(await Promise.all(paths.map(p=>readFile(p,'utf8'))),before);
 });
@@ -157,7 +159,7 @@ test('An appended backdated forecast cannot replace frozen model or challenger b
     if(alteration==='challenger'){
       baseline.snapshots[0].challengerHomeProbability=null;
       candidate.snapshots[0].challengerHomeProbability=null;
-      const later={...candidate.snapshots[0],id:'later-challenger',capturedAt:'2026-11-07T12:10:00.000Z',challengerHomeProbability:.65};
+      const later={...candidate.snapshots[0],id:'later-challenger',capturedAt:'2026-11-07T12:10:00.000Z',sourceReceivedAt:'2026-11-07T12:09:59.000Z',marketNewestQuoteAt:'2026-11-07T12:09:58.000Z',challengerHomeProbability:.65};
       baseline.snapshots.push(later);candidate.snapshots.push(structuredClone(later));
       extra.capturedAt='2026-11-07T12:05:00.000Z';
     }

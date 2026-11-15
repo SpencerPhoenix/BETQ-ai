@@ -10,7 +10,7 @@ for compatibility but is not the server's production evidence route.
 
 - One fixed GitHub raw URL, one GET per refresh, no redirects or credentials.
 - Requests are coalesced and cached for five minutes; failures retain the last
-  accepted summary. Reads are bounded to 5 MB and ten seconds, with no retry.
+  accepted journal and its recomputed summary. Reads are bounded to 5 MB and ten seconds, with no retry.
 - No BALLDONTLIE, odds-provider or ESPN request, API key, evidence write,
   database, account setup or new schedule is involved.
 - The decoded journal must match the existing 2026 research schema and exact
@@ -25,11 +25,8 @@ for compatibility but is not the server's production evidence route.
 - Every historical settlement record must remain identical and in order;
   later corrections append revisions. The scoring gate handles qualified and
   unqualified revisions without falling back to an older qualified outcome.
-- Captures more than one minute ahead of the reader clock, and reconciliations
-  more than two minutes ahead, are rejected. These are clock-skew tolerances,
-  not permission to reconstruct forecasts after games.
-- Only the recalculated summary is returned, with cloned objects. A caller
-  cannot mutate the retained journal or cached scores.
+- All observation timestamps, including capture, source/model/market and final-result receipt times, must be canonical and no later than the reader clock. Relative clock-skew tolerances in legacy provenance comparisons never make a future observation currently available. The dossier, feed acceptance, cached read and HTTP handler share the retained identity/chronology gate. A handler clock remains authoritative even if a supplied feed uses another clock. Clock rollback yields unavailable views until the retained observations are in the past again; it does not rewrite history.
+- Internal readers can obtain one detached snapshot of the journal, recomputed summary and publication metadata. The Evidence API returns the summary; dossier APIs return only allowlisted projections. No HTTP route exposes the raw internal journal. Callers cannot mutate retained history or cached scores.
 
 ## Honest freshness and limitations
 
@@ -62,3 +59,7 @@ with the scoring change. Publishing a draft does not merge or deploy anything.
 
 Tests use mocked responses and loopback HTTP, including the unchanged checked-in
 real journal. No live provider requests are needed to validate this reader.
+
+## Aligned retained views
+
+Evidence, retained game index/detail and cached health use the same accepted journal/digest. Dossier requests can coalesce with the existing public journal refresh; they never request a paid provider or create a capture. Health only inspects cached state and retains the collector-health-unknown warning. A failed read preserves the same prior records across views. An invalid startup bundle remains unavailable until a valid public journal is accepted. See [Pipeline alignment](PIPELINE_ALIGNMENT_20261108.md).

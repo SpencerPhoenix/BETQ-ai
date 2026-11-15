@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { createHandler } from '../src/server.mjs';
-import { createOddsSource } from '../src/odds.mjs';
+import {createTestOddsSource as createOddsSource} from './helpers/mock-budget.mjs';
 import { demoEvents } from '../src/demo.mjs';
 const NOW = Date.parse('2026-11-01T20:00:00Z');
 function localServer(source) {
@@ -73,19 +73,19 @@ test('Odds provider cache avoids duplicate credits', async () => {
     });
   };
   const source = createOddsSource({ apiKey: 'SERVER_SIDE_SECRET', fetchImpl, clock: () => NOW, ttlMs: 90000 });
-  assert.equal((await source.getOdds('americanfootball_nfl', 'h2h')).cacheHit, false);
-  assert.equal((await source.getOdds('americanfootball_nfl', 'h2h')).cacheHit, true);
+  assert.equal((await source.getOdds('americanfootball_nfl','h2h',{allowPaid:true})).cacheHit, false);
+  assert.equal((await source.getOdds('americanfootball_nfl','h2h',{allowPaid:true})).cacheHit, true);
   assert.equal(calls, 1);
   assert.match(seenUrl, /markets=h2h/);
-  assert.equal(source.status().quota.remaining, 496);
-  assert.equal(JSON.stringify(source.status()).includes('SERVER_SIDE_SECRET'), false);
-  assert.throws(() => source.getOdds('unknown_sport', 'h2h'), { code: 'INVALID_FILTER' });
+  assert.equal((await source.status()).quota.remaining, 496);
+  assert.equal(JSON.stringify((await source.status())).includes('SERVER_SIDE_SECRET'), false);
+  assert.throws(() => source.getOdds('unknown_sport','h2h',{allowPaid:true}), { code: 'INVALID_FILTER' });
 });
 test('Provider errors never echo private credentials', async () => {
   const source = createOddsSource({
     apiKey: 'SUPER_PRIVATE_KEY', fetchImpl: async () => new Response('unauthorized', { status: 401 })
   });
-  await assert.rejects(source.getOdds('americanfootball_nfl', 'h2h'), err => {
+  await assert.rejects(source.getOdds('americanfootball_nfl','h2h',{allowPaid:true}), err => {
     assert.equal(err.code, 'API_KEY_REJECTED');
     assert.equal(err.message.includes('SUPER_PRIVATE_KEY'), false);
     return true;

@@ -4,6 +4,7 @@
  * Community-sourced public reports may lag or omit players.
  */
 import { canonicalTeam, NFL_TEAMS } from './nfl-elo.mjs';
+import {scheduledInstant} from './schedule-review.mjs';
 const allowedStatus=new Set(['OUT','DOUBTFUL','QUESTIONABLE']);
 const norm=s=>String(s??'').trim();
 const weekKey=(team,week)=>canonicalTeam(team)+':'+week;
@@ -115,35 +116,63 @@ export function compileInjuryReports(rows,{season,sourceUpdatedAt,now=Date.now()
   };
 }
 
+export const INJURY_MAX_AGE_MS=72*3600000;
+/** Source-file freshness is not per-player recency or a verified starter. */
+export function injurySourceStatus(artifact,now=Date.now()){
+  const base={available:false,reason:'INJURY_REPORT_NOT_CONFIGURED',
+    starterVerified:false,modelProbabilitiesAdjusted:false};
+  if(!artifact||artifact.schema!==1||artifact.source!=='NFLVERSE_INJURIES')return base;
+  const vintage=Date.parse(artifact.sourceUpdatedAt),age=now-vintage;
+  const date=new Date(now),season=date.getUTCMonth()<2?date.getUTCFullYear()-1:date.getUTCFullYear();
+  const reason=!Number.isFinite(now)||!Number.isFinite(vintage)?'INJURY_SOURCE_TIME_INVALID':
+    age<0?'INJURY_SOURCE_TIME_IN_FUTURE':age>INJURY_MAX_AGE_MS?'INJURY_SOURCE_STALE':
+    artifact.season!==season?'INJURY_SEASON_MISMATCH':
+    !(artifact.reportCount>0)?'INJURY_REPORTS_MISSING':null;
+  return {...base,available:reason===null,reason,source:artifact.source,
+    sourceUpdatedAt:artifact.sourceUpdatedAt,
+    validUntil:Number.isFinite(vintage)?new Date(vintage+INJURY_MAX_AGE_MS).toISOString():null,
+    sourceAgeSeconds:Number.isFinite(age)&&age>=0?Math.floor(age/1000):null,
+    freshnessBasis:'SOURCE_FILE_ONLY',playerTimestampAvailable:artifact.perPlayerTimestampsAvailable===true,
+    season:artifact.season,reportCount:artifact.reportCount,upcomingFixtures:artifact.fixtures?.length||0,
+    advisory:'Reported player status is not confirmed quarterback starter status. Injury adjustments are not modeled.'};
+}
+
 export function injuryContextForGame(event,artifact,now=Date.now()){
   if(!artifact||artifact.schema!==1||artifact.source!=='NFLVERSE_INJURIES')
     return {available:false,reason:'INJURY_REPORT_NOT_CONFIGURED'};
   const home=NFL_TEAMS[event.home_team],away=NFL_TEAMS[event.away_team];
-  const kick=Date.parse(event.commence_time || '');
+  const kick=scheduledInstant(event.commence_time);
+  if(!Number.isFinite(kick))return {available:false,reason:'SCHEDULE_WEEK_NOT_VERIFIED'};
   const fixture=Number.isFinite(kick) && Array.isArray(artifact.fixtures) ?
     artifact.fixtures.find(f=>f.home===home&&f.away===away&&
       Math.abs(kick-Date.parse(f.gameDate+'T12:00:00Z'))<=36*3600000) : null;
   const week=Number(event.week ?? fixture?.week);
   if(!home||!away||!Number.isInteger(week)||week<1||week>23)
     return {available:false,reason:'SCHEDULE_WEEK_NOT_VERIFIED'};
-  const vintage=Date.parse(artifact.sourceUpdatedAt);
-  if(!Number.isFinite(vintage)||vintage>now+60000||now-vintage>72*3600000)
-    return {available:false,reason:'INJURY_SOURCE_STALE',
-      sourceUpdatedAt:artifact.sourceUpdatedAt};
+  const sourceStatus=injurySourceStatus(artifact,now);
+  if(!sourceStatus.available)return {...sourceStatus,probabilitiesAdjusted:false};
   const find=team=>{
-    const report=artifact.reports[weekKey(team,week)];
+    const report=artifact.reports?.[weekKey(team,week)];
     if(!report)return {reported:false,reason:'NO_REPORT_FOR_TEAM_WEEK'};
     return {
-      reported:true,sourceLastModified:report.lastPlayerUpdate,
+      reported:true,sourceLastModified:artifact.sourceUpdatedAt,
+      individualTimestampAvailable:report.individualTimestampAvailable===true,
+      // Legacy report aggregates mix player times with source-file fallback.
+      // Only individual dateModified fields establish a player update.
+      lastPlayerUpdateAt:null,
       count:report.flaggedCount,statusCounts:report.statusCounts,
       flaggedPlayers:report.flaggedPlayers,reportedQBs:report.reportedQBs,
       starterVerified:false
     };
   };
+  const homeReport=find(home),awayReport=find(away);
   return {
-    available:true,week,source:artifact.source,
+    available:homeReport.reported||awayReport.reported,
+    reason:homeReport.reported||awayReport.reported?null:'NO_REPORT_FOR_GAME_WEEK',
+    week,source:artifact.source,
     sourceUpdatedAt:artifact.sourceUpdatedAt,
-    home:find(home),away:find(away),
+    home:homeReport,away:awayReport,
+    freshnessBasis:sourceStatus.freshnessBasis,validUntil:sourceStatus.validUntil,
     starterVerified:false,probabilitiesAdjusted:false,
     caveat:'Public injury reports can lag. Reported quarterbacks are not necessarily starters.'
   };

@@ -17,7 +17,7 @@ const raw={
   }))
 };
 const elo={
-  schema:1,version:MODEL_VERSION,readyForResearch:true,
+  source:{project:'nflverse/nflverse-data'},schema:1,version:MODEL_VERSION,readyForResearch:true,
   generatedAt:iso(NOW-86400000),lastGameDate:'2026-10-25',
   params:{homeAdv:25,scale:1.1},ratings:{KC:1560,LV:1480},
   holdout:{n:284,brier:0.22235,ece:0.053}
@@ -40,15 +40,16 @@ const efficiency={
 };
 const injuries={
   schema:1,source:'NFLVERSE_INJURIES',season:2026,
-  sourceUpdatedAt:iso(NOW-3600000),reportCount:10,
+  sourceUpdatedAt:iso(NOW-3600000),builtAt:iso(NOW),validUntil:iso(NOW-3600000+72*3600000),reportCount:2,
+  sourceUrl:'https://github.com/nflverse/nflverse-data/releases/download/injuries/injuries_2026.csv',
   perPlayerTimestampsAvailable:false,advisory:'not confirmed quarterback starter',
   fixtures:[{gameId:'2026_09_LV_KC',week:9,gameDate:'2026-11-01',home:'KC',away:'LV'}],
   reports:{
-    'KC:9':{lastPlayerUpdate:iso(NOW-3600000),flaggedCount:1,
+    'KC:9':{team:'KC',week:9,individualTimestampAvailable:false,lastPlayerUpdate:iso(NOW-3600000),flaggedCount:1,
       statusCounts:{out:0,doubtful:0,questionable:1},
-      flaggedPlayers:[{player:'Fixture QB',position:'QB',status:'QUESTIONABLE'}],
-      reportedQBs:[{player:'Fixture QB',position:'QB',status:'QUESTIONABLE'}]},
-    'LV:9':{lastPlayerUpdate:iso(NOW-3600000),flaggedCount:0,
+      flaggedPlayers:[{player:'Fixture QB',position:'QB',status:'QUESTIONABLE',injury:null,dateModified:null}],
+      reportedQBs:[{player:'Fixture QB',position:'QB',status:'QUESTIONABLE',injury:null,dateModified:null}]},
+    'LV:9':{team:'LV',week:9,individualTimestampAvailable:false,lastPlayerUpdate:iso(NOW-3600000),flaggedCount:0,
       statusCounts:{out:0,doubtful:0,questionable:0},
       flaggedPlayers:[],reportedQBs:[]}
   }

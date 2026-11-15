@@ -1,4 +1,11 @@
 import http from 'node:http';
+import {createHash,timingSafeEqual} from 'node:crypto';
+import {describeModelDelivery} from './model-delivery.mjs';
+import {performance} from 'node:perf_hooks';
+import {collectionHealthFromJournal} from './collection-health.mjs';
+import {gradeRetainedGames} from './game-grading.mjs';
+import {listGameDossiers,buildGameDossier,listRetainedForecasts} from './game-dossier.mjs';
+import {getBundledHistoricalEvaluation,HISTORICAL_BUNDLE_DIR} from './historical-bundle.mjs';
 import { readFile } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -7,11 +14,12 @@ import { createOddsSource, OddsError } from './odds.mjs';
 import { analyzeEvents, SPORTS, MARKETS } from './engine.mjs';
 import { demoEvents } from './demo.mjs';
 import { predictNflEvent, MODEL_VERSION } from './nfl-elo.mjs';
-import { nflMoneylineConsensus } from './market-consensus.mjs';
+import { nflMoneylineConsensus, selectUnambiguousProviderEvents } from './market-consensus.mjs';
 import { emptyJournal, summarizeEvidence } from './evidence.mjs';
-import { createJournalEvidenceFeed,recomputeJournalEvidence } from './evidence-journal-feed.mjs';
+import { createJournalEvidenceFeed,recomputeJournalEvidence,validateRetainedJournal } from './evidence-journal-feed.mjs';
 import { challengerResearchForEvent } from './nfl-efficiency.mjs';
 import { injuryContextForGame } from './injuries.mjs';
+import {createInjuryReportFeed} from './injury-feed.mjs';
 import { illustrativePrice, PriceAuditError } from './price-metrics.mjs';
 import { assembleAgentRun } from './agent-run.mjs';
 import { applyDecisionAuthority } from './decision-policy.mjs';
@@ -21,7 +29,6 @@ import {createDerivedForwardMarketFeed} from './shadow-derived.mjs';
 
 const PUBLIC_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../public');
 const SHADOW_PRIVATE = configuredShadowStore();
-const SHADOW_DERIVED_FEED = createDerivedForwardMarketFeed();
 const SHADOW_SYNTHETIC_REPORT = evaluateQBLatency(syntheticQBStudyFixture());
 function loadModelArtifact() {
   try {
@@ -43,18 +50,21 @@ const NFL_EFFICIENCY=loadResearchArtifact('nfl_efficiency.json',a=>
 const NFL_INJURIES=loadResearchArtifact('nfl_injuries.json',a=>
   a?.schema===1&&a?.source==='NFLVERSE_INJURIES');
 export function loadEvidenceJournal({read=()=>readFileSync(resolve(dirname(fileURLToPath(import.meta.url)),
-  '../data/evidence/nfl-2026.json'),'utf8'),clock=Date.now}={}) {
+  '../data/evidence/nfl-2026.json'),'utf8'),clock=Date.now,onInvalid=()=>{}}={}) {
   try {
     const json=JSON.parse(read());
     recomputeJournalEvidence(json,clock()); // Same boundary as the remote journal.
     return json;
   } catch {
+    onInvalid();
     return emptyJournal(2026);
   }
 }
-const NFL_EVIDENCE_JOURNAL=loadEvidenceJournal();
+let BUNDLED_JOURNAL_AVAILABLE=true;
+const NFL_EVIDENCE_JOURNAL=loadEvidenceJournal({onInvalid:()=>{BUNDLED_JOURNAL_AVAILABLE=false;}});
 const NFL_EVIDENCE=summarizeEvidence(NFL_EVIDENCE_JOURNAL);
 const NFL_EVIDENCE_FEED=createJournalEvidenceFeed({fallbackJournal:NFL_EVIDENCE_JOURNAL});
+const SHADOW_DERIVED_FEED=createDerivedForwardMarketFeed({fallbackJournal:NFL_EVIDENCE_JOURNAL});
 function loadReplayFile(name){
   try {
     const path=resolve(dirname(fileURLToPath(import.meta.url)),'../data/replay/'+name);
@@ -78,6 +88,12 @@ const ASSETS = new Map([
   ['/index.html', ['index.html', 'text/html; charset=utf-8']],
   ['/styles.css', ['styles.css', 'text/css; charset=utf-8']],
   ['/app.js', ['app.js', 'text/javascript; charset=utf-8']],
+  ['/game-strategies.js', ['game-strategies.js', 'text/javascript; charset=utf-8']],
+  ['/retained-forecasts.js', ['retained-forecasts.js', 'text/javascript; charset=utf-8']],
+  ['/game-grades.js', ['game-grades.js', 'text/javascript; charset=utf-8']],
+  ['/historical-2025', ['historical-evaluation.html', 'text/html; charset=utf-8']],
+  ['/historical-evaluation.js', ['historical-evaluation.js', 'text/javascript; charset=utf-8']],
+  ['/historical-evaluation.css', ['historical-evaluation.css', 'text/css; charset=utf-8']],
   ['/favicon.svg', ['favicon.svg', 'image/svg+xml']]
 ]);
 const CSP = [
@@ -100,23 +116,109 @@ function safeError(res, err) {
   console.error('[BETQ] request failed:', err && err.message ? err.message : 'unknown error');
   return reply(res, 500, { error: { code: 'INTERNAL_ERROR', message: 'Unexpected server error.' } });
 }
+const HEALTH_STATUS_TIMEOUT_MS = 500;
+function createHealthStatusReader(source) {
+  let pending = null;
+  const unavailable = reason => ({
+    reason,
+    odds: {
+      configured: typeof source.configured === 'boolean' ? source.configured : null,
+      lastSuccess: null, lastError: null, quota: null, cacheEntries: null,
+      budget: { persistent: false, available: false, ready: false, reason }
+    }
+  });
+  return () => {
+    if (pending) return pending;
+    let finish;
+    const result = new Promise(resolve => { finish = resolve; });
+    pending = result;
+    const deadline = performance.now() + HEALTH_STATUS_TIMEOUT_MS;
+    // Keep the timed-out operation tracked until it actually settles. Repeated
+    // probes share this bounded result rather than queueing more ledger queries.
+    const timer = setTimeout(() => finish(unavailable('ODDS_STATUS_TIMEOUT')), HEALTH_STATUS_TIMEOUT_MS);
+    function complete(value) {
+      clearTimeout(timer);
+      pending = null;
+      finish(value); // A late success cannot replace an already returned timeout.
+    }
+    Promise.resolve().then(() => source.status()).then(odds => {
+      const reason = performance.now() >= deadline ? 'ODDS_STATUS_TIMEOUT' :
+        typeof odds?.configured !== 'boolean' ? 'ODDS_STATUS_UNAVAILABLE' : null;
+      complete(reason ? unavailable(reason) : { odds, reason: null });
+    }, () => complete(unavailable(performance.now() >= deadline ?
+      'ODDS_STATUS_TIMEOUT' : 'ODDS_STATUS_UNAVAILABLE')));
+    // Do not cache a successful check: each later probe must verify readiness.
+    return result;
+  };
+}
 export function createHandler({
   source = createOddsSource(),
+  operatorRefreshToken = process.env.BETQ_OPERATOR_REFRESH_TOKEN || '',
   clock = Date.now,
   nflArtifact = NFL_ARTIFACT,
   nflEfficiency = NFL_EFFICIENCY,
   nflInjuries = NFL_INJURIES,
+  injuryFeed = createInjuryReportFeed({fallbackArtifact:nflInjuries,clock,fetchImpl:null}),
   nflEvidence = NFL_EVIDENCE,
-  evidenceFeed = NFL_EVIDENCE_FEED,
+  nflEvidenceJournal = BUNDLED_JOURNAL_AVAILABLE ? NFL_EVIDENCE_JOURNAL : null,
+  evidenceFeed = nflEvidenceJournal===(BUNDLED_JOURNAL_AVAILABLE?NFL_EVIDENCE_JOURNAL:null)?NFL_EVIDENCE_FEED:null,
   replaySummary = NFL_REPLAY_SUMMARY,
   replayFull = NFL_REPLAY_FULL,
   marketChallenge = NFL_MARKET_CHALLENGE,
   riskReport = NFL_RISK_REPORT,
   shadowStore = SHADOW_PRIVATE,
   derivedShadowFeed = SHADOW_DERIVED_FEED,
+  historicalEvaluation = getBundledHistoricalEvaluation,
   maxAgeMs = Number(process.env.ODDS_MAX_AGE_MS) || 600000
 } = {}) {
+  // Freeze a private copy: a caller cannot mutate the artifact behind its identity.
+  nflArtifact=nflArtifact===null?null:structuredClone(nflArtifact);
+  function localEvidenceSnapshot(){
+    if(typeof evidenceFeed?.peekSnapshot==='function'){
+      const current=evidenceFeed.peekSnapshot();
+      if(current.journal!==null&&current.summary!==null){
+        try{validateRetainedJournal(current.journal,clock());}catch{
+          return {...current,journal:null,summary:null,publication:{...current.publication,
+            status:'RETAINED_EVIDENCE_NOT_YET_AVAILABLE',lastError:'RETAINED_EVIDENCE_READER_TIME_INVALID'}};
+        }
+      }
+      // An invalid startup bundle is not an empty successful dossier. A later
+      // accepted public journal can recover availability without a restart.
+      if(nflEvidenceJournal===null&&current.publication.source==='BUNDLED_JOURNAL')
+        return {...current,journal:null,summary:null};
+      return current;
+    }
+    let summary=null;
+    try{summary=recomputeJournalEvidence(nflEvidenceJournal,clock());}catch{/* Missing remains unavailable. */}
+    return {journal:nflEvidenceJournal,summary,publication:null};
+  }
+  async function currentEvidenceSnapshot(){
+    if(typeof evidenceFeed?.getSnapshot==='function')await evidenceFeed.getSnapshot();
+    return localEvidenceSnapshot();
+  }
+  const eloReadiness=at=>{
+    if(!nflArtifact)return {available:false,reason:'ARTIFACT_NOT_AVAILABLE'};
+    const identity=describeModelDelivery(nflArtifact,at);
+    return identity.available?predictNflEvent({home_team:'Kansas City Chiefs',away_team:'Las Vegas Raiders'},nflArtifact,at):identity;
+  };
+  const efficiencyReadiness=at=>!nflEfficiency?{available:false,reason:'CHALLENGER_ARTIFACT_NOT_AVAILABLE'}:challengerResearchForEvent({home_team:'Kansas City Chiefs',away_team:'Las Vegas Raiders',
+    commence_time:new Date(at+86400000).toISOString()},0.5,nflEfficiency,at);
   const access = new Map();
+  const healthStatus = createHealthStatusReader(source);
+  const operatorConfigured=typeof operatorRefreshToken==='string' &&
+    /^[A-Za-z0-9._~-]{32,512}$/.test(operatorRefreshToken);
+  const tokenDigest=operatorConfigured ? createHash('sha256').update(operatorRefreshToken).digest() : null;
+  function paidPermission(req){
+    if(req.headers['x-betq-paid-request']!=='true')return false;
+    if(!operatorConfigured)throw new OddsError('OPERATOR_REFRESH_NOT_CONFIGURED',503,
+      'Paid refresh is disabled until operator authentication is configured. Public reads use cached data only.');
+    const header=req.headers.authorization;
+    const candidate=typeof header==='string' && /^Bearer [A-Za-z0-9._~-]{32,512}$/.test(header) ? header.slice(7) : '';
+    const candidateDigest=createHash('sha256').update(candidate).digest();
+    if(!timingSafeEqual(candidateDigest,tokenDigest))throw new OddsError('OPERATOR_AUTH_REQUIRED',401,
+      'Paid refresh requires operator authentication. Public reads use cached data only.');
+    return true;
+  }
   return async (req, res) => {
     try {
       if (req.method !== 'GET' && req.method !== 'HEAD') {
@@ -127,35 +229,62 @@ export function createHandler({
       if (url.pathname.startsWith('/api/')) {
         const ip = req.socket?.remoteAddress || 'unknown';
         const now = clock();
-        const bucket = access.get(ip) || { resetAt: now + 600000, count: 0 };
+        const historicalRead=['/api/historical-evaluation','/api/historical-evaluation/game'].includes(url.pathname);
+        const accessKey=historicalRead?'historical:'+ip:ip;
+        // Frozen browsing has its own bounded allowance; it cannot consume the odds/API quota.
+        const bucket = access.get(accessKey) || { resetAt: now + 600000, count: 0 };
         if (bucket.resetAt < now) { bucket.resetAt = now + 600000; bucket.count = 0; }
         // Health checks must not be throttled by user odds traffic behind a shared proxy.
         if(url.pathname!=='/api/health' && url.pathname!=='/api/config') bucket.count++;
-        access.set(ip, bucket);
+        access.set(accessKey, bucket);
         if (access.size > 10000) access.clear();
-        if (bucket.count > 180 && !['/api/health','/api/config'].includes(url.pathname)) {
-          return reply(res, 429, { error: { code: 'LOCAL_RATE_LIMIT', message: 'Too many requests. Try again shortly.' } });
+        if (bucket.count > (historicalRead?600:180) && !['/api/health','/api/config'].includes(url.pathname)) {
+          return reply(res, 429, { error: { code: historicalRead?'HISTORICAL_RATE_LIMIT':'LOCAL_RATE_LIMIT', message: 'Too many requests. Try again shortly.' } },
+            {'Retry-After':String(Math.max(1,Math.ceil((bucket.resetAt-now)/1000)))});
         }
-        if (url.pathname === '/api/health') return reply(res, 200, {
+        if (url.pathname === '/api/health') {
+          const {odds,reason:statusReason}=await healthStatus();
+          const injuryStatus=injuryFeed.status();
+          const healthNow=clock();
+          const retained=localEvidenceSnapshot(),eloStatus=eloReadiness(healthNow),efficiencyStatus=efficiencyReadiness(healthNow);
+          const reason=statusReason || (!odds.configured?'LIVE_ODDS_SOURCE_NOT_CONFIGURED':!operatorConfigured ? 'OPERATOR_REFRESH_NOT_CONFIGURED' :
+            odds.budget?.persistent!==true || odds.budget?.available!==true || odds.budget?.ready!==true ?
+              odds.budget?.reason||'DURABLE_BUDGET_NOT_READY' : null);
+          return reply(res, 200, {
           status: 'ok', app: 'BETQ.ai', version: '0.11.0',
-          serverTime: new Date(now).toISOString(), odds: source.status(),
-          nflModel: { available: Boolean(nflArtifact?.readyForResearch), version: nflArtifact?.version || null },
-          forwardEvidence: { status: nflEvidence.status, prospectiveGames: nflEvidence.prospectiveGames,
-            settledGames: nflEvidence.settledGames },
+          serverTime: new Date(healthNow).toISOString(), odds,
+          operatorRefresh:{configured:operatorConfigured,authenticationRequired:true,paidIntentRequired:true},
+          captureReadiness:{ready:reason===null,reason,scope:'PROVIDER_REFRESH_PREREQUISITES_ONLY'},
+          collectionHealth:collectionHealthFromJournal(retained.journal,healthNow,retained.publication),
+          nflModel: { available:eloStatus.available,reason:eloStatus.reason||null,version:nflArtifact?.version||null,
+            deliveryIdentity:describeModelDelivery(nflArtifact,healthNow),
+            generatedAt:nflArtifact?.generatedAt||null,lastGameDate:nflArtifact?.lastGameDate||null,delivery:'DEPLOYMENT_BUNDLED',
+            availabilityScope:'REFERENCE_MATCHUP_CHECK_NOT_ALL_GAMES' },
+          forwardEvidence: { available:retained.summary!==null,status:retained.summary?.status||'EVIDENCE_UNAVAILABLE',
+            prospectiveGames:retained.summary?.prospectiveGames??null,settledGames:retained.summary?.settledGames??null,
+            sourceCorroboratedSettledGames:retained.summary?.sourceCorroboratedSettledGames??null,
+            quarantine:retained.summary?.quarantine??null,
+            publication:retained.publication },
           nflIntelligence: {
-            efficiencyChallengerAvailable:Boolean(nflEfficiency),
+            efficiencyChallengerAvailable:efficiencyStatus.available,
+            efficiencyChallengerReason:efficiencyStatus.reason||null,
             efficiencyChallengerPromoted:false,
-            injurySourceAvailable:Boolean(nflInjuries),
+            injurySourceAvailable:injuryStatus.available,
+            injurySource:injuryStatus,
             startingQuarterbacksVerified:false
           }
         });
+        }
         if (url.pathname === '/api/config') return reply(res, 200, {
           sports: SPORTS, markets: MARKETS,
           maxAgeMs, refreshMs: null, autoRefresh: false,
-          marketOnlySignals: true, nflResearchModel: Boolean(nflArtifact?.readyForResearch),
+          paidRefreshRequiresExplicitRequest: true,
+          paidRefreshRequiresOperatorAuthentication: true,
+          publicReadsCacheOnly: true,
+          marketOnlySignals: true, nflResearchModel: eloReadiness(now).available,
           forwardEvidenceEnabled: true,
-          nflEfficiencyChallengerAvailable:Boolean(nflEfficiency),
-          injuryReportAvailable:Boolean(nflInjuries),
+          nflEfficiencyChallengerAvailable:efficiencyReadiness(now).available,
+          injuryReportAvailable:injuryFeed.status().available,
           startingQuarterbacksVerified:false,
           modelAutomaticallyPromoted:false,
           realMoneyResultsVerified: false,
@@ -166,12 +295,11 @@ export function createHandler({
           if (!nflArtifact) return reply(res, 200, {
             available: false, modelVersion: MODEL_VERSION, reason: 'ARTIFACT_NOT_AVAILABLE'
           });
-          const sample = predictNflEvent({
-            home_team: 'Kansas City Chiefs', away_team: 'Las Vegas Raiders'
-          }, nflArtifact, now);
+          const sample = eloReadiness(now);
           return reply(res, 200, {
             available: sample.available, reason: sample.available ? null : sample.reason,
             modelVersion: nflArtifact.version, generatedAt: nflArtifact.generatedAt,
+            deliveryIdentity:describeModelDelivery(nflArtifact,now),
             lastGameDate: nflArtifact.lastGameDate, readyForResearch: nflArtifact.readyForResearch,
             source: nflArtifact.source, trainingProtocol: nflArtifact.trainingProtocol,
             tuning: nflArtifact.tuning, calibration: nflArtifact.calibration,
@@ -185,10 +313,7 @@ export function createHandler({
           if(!nflEfficiency)return reply(res,200,{
             available:false,reason:'CHALLENGER_ARTIFACT_NOT_AVAILABLE'
           });
-          const sample=challengerResearchForEvent({
-            home_team:'Kansas City Chiefs',away_team:'Las Vegas Raiders',
-            commence_time:new Date(now+86400000).toISOString()
-          },0.5,nflEfficiency,now);
+          const sample=efficiencyReadiness(now);
           return reply(res,200,{
             available:sample.available,
             reason:sample.available?null:sample.reason,
@@ -210,19 +335,8 @@ export function createHandler({
           });
         }
         if (url.pathname === '/api/injuries/nfl') {
-          if(!nflInjuries)return reply(res,200,{
-            available:false,reason:'REPORT_SOURCE_NOT_AVAILABLE'
-          });
-          const age=now-Date.parse(nflInjuries.sourceUpdatedAt);
-          return reply(res,200,{
-            available:age>=0&&age<=72*3600000,
-            source:nflInjuries.source,sourceUpdatedAt:nflInjuries.sourceUpdatedAt,
-            playerTimestampAvailable:nflInjuries.perPlayerTimestampsAvailable,
-            season:nflInjuries.season,reportCount:nflInjuries.reportCount,
-            upcomingFixtures:nflInjuries.fixtures?.length||0,
-            starterVerified:false,modelProbabilitiesAdjusted:false,
-            advisory:nflInjuries.advisory
-          });
+          const current=await injuryFeed.get();
+          return reply(res,200,current.status);
         }
         if (url.pathname === '/api/shadow/status') {
           // Never returns bookmaker identities, prices, article URLs, or DB credentials.
@@ -241,8 +355,63 @@ export function createHandler({
           // Entirely synthetic, immutable fixture; zero odds-provider requests.
           return reply(res,200,SHADOW_SYNTHETIC_REPORT);
         }
+        if (['/api/historical-evaluation','/api/historical-evaluation/game'].includes(url.pathname)) {
+          if(req.method!=='GET')return reply(res,405,{error:{code:'METHOD_NOT_ALLOWED',message:'Frozen historical data supports GET only.'}},{Allow:'GET'});
+          const detail=url.pathname.endsWith('/game'),pairs=[...url.searchParams];
+          if((!detail&&pairs.length)||(detail&&(pairs.length!==1||pairs[0][0]!=='gameId'||!/^2025_\d{2}_[A-Z]{2,3}_[A-Z]{2,3}$/.test(pairs[0][1]))))
+            return reply(res,400,{error:{code:'INVALID_SELECTOR',message:'Choose one frozen 2025 game identifier.'}});
+          try{
+            const view=typeof historicalEvaluation==='function'?historicalEvaluation():historicalEvaluation;
+            if(!view)throw Error('UNAVAILABLE');
+            const result=detail?view.game(pairs[0][1]):view.summary();
+            return result?reply(res,200,result):reply(res,404,{error:{code:'GAME_NOT_FOUND',message:'No frozen 2025 record matches this game.'}});
+          }catch{
+            return reply(res,503,{error:{code:'HISTORICAL_VIEW_UNAVAILABLE',message:'The frozen historical bundle is missing or did not pass integrity checks.'}});
+          }
+        }
+        if (url.pathname === '/api/research/grades') {
+          if(req.method!=='GET')return reply(res,405,{error:{code:'METHOD_NOT_ALLOWED',message:'Retained grades support GET only.'}},{Allow:'GET'});
+          if([...url.searchParams].length)return reply(res,400,{error:{code:'INVALID_SELECTOR',message:'Retained grades accept no query parameters.'}});
+          // Await the same coalesced, validated public journal refresh as other research views.
+          const retained=await currentEvidenceSnapshot();
+          const result=gradeRetainedGames(retained.journal,{now:clock()});
+          return reply(res,result.available?200:503,result);
+        }
+        if (['/api/research/games','/api/research/game','/api/research/forecasts'].includes(url.pathname)) {
+          const detail=url.pathname==='/api/research/game';
+          const keys=[...url.searchParams.keys()];
+          const selector=keys.length===1 && ['gameId','providerEventId'].includes(keys[0]) ? keys[0] : null;
+          const value=selector ? url.searchParams.get(selector) : null;
+          if ((!detail&&keys.length) || (detail&&(!selector||typeof value!=='string'||
+              !value.trim()||value.length>(selector==='providerEventId'?200:140)||/[\u0000-\u001f\u007f]/.test(value)))) {
+            return reply(res,400,{error:{code:'INVALID_SELECTOR',message:'Choose exactly one retained game identifier.'}});
+          }
+          try {
+            // Same validated retained source as the Evidence API, never a paid provider.
+            const retained=await currentEvidenceSnapshot(),viewNow=clock();
+            const options={now:viewNow,publication:retained.publication};
+            const result=detail ? buildGameDossier(retained.journal,{[selector]:value,...options}) :
+              url.pathname==='/api/research/forecasts' ? listRetainedForecasts(retained.journal,options) :
+              listGameDossiers(retained.journal,options);
+            if(result.reason==='SCHEDULE_CONFLICT_QUARANTINED')return reply(res,409,{...result,error:{
+              code:'SCHEDULE_CONFLICT_QUARANTINED',message:'Conflicting retained kickoff times. This game is excluded from forecasts, scoring and collection; original history is preserved.'}});
+            if(result.available!==true)throw Object.assign(new Error('Retained dossier unavailable'),{code:result.reason});
+            return reply(res,200,result);
+          } catch(error) {
+            const codes={GAME_NOT_FOUND:[404,'No retained dossier matches this game.'],
+              INVALID_SELECTOR:[400,'Choose exactly one retained game identifier.'],
+              AMBIGUOUS_PROVIDER_EVENT_ID:[409,'This provider identifier matches conflicting retained games.'],
+              INVALID_RETAINED_JOURNAL:[503,'Retained game evidence is unavailable or did not pass integrity checks.']};
+            const code=Object.hasOwn(codes,error?.code)?error.code:'INVALID_RETAINED_JOURNAL';
+            const [status,message]=codes[code];
+            return reply(res,status,{error:{code,message}});
+          }
+        }
         if (url.pathname === '/api/evidence/nfl') {
-          return reply(res, 200, await evidenceFeed.get());
+          const summary=typeof evidenceFeed?.getSnapshot==='function'?(await currentEvidenceSnapshot()).summary:
+            typeof evidenceFeed?.get==='function'?await evidenceFeed.get():localEvidenceSnapshot().summary;
+          if(!summary)return reply(res,503,{error:{code:'EVIDENCE_UNAVAILABLE',message:'Retained evidence is unavailable.'}});
+          return reply(res,200,summary);
         }
         if (url.pathname === '/api/risk/nfl') {
           if(!riskReport)return reply(res,200,{
@@ -384,30 +553,55 @@ export function createHandler({
             return reply(res, 400, { error: { code: 'INVALID_FILTER', message: 'Unsupported sport, market or mode.' } });
           }
           const demo = mode === 'demo';
+          if (!demo && req.method === 'HEAD') return reply(res, 405, {
+            error: { code: 'METHOD_NOT_ALLOWED', message: 'Live data supports GET only; HEAD never requests provider data.' }
+          }, { Allow: 'GET' });
+          // Collector pins its checked-out artifact. Reject a deployment race before any source access.
+          const expectedModel=req.headers['x-betq-expected-model-sha256'];
+          if(expectedModel!==undefined){
+            const delivered=describeModelDelivery(nflArtifact,now);
+            if(demo||sport!=='americanfootball_nfl'||market!=='h2h'||
+              typeof expectedModel!=='string'||!/^[a-f0-9]{64}$/.test(expectedModel)||
+              !delivered.available||expectedModel!==delivered.artifactCanonicalSha256)
+              return reply(res,409,{error:{code:'MODEL_DELIVERY_MISMATCH',message:'Expected model artifact is not available. No provider request was made.'}});
+          }
           const snapshot = demo
             ? { events: demoEvents(sport, now), receivedAt: new Date(now).toISOString(), cacheHit: false, quota: null }
-            : await source.getOdds(sport, market);
-          const analysisNow=clock(); // Upstream fetch can cross kickoff or the freshness boundary.
+            : await source.getOdds(sport, market, {
+                allowPaid: paidPermission(req)
+              });
+          const producerSelection = !demo && sport === 'americanfootball_nfl' && market === 'h2h'
+            ? selectUnambiguousProviderEvents(snapshot.events)
+            : {events: snapshot.events, integrity: null};
+          const currentInjuries=!demo&&sport==='americanfootball_nfl'&&market==='h2h'
+            ? (await injuryFeed.get()).artifact : null;
+          const captureNow=clock();
           // Private opt-in capture reuses EXACTLY this already paid live response:
           // no second provider call, no demo, no caching-as-new-observation.
           let shadowCapture={captured:false,inserted:0,reason:'NOT_CAPTURED'};
           if(!demo&&sport==='americanfootball_nfl'&&market==='h2h'&&
-             snapshot.cacheHit!==true){
+             snapshot.cacheHit!==true && producerSelection.integrity.excludedEvents===0){
             try{
-              shadowCapture=await shadowStore.capture(snapshot,{now:analysisNow});
+              shadowCapture=await shadowStore.capture(snapshot,{now:captureNow});
             }catch{
               shadowCapture={captured:false,inserted:0,
                 reason:'PRIVATE_CAPTURE_REJECTED'};
             }
           }
-          const analysis = analyzeEvents(snapshot.events, {
+          if (producerSelection.integrity?.excludedEvents > 0) {
+            shadowCapture={captured:false,inserted:0,reason:'PROVIDER_EVENT_IDENTITY_REJECTED'};
+          }
+          // Both injury retrieval and private persistence can cross freshness
+          // or kickoff boundaries. Evaluate response state after all awaits.
+          const analysisNow=clock();
+          const analysis = analyzeEvents(producerSelection.events, {
             sport, market, asOf: analysisNow, maxAgeMs, demo
           });
           if (!demo && sport === 'americanfootball_nfl' && market === 'h2h') {
-            const rawById = new Map(snapshot.events.filter(e=>e && typeof e==='object').map(e => [String(e.id), e]));
+            const rawById = new Map(producerSelection.events.map(e => [e.id, e]));
             for (const game of analysis.events) {
               const rawGame = rawById.get(game.id);
-              game.marketConsensus = nflMoneylineConsensus(rawGame, { asOf: analysisNow, maxAgeMs });
+              game.marketConsensus = nflMoneylineConsensus(rawGame, { asOf: analysisNow, receivedAt: snapshot.receivedAt ?? null, maxAgeMs });
               game.marketAnchoredResearch=game.marketConsensus?.available===true?{
                 available:true,
                 homeProbability:game.marketConsensus.homeProbability,
@@ -418,16 +612,18 @@ export function createHandler({
                 researchOnly:true,wageringAuthorized:false,
                 warning:'Market consensus is not an independent BETQ win model or a bet'
               }:{available:false,reason:game.marketConsensus?.reason||'MARKET_UNAVAILABLE'};
+              const deliveredIdentity=describeModelDelivery(nflArtifact,analysisNow);
               const projection = game.started
                 ? { available: false, reason: 'GAME_ALREADY_STARTED' }
-                : predictNflEvent({
-                    home_team: game.homeTeam, away_team: game.awayTeam
-                  }, nflArtifact, analysisNow);
+                // Preserve explicit venue and kickoff metadata for the model's
+                // fail-closed neutral-site and chronology checks.
+                : !deliveredIdentity.available?{available:false,reason:deliveredIdentity.reason}:predictNflEvent(rawGame, nflArtifact, analysisNow);
+              if(projection.available)projection.deliveryIdentity=deliveredIdentity;
               game.independentModel = projection;
               game.efficiencyChallenger = projection.available ?
                 challengerResearchForEvent(rawGame,projection.homeWinProbability,nflEfficiency,analysisNow) :
                 {available:false,reason:'ELO_BASELINE_NOT_AVAILABLE'};
-              game.injuryContext = injuryContextForGame(rawGame,nflInjuries,analysisNow);
+              game.injuryContext = injuryContextForGame(rawGame,currentInjuries,analysisNow);
               if (projection.available) {
                 for (const signal of game.opportunities) {
                   const p = signal.side === 'home' ? projection.homeWinProbability
@@ -445,8 +641,10 @@ export function createHandler({
           applyDecisionAuthority(analysis,agentRun,{asOf:analysisNow});
           return reply(res, 200, {
             ...analysis,
+            nflModelDelivery:!demo&&sport==='americanfootball_nfl'&&market==='h2h'?describeModelDelivery(nflArtifact,analysisNow):null,
             agentRun,
             shadowCapture,
+            producerIntegrity: producerSelection.integrity,
             receivedAt: snapshot.receivedAt, cacheHit: snapshot.cacheHit,
             quota: snapshot.quota, warnings: [
               'Market consensus is not an independently validated win-probability model.',
@@ -464,7 +662,12 @@ export function createHandler({
           if (!Object.hasOwn(SPORTS, sport)) return reply(res, 400, {
             error: { code: 'INVALID_FILTER', message: 'Unsupported sport.' }
           });
-          const snapshot = await source.getScores(sport);
+          if (req.method === 'HEAD') return reply(res, 405, {
+            error: { code: 'METHOD_NOT_ALLOWED', message: 'Live data supports GET only; HEAD never requests provider data.' }
+          }, { Allow: 'GET' });
+          const snapshot = await source.getScores(sport, {
+            allowPaid: paidPermission(req)
+          });
           return reply(res, 200, {
             source: 'THE_ODDS_API_V4', sport, receivedAt: snapshot.receivedAt,
             cacheHit: snapshot.cacheHit, quota: snapshot.quota,
@@ -477,6 +680,12 @@ export function createHandler({
           });
         }
         return reply(res, 404, { error: { code: 'NOT_FOUND', message: 'Unknown API endpoint.' } });
+      }
+      if(url.pathname==='/historical-source-license.txt'){
+        const body=await readFile(join(HISTORICAL_BUNDLE_DIR,'SOURCE-LICENSE.txt'));
+        res.writeHead(200,{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'public, max-age=300',
+          'X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY','Referrer-Policy':'no-referrer','Content-Security-Policy':CSP});
+        return res.end(req.method==='HEAD'?undefined:body);
       }
       const asset = ASSETS.get(url.pathname);
       if (!asset) return reply(res, 404, { error: { code: 'NOT_FOUND', message: 'File not found.' } });
@@ -494,7 +703,11 @@ export function createHandler({
 }
 export function startServer(options = {}) {
   const port = Number(options.port ?? process.env.PORT ?? 3000);
-  const server = http.createServer(createHandler(options));
+  const injuryFeed=options.injuryFeed??createInjuryReportFeed({
+    fallbackArtifact:options.nflInjuries===undefined?NFL_INJURIES:options.nflInjuries,
+    clock:options.clock??Date.now
+  });
+  const server = http.createServer(createHandler({...options,injuryFeed}));
   server.listen(port, '0.0.0.0', () => {
     console.log('[BETQ] terminal listening on port ' + server.address().port);
   });

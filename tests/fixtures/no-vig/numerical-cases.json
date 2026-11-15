@@ -1,0 +1,14 @@
+{
+  "scope":"SYNTHETIC_NUMERICAL_FIXTURES_NOT_SPORTS_EVIDENCE",
+  "derivation":"Independently hand-derived rational probabilities, not copied package output.",
+  "cases":[
+    {"name":"balanced_vig","american":[-110,-110],"proportional":[0.5,0.5],"shin":[0.5,0.5],"overround":0.047619047619047616},
+    {"name":"favorite","american":[-200,150],"proportional":[0.625,0.375],"shin":[0.6333333333333333,0.36666666666666664],"overround":0.06666666666666665},
+    {"name":"fair_favorite","american":[-200,200],"proportional":[0.6666666666666666,0.3333333333333333],"shin":[0.6666666666666666,0.3333333333333333],"overround":0},
+    {"name":"underround","american":[150,150],"proportional":[0.5,0.5],"shinError":"SHIN_UNDERROUND_UNSUPPORTED","overround":-0.2},
+    {"name":"heavy_vig","american":[-900,-900],"proportional":[0.5,0.5],"shin":[0.5,0.5],"overround":0.8},
+    {"name":"two_longshots","american":[9900,9900],"proportional":[0.5,0.5],"shinError":"SHIN_UNDERROUND_UNSUPPORTED","overround":-0.98},
+    {"name":"fair_coin","american":[100,100],"proportional":[0.5,0.5],"shin":[0.5,0.5],"overround":0},
+    {"name":"asymmetric","american":[-150,130],"proportional":[0.5798319327731092,0.4201680672268907],"shin":[0.5826086956521739,0.4173913043478261],"overround":0.034782608695652195}
+  ]
+}

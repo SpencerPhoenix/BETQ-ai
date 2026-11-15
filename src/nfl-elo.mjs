@@ -3,7 +3,8 @@
  * Source: nflverse/nflverse-data schedules release (CC BY 4.0); maintained by Lee Sharpe.
  * This module does not use betting prices, future outcomes, injuries, or weather.
  */
-import {sourceDateFresh, validDay, timestamp} from './integrity.mjs';
+import {sourceDateFresh, validDay} from './integrity.mjs';
+import {scheduledInstant} from './schedule-review.mjs';
 export const MODEL_VERSION = 'nfl-elo-1';
 export const NFL_TEAMS = Object.freeze({
   'Arizona Cardinals':'ARI','Atlanta Falcons':'ATL','Baltimore Ravens':'BAL',
@@ -170,7 +171,7 @@ export function predictNflEvent(event,artifact,now=Date.now()){
     return {available:false,reason:'NO_VALIDATED_BASELINE'};
   }
   if (!Number.isFinite(now)) return {available:false,reason:'INVALID_ASOF'};
-  if (event?.commence_time !== undefined && (!Number.isFinite(timestamp(event.commence_time)) || timestamp(event.commence_time)<=now))
+  if (event?.commence_time !== undefined && (!Number.isFinite(scheduledInstant(event.commence_time)) || scheduledInstant(event.commence_time)<=now))
     return {available:false,reason:'INVALID_OR_STARTED_EVENT'};
   const generated=Date.parse(artifact.generatedAt);
   if(!Number.isFinite(generated)||generated>now+60000||now-generated>14*86400000){
@@ -182,8 +183,12 @@ export function predictNflEvent(event,artifact,now=Date.now()){
   const home=NFL_TEAMS[event?.home_team],away=NFL_TEAMS[event?.away_team];
   if(!home||!away||home===away||!Number.isFinite(artifact.ratings[home])||!Number.isFinite(artifact.ratings[away]))
     return {available:false,reason:'TEAM_MAPPING_UNAVAILABLE'};
+  // Never coerce provider strings or objects into venue flags. In particular,
+  // Boolean('false') would silently remove the fitted home-field advantage.
+  if (event.neutralSite !== undefined && typeof event.neutralSite !== 'boolean')
+    return {available:false,reason:'INVALID_NEUTRAL_SITE'};
   const p=calibrate(eloProbability(artifact.ratings[home],artifact.ratings[away],artifact.params.homeAdv,
-    Boolean(event.neutralSite)),artifact.params.scale);
+    event.neutralSite === true),artifact.params.scale);
   return {
     available:true,method:'NFL_ELO_HISTORICAL_OUTCOMES',modelVersion:MODEL_VERSION,
     source:'NFLVERSE_SCHEDULES',independentOfOdds:true,

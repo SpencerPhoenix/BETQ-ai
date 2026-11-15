@@ -6,6 +6,7 @@
  * code and aggregate research, not vendor observations.
  */
 import {readFile} from 'node:fs/promises';
+import {verifiedPostgresOptions,handleIdlePoolErrors,guardPostgresClient} from './postgres-security.mjs';
 import {fileURLToPath} from 'node:url';
 import {resolve,dirname} from 'node:path';
 import {SHADOW_SCHEMA,normalizeOwnedOddsSnapshot} from './shadow-latency.mjs';
@@ -91,6 +92,7 @@ export function postgresShadowStore(pool){
         reason:normalized.reason
       };
       const client=await pool.connect();
+      const guard=guardPostgresClient(client);
       let inserted=0;
       try{
         await client.query('BEGIN');
@@ -118,12 +120,14 @@ export function postgresShadowStore(pool){
           inserted+=result.rowCount||0;
         }
         await client.query('COMMIT');
+        guard.assertHealthy();
         return {captured:true,inserted,rejected:normalized.rejected,
           sourceStatus:'PRIVATE_SOURCE_OBSERVATION_NOT_EXECUTABLE'};
       }catch{
-        await client.query('ROLLBACK').catch(()=>{});
+        await guard.rollback();
+        guard.markFailed();
         throw Error('PRIVATE_SHADOW_WRITE_FAILED');
-      }finally{client.release();}
+      }finally{guard.release();}
     },
     async appendQBCandidate(r){
       if(r?.schema!==SHADOW_SCHEMA||
@@ -257,14 +261,14 @@ export function configuredShadowStore({
   async function get(){
     if(store)return store;
     if(!promise)promise=(async()=>{
+      const databaseOptions=verifiedPostgresOptions(env.BETQ_SHADOW_DATABASE_URL);
       const driver=clientFactory?await clientFactory():
         await import('pg').then(x=>x.default||x);
-      pool=typeof driver.connect==='function'&&typeof driver.query==='function'?
+      pool=handleIdlePoolErrors(typeof driver.connect==='function'&&typeof driver.query==='function'?
         driver:new driver.Pool({
-          connectionString:env.BETQ_SHADOW_DATABASE_URL,
-          ssl:{rejectUnauthorized:true},max:3,
+          ...databaseOptions,max:3,
           connectionTimeoutMillis:3000,idleTimeoutMillis:10000
-        });
+        }));
       const active=postgresShadowStore(pool);
       const health=await active.status();
       if(!health.available)throw Error('SHADOW_SCHEMA_NOT_READY');

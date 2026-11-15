@@ -1,0 +1,20 @@
+[
+  {
+    "file": "2026-11-04.json.gz",
+    "sha256": "760c6f40ae57a4cf7a423d0857d8bf8828ceb962b30fdb0b5b75f3f1aad7ef36",
+    "sourceUrl": "https://github.com/nflverse/nflverse-data/releases/download/injuries/injuries_2026.csv",
+    "sourceUpdatedAt": "2026-11-04T15:21:18.000Z",
+    "builtAt": "2026-11-04T18:03:39.939Z",
+    "reportCount": 244,
+    "origin": "Retained prior BETQ repository artifact, matching the production source vintage"
+  },
+  {
+    "file": "2026-11-07.json.gz",
+    "sha256": "fbc9e59ce94aed7c34aa3334a2ac436f7a37917760249a9db84946b0cbc5a8ea",
+    "sourceUrl": "https://github.com/nflverse/nflverse-data/releases/download/injuries/injuries_2026.csv",
+    "sourceUpdatedAt": "2026-11-07T13:53:57.000Z",
+    "builtAt": "2026-11-07T16:30:28.940Z",
+    "reportCount": 272,
+    "origin": "69ca969eeef474b379a0b8bc729a1cdde348dc6e"
+  }
+]

@@ -37,6 +37,8 @@ test('Injury status is source-scoped, scheduled and never guarantees a starting 
   assert.equal(data.home.reportedQBs.length,1);
   assert.equal(data.starterVerified,false);
   assert.equal(data.probabilitiesAdjusted,false);
+  for(const commence_time of ['2026-11-01','2026-11-01T20:00:00','2026-02-30T20:00:00Z'])
+    assert.equal(injuryContextForGame({...event,week:9,commence_time},artifact,NOW).reason,'SCHEDULE_WEEK_NOT_VERIFIED');
   assert.equal(injuryContextForGame(event,artifact,NOW+5*86400000).reason,'INJURY_SOURCE_STALE');
   assert.equal(injuryContextForGame({...event,away_team:'Buffalo Bills'},artifact,NOW).reason,'SCHEDULE_WEEK_NOT_VERIFIED');
 });
