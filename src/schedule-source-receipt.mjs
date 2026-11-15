@@ -1,6 +1,5 @@
 /** In-memory source receipt and diagnostics only. No transport, storage or source eligibility expansion. */
 import {createHash} from 'node:crypto';
-import {parseCsv} from './nfl-elo.mjs';
 import {resultsFromSchedule,validateJournal} from './evidence.mjs';
 import {canonicalTimestamp,FINALITY_DELAY_MS} from './evidence-integrity.mjs';
 import {unambiguousFrozenGameIds} from './settlement-qualification.mjs';
@@ -11,29 +10,63 @@ export function readScheduleSourceBytes(bytes,observedAt){
     !Number.isFinite(canonicalTimestamp(observedAt)))throw Error('INVALID_SCHEDULE_SOURCE_RECEIPT');
   let text;
   try{text=new TextDecoder('utf-8',{fatal:true}).decode(bytes);}catch{throw Error('INVALID_SCHEDULE_UTF8');}
-  const records=[];let row=[],cell='',state='plain';
-  const pushCell=()=>{row.push(cell);cell='';state='plain';};
-  const pushRow=()=>{pushCell();if(row.some(v=>v!==''))records.push(row);row=[];};
+  // Slice once per field instead of building character ropes and parsing twice.
+  // Byte/row bounds alone do not bound the memory occupied by wide output objects.
+  const MAX_COLUMNS=256,MAX_CELLS=1000000;
+  const rows=[];let headers=null,row=[],columns=0,nonempty=false,records=0,totalCells=0;
+  let start=0,end=0,state='plain',escaped=false;
+  const pushCell=position=>{
+    const value=state==='closed'
+      ?(escaped?text.slice(start,end).replaceAll('""','"'):text.slice(start,end))
+      :text.slice(start,position);
+    columns++;nonempty ||= value!=='';
+    // Keep empty oversized records allocation-free until their meaning is known.
+    if(columns<=MAX_COLUMNS)row.push(value);
+    else if(nonempty)throw Error(headers?'SCHEDULE_ROW_WIDTH_MISMATCH':'SCHEDULE_COLUMN_LIMIT');
+    state='plain';escaped=false;start=position+1;
+  };
+  const pushRow=(position,eof=false)=>{
+    pushCell(position);
+    if(nonempty){
+      if(columns>MAX_COLUMNS)throw Error(headers?'SCHEDULE_ROW_WIDTH_MISMATCH':'SCHEDULE_COLUMN_LIMIT');
+      if(++records>30001)throw Error('SCHEDULE_ROW_LIMIT');
+      if(!headers){
+        if(row.some(x=>!/^[A-Za-z][A-Za-z0-9_]*$/.test(x))||new Set(row).size!==row.length)
+          throw Error('INVALID_SCHEDULE_HEADERS');
+        headers=row;
+      }else{
+        if(columns!==headers.length)throw Error('SCHEDULE_ROW_WIDTH_MISMATCH');
+        totalCells+=columns;
+        if(totalCells>MAX_CELLS)throw Error('SCHEDULE_CELL_LIMIT');
+        rows.push(Object.fromEntries(headers.map((key,i)=>[key,row[i]])));
+      }
+    }else if(eof&&columns>1&&headers){
+      // Preserve parseCsv's historical EOF-only empty-record behavior: absent
+      // cells default to empty and excess empty cells are ignored.
+      totalCells+=headers.length;
+      if(totalCells>MAX_CELLS)throw Error('SCHEDULE_CELL_LIMIT');
+      rows.push(Object.fromEntries(headers.map(key=>[key,''])));
+    }
+    row=[];columns=0;nonempty=false;
+  };
   for(let i=0;i<text.length;i++){
     const c=text[i];
     if(state==='quoted'){
-      if(c==='"'){if(text[i+1]==='"'){cell+='"';i++;}else state='closed';}
-      else cell+=c;
-    }else if(c===',')pushCell();
-    else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;pushRow();}
-    else if(c==='"'&&state==='plain'&&cell==='')state='quoted';
+      if(c==='"'){if(text[i+1]==='"'){escaped=true;i++;}else{end=i;state='closed';}}
+    }else if(c===',')pushCell(i);
+    else if(c==='\n'||c==='\r'){
+      pushRow(i);
+      if(c==='\r'&&text[i+1]==='\n')i++;
+      start=i+1;
+    }else if(c==='"'&&state==='plain'&&i===start){state='quoted';start=i+1;}
     else if(state==='closed'||c==='"')throw Error('INVALID_SCHEDULE_QUOTING');
-    else cell+=c;
-    if(records.length>30001)throw Error('SCHEDULE_ROW_LIMIT');
   }
   if(state==='quoted')throw Error('INVALID_SCHEDULE_QUOTING');
-  if(cell||row.length||state==='closed')pushRow();
-  const headers=records[0]??[];
-  if(!headers.length||headers.some(x=>!/^[A-Za-z][A-Za-z0-9_]*$/.test(x))||new Set(headers).size!==headers.length)
-    throw Error('INVALID_SCHEDULE_HEADERS');
-  if(records.slice(1).some(r=>r.length!==headers.length))throw Error('SCHEDULE_ROW_WIDTH_MISMATCH');
-  if(records.length>30001)throw Error('SCHEDULE_ROW_LIMIT');
-  const rows=parseCsv(text);
+  if(start<text.length||columns||state==='closed')pushRow(text.length,true);
+  if(!headers)throw Error('INVALID_SCHEDULE_HEADERS');
+  for(const field of ['game_id','season','game_type','gameday','away_team','home_team','away_score','home_score','location']){
+    if(!headers.includes(field))throw Error('Missing NFL game column: '+field);
+  }
   return {rows,sourceReceipt:{source:'NFLVERSE_SCHEDULES',observedAt,
     sha256:createHash('sha256').update(bytes).digest('hex')}};
 }
