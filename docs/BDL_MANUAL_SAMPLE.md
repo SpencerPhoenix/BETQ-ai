@@ -30,6 +30,13 @@ one native-ID detail. There is no pagination, alternate endpoint, redirect, retr
 historical odds query or subscription purchase. Requests have bounded header/body
 timeouts and decoded-body limits. Compressed responses are bounded after decoding.
 
+The provider's optional `next_cursor` is accepted as omitted only for a short final
+page (fewer rows than a valid `per_page`). Explicit null also marks an end page.
+Any continuation value, too many rows, malformed metadata or full page without an
+end marker is rejected. `providerListState` reports only a fixed diagnostic label,
+never provider-supplied field values. Original list bytes are retained unchanged in
+a successful encrypted bundle; no missing cursor is inserted into the evidence.
+
 The [BDL NFL documentation](https://nfl.balldontlie.io/#account-tiers) lists Games on
 its free tier, at five requests per minute. The account's actual key validity and
 entitlements still require a successful authorized response. No paid tier is needed

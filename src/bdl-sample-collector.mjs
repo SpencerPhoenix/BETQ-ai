@@ -9,6 +9,8 @@ import {canonicalTeam,NFL_TEAMS} from './nfl-elo.mjs';
 import {nflGameDate} from './integrity.mjs';
 import {assessBdlOutcomeCandidate} from './bdl-outcome-candidate.mjs';
 import {emptyBdlReceiptLedger,appendBdlReceipt,summarizeBdlReceiptLedger} from './bdl-receipt-ledger.mjs';
+export const BDL_PROVIDER_LIST_STATES=Object.freeze(['NOT_OBSERVED','INVALID_JSON','INVALID_SHAPE','INVALID_PAGE',
+  'CONTINUATION_PRESENT','AMBIGUOUS_FULL_PAGE','COMPLETE_EXPLICIT_NULL','COMPLETE_SHORT_PAGE_CURSOR_OMITTED']);
 const API='https://api.balldontlie.io/nfl/v1/games';
 const CSV='https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv';
 const PUBLIC_HOSTS=new Set(['github.com','release-assets.githubusercontent.com','objects.githubusercontent.com']);
@@ -39,7 +41,7 @@ function publicLocation(location,base){
  * fetchImpl and clock are trusted dependencies. Success.privateBundle contains raw
  * licensed source material; it must never be logged or uploaded unencrypted. */
 export async function collectBdlOutcomeSample(input,{fetchImpl,clock,timeoutMs=15000}={}){
-  const diagnostics={bdlRequests:0,publicRequests:0,scoringEligible:false,sourceIndependenceVerified:false};
+  const diagnostics={bdlRequests:0,publicRequests:0,providerListState:'NOT_OBSERVED',scoringEligible:false,sourceIndependenceVerified:false};
   try{
     if(typeof fetchImpl!=='function'||typeof clock!=='function'||!Number.isInteger(timeoutMs)||timeoutMs<1||timeoutMs>30000)fail('INVALID_DEPENDENCIES');
     let previous=-1;
@@ -101,9 +103,25 @@ export async function collectBdlOutcomeSample(input,{fetchImpl,clock,timeoutMs=1
     // Public source first: fail without spending provider calls if unavailable/oversized.
     const nfl=await read(CSV,false,4000000);
     const listUrl=`${API}?dates%5B%5D=${snapshot.gameDate}&per_page=100`;
-    const list=await read(listUrl,true,262144),payload=strictJson(list.bytes);
-    if(!payload||!Array.isArray(payload.data)||payload.data.length>100||!payload.meta||
-      !Object.hasOwn(payload.meta,'next_cursor')||payload.meta.next_cursor!=null||!Number.isInteger(payload.meta.per_page)||payload.meta.per_page<1||payload.meta.per_page>100)fail('INCOMPLETE_PROVIDER_LIST');
+    const list=await read(listUrl,true,262144);
+    diagnostics.providerListState='INVALID_JSON';
+    const payload=strictJson(list.bytes);
+    const plain=value=>value!==null&&typeof value==='object'&&Object.getPrototypeOf(value)===Object.prototype;
+    diagnostics.providerListState='INVALID_SHAPE';
+    if(!plain(payload)||!Array.isArray(payload.data)||!plain(payload.meta))fail('INCOMPLETE_PROVIDER_LIST');
+    diagnostics.providerListState='INVALID_PAGE';
+    const pageSize=payload.meta.per_page;
+    if(!Number.isInteger(pageSize)||pageSize<1||pageSize>100||payload.data.length>pageSize)fail('INCOMPLETE_PROVIDER_LIST');
+    const hasCursor=Object.hasOwn(payload.meta,'next_cursor');
+    if(hasCursor&&payload.meta.next_cursor!==null){
+      diagnostics.providerListState='CONTINUATION_PRESENT';fail('INCOMPLETE_PROVIDER_LIST');
+    }
+    if(!hasCursor&&payload.data.length===pageSize){
+      diagnostics.providerListState='AMBIGUOUS_FULL_PAGE';fail('INCOMPLETE_PROVIDER_LIST');
+    }
+    // Optional cursor is safe only for a strictly short page. Never infer that a
+    // full page with no cursor is complete, and never fetch continuation pages.
+    diagnostics.providerListState=hasCursor?'COMPLETE_EXPLICIT_NULL':'COMPLETE_SHORT_PAGE_CURSOR_OMITTED';
     const ids=new Set();for(const event of payload.data){if(!event||!positive(event.id)||ids.has(event.id))fail('AMBIGUOUS_PROVIDER_MAPPING');ids.add(event.id);}
     const matches=payload.data.filter(e=>e.season===snapshot.season&&team(e.home_team?.abbreviation)===team(snapshot.home)&&team(e.visitor_team?.abbreviation)===team(snapshot.away));
     if(matches.length!==1||canonicalTimestamp(matches[0].date)!==kick)fail('PROVIDER_MAPPING_MISMATCH');

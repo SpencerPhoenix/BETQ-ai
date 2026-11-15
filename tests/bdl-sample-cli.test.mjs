@@ -116,3 +116,30 @@ test('Credential-echo rejection remains a fixed safe error rather than source te
   assert.equal(summary.error,'CREDENTIAL_ECHO_REJECTED');
   assert.doesNotMatch(JSON.stringify(summary)+f.messages.stdout+f.messages.stderr,/SYNTHETIC_ENV_SECRET|SYNTHETIC_SOURCE_ECHO/);
 });
+
+test('Short final list with omitted optional cursor encrypts original bytes without inventing pagination',async t=>{
+  const f=await setup(t),raw=JSON.stringify({data:[f.event],meta:{per_page:100}});
+  f.responses[1]=()=>new Response(raw);
+  assert.equal(await f.run(),0,f.messages.stderr);assert.equal(f.calls.length,3);
+  const summary=JSON.parse(await readFile(join(f.output,'summary.json'),'utf8'));
+  assert.equal(summary.providerListState,'COMPLETE_SHORT_PAGE_CURSOR_OMITTED');
+  const bundle=decryptBdlPrivateEnvelope(JSON.parse(await readFile(join(f.output,'envelope.json'),'utf8')),pair.privateKey);
+  assert.equal(Buffer.from(bundle.mappingList.base64,'base64').toString(),raw);
+  assert.equal(Object.hasOwn(JSON.parse(raw).meta,'next_cursor'),false);
+  assert.equal(summary.scoringEligible,false);
+});
+
+test('Pagination failure diagnostics are fixed labels and never expose provider values',async t=>{
+  for(const [meta,state] of [
+    [{per_page:1},'AMBIGUOUS_FULL_PAGE'],
+    [{per_page:100,next_cursor:PRIVATE},'CONTINUATION_PRESENT'],
+    [{per_page:'100'},'INVALID_PAGE']
+  ]){
+    const f=await setup(t);f.responses[1]=()=>new Response(JSON.stringify({data:[f.event],meta}));
+    assert.equal(await f.run(),1);assert.equal(f.calls.length,2);
+    assert.deepEqual(await readdir(f.output),['summary.json']);
+    const raw=await readFile(join(f.output,'summary.json'),'utf8'),summary=JSON.parse(raw);
+    assert.equal(summary.providerListState,state);assert.equal(summary.error,'INCOMPLETE_PROVIDER_LIST');
+    assert.doesNotMatch(raw+f.messages.stdout+f.messages.stderr,/SYNTHETIC_ENV_SECRET|SYNTHETIC_PROVIDER_PRIVATE/);
+  }
+});

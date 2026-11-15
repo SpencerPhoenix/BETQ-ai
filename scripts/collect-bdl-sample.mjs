@@ -5,7 +5,7 @@ import {constants} from 'node:fs';
 import {resolve,dirname,basename,relative,isAbsolute,sep} from 'node:path';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {createHash} from 'node:crypto';
-import {collectBdlOutcomeSample} from '../src/bdl-sample-collector.mjs';
+import {collectBdlOutcomeSample,BDL_PROVIDER_LIST_STATES} from '../src/bdl-sample-collector.mjs';
 import {validateBdlRecipientPublicKey,encryptBdlPrivateBundle} from '../src/bdl-private-envelope.mjs';
 const ROOT=fileURLToPath(new URL('../',import.meta.url));
 const JOURNAL=resolve(ROOT,'data/evidence/nfl-2026.json');
@@ -56,7 +56,9 @@ const count=(value,max)=>Number.isInteger(value)&&value>=0&&value<=max?value:0;
 function summary({ok=false,error='SAMPLE_FAILED',diagnostics={},recipientKeySha256=null,encryptedArtifactSha256=null,encryptedArtifactStored=ok}={}){
   return {schema:1,status:ok?'ENCRYPTED_NONQUALIFYING_SAMPLE':'SAMPLE_FAILED',manualOnly:true,
     error:ok?null:ERRORS.has(error)?error:'SAMPLE_FAILED',bdlRequests:count(diagnostics.bdlRequests,2),
-    publicRequests:count(diagnostics.publicRequests,3),scoringEligible:false,qualifiedOutcomes:0,
+    publicRequests:count(diagnostics.publicRequests,3),
+    providerListState:BDL_PROVIDER_LIST_STATES.includes(diagnostics.providerListState)?diagnostics.providerListState:'NOT_OBSERVED',
+    scoringEligible:false,qualifiedOutcomes:0,
     sourceIndependenceVerified:false,sourceAuthenticityVerified:false,journalModified:false,plaintextStored:false,
     encryptedArtifactStored,recipientKeySha256,encryptedArtifactSha256};
 }
