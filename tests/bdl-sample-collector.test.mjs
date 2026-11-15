@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {collectBdlOutcomeSample} from '../src/bdl-sample-collector.mjs';
+import {collectBdlOutcomeSample,BDL_PROVIDER_LIST_STATES} from '../src/bdl-sample-collector.mjs';
 import {syntheticBdlOutcomeInput} from './fixtures/bdl-outcome-candidate.mjs';
 const KEY='synthetic-secret-DO-NOT-LEAK';
 const encode=x=>new TextEncoder().encode(typeof x==='string'?x:JSON.stringify(x));
@@ -105,4 +105,43 @@ test('decoded gzip bytes are capped but not compared with encoded content length
  const r=await f.run();assert.equal(r.ok,true);assert.equal(f.calls[0].opts.headers['Accept-Encoding'],'identity');
  const g=setup();g.responses[0]=()=>new Response(new Uint8Array(4000001),{headers:{'content-encoding':'gzip','content-length':'24'}});
  assert.equal((await g.run()).error,'SOURCE_TOO_LARGE');
+});
+test('optional cursor accepted only for a strictly short valid page',async()=>{
+ for(const meta of [{per_page:100},{per_page:2},{per_page:1,next_cursor:null},{per_page:100,next_cursor:null}]){
+  const f=setup();f.responses[1]=()=>new Response(JSON.stringify({data:[f.event],meta}));
+  const r=await f.run();assert.equal(r.ok,true,JSON.stringify(r));assert.equal(f.calls.length,3);
+  assert.equal(r.diagnostics.bdlRequests,2);assert.equal(r.diagnostics.providerListState,Object.hasOwn(meta,'next_cursor')?'COMPLETE_EXPLICIT_NULL':'COMPLETE_SHORT_PAGE_CURSOR_OMITTED');
+ }
+});
+test('provider list enum separates invalid shapes, bounds, continuation and ambiguity',async()=>{
+ const cases=[
+  [null,'INVALID_SHAPE'],[[],'INVALID_SHAPE'],[{},'INVALID_SHAPE'],
+  [{data:[],meta:null},'INVALID_SHAPE'],[{data:[],meta:[]},'INVALID_SHAPE'],
+  [{data:{},meta:{per_page:100}},'INVALID_SHAPE'],
+  ...[undefined,null,'100',0,-1,101,1.5,true].map(per_page=>[{data:[],meta:{per_page}},'INVALID_PAGE']),
+  [{data:[{},{}],meta:{per_page:1,next_cursor:null}},'INVALID_PAGE'],
+  [{data:Array(101).fill({}),meta:{per_page:100,next_cursor:null}},'INVALID_PAGE'],
+  ...[0,1,'',false,{},[]].map(next_cursor=>[{data:[],meta:{per_page:100,next_cursor}},'CONTINUATION_PRESENT']),
+  [{data:[{}],meta:{per_page:1}},'AMBIGUOUS_FULL_PAGE']
+ ];
+ for(const [payload,state] of cases){
+  const f=setup();f.responses[1]=()=>new Response(JSON.stringify(payload));const r=await f.run();
+  assert.equal(r.ok,false);assert.equal(r.error,'INCOMPLETE_PROVIDER_LIST');assert.equal(r.diagnostics.providerListState,state);
+  assert.equal(f.calls.length,2);assert.equal(r.diagnostics.bdlRequests,1);assert.equal(r.privateBundle,undefined);
+ }
+});
+test('complete empty pages still fail mapping, without another provider request',async()=>{
+ for(const meta of [{per_page:100},{per_page:1,next_cursor:null}]){
+  const f=setup();f.responses[1]=()=>new Response(JSON.stringify({data:[],meta}));const r=await f.run();
+  assert.equal(r.error,'PROVIDER_MAPPING_MISMATCH');assert.match(r.diagnostics.providerListState,/^COMPLETE_/);assert.equal(f.calls.length,2);
+ }
+});
+test('list diagnostic is allowlisted and never includes raw malformed payload values',async()=>{
+ assert.equal(Object.isFrozen(BDL_PROVIDER_LIST_STATES),true);
+ for(const [body,state] of [['{"private":"secret-raw-value",','INVALID_JSON'],['{"data":[],"data":[],"meta":{}}','INVALID_JSON'],[JSON.stringify({data:[],meta:{per_page:100,next_cursor:'secret-raw-value'}}),'CONTINUATION_PRESENT']]){
+  const f=setup();f.responses[1]=()=>new Response(body);const r=await f.run();assert.equal(r.ok,false);
+  assert.equal(r.diagnostics.providerListState,state);assert.equal(BDL_PROVIDER_LIST_STATES.includes(state),true);
+  assert.equal(JSON.stringify(r).includes('secret-raw-value'),false);assert.equal(JSON.stringify(r).includes(KEY),false);
+ }
+ const f=setup();f.input.gameId='bad';const r=await f.run();assert.equal(r.diagnostics.providerListState,'NOT_OBSERVED');assert.equal(f.calls.length,0);
 });
