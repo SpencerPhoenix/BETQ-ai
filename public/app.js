@@ -806,13 +806,26 @@
       s.labels?.market === 'MARKET_DERIVED_NO_VIG_CONSENSUS' &&
       (!s.eligibility.model || (Number.isFinite(s.modelHomeProbability) && s.modelHomeProbability >= 0 && s.modelHomeProbability <= 1 && Date.parse(s.capturedAt) < Date.parse(s.commenceTime))) &&
       (!s.eligibility.market || (Number.isFinite(s.marketHomeProbability) && s.marketHomeProbability >= 0 && s.marketHomeProbability <= 1));
+    const validMetrics = result => {
+      const m=result.metrics,s=data.firstFrozenBaseline;
+      if(!result.scoringEligible)return m===null;
+      if(!m||!Number.isFinite(m.modelBrier)||m.modelBrier<0||m.modelBrier>1||
+        !Number.isFinite(m.modelLogLoss)||m.modelLogLoss<0||
+        !(typeof m.modelCorrect==='boolean'||(s.modelHomeProbability===.5&&m.modelCorrect===null)))return false;
+      const absent=m.marketBrier===null&&m.marketLogLoss===null&&m.marketCorrect===null&&m.brierImprovement===null;
+      return s.eligibility.market ? Number.isFinite(m.marketBrier)&&m.marketBrier>=0&&m.marketBrier<=1&&
+        Number.isFinite(m.marketLogLoss)&&m.marketLogLoss>=0&&Number.isFinite(m.brierImprovement)&&
+        (typeof m.marketCorrect==='boolean'||(s.marketHomeProbability===.5&&m.marketCorrect===null)) : absent;
+    };
     return validSnapshot(data.firstFrozenBaseline) && validSnapshot(data.latestSnapshot) && data.history.snapshots.every(validSnapshot) &&
       Date.parse(data.firstFrozenBaseline.capturedAt) <= Date.parse(data.latestSnapshot.capturedAt) &&
       data.history.snapshots.every((s,i,shots) => Date.parse(s.capturedAt) >= Date.parse(data.firstFrozenBaseline.capturedAt) &&
         Date.parse(s.capturedAt) <= Date.parse(data.latestSnapshot.capturedAt) && (!i || Date.parse(shots[i-1].capturedAt) <= Date.parse(s.capturedAt))) &&
       (data.result === null || (data.result?.gameId === data.game.gameId && typeof data.result.sourceCorroborated === 'boolean' &&
         typeof data.result.scoringEligible === 'boolean' && data.result.officialLeagueCertification === false &&
-        (!data.result.scoringEligible || (data.result.sourceCorroborated === true && data.result.modelQualified === true &&
+        (data.result.qualificationDetails==null||globalThis.BETQGameGrades?.qualifiedResult(data.result)===true)&&validMetrics(data.result)&&
+        (!data.result.scoringEligible || (globalThis.BETQGameGrades?.qualifiedResult(data.result)===true && data.result.modelQualified === true &&
+          data.firstFrozenBaseline.eligibility.model === true && data.result.baselineSnapshotId === data.firstFrozenBaseline.id &&
           ['HOME','AWAY'].includes(data.result.outcome) && Number.isInteger(data.result.homeScore) && Number.isInteger(data.result.awayScore) &&
           data.result.homeScore !== data.result.awayScore && data.result.homeScore >= 0 && data.result.awayScore >= 0 &&
           data.result.outcome === (data.result.homeScore > data.result.awayScore ? 'HOME' : 'AWAY') &&
@@ -856,7 +869,10 @@
       '</dl></article>';
   }
   function dossierHTML(data) {
-    const game = data.game, result = data.result;
+    const game = data.game, result = data.result,q=result?.qualificationDetails;
+    const reviewedBdl=globalThis.BETQGameGrades?.reviewedBdlResult(result)===true;
+    const metric=value=>Number.isFinite(value)?value.toFixed(3):'Not scored';
+    const direction=(value,p,scored)=>value===true?'Correct':value===false?'Incorrect':scored&&p===.5?'No directional pick':'Not scored';
     return (globalThis.BETQRetainedForecasts?.quarantineHTML(data.quarantine)||'')+'<p><b>REAL RETAINED NFL RESEARCH · FROZEN VALUES ONLY</b></p>' +
       '<p>' + esc(game.away + ' @ ' + game.home) + ' · Kickoff recorded with forecast (UTC): ' + esc(dossierTime(game.commenceTime)) +
       ' · Game ID: ' + esc(game.gameId) + '</p>' + scheduleReviewHTML(game.scheduleReview) +
@@ -865,10 +881,18 @@
       '<div class="dossier-grid">' + frozenSnapshotHTML(data.firstFrozenBaseline, 'First frozen baseline') +
       frozenSnapshotHTML(data.latestSnapshot, 'Latest retained snapshot') + '</div>' +
       '<section class="dossier-section"><h4>Result qualification</h4><p>' +
-      (result ? esc((result.sourceCorroborated ? 'Source-corroborated; not official league certification. Upstream source independence remains unverified. ' : 'Recorded only; source corroboration not established. ') +
-        (result.scoringEligible ? 'Eligible for the retained scoring contract, not evidence of a profitable strategy.' : 'Not eligible for retained model scoring.')) +
+      (result ? esc((reviewedBdl ? 'BDL native final + nflverse score agreement. Operator-reviewed, not independently authenticated. Source independence unverified; not official league certification. Historical as-of and provider publication time unverified. Excluded from V2 aggregate reports. ' :
+        result.sourceCorroborated ? 'Source-corroborated (V2); not official league certification. Upstream source independence remains unverified. ' : 'Recorded only; source corroboration not established. ') +
+        (result.scoringEligible ? 'Eligible for descriptive per-game model scoring, not evidence of a profitable strategy.' : 'Not eligible for retained model scoring.')) +
         '</p><dl>' + dossierField('Retained score', game.away + ' ' + (result.awayScore ?? 'Not retained') + ' · ' + game.home + ' ' + (result.homeScore ?? 'Not retained')) +
-        dossierField('Result source / receipt (UTC)', (result.source || 'Not retained') + ' / ' + dossierTime(result.verifiedAt)) + '</dl>' :
+        dossierField('Result source / receipt (UTC)', (result.source || 'Not retained') + ' / ' + dossierTime(result.verifiedAt)) +
+        (q?dossierField('Result policy / separate cohort',q.policyId):'')+
+        dossierField('Scoring baseline',result.baselineSnapshotId||'Not retained')+
+        dossierField('Model Brier / log loss',metric(result.metrics?.modelBrier)+' / '+metric(result.metrics?.modelLogLoss))+
+        dossierField('Model direction',direction(result.metrics?.modelCorrect,data.firstFrozenBaseline.modelHomeProbability,!!result.metrics))+
+        dossierField('Market Brier / log loss',metric(result.metrics?.marketBrier)+' / '+metric(result.metrics?.marketLogLoss))+
+        dossierField('Market direction',direction(result.metrics?.marketCorrect,data.firstFrozenBaseline.marketHomeProbability,Number.isFinite(result.metrics?.marketBrier)))+
+        dossierField('Brier improvement (market minus model)',metric(result.metrics?.brierImprovement))+'</dl>' :
         'No result retained. This view does not fetch or invent outcomes.</p>') + '</section>' +
       '<section class="dossier-section"><h4>Retained capture history</h4><p>' + esc(String(data.history.total)) + ' captures. ' +
       (data.history.truncated ? 'Only the latest ' + esc(String(data.history.snapshots.length)) + ' are listed; the first baseline is preserved above.' : 'All retained captures are listed.') + '</p>' +

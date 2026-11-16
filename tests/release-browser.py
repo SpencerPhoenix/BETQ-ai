@@ -172,3 +172,6 @@ with sync_playwright() as p:
     (OUT/'report.json').write_text(json.dumps(report,indent=2))
     print(json.dumps({k:v for k,v in report.items() if k!='requests'}))
     browser.close()
+
+# Keep the distinct fabricated reviewed-result scenario in the existing CI entrypoint.
+subprocess.run([sys.executable,str(ROOT/'tests/bdl-reviewed-browser.py'),str(OUT/'reviewed-bdl')],cwd=ROOT,check=True)

@@ -6,6 +6,7 @@ import {buildGameDossier,listGameDossiers} from '../src/game-dossier.mjs';
 import {quarantineFixture} from './fixtures/quarantine-ui.mjs';
 const js=await readFile(new URL('../public/app.js',import.meta.url),'utf8');
 const forecasts=await readFile(new URL('../public/retained-forecasts.js',import.meta.url),'utf8');
+const grades=await readFile(new URL('../public/game-grades.js',import.meta.url),'utf8');
 const html=await readFile(new URL('../public/index.html',import.meta.url),'utf8');
 const css=await readFile(new URL('../public/styles.css',import.meta.url),'utf8');
 const journal=JSON.parse(await readFile(new URL('./fixtures/retained-20261114/nfl-2026.json',import.meta.url),'utf8'));
@@ -23,7 +24,7 @@ function harness(request=async()=>data(),state={mode:'live',sport:'americanfootb
     window:{scrollTo(){},matchMedia:()=>({matches:true})}};
   for(const tab of ['games','evidence'])node('page-'+tab).querySelector=()=>node(tab+'-heading');
   vm.createContext(context);
-  vm.runInContext(forecasts+segment('  const esc =','  const persist =')+segment('  // Dossiers are read only','  function renderGames()')+
+  vm.runInContext(forecasts+grades+segment('  const esc =','  const persist =')+segment('  // Dossiers are read only','  function renderGames()')+
     segment('  function setTab(','  async function requestJSON(')+
     'globalThis.api={openGameDossier,closeGameDossier,loadRetainedGames,validDossier,dossierHTML,setTab};',context);
   return {api:context.api,nodes,node,calls,state,get focus(){return focus;},get focusCalls(){return focusCalls;}};

@@ -1,33 +1,35 @@
 {
   "schema": 1,
   "season": 2026,
-  "generatedAt": "2026-11-15T17:57:35.795Z",
+  "generatedAt": "2026-11-16T11:57:02.683Z",
   "provenance": {
     "model": "BETQ_NFL_ELO",
     "market": "THE_ODDS_API_V4_DERIVED",
     "results": "NFLVERSE_SCHEDULES_CC_BY_4_0"
   },
   "status": "COLLECTING_FORWARD_EVIDENCE",
-  "outcomeScoringPolicy": "SOURCE_CORROBORATED_SETTLEMENT_V1",
+  "outcomeScoringPolicy": "SOURCE_CORROBORATED_SETTLEMENT_V2",
   "sourceIndependenceVerified": false,
+  "marketFreshnessPolicy": "ABSOLUTE_OLDEST_QUOTE_AT_CAPTURE_V1",
+  "legacyMarketSnapshotsWithoutOldestQuoteTime": 252,
   "researchOnly": true,
   "noWagering": true,
   "marketBeatingEdgeEstablished": false,
   "realizedROI": null,
   "verifiedCLV": null,
   "minimumScoredSample": 30,
-  "totalSnapshots": 347,
-  "prospectiveGames": 44,
-  "settledGames": 18,
-  "pendingGames": 26,
+  "totalSnapshots": 255,
+  "prospectiveGames": 36,
+  "settledGames": 17,
+  "pendingGames": 19,
   "sourceCorroboratedSettledGames": 0,
-  "sourceUncorroboratedSettledGames": 18,
+  "sourceUncorroboratedSettledGames": 17,
   "sourceCorroboratedMarketGames": 0,
   "sourceCorroboratedChallengerGames": 0,
-  "pairedMarketGames": 18,
-  "nearKickoffConsensusPairs": 19,
-  "prospectiveChallengerGames": 30,
-  "pairedChallengerSettled": 17,
+  "pairedMarketGames": 17,
+  "nearKickoffConsensusPairs": 0,
+  "prospectiveChallengerGames": 22,
+  "pairedChallengerSettled": 16,
   "challengerForwardComparison": null,
   "tiesExcluded": 0,
   "forwardMetrics": null,
@@ -203,24 +205,6 @@
       "marketHomeProbability": 0.252217
     },
     {
-      "gameId": "2026_10_HOU_CLE",
-      "home": "CLE",
-      "away": "HOU",
-      "gameDate": "2026-11-15",
-      "capturedAt": "2026-11-04T18:50:46.512Z",
-      "modelHomeProbability": 0.511427,
-      "marketHomeProbability": 0.359564
-    },
-    {
-      "gameId": "2026_10_CAR_NO",
-      "home": "NO",
-      "away": "CAR",
-      "gameDate": "2026-11-15",
-      "capturedAt": "2026-11-04T18:50:46.512Z",
-      "modelHomeProbability": 0.487433,
-      "marketHomeProbability": 0.477322
-    },
-    {
       "gameId": "2026_10_SF_DAL",
       "home": "DAL",
       "away": "SF",
@@ -230,42 +214,6 @@
       "marketHomeProbability": 0.348471
     },
     {
-      "gameId": "2026_10_JAX_TEN",
-      "home": "TEN",
-      "away": "JAX",
-      "gameDate": "2026-11-15",
-      "capturedAt": "2026-11-04T18:50:46.512Z",
-      "modelHomeProbability": 0.178211,
-      "marketHomeProbability": 0.198488
-    },
-    {
-      "gameId": "2026_10_MIA_IND",
-      "home": "IND",
-      "away": "MIA",
-      "gameDate": "2026-11-15",
-      "capturedAt": "2026-11-04T18:50:46.512Z",
-      "modelHomeProbability": 0.55635,
-      "marketHomeProbability": 0.545984
-    },
-    {
-      "gameId": "2026_10_BUF_NYJ",
-      "home": "NYJ",
-      "away": "BUF",
-      "gameDate": "2026-11-15",
-      "capturedAt": "2026-11-04T18:50:46.512Z",
-      "modelHomeProbability": 0.149525,
-      "marketHomeProbability": 0.211679
-    },
-    {
-      "gameId": "2026_10_KC_ATL",
-      "home": "ATL",
-      "away": "KC",
-      "gameDate": "2026-11-15",
-      "capturedAt": "2026-11-04T18:50:46.512Z",
-      "modelHomeProbability": 0.423029,
-      "marketHomeProbability": 0.385463
-    },
-    {
       "gameId": "2026_10_PIT_CIN",
       "home": "CIN",
       "away": "PIT",
@@ -273,6 +221,60 @@
       "capturedAt": "2026-11-04T18:50:46.512Z",
       "modelHomeProbability": 0.453087,
       "marketHomeProbability": 0.608265
+    },
+    {
+      "gameId": "2026_11_TB_DET",
+      "home": "DET",
+      "away": "TB",
+      "gameDate": "2026-11-22",
+      "capturedAt": "2026-11-11T18:52:16.116Z",
+      "modelHomeProbability": 0.72298,
+      "marketHomeProbability": 0.621115
+    },
+    {
+      "gameId": "2026_11_NO_CHI",
+      "home": "CHI",
+      "away": "NO",
+      "gameDate": "2026-11-22",
+      "capturedAt": "2026-11-11T18:52:16.116Z",
+      "modelHomeProbability": 0.792683,
+      "marketHomeProbability": 0.79661
+    },
+    {
+      "gameId": "2026_11_MIN_SF",
+      "home": "SF",
+      "away": "MIN",
+      "gameDate": "2026-11-22",
+      "capturedAt": "2026-11-11T18:52:16.116Z",
+      "modelHomeProbability": 0.566624,
+      "marketHomeProbability": 0.646522
+    },
+    {
+      "gameId": "2026_11_IND_HOU",
+      "home": "HOU",
+      "away": "IND",
+      "gameDate": "2026-11-19",
+      "capturedAt": "2026-11-11T18:52:16.116Z",
+      "modelHomeProbability": 0.67036,
+      "marketHomeProbability": 0.798319
+    },
+    {
+      "gameId": "2026_11_MIA_BUF",
+      "home": "BUF",
+      "away": "MIA",
+      "gameDate": "2026-11-22",
+      "capturedAt": "2026-11-11T18:52:16.116Z",
+      "modelHomeProbability": 0.848771,
+      "marketHomeProbability": 0.908257
+    },
+    {
+      "gameId": "2026_11_NYJ_LAC",
+      "home": "LAC",
+      "away": "NYJ",
+      "gameDate": "2026-11-22",
+      "capturedAt": "2026-11-11T18:52:16.116Z",
+      "modelHomeProbability": 0.646071,
+      "marketHomeProbability": 0.536961
     }
   ],
   "safeguards": [
@@ -280,9 +282,166 @@
     "Original forecasts are append-only; corrected results retain settlement revisions",
     "At least 30 source-corroborated non-ties before aggregate outcome performance is displayed",
     "Market consensus is paired at the same as-of snapshot, NOT genuine bookmaker closing-line value",
+    "Market scoring requires absolute oldest quote time fresh at capture; legacy missing timestamps are not reconstructed",
     "Only derived probabilities are journaled; no raw bookmaker prices or identities",
     "Legacy community scores remain recorded but do not qualify for outcome scoring",
     "Cross-source agreement does not establish upstream source independence or official league certification",
     "No real wagers, account execution or realized ROI"
-  ]
+  ],
+  "quarantine": {
+    "policy": "FROZEN_SCHEDULE_CONFLICT_QUARANTINE_V1",
+    "historyPreserved": true,
+    "rawGameCount": 44,
+    "rawSnapshotCount": 347,
+    "rawResultCount": 19,
+    "excludedGameCount": 8,
+    "excludedSnapshotCount": 92,
+    "excludedResultCount": 1,
+    "games": [
+      {
+        "gameId": "2026_09_LV_SF",
+        "season": 2026,
+        "home": "SF",
+        "away": "LV",
+        "gameDate": "2026-11-08",
+        "reason": "CONFLICTING_RETAINED_KICKOFFS",
+        "firstFrozenSnapshotId": "37fd85fde94b4b5014785913",
+        "firstFrozenCommenceTime": "2026-11-08T21:05:00.000Z",
+        "observedCommenceTimes": [
+          "2026-11-08T21:05:00.000Z",
+          "2026-11-08T21:25:00.000Z"
+        ],
+        "snapshotCount": 9,
+        "scoringEligible": false,
+        "collectionEligible": false,
+        "resultCount": 1
+      },
+      {
+        "gameId": "2026_10_BUF_NYJ",
+        "season": 2026,
+        "home": "NYJ",
+        "away": "BUF",
+        "gameDate": "2026-11-15",
+        "reason": "CONFLICTING_RETAINED_KICKOFFS",
+        "firstFrozenSnapshotId": "e61076baaf9b56a3c7d57d6a",
+        "firstFrozenCommenceTime": "2026-11-15T18:00:00.000Z",
+        "observedCommenceTimes": [
+          "2026-11-15T18:00:00.000Z",
+          "2026-11-15T18:05:00.000Z"
+        ],
+        "snapshotCount": 12,
+        "scoringEligible": false,
+        "collectionEligible": false,
+        "resultCount": 0
+      },
+      {
+        "gameId": "2026_10_CAR_NO",
+        "season": 2026,
+        "home": "NO",
+        "away": "CAR",
+        "gameDate": "2026-11-15",
+        "reason": "CONFLICTING_RETAINED_KICKOFFS",
+        "firstFrozenSnapshotId": "b632547636c32ebf8603f26c",
+        "firstFrozenCommenceTime": "2026-11-15T18:00:00.000Z",
+        "observedCommenceTimes": [
+          "2026-11-15T18:00:00.000Z",
+          "2026-11-15T18:05:00.000Z"
+        ],
+        "snapshotCount": 12,
+        "scoringEligible": false,
+        "collectionEligible": false,
+        "resultCount": 0
+      },
+      {
+        "gameId": "2026_10_HOU_CLE",
+        "season": 2026,
+        "home": "CLE",
+        "away": "HOU",
+        "gameDate": "2026-11-15",
+        "reason": "CONFLICTING_RETAINED_KICKOFFS",
+        "firstFrozenSnapshotId": "53cb8e220928e83f732b3d76",
+        "firstFrozenCommenceTime": "2026-11-15T18:00:00.000Z",
+        "observedCommenceTimes": [
+          "2026-11-15T18:00:00.000Z",
+          "2026-11-15T18:05:00.000Z"
+        ],
+        "snapshotCount": 12,
+        "scoringEligible": false,
+        "collectionEligible": false,
+        "resultCount": 0
+      },
+      {
+        "gameId": "2026_10_JAX_TEN",
+        "season": 2026,
+        "home": "TEN",
+        "away": "JAX",
+        "gameDate": "2026-11-15",
+        "reason": "CONFLICTING_RETAINED_KICKOFFS",
+        "firstFrozenSnapshotId": "cfe8b09342f22e5d2c68f8c6",
+        "firstFrozenCommenceTime": "2026-11-15T18:00:00.000Z",
+        "observedCommenceTimes": [
+          "2026-11-15T18:00:00.000Z",
+          "2026-11-15T18:05:00.000Z"
+        ],
+        "snapshotCount": 12,
+        "scoringEligible": false,
+        "collectionEligible": false,
+        "resultCount": 0
+      },
+      {
+        "gameId": "2026_10_KC_ATL",
+        "season": 2026,
+        "home": "ATL",
+        "away": "KC",
+        "gameDate": "2026-11-15",
+        "reason": "CONFLICTING_RETAINED_KICKOFFS",
+        "firstFrozenSnapshotId": "e8599392908726886c7fe4f6",
+        "firstFrozenCommenceTime": "2026-11-15T18:00:00.000Z",
+        "observedCommenceTimes": [
+          "2026-11-15T18:00:00.000Z",
+          "2026-11-15T18:05:00.000Z"
+        ],
+        "snapshotCount": 11,
+        "scoringEligible": false,
+        "collectionEligible": false,
+        "resultCount": 0
+      },
+      {
+        "gameId": "2026_10_MIA_IND",
+        "season": 2026,
+        "home": "IND",
+        "away": "MIA",
+        "gameDate": "2026-11-15",
+        "reason": "CONFLICTING_RETAINED_KICKOFFS",
+        "firstFrozenSnapshotId": "d7f2d5f0af6032213639c661",
+        "firstFrozenCommenceTime": "2026-11-15T18:00:00.000Z",
+        "observedCommenceTimes": [
+          "2026-11-15T18:00:00.000Z",
+          "2026-11-15T18:05:00.000Z"
+        ],
+        "snapshotCount": 12,
+        "scoringEligible": false,
+        "collectionEligible": false,
+        "resultCount": 0
+      },
+      {
+        "gameId": "2026_10_MIN_GB",
+        "season": 2026,
+        "home": "GB",
+        "away": "MIN",
+        "gameDate": "2026-11-15",
+        "reason": "CONFLICTING_RETAINED_KICKOFFS",
+        "firstFrozenSnapshotId": "fd645ceca994b1ae60572e59",
+        "firstFrozenCommenceTime": "2026-11-15T18:00:00.000Z",
+        "observedCommenceTimes": [
+          "2026-11-15T18:00:00.000Z",
+          "2026-11-15T18:05:00.000Z"
+        ],
+        "snapshotCount": 12,
+        "scoringEligible": false,
+        "collectionEligible": false,
+        "resultCount": 0
+      }
+    ]
+  }
 }
