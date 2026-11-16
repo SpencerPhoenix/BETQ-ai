@@ -1330,7 +1330,8 @@
        esc(injSource.reason||'No fresh data')+'</p>';
     const caution='<p class="nfl4-caution">Reported QB names are not confirmed starters. This build does not '+
       'claim a QB injury adjustment or change betting recommendations automatically. '+
-      'EPA is computed only from previously completed games.</p>';
+      'EPA is computed only from previously completed games. '+
+      'Source-file freshness does not confirm current game-day availability; consult official team reports and inactives.</p>';
     const cards=(state.mode==='live'&&state.sport==='americanfootball_nfl'&&
       state.market==='h2h'?(state.slate?.events||[]):[])
       .filter(e=>Number.isFinite(Date.parse(e.commenceTime))&&Date.parse(e.commenceTime)>Date.now()).slice(0,20).map(e=>{
@@ -1340,12 +1341,15 @@
         const qbs=x=>x?.reportedQBs?.length?
           x.reportedQBs.map(p=>esc(p.player)+' ('+esc(p.status)+')').join('; ') :
           'No QB listing — starter still unverified';
+        const completeness=x=>x?.reported ? '<small>'+
+          (x.listComplete===false ? 'Incomplete retained list: '+esc(x.listedCount)+' of '+esc(x.count)+' flagged players. ' : '')+
+          'Player availability is not independently verified.</small>' : '';
         const injuryInfo=source ?
           '<div class="nfl4-injury-row"><div><span>'+esc(e.homeTeam)+
             ' report</span><b>'+(h?.reported?String(h.count)+' flagged':'No matching week report')+
-            '</b><small>'+qbs(h)+'</small></div><div><span>'+esc(e.awayTeam)+
+            '</b><small>'+qbs(h)+'</small>'+completeness(h)+'</div><div><span>'+esc(e.awayTeam)+
             ' report</span><b>'+(a?.reported?String(a.count)+' flagged':'No matching week report')+
-            '</b><small>'+qbs(a)+'</small></div></div>' :
+            '</b><small>'+qbs(a)+'</small>'+completeness(a)+'</div></div>' :
           '<p class="nfl4-warning">Injury week or source is not verified: '+
             esc(inj?.reason||'Unavailable')+'. No availability assumptions applied.</p>';
         const modelInfo=m?.available?

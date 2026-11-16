@@ -53,7 +53,8 @@ data.validUntil=new Date(Date.parse(asset.updated_at)+72*3600000).toISOString();
 const path='data/nfl_injuries.json';
 const prev=await readFile(path,'utf8').then(JSON.parse).catch(()=>null);
 if(prev?.sourceUpdatedAt===data.sourceUpdatedAt&&
-   JSON.stringify(prev.fixtures)===JSON.stringify(data.fixtures)){
+   JSON.stringify(prev.fixtures)===JSON.stringify(data.fixtures)&&
+   JSON.stringify(prev.reports)===JSON.stringify(data.reports)){
   console.log('No source-vintage or upcoming fixture changes');
   process.exit(0);
 }
