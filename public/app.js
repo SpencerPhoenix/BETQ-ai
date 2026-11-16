@@ -866,7 +866,7 @@
       dossierField('Source receipt (UTC)', dossierTime(s.sourceReceivedAt)) +
       dossierField('Source freshness when this view was opened', sourceAge === null ? 'Unknown: receipt not retained' : sourceAge < 0 ? 'Invalid future receipt' : sourceAgeMs > 600000 ? 'Stale retained source · ' + sourceAge + ' minutes old' : 'Receipt within 10 minutes; frozen observation, not a live feed') +
       dossierField('Missing retained fields', s.missingness.length ? s.missingness.join(', ') : 'None in this record’s published field set') +
-      '</dl></article>';
+      '</dl>'+(globalThis.BETQRetainedForecasts?.comparison(s,'Home','Away')||'')+'</article>';
   }
   function dossierHTML(data) {
     const game = data.game, result = data.result,q=result?.qualificationDetails;

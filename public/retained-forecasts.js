@@ -98,6 +98,22 @@
       return true;
     });
   }
+  function comparison(s,home,away,now=Date.now()) {
+    const ok=s?.eligibility?.model===true && s.modelVersion==='nfl-elo-1' && s?.eligibility?.challenger===true &&
+      s.challengerResearchOnly===true && s.challengerModelVersion==='nfl-efficiency-1' &&
+      probability(s.modelHomeProbability) && probability(s.challengerHomeProbability) &&
+      Number.isFinite(instant(s.challengerBuiltAt)) && Number.isFinite(instant(s.capturedAt)) &&
+      instant(s.challengerBuiltAt)<=instant(s.capturedAt) && instant(s.capturedAt)<instant(s.commenceTime);
+    if(!ok)return '<p data-forecast-comparison>EPA challenger unavailable: compatible pregame provenance required. No substitute probability.</p>';
+    const p=s.challengerHomeProbability,primary=s.modelHomeProbability;
+    const opposed=(p-.5)*(primary-.5)<0;
+    const state=opposed?'Models favor opposite teams':p===.5||primary===.5?'At least one model has no preferred side':'Models favor the same team';
+    return '<section class="model-comparison" data-forecast-comparison><h5>'+esc(state)+'</h5><p>Frozen EPA challenger: '+esc(home)+' '+percent(p)+' · '+esc(away)+' '+percent(1-p)+
+      '. Separate experimental model, not a replacement for Elo.</p><p>Challenger version: '+esc(s.challengerModelVersion)+' · Built UTC: '+esc(s.challengerBuiltAt)+
+      ' · Captured UTC: '+esc(s.capturedAt)+'. '+(now-instant(s.challengerBuiltAt)>7*DAY?'Stale challenger build. ':'')+
+      'Historical capture, not a current recomputation; build age does not certify lineup freshness.</p><p>No injury or confirmed-starter adjustment, calibrated confidence interval, or proven superiority is established. '+
+      'Model disagreement is uncertainty, not a betting edge. Models are not averaged; Elo ranking and the first frozen scoring baseline remain unchanged.</p></section>';
+  }
   function describe(game,now) {
     const s=game.latestSnapshot;
     const modelAvailable=s.eligibility.model && s.modelVersion==='nfl-elo-1';
@@ -118,7 +134,7 @@
     if(modelAvailable && (now-instant(s.modelBuiltAt)>14*DAY||now-instant(s.modelLastResultDate+'T00:00:00.000Z')>28*DAY))reasons.push('Stale model vintage');
     if(modelAvailable && !selectedSide)reasons.push('No preferred side: Elo is 50/50');
     const minutes=Math.max(0,Math.floor((now-instant(s.capturedAt))/60000));
-    return {game,snapshot:s,selectedTeam,selectedProbability,marketProbability,unqualifiedMarketProbability,modelAvailable,rank:null,
+    return {game,now,snapshot:s,selectedTeam,selectedProbability,marketProbability,unqualifiedMarketProbability,modelAvailable,rank:null,
       rankEligible:reasons.length===0,
       status:reasons.length?reasons.join(' · '):'Retained pregame forecast; current schedule and game status unverified',
       age:'Capture age: '+minutes+' minutes. Saved observation, not live odds.',
@@ -144,7 +160,7 @@
     return '<article class="retained-forecast-card" data-retained-forecast="'+esc(g.gameId)+'"><p class="forecast-rank" data-forecast-rank>'+esc(c.rank?'#'+c.rank+' on '+g.gameDate+' by saved outright probability':'Not ranked as a current pregame preference')+'</p>'+
       '<h4>'+esc(g.away+' @ '+g.home)+'</h4><p class="forecast-preference"><b>'+esc(preferred)+'</b></p>'+
       (c.selectedTeam?'<label>Experimental outright-win probability · 0–100%<meter min="0" max="1" value="'+c.selectedProbability+'" aria-label="'+esc(c.selectedTeam+' experimental outright-win forecast '+percent(c.selectedProbability)+'; not betting confidence')+'">'+percent(c.selectedProbability)+'</meter></label>':'')+
-      '<p class="forecast-status" data-forecast-status>'+esc(c.status)+'</p><p data-forecast-age>'+esc(c.age)+'</p><dl>'+
+      comparison(s,g.home,g.away,c.now)+'<p class="forecast-status" data-forecast-status>'+esc(c.status)+'</p><p data-forecast-age>'+esc(c.age)+'</p><dl>'+
       field('Both teams · frozen Elo',c.modelAvailable?g.home+' '+percent(s.modelHomeProbability)+' · '+g.away+' '+percent(1-s.modelHomeProbability):'Unavailable; no substitute probability')+
       field('Same-capture market · selected side',c.marketProbability===null?'Unavailable':c.selectedTeam+' '+percent(c.marketProbability)+' · no-vig bookmaker consensus, not an independent forecast')+
       (c.unqualifiedMarketProbability===null?'':field('Archived market · unqualified',c.selectedTeam+' '+percent(c.unqualifiedMarketProbability)+' · retained market probability, not an independent forecast; capture-time freshness/provenance unverified'))+
@@ -183,6 +199,8 @@
     const byId=new Map(report.cards.map(c=>[c.game.gameId,c]));
     for(const el of root.querySelectorAll('[data-retained-forecast]')){
       const c=byId.get(el.dataset.retainedForecast);if(!c)continue;
+      const compare=el.querySelector('[data-forecast-comparison]');
+      if(compare)compare.outerHTML=comparison(c.snapshot,c.game.home,c.game.away,now);
       for(const [key,value] of [['rank',c.rank?'#'+c.rank+' on '+c.game.gameDate+' by saved outright probability':'Not ranked as a current pregame preference'],['status',c.status],['age',c.age],['market-status',c.marketStatus]]){
         const target=el.querySelector('[data-forecast-'+key+']');if(target)target.textContent=value;
       }
@@ -198,5 +216,5 @@
       if(requests.get(root)===serial)mount(root,null,clock());
     }
   }
-  globalThis.BETQRetainedForecasts=Object.freeze({build,html,mount,refresh,load,quarantineValid,quarantineHTML});
+  globalThis.BETQRetainedForecasts=Object.freeze({build,html,mount,refresh,load,comparison,quarantineValid,quarantineHTML});
 })();
