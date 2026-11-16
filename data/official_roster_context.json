@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "gameId": "2026_10_LAC_BAL",
+  "away": "LAC",
+  "home": "BAL",
+  "kickoff": "2026-11-17T01:15:00.000Z",
+  "observedAt": "2026-11-16T21:36:33.000Z",
+  "sources": [
+    {
+      "url": "https://www.baltimoreravens.com/news/game-preview-jacoby-brissett-ravens-first-start-week-10-against-chargers-monday-night-football",
+      "title": "Ravens game preview",
+      "publishedAt": "2026-11-16T16:00:52.099Z",
+      "bodySha256": "d5dd73c2862f30664f27a657cd95ceb93d1a3187ce14405a091ad72bf5442447"
+    },
+    {
+      "url": "https://www.baltimoreravens.com/news/lamar-jackson-tyler-huntley-injured-reserve-austin-reed-adisa-isaac-jake-moody",
+      "title": "Ravens injured-reserve announcement",
+      "publishedAt": "2026-11-05T21:35:01.234Z",
+      "bodySha256": "4e420dafcb97c5dfe85dc18b18feeae48ce6133d2250d2544b780de13bcf5a9b"
+    }
+  ],
+  "expectedQuarterback": "Jacoby Brissett",
+  "injuredReserve": [
+    "Lamar Jackson",
+    "Tyler Huntley"
+  ]
+}

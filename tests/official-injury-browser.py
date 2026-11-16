@@ -10,6 +10,9 @@ review={'available':True,'away':'LAC','home':'BAL','sourceUrl':'https://www.char
  'observedAt':observed,'validUntil':'2026-11-16T20:01:00.000Z','sourcePublishedAt':None,
  'conflicts':[{'team':'LAC','player':'Synthetic Receiver','officialStatus':'OUT','nflverseStatus':'QUESTIONABLE'}],
  'unmatched':[],'officialFlaggedPlayers':[{'team':'LAC','player':'Synthetic Receiver','position':'WR','status':'OUT'}]}
+roster={'available':True,'away':'LAC','home':'BAL','observedAt':observed,'validUntil':'2026-11-16T20:01:00.000Z',
+ 'expectedQuarterback':'Synthetic Quarterback','injuredReserve':['Synthetic IR QB'],
+ 'sources':[{'url':'https://www.baltimoreravens.com/news/test-fixture','title':'Synthetic club article','publishedAt':'2026-11-16T16:00:00.000Z'}]}
 requests=[];errors=[]
 def route_all(route):
  u=urlparse(route.request.url);requests.append(route.request)
@@ -17,7 +20,7 @@ def route_all(route):
  if u.path=='/' or u.path in ['/app.js','/retained-forecasts.js','/game-grades.js','/game-strategies.js','/styles.css','/favicon.svg']:
   f=ROOT/'public'/('index.html' if u.path=='/' else u.path[1:]);types={'.html':'text/html','.js':'application/javascript','.css':'text/css','.svg':'image/svg+xml'}
   return route.fulfill(status=200,content_type=types[f.suffix],body=f.read_bytes())
- if u.path=='/api/injuries/nfl': return route.fulfill(status=200,json={'available':False,'reason':'INJURY_SOURCE_STALE','officialReviews':[review]})
+ if u.path=='/api/injuries/nfl': return route.fulfill(status=200,json={'available':False,'reason':'INJURY_SOURCE_STALE','officialReviews':[review],'rosterContextReviews':[roster]})
  if u.path=='/api/model/efficiency': return route.fulfill(status=200,json={'available':False,'reason':'OFFLINE_TEST'})
  return route.fulfill(status=503,json={'error':{'code':'OFFLINE_TEST','message':'Offline test'}})
 with sync_playwright() as p:
@@ -32,6 +35,10 @@ with sync_playwright() as p:
   panel=page.locator('#intelligence-view')
   expect(panel).to_contain_text('official OUT; nflverse QUESTIONABLE')
   expect(panel).to_contain_text('Publication time unknown')
+  expect(panel).to_contain_text('Synthetic Quarterback')
+  expect(panel).to_contain_text('Synthetic IR QB')
+  expect(panel).to_contain_text('existing model estimates do not incorporate this QB change')
+  expect(page.locator('.nfl4-roster-context a')).to_have_attribute('href','https://www.baltimoreravens.com/news/test-fixture')
   expect(panel).to_contain_text('No probability adjustment')
   page.locator('.nfl4-official-review summary').click()
   expect(panel).to_contain_text('Synthetic Receiver (WR): OUT')
@@ -40,6 +47,7 @@ with sync_playwright() as p:
   page.clock.fast_forward(75000)
   expect(panel).to_contain_text('OBSERVATION_EXPIRED')
   expect(page.locator('.nfl4-official-review')).to_have_count(0)
+  expect(page.locator('.nfl4-roster-context')).to_have_count(0)
   context.close()
  browser.close()
 assert not errors,errors
