@@ -15,7 +15,7 @@ Scope: source inspection at main `41ddfa5268b7f6bd1502066d775017652cb117ce`, ret
 | Medium | `challengerResearchForEvent` checked dates against current clock but not artifact build or predicted game date, and counts could be malformed. | Fixed locally: feature day must fully precede build and precede game day; counts must be integer 4–8. Regression covers post-build/same-game/malformed cases. |
 | Medium | Predictor treats missing `neutralSite` as normal home advantage. Odds provider event shape does not establish venue status. | Add an identity-matched, timestamped schedule/venue adapter. At minimum disclose home-venue assumption; do not silently claim verified neutral-site handling. Explicit boolean neutral metadata is handled correctly. |
 | Medium | `render.yaml` uses `npm install` although CI uses locked `npm ci`. | Fixed manifest to `npm ci --ignore-scripts --no-audit --no-fund`. Existing Render service settings may override manifest and must be checked separately. |
-| Medium | Historical `market-production-audit.yml` and `production-audit.yml` assert obsolete v0.7/v0.4 runtimes. | Replace or archive obsolete probes; use exact commit plus compatible protocol health checks. Do not interpret obsolete probe failure as current app failure. |
+| Medium | Historical `market-production-audit.yml` and `phase4-production-audit.yml` assert obsolete v0.7/v0.4 runtimes. | Replace or archive obsolete probes; use exact commit plus compatible protocol health checks. Do not interpret obsolete probe failure as current app failure. |
 | Medium | Outcome ledger has 347 snapshots, 44 raw games, 8 quarantined games. Filtered summary has 36 games, no aggregate-qualified V2 outcomes, plus a separately reviewed descriptive game. | Continue final-status receipt ingestion/review and schedule resolution. Raw record count is not independent scored sample size. No aggregate market advantage established. |
 | Medium | Demo, several sports, spread/total displays exist, but independent live model only supports NFL outright; tie/push distribution not modeled. | Make coverage explicit. Do not apply winner probability to spread, total, halftime or another sport. |
 
@@ -34,3 +34,7 @@ Across 36 latest non-quarantined retained games, 15 contain a challenger probabi
 5. Promote only on out-of-sample incremental evidence, not a single upset or optimized historical selection. Thirty games is a reporting gate, not proof of reliable market outperformance.
 
 No model weights, historical journal rows, scoring cohort rules or numeric predictions were changed by this audit.
+
+## Integration verification
+
+Integrated on injury repair main `0d7f698`. Complete local suite: 1,308/1,308 tests; syntax and diff checks passed. Challenger display age warning corrected to the seven-day runtime bound. Read-only Render inspection also found the existing service still configured with `npm install && npm run check && npm test` and an empty HTTP health-check path; updating the repository manifest does not alone fix those service settings. Deployment and live verification are recorded separately.
