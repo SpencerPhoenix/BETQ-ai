@@ -21,6 +21,7 @@ import { emptyJournal, summarizeEvidence } from './evidence.mjs';
 import { createJournalEvidenceFeed,recomputeJournalEvidence,validateRetainedJournal } from './evidence-journal-feed.mjs';
 import { challengerResearchForEvent } from './nfl-efficiency.mjs';
 import { injuryContextForGame } from './injuries.mjs';
+import {officialRosterContext} from './official-roster-context.mjs';
 import {officialInjuryReviews} from './official-injury-review.mjs';
 import {createOfficialInjuryFeed} from './official-injury-feed.mjs';
 import {createInjuryReportFeed} from './injury-feed.mjs';
@@ -344,7 +345,7 @@ export function createHandler({
         }
         if (url.pathname === '/api/injuries/nfl') {
           const [current,official]=await Promise.all([injuryFeed.get(),officialInjuryFeed.get()]);
-          return reply(res,200,{...current.status,officialReviews:officialInjuryReviews(official.artifact,current.artifact,{now:clock()}),officialRefresh:official.status});
+          return reply(res,200,{...current.status,officialReviews:officialInjuryReviews(official.artifact,current.artifact,{now:clock()}),officialRefresh:official.status,rosterContextReviews:officialRosterContext({now:clock()})});
         }
         if (url.pathname === '/api/shadow/status') {
           // Never returns bookmaker identities, prices, article URLs, or DB credentials.

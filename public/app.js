@@ -1337,6 +1337,19 @@
         '<p>Injury report, not confirmed game-day inactives. Missing or undesignated players are not assumed healthy. '+
         'Kickoff matched to retained schedule, not independently certified here. No probability adjustment.</p></section>';
     }).join('');
+    const rosterContext=(injSource.rosterContextReviews||[]).map(review=>{
+      const current=review.available===true&&Date.parse(review.observedAt)<=Date.now()&&Date.now()<Date.parse(review.validUntil);
+      if(!current)return '<p class="nfl4-warning">Official article context for '+esc(review.away)+' at '+esc(review.home)+
+        ' is not current: '+esc(review.reason||'OBSERVATION_EXPIRED')+'. No current starter inferred.</p>';
+      const sources=(review.sources||[]).map(s=>'<li><a href="'+esc(s.url)+'" target="_blank" rel="noopener noreferrer">'+
+        esc(s.title)+'</a> · published '+esc(when(s.publishedAt))+'</li>').join('');
+      return '<section class="nfl4-roster-context"><h4>Baltimore quarterback context · official articles</h4>'+
+        '<p><b>'+esc(review.expectedQuarterback)+'</b> is the expected starter according to the Ravens game preview. '+
+        esc((review.injuredReserve||[]).join(' and '))+' were placed on injured reserve according to the club announcement.</p>'+
+        '<p>Sources reviewed '+esc(when(review.observedAt))+'. Context expires '+esc(when(review.validUntil))+'.</p><ul>'+sources+'</ul>'+
+        '<p>Manually reviewed article snapshot, not an automatically refreshed roster or confirmed starting lineup. '+
+        'Weekly injury reports may omit injured-reserve players. No probability adjustment; existing model estimates do not incorporate this QB change.</p></section>';
+    }).join('');
     const injuryStatus=injSource.available ?
       '<p><b>Injury source:</b> nflverse weekly reports · last published '+
        esc(when(injSource.sourceUpdatedAt))+' · '+
@@ -1399,7 +1412,7 @@
         '</span></div>'+model+'</section>'+
       '<section class="panel"><div class="panel-head"><div><span class="panel-kicker">REPORT SOURCE GOVERNANCE</span>'+
       '<h3>Reported injuries ≠ confirmed starters</h3></div></div>'+
-      '<div class="nfl4-intel-body">'+injuryStatus+officialReviews+caution+'</div></section></div>'+
+      '<div class="nfl4-intel-body">'+injuryStatus+rosterContext+officialReviews+caution+'</div></section></div>'+
       '<div class="section-heading nfl4-subtitle"><div><div class="eyebrow subtle">SOURCE-ALIGNED / UPCOMING</div>'+
       '<h2>Game-level research comparisons</h2></div>'+
       '<span class="faint-caption">NO WAGERING EXECUTION</span></div>'+
@@ -1948,7 +1961,7 @@
     $('clock').textContent = new Date().toLocaleTimeString();
     refreshScheduleLabels();
     let officialExpired=false;
-    for(const review of state.injurySource?.officialReviews||[]){
+    for(const review of [...(state.injurySource?.officialReviews||[]),...(state.injurySource?.rosterContextReviews||[])]){
       if(review.available===true&&!(Date.now()<Date.parse(review.validUntil))){
         review.available=false;review.reason='OBSERVATION_EXPIRED';officialExpired=true;
       }
