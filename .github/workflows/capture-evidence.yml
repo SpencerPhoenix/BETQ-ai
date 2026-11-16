@@ -29,7 +29,8 @@ jobs:
           fetch-depth: 1
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '26'
+          check-latest: true
       - name: Install locked dependencies without lifecycle scripts
         env:
           BETQ_OPERATOR_REFRESH_TOKEN: ''

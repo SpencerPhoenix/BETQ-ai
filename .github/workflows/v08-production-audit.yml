@@ -1,4 +1,4 @@
-name: BETQ v0.8 central authority production smoke
+name: BETQ central authority production smoke
 on:
   push:
     paths:
@@ -11,13 +11,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '26'
+          check-latest: true
       - name: Verify risk veto, 10k stress report and no paid-odds budget usage
         shell: bash
         run: |
           node --input-type=module <<'NODE'
+          const {readFile}=await import('node:fs/promises');
+          const expectedVersion=JSON.parse(await readFile('package.json','utf8')).version;
           const base='https://betq-ai.onrender.com';
           const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
           const read=async path=>{
@@ -31,17 +35,17 @@ jobs:
           for(let n=0;n<10;n++){
             try{
               const res=await read('/api/health');
-              if(res.status===200&&res.data?.version==='0.8.0'){health=res.data;break;}
+              if(res.status===200&&res.data?.version===expectedVersion){health=res.data;break;}
             }catch{}
             await pause(8000);
           }
-          if(!health)throw Error('v0.8 production code not live');
+          if(!health)throw Error('Expected production version not live: '+expectedVersion);
           const [html,client,risk,market,replay,verification,demo]=await Promise.all([
             read('/'),read('/app.js'),read('/api/risk/nfl'),
             read('/api/research/market'),read('/api/replay/nfl'),
             read('/api/price/verification'),read('/api/slate?mode=demo')
           ]);
-          if(html.status!==200||!html.text.includes('TERMINAL / v0.8.0')||
+          if(html.status!==200||!html.text.includes('TERMINAL / v'+expectedVersion)||
              !html.text.includes('id="risk-stress-view"'))
             throw Error('No deployed bankroll stress interface or version marker');
           if(client.status!==200||
@@ -83,7 +87,7 @@ jobs:
             throw Error('Unauthorized paper entry or Kelly stake still surfaced');
           if(!demo.data.agentRun.stages.some(x=>x.id==='selection'))
             throw Error('Selection Bias Guardian not active on every slate');
-          console.log('PRODUCTION v0.8.0: PASS');
+          console.log('PRODUCTION v'+expectedVersion+': PASS');
           console.log('Risk scenario coverage: '+risk.data.historicalEligibleDecisions+
             ' source-result historical selections, '+risk.data.historicalWeekBlocks+' week blocks');
           console.log('Baseline 10k path median %: '+

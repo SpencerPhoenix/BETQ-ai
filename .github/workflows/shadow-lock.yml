@@ -13,7 +13,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '26'
+          check-latest: true
       - name: Generate dependency lock without lifecycle scripts or Odds API keys
         run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
       - name: Verify reproducible installation and complete offline test suite

@@ -14,7 +14,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '26'
+          check-latest: true
       - name: Reproducible locked dependency installation
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Validate source syntax
@@ -42,7 +43,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '26'
+          check-latest: true
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

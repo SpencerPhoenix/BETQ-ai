@@ -11,13 +11,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 9
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '26'
+          check-latest: true
       - name: Check production version, private disabled mode and no-cost study endpoints
         shell: bash
         run: |
           node --input-type=module <<'NODE'
+          const {readFile}=await import('node:fs/promises');
+          const expectedVersion=JSON.parse(await readFile('package.json','utf8')).version;
           const base='https://betq-ai.onrender.com';
           const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
           async function get(path,method='GET'){
@@ -33,13 +37,13 @@ jobs:
           for(let attempt=0;attempt<15;attempt++){
             try{
               const h=await get('/api/health');
-              if(h.status===200&&h.data?.version==='0.11.0'){
+              if(h.status===200&&h.data?.version===expectedVersion){
                 health=h.data;break;
               }
             }catch{}
             await sleep(10000);
           }
-          if(!health)throw Error('BETQ 0.10 production release not live');
+          if(!health)throw Error('Expected production version not live: '+expectedVersion);
           if(health.app!=='BETQ.ai'||health.status!=='ok')
             throw Error('Unexpected live service');
           const status=await get('/api/shadow/status');
@@ -83,7 +87,7 @@ jobs:
           }
           const site=await get('/');
           if(site.status!==200||
-             !site.text.includes('TERMINAL / v0.11.0')||
+             !site.text.includes('TERMINAL / v'+expectedVersion)||
              !site.text.includes('id="page-latency"')||
              !site.text.includes('id="shadow-forward-view"'))
             throw Error('Latency UI does not match backend release');

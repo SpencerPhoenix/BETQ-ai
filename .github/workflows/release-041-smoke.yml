@@ -1,4 +1,4 @@
-name: BETQ 0.4.1 free production smoke
+name: BETQ free production smoke
 on:
   push:
     branches: [main]
@@ -11,15 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '26'
+          check-latest: true
       - name: Verify live release and safe research boundaries
         shell: bash
         run: |
           mkdir -p audit-output
           node --input-type=module <<'NODE'
           import {writeFileSync} from 'node:fs';
+          const {readFile}=await import('node:fs/promises');
+          const expectedVersion=JSON.parse(await readFile('package.json','utf8')).version;
           const base='https://betq-ai.onrender.com';
           const wait=ms=>new Promise(r=>setTimeout(r,ms));
           async function read(path){
@@ -29,10 +33,10 @@ jobs:
           }
           let health;
           for(let i=0;i<24;i++){
-            try{health=await read('/api/health');if(health.version==='0.4.1')break;}catch{}
+            try{health=await read('/api/health');if(health.version===expectedVersion)break;}catch{}
             await wait(10000);
           }
-          if(health?.version!=='0.4.1')throw Error('Release 0.4.1 not live');
+          if(health?.version!==expectedVersion)throw Error('Expected production version not live: '+expectedVersion);
           const [config,model,injury,evidence,demo]=await Promise.all([
             read('/api/config'),read('/api/model/efficiency'),read('/api/injuries/nfl'),
             read('/api/evidence/nfl'),read('/api/slate?mode=demo&sport=americanfootball_nfl&market=h2h')
@@ -43,7 +47,7 @@ jobs:
           if(evidence.realizedROI!==null||evidence.verifiedCLV!==null||evidence.marketBeatingEdgeEstablished!==false)throw Error('Unsupported performance claim');
           if(!demo.demo||demo.events.some(e=>e.efficiencyChallenger||e.injuryContext))throw Error('Synthetic/live mixing');
           const page=await fetch(base+'/',{signal:AbortSignal.timeout(30000)});const html=await page.text();
-          if(!page.ok||!html.includes('v0.4.1'))throw Error('UI version mismatch');
+          if(!page.ok||!html.includes('v'+expectedVersion))throw Error('UI version mismatch');
           const result={checkedAt:new Date().toISOString(),version:health.version,homepageStatus:page.status,
             modelAvailable:model.available,automaticModelPromotion:model.automaticallyPromoted,
             injuryStarterVerified:injury.starterVerified,evidenceGames:evidence.prospectiveGames,

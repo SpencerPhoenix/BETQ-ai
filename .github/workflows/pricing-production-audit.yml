@@ -1,4 +1,4 @@
-name: BETQ v0.5 ROI and CLV production audit
+name: BETQ ROI and CLV production audit
 on:
   push:
     paths:
@@ -11,13 +11,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '26'
+          check-latest: true
       - name: Verify version-matched site and free pricing mathematics, no paid odds
         shell: bash
         run: |
           node --input-type=module <<'NODE'
+          const {readFile}=await import('node:fs/promises');
+          const expectedVersion=JSON.parse(await readFile('package.json','utf8')).version;
           const base='https://betq-ai.onrender.com';
           const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
           async function get(path){
@@ -32,16 +36,16 @@ jobs:
           for(let i=0;i<10;i++){
             try{
               const h=await get('/api/health');
-              if(h.status===200&&h.data?.version==='0.5.0'){health=h.data;break;}
+              if(h.status===200&&h.data?.version===expectedVersion){health=h.data;break;}
             }catch{}
             await sleep(8000);
           }
-          if(!health)throw Error('Production v0.5.0 not responding');
+          if(!health)throw Error('Expected production version not responding: '+expectedVersion);
           const landing=await fetch(base+'/',{signal:AbortSignal.timeout(30000)});
           const html=await landing.text();
           if(!landing.ok||!html.includes('data-tab="pricing"')||
              !html.includes('id="pricing-form"')||
-             !html.includes('TERMINAL / v0.5.0'))
+             !html.includes('TERMINAL / v'+expectedVersion))
             throw Error('ROI/CLV interface not version-matched in production');
           const verification=await get('/api/price/verification');
           if(verification.status!==200||

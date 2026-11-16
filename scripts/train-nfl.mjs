@@ -10,6 +10,7 @@ import { createHash } from 'node:crypto';
 import { dirname, resolve } from 'node:path';
 import { parseCsv, fitNflElo, MODEL_VERSION } from '../src/nfl-elo.mjs';
 
+import { assertTrainingFinalityCoverage, trainingReceiptOptions } from '../src/nfl-official-finality.mjs';
 import { selectTrainingGames, TRAINING_INPUT_POLICY } from '../src/training-input-safety.mjs';
 
 const URL = 'https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv';
@@ -27,13 +28,16 @@ async function source() {
   if (Number.isFinite(length) && length > 12000000) throw new Error('NFL schedule source too large');
   return await response.text();
 }
+const receiptOptions=trainingReceiptOptions(args,{otherFlags:['--input','--output']});
 const raw = await source();
 if (raw.length > 12000000) throw new Error('NFL source too large');
 const {games,report:trainingInputSafety} = selectTrainingGames(parseCsv(raw));
+const finalityCoverage=receiptOptions?assertTrainingFinalityCoverage(games,JSON.parse(await readFile(receiptOptions.path,'utf8')),
+  {season:trainingInputSafety.latestSeason,weeks:receiptOptions.weeks,asOf:trainingInputSafety.asOf}):null;
 const checksum = createHash('sha256').update(games.map(g =>
   [g.id,g.date,g.home,g.away,g.homeScore,g.awayScore,g.neutral].join('|')).join('\n')).digest('hex');
 const existing = await readFile(target,'utf8').then(JSON.parse).catch(()=>null);
-if (existing?.trainingInputSafety?.policy===TRAINING_INPUT_POLICY && existing?.version===MODEL_VERSION && existing?.completedGamesSha256===checksum && existing?.source?.url===URL) {
+if (!finalityCoverage && existing?.trainingInputSafety?.policy===TRAINING_INPUT_POLICY && existing?.version===MODEL_VERSION && existing?.completedGamesSha256===checksum && existing?.source?.url===URL) {
   console.log('No completed results changed; existing model remains unchanged');
   console.log(JSON.stringify({ready:existing.readyForResearch,holdout:existing.holdout,generatedAt:existing.generatedAt}));
   process.exit(0);
@@ -48,6 +52,7 @@ const artifact = {
   generatedAt:new Date().toISOString(),
   completedGamesSha256:checksum,
   trainingInputSafety,
+  finalityCoverage,
   lastGameDate:fit.lastGameDate,
   seasons:fit.seasons,
   completedGames:fit.gamesCount,
