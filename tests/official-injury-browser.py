@@ -25,7 +25,7 @@ with sync_playwright() as p:
  for width in [1440,375]:
   context=browser.new_context(viewport={'width':width,'height':1000},service_workers='block');context.route('**/*',route_all)
   page=context.new_page();page.on('pageerror',lambda e:errors.append(str(e)))
-  page.clock.install(time=1794859200000) # 2026-11-16 20:00 UTC
+  page.clock.install(time=1794859200) # 2026-11-16 20:00 UTC
   page.goto('http://betq.test/')
   if width<850:page.locator('#menu-toggle').click()
   page.locator('.nav-item[data-tab="model"]').click()
