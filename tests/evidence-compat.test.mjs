@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {compatibleEvidenceHealth} from '../src/evidence-compat.mjs';
+import {compatibleEvidenceHealth,MARKET_CAPTURE_CONTRACT,describeMarketCaptureContract,validMarketCaptureContract} from '../src/evidence-compat.mjs';
 
 const good=(version='0.9.0')=>({
-  status:'ok',app:'BETQ.ai',version,
+  status:'ok',app:'BETQ.ai',version,marketCaptureContract:describeMarketCaptureContract(),
   odds:{configured:true,budget:{used:0,limit:12}},
   nflModel:{available:true,version:'nfl-elo-1'},
   forwardEvidence:{status:'COLLECTING_FORWARD_EVIDENCE',prospectiveGames:17,settledGames:0},
@@ -41,4 +41,36 @@ test('Collector workflow consumes only read-only health for compatibility and re
   assert.match(cli,/compatibleEvidenceHealth/);
   assert.match(wf,/cron: '41 11 \* \* \*'/);
   assert.match(wf,/run: node scripts\/capture-evidence\.mjs/);
+});
+
+
+test('market producer descriptor is immutable, detached and precisely bounded',()=>{
+  assert.equal(Object.isFrozen(MARKET_CAPTURE_CONTRACT),true);
+  assert.equal(validMarketCaptureContract(MARKET_CAPTURE_CONTRACT),true);
+  for(const value of [undefined,null,false,[],{}])assert.equal(validMarketCaptureContract(value),false);
+  const a=describeMarketCaptureContract(),b=describeMarketCaptureContract();
+  assert.notEqual(a,b);assert.deepEqual(a,b);
+  a.maximumQuoteAgeMs=999999;assert.equal(b.maximumQuoteAgeMs,600000);
+  assert.equal(MARKET_CAPTURE_CONTRACT.maximumQuoteAgeMs,600000);
+  assert.equal(b.minimumDistinctBooks,3);assert.equal(b.historicalBackfillAllowed,false);
+  assert.equal(b.scope,'PRODUCER_CAPABILITY_ONLY');
+});
+
+test('every missing or mismatched market producer capability blocks compatibility',()=>{
+  for(const contract of [undefined,null])assert.equal(compatibleEvidenceHealth({...good(),marketCaptureContract:contract}).reason,'MARKET_CAPTURE_CONTRACT_MISSING');
+  for(const contract of [true,[],{},'ABSOLUTE_OLDEST_QUOTE_AT_CAPTURE_V1'])
+    assert.equal(compatibleEvidenceHealth({...good(),marketCaptureContract:contract}).reason,'MARKET_CAPTURE_CONTRACT_MISMATCH');
+  for(const [key,value] of Object.entries(MARKET_CAPTURE_CONTRACT)){
+    const absent=describeMarketCaptureContract();delete absent[key];
+    const changed=describeMarketCaptureContract();changed[key]=typeof value==='boolean'?!value:typeof value==='number'?value+1:value+'-different';
+    for(const contract of [absent,changed])assert.equal(compatibleEvidenceHealth({...good(),marketCaptureContract:contract}).compatible,false,key);
+  }
+});
+
+test('model availability ordering and prerequisite distinctions are preserved',()=>{
+  const old=good();delete old.marketCaptureContract;
+  assert.equal(compatibleEvidenceHealth({...old,nflModel:{available:false}}).reason,'NO_NFL_MODEL_SOURCE');
+  assert.equal(compatibleEvidenceHealth({...old,forwardEvidence:null}).reason,'NO_FORWARD_EVIDENCE_CONTRACT');
+  const capabilityOnly={...good(),captureReadiness:{ready:false},collectionHealth:{liveFreshnessVerified:false}};
+  assert.equal(compatibleEvidenceHealth(capabilityOnly).compatible,true);
 });

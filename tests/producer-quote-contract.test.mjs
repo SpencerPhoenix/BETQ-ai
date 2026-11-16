@@ -73,6 +73,11 @@ test('Actual collector entry retains HTTP quote proof, and delay loses only mark
     const output=execFileSync(process.execPath,['--input-type=module','-e',code],{cwd:directory,encoding:'utf8',timeout:10000,
       env:{PATH:process.env.PATH,BETQ_PRODUCTION_URL:'https://offline-betq.test',BETQ_OPERATOR_APPROVED_ORIGIN:'https://offline-betq.test',BETQ_OPERATOR_REFRESH_TOKEN:TOKEN}});
     assert.match(output,/"appended": 1/);
+    assert.match(output,/"captureStatus": "SUCCESS"/);
+    assert.match(output,new RegExp('"appendedPairedMarketSnapshots": '+(delay?0:1)));
+    assert.match(output,new RegExp('"appendedModelOnlySnapshots": '+(delay?1:0)));
+    assert.match(output,new RegExp(delay?'MODEL_ONLY_NO_USABLE_MARKET_PROVENANCE':'PAIRED_MARKET_PROVENANCE_APPENDED'));
+    if(delay)assert.match(output,/"OLDEST_QUOTE_EXPIRED_AT_CAPTURE": 1/);
     const j=JSON.parse(await readFile(join(directory,'data/evidence/nfl-2026.json'),'utf8')),s=j.snapshots[0];
     assert.equal(s.capturedAt,iso(NOW+delay));assert.ok(s.modelHomeProbability>0);
     assert.equal(s.marketOldestQuoteAt,delay?null:iso(NOW-599000));assert.equal(s.marketHomeProbability,delay?null:.511628);

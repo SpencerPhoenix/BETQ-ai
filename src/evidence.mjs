@@ -7,11 +7,12 @@ import {validProjectionDelivery} from './model-delivery.mjs';
 import {OUTCOME_SCORING_POLICY,isSourceCorroboratedSettlement,latestSettlementsByRevision,unambiguousFrozenGameIds} from './settlement-qualification.mjs';
 import {pairedWeekBootstrap} from './statistical-audit.mjs';
 import {isProbability, validDay} from './integrity.mjs';
-import {validSnapshotChronology,validFrozenIdentity,sameFrozenIdentity,isEligibleModelSnapshot,isEligibleMarketSnapshot,isEligibleChallengerSnapshot,validNewFinalResult,FINAL_RECEIPT_BINDING_POLICY,validMarketQuoteWindow,MARKET_FRESHNESS_POLICY,validProviderEventId,providerContinuityConflicts} from './evidence-integrity.mjs';
+import {validSnapshotChronology,validFrozenIdentity,sameFrozenIdentity,isEligibleModelSnapshot,isEligibleMarketSnapshot,isEligibleChallengerSnapshot,validNewFinalResult,FINAL_RECEIPT_BINDING_POLICY,MARKET_FRESHNESS_POLICY,validProviderEventId,providerContinuityConflicts} from './evidence-integrity.mjs';
 import { createHash } from 'node:crypto';
 import { NFL_TEAMS, canonicalTeam } from './nfl-elo.mjs';
 import {scheduledInstant,scheduleReviewFor} from './schedule-review.mjs';
 import {validateRetainedIdentityState,scheduleQuarantineMetadata} from './retained-schedule-quarantine.mjs';
+import {assessFutureMarketCapture,summarizeDerivedMarketObservations} from './market-capture-diagnostics.mjs';
 
 export const MIN_SAMPLE = 30;
 const round = (n,d=5) => Number.isFinite(n)?Number(n.toFixed(d)):null;
@@ -75,7 +76,7 @@ export function observationsFromSlate(slate,rows,now=Date.now(),season=new Date(
   const received=parsed(slate.receivedAt);
   if (!Number.isFinite(received)||received>now+60000||now-received>10*60000)
     throw Error('Provider snapshot timestamp stale');
-  const accepted=[],skipped=[];
+  const accepted=[],skipped=[],marketObservations=[];
   for(const event of slate.events) {
     if(!event || typeof event!=='object') { skipped.push({reason:'INVALID_EVENT'});continue; }
     if(!validProviderEventId(event.id)){skipped.push({eventId:'',reason:'INVALID_PROVIDER_EVENT_ID'});continue;}
@@ -94,11 +95,9 @@ export function observationsFromSlate(slate,rows,now=Date.now(),season=new Date(
     const row=matchSchedule(event,rows,season);
     if(!row){skipped.push({eventId:String(event.id||''),reason:'NO_UNIQUE_SCHEDULE_MATCH'});continue;}
     const c=event.marketConsensus;
-    const validMarket=c?.available&&c.method==='ALL_BOOKS_MEDIAN_DE_VIG'&&Number.isInteger(c.books)&&c.books>=3&&
-      Number.isFinite(c.homeProbability)&&c.homeProbability>0&&c.homeProbability<1&&
-      validMarketQuoteWindow({capturedAt:new Date(now).toISOString(),sourceReceivedAt:slate.receivedAt,
-        marketOldestQuoteAt:c.oldestQuoteAt,marketNewestQuoteAt:c.latestQuoteAt})&&
-      parsed(c.latestQuoteAt)<kick;
+    const marketObservation=assessFutureMarketCapture(c,{capturedAt:new Date(now).toISOString(),
+      sourceReceivedAt:slate.receivedAt,commenceTime:new Date(kick).toISOString()});
+    const validMarket=marketObservation.eligible;
     const cModel=event.efficiencyChallenger;
     const validChallenger=cModel?.available===true &&
       cModel.independentOfOdds===true && cModel.researchOnly===true &&
@@ -148,8 +147,9 @@ export function observationsFromSlate(slate,rows,now=Date.now(),season=new Date(
       skipped.push({eventId:String(event.id||''),reason:'SCHEDULE_RECONCILIATION_REQUIRED'});continue;
     }
     accepted.push(snapshot);
+    marketObservations.push(marketObservation);
   }
-  return {accepted,skipped};
+  return {accepted,skipped,marketDiagnostics:summarizeDerivedMarketObservations(marketObservations)};
 }
 
 /**
