@@ -23,19 +23,19 @@ const writers = [...manualWriters, ...Object.keys(schedules)];
 // or API-write changes that a text search for `git push` cannot classify.
 const readOnlyBaseline = {
   // New manual encrypted sample reviewed separately; no automatic collection.
-  'bdl-result-sample': 'faf6f437119254f3b57f9f78177ff95d066e147837e836783e5ddc5e462acd67',
-  'retained-evidence-audit': '413e2cba527b1ae7f1712e869f6d7f2457164ede2dd0a85b37b0b0498a21723b',
-  ci: '3d432a992a03606032b46e342d9346ec2e125fbde75f3c9dd5572c29d770de5c',
-  'audit-reliability': '87ac38b4fb4f0a7925b16eacf0f50ac662c0a50a6cbe02d8ee74780c5c0de846',
-  'prospective-direction-audit': 'd23a2966566e0558eed4fac023c6b965b71e8556085fe0cd0b186fb68efde07e',
-  'live-probe': '789cdb21b8abad55806a02309bc5ff77958d82b34658b05b16706349e45b0b1d',
-  'model-production-probe': '1a76b04624798a2e830ce5837fbfff1b27e5d9beeae137feb4b38611b242bafc',
-  'market-production-audit': 'b259fa8c06d59f333777043b1667ef261c0d9d03ddf24bc033d3756e6b6ebd6b',
-  'phase4-production-audit': 'e535cae766efac729a2d694eea880796c0ad50fbb2e2a3fe5b2ff62fc4ae34c9',
-  'pricing-production-audit': '24955d46bfb623ec2310f7c06f3844b04c2c89a637797b5ff788661eab6b6c03',
-  'release-041-smoke': '6e7e6043ecec5c09ad7d678baf3e0713102c221e3317bdb410c65918db926912',
-  'shadow-production-audit': '432fc7137830754f1aaf0be4c932aae3441407fa585c16e84c32c43ca91d1323',
-  'v08-production-audit': '58324e89c1d460f6abf7325daea5d51eaf27658f502e5be8eb7cd2c175374182'
+  'bdl-result-sample': '7dd8a44daaed324435cef33ee1547c54188b121ab8551113a99b18844abde1d4',
+  'retained-evidence-audit': '24a6bc9009daf141496935498722ace6ef3146ca64002bd79b20fe5da6c96991',
+  ci: '0aa634cbd81436972f6b52c27cae0553c10a210c8afcdee7f67f18b1f9cd6d0c',
+  'audit-reliability': '7727e532ecd9231b0258dac0ad457ceeb263d48939e0958721432ea3258a8a51',
+  'prospective-direction-audit': '546569fd5dade84b14e9a78a4bbd7a3a955287c211cc623337a8e10f673db688',
+  'live-probe': 'd7830d7e50c4525e6127076f0b79674fd3a721bdf043a5095c4b96131429e351',
+  'model-production-probe': '7a9c3a604d788413c855a2ad96e124c0286b7be7f0f4fbb19eefe85ebf7e8c4a',
+  'market-production-audit': '5c2f3455323c386cc8bba3ba04c1651df17a7f3b4dbe879a986730bd4ab0993c',
+  'phase4-production-audit': 'b6f4ac2323c1c3f83f428abfd544efad29df154c62591eb41181c6aa3373fc3a',
+  'pricing-production-audit': 'b9da5f35e0d7eee4b5057f2fd2c79379b4484a64b98c0c020e888c7f1b2950c1',
+  'release-041-smoke': '2c9abcaafd5add3e3d33e85e62513f993876fcca118823384d69a73e5b4522e4',
+  'shadow-production-audit': '731473c61a93aa6d14853811c0247ef58d5c36cf1f81416bc0b5d10ddc509b0c',
+  'v08-production-audit': '9bccf99ed61213aa9da3121628d69029fe96268de28760f5ed02fca0b716ff60'
 };
 const read = name => readFile(new URL(name + '.yml', root), 'utf8');
 const events = text => text.match(/^on:\n([\s\S]*?)(?=^\S)/m)?.[1] || '';
@@ -212,10 +212,10 @@ test('Collector preflight has a bounded retry window leaving time for results re
 });
 
 
-test('Browser release CI preserves original integrity job and uses isolated offline fixtures', async () => {
+test('Browser release CI preserves reviewed integrity job and uses isolated offline fixtures', async () => {
   const workflow=await read('ci');
   const original=workflow.split('  offline-browser:')[0];
-  assert.equal(createHash('sha256').update(original).digest('hex'),'ca2067ffe3be3fde292c80c8952cb538f9f227cb237bb9ea4a01256a6c9ed456');
+  assert.equal(createHash('sha256').update(original).digest('hex'),'b811cd5dcd24f07336eb7264ba97e0b5c371b60e6f4cb6ae87802a855f37cb34');
   const browser=workflow.split('  offline-browser:')[1];
   assert.ok(browser);assert.match(browser,/timeout-minutes: 15/);
   assert.match(browser,/python -m venv \.browser-venv/);

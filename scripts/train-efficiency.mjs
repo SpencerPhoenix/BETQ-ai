@@ -11,6 +11,7 @@ import { parseCsv } from '../src/nfl-elo.mjs';
 import { downloadPbpSeason } from '../src/pbp.mjs';
 import { fitEfficiencyChallenger } from '../src/nfl-efficiency.mjs';
 
+import { assertTrainingFinalityCoverage, trainingReceiptOptions } from '../src/nfl-official-finality.mjs';
 import { selectTrainingGames, TRAINING_INPUT_POLICY } from '../src/training-input-safety.mjs';
 
 const SCHEDULE_URL='https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv';
@@ -19,12 +20,15 @@ const TARGET='data/nfl_efficiency.json';
 const YEAR=Number(process.env.EFFICIENCY_END_SEASON || 2026);
 if(!Number.isInteger(YEAR)||YEAR<2025||YEAR>2100)throw Error('Invalid latest NFL season');
 
+const receiptOptions=trainingReceiptOptions(process.argv.slice(2));
 const response=await fetch(SCHEDULE_URL,{signal:AbortSignal.timeout(30000)});
 if(!response.ok)throw Error('nflverse schedule source failed HTTP '+response.status);
 const raw=await response.text();
 if(raw.length>12000000)throw Error('Schedules exceed limit');
 const selection=selectTrainingGames(parseCsv(raw));
 const games=selection.games.filter(g=>g.season>=2018&&g.season<=YEAR);
+const finalityCoverage=receiptOptions?assertTrainingFinalityCoverage(games,JSON.parse(await readFile(receiptOptions.path,'utf8')),
+  {season:YEAR,weeks:receiptOptions.weeks,asOf:selection.report.asOf}):null;
 const elo=JSON.parse(await readFile(ELO_ARTIFACT,'utf8'));
 if(!elo?.readyForResearch||!elo?.params||elo?.source?.project!=='nflverse/nflverse-data')
   throw Error('Frozen Elo baseline or source provenance unavailable');
@@ -49,6 +53,7 @@ if(YEAR===2026&&games.filter(g=>g.season===2026&&allPbp[g.id]).length<90)
 
 const artifact=fitEfficiencyChallenger(games,allPbp,elo.params,{asOf:new Date().toISOString()});
 artifact.trainingInputSafety=selection.report;
+artifact.finalityCoverage=finalityCoverage;
 artifact.sourceManifest={
   project:'nflverse/nflverse-data',
   attribution:'nflverse / nflfastR; CC BY 4.0',
@@ -66,7 +71,7 @@ artifact.dataFingerprint=createHash('sha256').update(
     Object.entries(allPbp).sort(([a],[b])=>a.localeCompare(b))])
 ).digest('hex');
 const prior=await readFile(TARGET,'utf8').then(JSON.parse).catch(()=>null);
-if(prior?.trainingInputSafety?.policy===TRAINING_INPUT_POLICY&&prior?.dataFingerprint===artifact.dataFingerprint&&prior?.version===artifact.version&&prior?.evaluationVersion===artifact.evaluationVersion){
+if(!finalityCoverage&&prior?.trainingInputSafety?.policy===TRAINING_INPUT_POLICY&&prior?.dataFingerprint===artifact.dataFingerprint&&prior?.version===artifact.version&&prior?.evaluationVersion===artifact.evaluationVersion){
   console.log('No new completed data: existing challenger unchanged');
   console.log(JSON.stringify({promotable:prior.promotable,holdout:prior.holdout},null,2));
   process.exit(0);

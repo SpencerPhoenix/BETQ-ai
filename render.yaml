@@ -2,7 +2,7 @@ services:
   - type: web
     name: betq-ai
     runtime: node
-    buildCommand: npm ci --ignore-scripts --no-audit --no-fund
+    buildCommand: npm ci --ignore-scripts --no-audit --no-fund && npm run check && npm test
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
