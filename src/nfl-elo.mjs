@@ -197,6 +197,10 @@ export function predictNflEvent(event,artifact,now=Date.now()){
     modelBuiltAt:artifact.generatedAt,throughGameDate:artifact.lastGameDate,
     holdoutN:artifact.holdout.n,holdoutBrier:artifact.holdout.brier,
     calibrationEce:artifact.holdout.ece, injuryAdjusted:false,weatherAdjusted:false,
-    verifiedStarters:false, use:'RESEARCH_ONLY'
+    verifiedStarters:false, use:'RESEARCH_ONLY',
+    venueAssumption:event.neutralSite===undefined?'HOME_ADVANTAGE_UNVERIFIED':event.neutralSite?'NEUTRAL_SUPPLIED':'HOME_SUPPLIED',
+    venueSourceVerified:false,
+    completeScheduleCoverageVerified:false,
+    trainingFinalityIndependentlyVerified:false
   };
 }

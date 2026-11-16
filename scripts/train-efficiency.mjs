@@ -7,9 +7,11 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { createHash } from 'node:crypto';
-import { parseCsv, cleanGames } from '../src/nfl-elo.mjs';
+import { parseCsv } from '../src/nfl-elo.mjs';
 import { downloadPbpSeason } from '../src/pbp.mjs';
 import { fitEfficiencyChallenger } from '../src/nfl-efficiency.mjs';
+
+import { selectTrainingGames, TRAINING_INPUT_POLICY } from '../src/training-input-safety.mjs';
 
 const SCHEDULE_URL='https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv';
 const ELO_ARTIFACT='data/nfl_elo.json';
@@ -21,8 +23,8 @@ const response=await fetch(SCHEDULE_URL,{signal:AbortSignal.timeout(30000)});
 if(!response.ok)throw Error('nflverse schedule source failed HTTP '+response.status);
 const raw=await response.text();
 if(raw.length>12000000)throw Error('Schedules exceed limit');
-const games=cleanGames(parseCsv(raw),{today:new Date().toISOString().slice(0,10)})
-  .filter(g=>g.season>=2018&&g.season<=YEAR);
+const selection=selectTrainingGames(parseCsv(raw));
+const games=selection.games.filter(g=>g.season>=2018&&g.season<=YEAR);
 const elo=JSON.parse(await readFile(ELO_ARTIFACT,'utf8'));
 if(!elo?.readyForResearch||!elo?.params||elo?.source?.project!=='nflverse/nflverse-data')
   throw Error('Frozen Elo baseline or source provenance unavailable');
@@ -46,6 +48,7 @@ if(YEAR===2026&&games.filter(g=>g.season===2026&&allPbp[g.id]).length<90)
   throw Error('2026 play-by-play feed not sufficiently up to date');
 
 const artifact=fitEfficiencyChallenger(games,allPbp,elo.params,{asOf:new Date().toISOString()});
+artifact.trainingInputSafety=selection.report;
 artifact.sourceManifest={
   project:'nflverse/nflverse-data',
   attribution:'nflverse / nflfastR; CC BY 4.0',
@@ -63,7 +66,7 @@ artifact.dataFingerprint=createHash('sha256').update(
     Object.entries(allPbp).sort(([a],[b])=>a.localeCompare(b))])
 ).digest('hex');
 const prior=await readFile(TARGET,'utf8').then(JSON.parse).catch(()=>null);
-if(prior?.dataFingerprint===artifact.dataFingerprint&&prior?.version===artifact.version&&prior?.evaluationVersion===artifact.evaluationVersion){
+if(prior?.trainingInputSafety?.policy===TRAINING_INPUT_POLICY&&prior?.dataFingerprint===artifact.dataFingerprint&&prior?.version===artifact.version&&prior?.evaluationVersion===artifact.evaluationVersion){
   console.log('No new completed data: existing challenger unchanged');
   console.log(JSON.stringify({promotable:prior.promotable,holdout:prior.holdout},null,2));
   process.exit(0);

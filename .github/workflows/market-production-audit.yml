@@ -1,4 +1,4 @@
-name: BETQ v0.7 independent market calibration production verification
+name: BETQ independent market calibration production verification
 on:
   push:
     paths: ['.github/workflows/market-production-audit.yml']
@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -23,8 +24,10 @@ jobs:
             if(!r.ok)throw Error(path+': HTTP '+r.status);
             return {data,text:t};
           }
+          const {readFile}=await import('node:fs/promises');
+          const expectedVersion=JSON.parse(await readFile('package.json','utf8')).version;
           const health=(await read('/api/health')).data;
-          if(health.version!=='0.7.0')throw Error('Wrong deployed version '+health.version);
+          if(health.version!==expectedVersion)throw Error('Wrong deployed version '+health.version);
           const m=(await read('/api/research/market')).data;
           if(!m.available||m.version!=='market-challenge-v1'||m.years.length!==4||
              m.bettingAuthorized!==false||m.verifiedROI!==null||m.verifiedCLV!==null)
@@ -36,12 +39,12 @@ jobs:
           if(favorite.winRatePercent<70||favorite.hypotheticalClosingPriceROIPercent>=0)
             throw Error('Win rate vs ROI source benchmark mismatch');
           const html=(await read('/')).text;
-          if(!html.includes('TERMINAL / v0.7.0')||!html.includes('id="market-challenge-view"'))
+          if(!html.includes('TERMINAL / v'+expectedVersion)||!html.includes('id="market-challenge-view"'))
             throw Error('Unmatched UI/version');
           const demo=(await read('/api/slate?mode=demo')).data;
           if(demo.agentRun.mayWager!==false||demo.agentRun.decision!=='DEMO_NO_ACTION')
             throw Error('Demo authorization safety failure');
-          console.log('PRODUCTION v0.7.0: PASS');
+          console.log('PRODUCTION v'+expectedVersion+': PASS');
           console.log('Independent model weight all four years: ZERO');
           console.log('Favorite 65% hit rate: '+favorite.winRatePercent+'%');
           console.log('Favorite 65% hypothetical ROI: '+favorite.hypotheticalClosingPriceROIPercent+'%');

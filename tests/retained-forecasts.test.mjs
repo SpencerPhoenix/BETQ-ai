@@ -253,3 +253,17 @@ test('challenger stale warning follows the seven-day runtime bound',()=>{
     challengerBuiltAt:'2026-11-01T12:00:00.000Z',capturedAt:'2026-11-02T12:00:00.000Z',commenceTime:'2026-11-03T12:00:00.000Z'};
   assert.match(api.comparison(s,'Home','Away',Date.parse('2026-11-09T12:00:00.000Z')),/Stale challenger build/);
 });
+
+test('Compact dossier quarantine keeps exclusion counts visible and all evidence in native details',()=>{
+  const q=quarantineFixture(),out=api.quarantineHTML(q,{compact:true}),before=out.split('<details')[0];
+  assert.match(before,/Quarantined games: 1 of 1/);assert.match(before,/Excluded snapshots: 2 of 2/);
+  assert.match(before,/excluded from rankings, scoring and collection/);
+  assert.match(out,/<details class="quarantine-details"><summary>Show all 1 quarantined games and evidence<\/summary>/);
+  assert.doesNotMatch(out,/<details[^>]*\bopen\b/);
+  for(const value of [q.games[0].gameId,q.games[0].firstFrozenSnapshotId,...q.games[0].observedCommenceTimes])assert.ok(out.includes(value));
+  assert.match(out,/Original history is preserved unchanged/);
+  assert.doesNotMatch(api.quarantineHTML(q),/<details/);
+  assert.doesNotMatch(api.quarantineHTML({}, {compact:true}),/<details/);
+  assert.match(api.quarantineHTML({}, {compact:true}),/scoring claims are withheld/);
+  assert.equal(api.quarantineHTML(undefined,{compact:true}),'');
+});

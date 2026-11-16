@@ -8,7 +8,9 @@
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { dirname, resolve } from 'node:path';
-import { parseCsv, cleanGames, fitNflElo, MODEL_VERSION } from '../src/nfl-elo.mjs';
+import { parseCsv, fitNflElo, MODEL_VERSION } from '../src/nfl-elo.mjs';
+
+import { selectTrainingGames, TRAINING_INPUT_POLICY } from '../src/training-input-safety.mjs';
 
 const URL = 'https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv';
 const args = process.argv.slice(2);
@@ -27,11 +29,11 @@ async function source() {
 }
 const raw = await source();
 if (raw.length > 12000000) throw new Error('NFL source too large');
-const games = cleanGames(parseCsv(raw), { today:new Date().toISOString().slice(0,10) });
+const {games,report:trainingInputSafety} = selectTrainingGames(parseCsv(raw));
 const checksum = createHash('sha256').update(games.map(g =>
   [g.id,g.date,g.home,g.away,g.homeScore,g.awayScore,g.neutral].join('|')).join('\n')).digest('hex');
 const existing = await readFile(target,'utf8').then(JSON.parse).catch(()=>null);
-if (existing?.version===MODEL_VERSION && existing?.completedGamesSha256===checksum && existing?.source?.url===URL) {
+if (existing?.trainingInputSafety?.policy===TRAINING_INPUT_POLICY && existing?.version===MODEL_VERSION && existing?.completedGamesSha256===checksum && existing?.source?.url===URL) {
   console.log('No completed results changed; existing model remains unchanged');
   console.log(JSON.stringify({ready:existing.readyForResearch,holdout:existing.holdout,generatedAt:existing.generatedAt}));
   process.exit(0);
@@ -45,6 +47,7 @@ const artifact = {
   },
   generatedAt:new Date().toISOString(),
   completedGamesSha256:checksum,
+  trainingInputSafety,
   lastGameDate:fit.lastGameDate,
   seasons:fit.seasons,
   completedGames:fit.gamesCount,
@@ -53,7 +56,7 @@ const artifact = {
     'parameterTuning':'2018–2022 games (prior games only)',
     'calibration':'2023–2024 games (after hyperparameter selection)',
     'untouchedTest':'2025 games (not used for hyperparameters or calibration)',
-    'liveRatings':'Includes only completed games through lastGameDate',
+    'liveRatings':'Delayed scored schedule rows through lastGameDate; see trainingInputSafety for unverified finality',
     'leakageControl':'Chronological pregame ratings, season-to-season mean regression'
   },
   params:fit.params,

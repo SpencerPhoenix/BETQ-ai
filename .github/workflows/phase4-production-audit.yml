@@ -8,6 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -20,8 +21,10 @@ jobs:
             if(!r.ok)throw Error(path+' HTTP '+r.status);
             return r.json();
           }
+          const {readFile}=await import('node:fs/promises');
+          const expectedVersion=JSON.parse(await readFile('package.json','utf8')).version;
           const health=await read('/api/health');
-          if(!/^0\.4\./.test(health.version))throw Error('Incompatible runtime');
+          if(health.version!==expectedVersion)throw Error('Incompatible runtime');
           const config=await read('/api/config');
           if(config.wageringEnabled!==false||config.autoRefresh!==false)throw Error('Unsafe execution/polling');
           const e=await read('/api/model/efficiency');

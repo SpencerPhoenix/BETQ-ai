@@ -43,15 +43,16 @@
     return snapshots===q.excludedSnapshotCount&&results===q.excludedResultCount&&
       visibleGames.every(g=>g&&text(g.gameId)&&!ids.has(g.gameId));
   }
-  function quarantineHTML(q) {
+  function quarantineHTML(q,{compact=false}={}) {
     if(q===undefined)return '';
     if(!quarantineValid(q))return '<section class="schedule-quarantine" role="note"><h4>Schedule conflict details unavailable</h4><p>Quarantine metadata is incomplete or inconsistent. Associated retained forecasts and scoring claims are withheld; excluded games cannot be verified.</p></section>';
     if(!q.excludedGameCount)return '';
-    return '<section class="schedule-quarantine" role="note"><h4>Schedule conflict quarantine</h4><p><b>Quarantined games: '+q.excludedGameCount+' of '+q.rawGameCount+'. Excluded snapshots: '+q.excludedSnapshotCount+' of '+q.rawSnapshotCount+'. Excluded result records: '+q.excludedResultCount+' of '+q.rawResultCount+'.</b></p>'+
-      '<p>Remaining view: '+(q.rawGameCount-q.excludedGameCount)+' games, '+(q.rawSnapshotCount-q.excludedSnapshotCount)+' snapshots and '+(q.rawResultCount-q.excludedResultCount)+' result records. Record counts are not qualified scoring counts.</p>'+
+    const heading='<section class="schedule-quarantine" role="note"><h4>Schedule conflict quarantine</h4><p><b>Quarantined games: '+q.excludedGameCount+' of '+q.rawGameCount+'. Excluded snapshots: '+q.excludedSnapshotCount+' of '+q.rawSnapshotCount+'. Excluded result records: '+q.excludedResultCount+' of '+q.rawResultCount+'.</b></p>';
+    const details='<p>Remaining view: '+(q.rawGameCount-q.excludedGameCount)+' games, '+(q.rawSnapshotCount-q.excludedSnapshotCount)+' snapshots and '+(q.rawResultCount-q.excludedResultCount)+' result records. Record counts are not qualified scoring counts.</p>'+
       '<p>Conflicting retained kickoff times are unresolved. These games are excluded from forecast rankings, scoring and further collection. Original history is preserved unchanged; no kickoff has been selected or corrected.</p><ul class="quarantined-game-list">'+q.games.map(g=>
         '<li data-quarantined-game="'+esc(g.gameId)+'"><h5>'+esc(g.away+' @ '+g.home)+'</h5><p>Game ID: '+esc(g.gameId)+' · Season: '+esc(g.season)+' · Frozen game date: '+esc(g.gameDate)+'</p>'+
-        '<p>First frozen kickoff UTC: '+esc(g.firstFrozenCommenceTime)+' · Snapshot ID: '+esc(g.firstFrozenSnapshotId)+'</p><p><b>All retained kickoff times UTC:</b> '+g.observedCommenceTimes.map(esc).join(' · ')+'</p><p>'+g.snapshotCount+' snapshots and '+g.resultCount+' result records preserved. Not eligible for ranking, scoring or collection.</p></li>').join('')+'</ul></section>';
+        '<p>First frozen kickoff UTC: '+esc(g.firstFrozenCommenceTime)+' · Snapshot ID: '+esc(g.firstFrozenSnapshotId)+'</p><p><b>All retained kickoff times UTC:</b> '+g.observedCommenceTimes.map(esc).join(' · ')+'</p><p>'+g.snapshotCount+' snapshots and '+g.resultCount+' result records preserved. Not eligible for ranking, scoring or collection.</p></li>').join('')+'</ul>';
+    return heading+(compact?'<p>Other games have unresolved kickoff conflicts and remain excluded from rankings, scoring and collection.</p><details class="quarantine-details"><summary>Show all '+q.excludedGameCount+' quarantined games and evidence</summary>'+details+'</details>':details)+'</section>';
   }
   function valid(data,now) {
     if(!Number.isFinite(now)||data?.schema!==1||data.available!==true||data.kind!=='RETAINED_NFL_OUTRIGHT_FORECASTS'||
