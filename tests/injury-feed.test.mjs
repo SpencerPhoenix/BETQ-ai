@@ -147,3 +147,15 @@ test('HTTP injury endpoint, health, config and cached NFL card use the same refr
   assert.equal((await get('/api/health')).nflIntelligence.injurySourceAvailable,false);
   assert.equal((await get('/api/config')).injuryReportAvailable,false);
 });
+
+test('Full lists over eight validate while legacy eight-entry lists remain readable',()=>{
+  const rows=Array.from({length:10},(_,i)=>({season:2026,week:10,team:'LAC',position:'WR',
+    full_name:'Synthetic Receiver '+i,gsis_id:'synthetic-'+i,report_status:'Out'}));
+  const a=compileInjuryReports(rows,{season:2026,sourceUpdatedAt:'2026-11-07T13:00:00.000Z',now:NOW});
+  a.fixtures=[];a.validUntil=new Date(Date.parse(a.sourceUpdatedAt)+INJURY_MAX_AGE_MS).toISOString();
+  assert.equal(validateInjuryArtifact(a,NOW).reports['LAC:10'].flaggedPlayers.length,10);
+  a.reports['LAC:10'].flaggedPlayers.pop();
+  assert.throws(()=>validateInjuryArtifact(a,NOW),/INVALID_INJURY_ARTIFACT/);
+  a.reports['LAC:10'].flaggedPlayers.pop();
+  assert.equal(validateInjuryArtifact(a,NOW).reports['LAC:10'].flaggedPlayers.length,8);
+});

@@ -84,7 +84,7 @@ export function compileInjuryReports(rows,{season,sourceUpdatedAt,now=Date.now()
     const selected=list.filter(x=>allowedStatus.has(x.gameStatus));
     const qb=list.filter(x=>x.position==='QB');
     selected.sort((a,b)=>a.gameStatus.localeCompare(b.gameStatus)||a.player.localeCompare(b.player));
-    const listPublic=a=>a.slice(0,8).map(x=>({
+    const listPublic=a=>a.map(x=>({
       player:x.player,position:x.position,status:x.gameStatus,
       injury:x.injury,dateModified:x.dateModified
     }));
@@ -161,6 +161,9 @@ export function injuryContextForGame(event,artifact,now=Date.now()){
       // Only individual dateModified fields establish a player update.
       lastPlayerUpdateAt:null,
       count:report.flaggedCount,statusCounts:report.statusCounts,
+      listedCount:report.flaggedPlayers.length,
+      listComplete:report.flaggedPlayers.length===report.flaggedCount,
+      omittedCount:Math.max(0,report.flaggedCount-report.flaggedPlayers.length),
       flaggedPlayers:report.flaggedPlayers,reportedQBs:report.reportedQBs,
       starterVerified:false
     };

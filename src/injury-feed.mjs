@@ -41,8 +41,8 @@ export function validateInjuryArtifact(a,now=Date.now()){
       !['out','doubtful','questionable'].every(k=>count(r.statusCounts[k]))||
       r.flaggedCount!==r.statusCounts.out+r.statusCounts.doubtful+r.statusCounts.questionable)bad();
     for(const field of ['flaggedPlayers','reportedQBs']){
-      if(!Array.isArray(r[field])||r[field].length>8||
-        (field==='flaggedPlayers'&&r[field].length!==Math.min(8,r.flaggedCount)))bad();
+      if(!Array.isArray(r[field])||r[field].length>100||
+        (field==='flaggedPlayers'&&r[field].length!==r.flaggedCount&&r[field].length!==Math.min(8,r.flaggedCount)))bad();
       for(const player of r[field]){
         if(!object(player)||!keys(player,['player','position','status','injury','dateModified'])||!short(player.player,100)||!short(player.position,10)||!status.has(player.status)||
           (field==='flaggedPlayers'&&player.status==='NOT_REPORTED')||

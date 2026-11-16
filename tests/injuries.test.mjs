@@ -52,3 +52,19 @@ test('Missing, malformed or stale inputs are blocked rather than interpreted as 
   },data,NOW);
   assert.equal(result.available,false);
 });
+
+test('More than eight designations are retained; legacy truncation is explicit',()=>{
+  const rows=Array.from({length:10},(_,i)=>({season:2026,week:9,team:'KC',position:'WR',
+    full_name:'Receiver '+i,gsis_id:'wr-'+i,report_status:'Questionable'}));
+  const artifact=compileInjuryReports(rows,{season:2026,sourceUpdatedAt:'2026-11-01T14:00:00Z',now:NOW});
+  const report=artifact.reports['KC:9'];
+  assert.equal(report.flaggedPlayers.length,10);
+  assert.equal(report.flaggedCount,10);
+  const event={home_team:'Kansas City Chiefs',away_team:'Las Vegas Raiders',week:9,commence_time:'2026-11-01T20:00:00Z'};
+  let ctx=injuryContextForGame(event,artifact,NOW);
+  assert.equal(ctx.home.listComplete,true);assert.equal(ctx.home.omittedCount,0);
+  report.flaggedPlayers=report.flaggedPlayers.slice(0,8);
+  ctx=injuryContextForGame(event,artifact,NOW);
+  assert.equal(ctx.home.listComplete,false);assert.equal(ctx.home.omittedCount,2);
+  assert.equal(ctx.probabilitiesAdjusted,false);
+});

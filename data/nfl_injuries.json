@@ -5,7 +5,7 @@
   "attribution": "nflverse injury reports (CC BY 4.0); upstream NFL injury report API",
   "sourceUrl": "https://github.com/nflverse/nflverse-data/releases/download/injuries/injuries_2026.csv",
   "sourceUpdatedAt": "2026-11-16T17:00:35.000Z",
-  "builtAt": "2026-11-16T20:33:32.838Z",
+  "builtAt": "2026-11-16T20:35:48.800Z",
   "reportCount": 300,
   "ambiguousPlayerRecords": 0,
   "perPlayerTimestampsAvailable": false,
@@ -4452,6 +4452,13 @@
           "status": "QUESTIONABLE",
           "injury": "Foot",
           "dateModified": null
+        },
+        {
+          "player": "Trey Lance",
+          "position": "QB",
+          "status": "QUESTIONABLE",
+          "injury": "Groin",
+          "dateModified": null
         }
       ],
       "reportedQBs": [
@@ -4639,6 +4646,20 @@
           "position": "TE",
           "status": "QUESTIONABLE",
           "injury": "Thigh",
+          "dateModified": null
+        },
+        {
+          "player": "Morgan Moses",
+          "position": "T",
+          "status": "QUESTIONABLE",
+          "injury": "Foot",
+          "dateModified": null
+        },
+        {
+          "player": "Reggie Gilliam",
+          "position": "FB",
+          "status": "QUESTIONABLE",
+          "injury": "Knee",
           "dateModified": null
         }
       ],
@@ -5994,6 +6015,41 @@
           "status": "OUT",
           "injury": "Concussion",
           "dateModified": null
+        },
+        {
+          "player": "Branson Taylor",
+          "position": "G",
+          "status": "QUESTIONABLE",
+          "injury": "Neck",
+          "dateModified": null
+        },
+        {
+          "player": "Charlie Kolar",
+          "position": "TE",
+          "status": "QUESTIONABLE",
+          "injury": "Forearm",
+          "dateModified": null
+        },
+        {
+          "player": "Ladd McConkey",
+          "position": "WR",
+          "status": "QUESTIONABLE",
+          "injury": "Foot",
+          "dateModified": null
+        },
+        {
+          "player": "Rodney Shelley",
+          "position": "CB",
+          "status": "QUESTIONABLE",
+          "injury": "Hamstring",
+          "dateModified": null
+        },
+        {
+          "player": "Scott Matlock",
+          "position": "FB",
+          "status": "QUESTIONABLE",
+          "injury": "Foot",
+          "dateModified": null
         }
       ],
       "reportedQBs": [
@@ -6251,6 +6307,41 @@
           "status": "QUESTIONABLE",
           "injury": "Shoulder",
           "dateModified": null
+        },
+        {
+          "player": "Christian Elliss",
+          "position": "LB",
+          "status": "QUESTIONABLE",
+          "injury": "Chest",
+          "dateModified": null
+        },
+        {
+          "player": "Craig Woodson",
+          "position": "S",
+          "status": "QUESTIONABLE",
+          "injury": "Shoulder",
+          "dateModified": null
+        },
+        {
+          "player": "Dre'Mont Jones",
+          "position": "LB",
+          "status": "QUESTIONABLE",
+          "injury": "Shoulder",
+          "dateModified": null
+        },
+        {
+          "player": "Morgan Moses",
+          "position": "T",
+          "status": "QUESTIONABLE",
+          "injury": "Foot",
+          "dateModified": null
+        },
+        {
+          "player": "Rhamondre Stevenson",
+          "position": "RB",
+          "status": "QUESTIONABLE",
+          "injury": "Knee",
+          "dateModified": null
         }
       ],
       "reportedQBs": [
@@ -6329,6 +6420,13 @@
           "position": "S",
           "status": "QUESTIONABLE",
           "injury": "Shoulder",
+          "dateModified": null
+        },
+        {
+          "player": "Lorenzo Styles Jr.",
+          "position": "CB",
+          "status": "QUESTIONABLE",
+          "injury": "Calf",
           "dateModified": null
         }
       ],
@@ -6818,6 +6916,20 @@
           "status": "QUESTIONABLE",
           "injury": "Quadricep",
           "dateModified": null
+        },
+        {
+          "player": "Terry McLaurin",
+          "position": "WR",
+          "status": "QUESTIONABLE",
+          "injury": "Hamstring",
+          "dateModified": null
+        },
+        {
+          "player": "Trey Amos",
+          "position": "CB",
+          "status": "QUESTIONABLE",
+          "injury": "Ankle",
+          "dateModified": null
         }
       ],
       "reportedQBs": [
@@ -7279,6 +7391,13 @@
           "status": "QUESTIONABLE",
           "injury": "Knee",
           "dateModified": null
+        },
+        {
+          "player": "Quinshon Judkins",
+          "position": "RB",
+          "status": "QUESTIONABLE",
+          "injury": "Ankle",
+          "dateModified": null
         }
       ],
       "reportedQBs": [
@@ -7450,6 +7569,20 @@
           "position": "CB",
           "status": "QUESTIONABLE",
           "injury": "Hip",
+          "dateModified": null
+        },
+        {
+          "player": "Jacob Monk",
+          "position": "C",
+          "status": "QUESTIONABLE",
+          "injury": "Quadricep",
+          "dateModified": null
+        },
+        {
+          "player": "Savion Williams",
+          "position": "WR",
+          "status": "QUESTIONABLE",
+          "injury": "Ankle",
           "dateModified": null
         }
       ],
@@ -7725,6 +7858,34 @@
           "status": "QUESTIONABLE",
           "injury": "Neck",
           "dateModified": null
+        },
+        {
+          "player": "Daiyan Henley",
+          "position": "LB",
+          "status": "QUESTIONABLE",
+          "injury": "Knee",
+          "dateModified": null
+        },
+        {
+          "player": "Dalvin Tomlinson",
+          "position": "DT",
+          "status": "QUESTIONABLE",
+          "injury": "Hamstring",
+          "dateModified": null
+        },
+        {
+          "player": "Jamaree Caldwell",
+          "position": "DT",
+          "status": "QUESTIONABLE",
+          "injury": "Knee",
+          "dateModified": null
+        },
+        {
+          "player": "KeAndre Lambert-Smith",
+          "position": "WR",
+          "status": "QUESTIONABLE",
+          "injury": "Hamstring",
+          "dateModified": null
         }
       ],
       "reportedQBs": []
@@ -7838,6 +7999,13 @@
           "position": "RB",
           "status": "QUESTIONABLE",
           "injury": "Ankle",
+          "dateModified": null
+        },
+        {
+          "player": "Will Campbell",
+          "position": "T",
+          "status": "QUESTIONABLE",
+          "injury": "Knee",
           "dateModified": null
         }
       ],
@@ -8111,6 +8279,27 @@
           "status": "OUT",
           "injury": "Abdomen",
           "dateModified": null
+        },
+        {
+          "player": "Saquon Barkley",
+          "position": "RB",
+          "status": "OUT",
+          "injury": "Hamstring",
+          "dateModified": null
+        },
+        {
+          "player": "Will Shipley",
+          "position": "RB",
+          "status": "OUT",
+          "injury": "Foot",
+          "dateModified": null
+        },
+        {
+          "player": "Drew Kendall",
+          "position": "C",
+          "status": "QUESTIONABLE",
+          "injury": "Knee",
+          "dateModified": null
         }
       ],
       "reportedQBs": [
@@ -8305,6 +8494,20 @@
           "status": "QUESTIONABLE",
           "injury": "Knee",
           "dateModified": null
+        },
+        {
+          "player": "Siran Neal",
+          "position": "S",
+          "status": "QUESTIONABLE",
+          "injury": "Neck",
+          "dateModified": null
+        },
+        {
+          "player": "Upton Stout",
+          "position": "CB",
+          "status": "QUESTIONABLE",
+          "injury": "Shoulder",
+          "dateModified": null
         }
       ],
       "reportedQBs": []
@@ -8498,6 +8701,41 @@
           "status": "QUESTIONABLE",
           "injury": "Illness",
           "dateModified": null
+        },
+        {
+          "player": "Nick Cross",
+          "position": "S",
+          "status": "QUESTIONABLE",
+          "injury": "Illness",
+          "dateModified": null
+        },
+        {
+          "player": "Percy Butler",
+          "position": "S",
+          "status": "QUESTIONABLE",
+          "injury": "Hamstring",
+          "dateModified": null
+        },
+        {
+          "player": "Stefon Diggs",
+          "position": "WR",
+          "status": "QUESTIONABLE",
+          "injury": "Hamstring",
+          "dateModified": null
+        },
+        {
+          "player": "Trey Amos",
+          "position": "CB",
+          "status": "QUESTIONABLE",
+          "injury": "Ankle",
+          "dateModified": null
+        },
+        {
+          "player": "Tyler Owens",
+          "position": "S",
+          "status": "QUESTIONABLE",
+          "injury": "Hamstring",
+          "dateModified": null
         }
       ],
       "reportedQBs": [
@@ -8662,6 +8900,48 @@
           "position": "CB",
           "status": "QUESTIONABLE",
           "injury": "Back",
+          "dateModified": null
+        },
+        {
+          "player": "C.J. Henderson",
+          "position": "CB",
+          "status": "QUESTIONABLE",
+          "injury": "Groin",
+          "dateModified": null
+        },
+        {
+          "player": "Gervon Dexter Sr.",
+          "position": "DT",
+          "status": "QUESTIONABLE",
+          "injury": "Hamstring",
+          "dateModified": null
+        },
+        {
+          "player": "Kendal Daniels",
+          "position": "LB",
+          "status": "QUESTIONABLE",
+          "injury": "Neck",
+          "dateModified": null
+        },
+        {
+          "player": "Olamide Zaccheaus",
+          "position": "WR",
+          "status": "QUESTIONABLE",
+          "injury": "Shoulder",
+          "dateModified": null
+        },
+        {
+          "player": "Samson Ebukam",
+          "position": "DE",
+          "status": "QUESTIONABLE",
+          "injury": "Hamstring",
+          "dateModified": null
+        },
+        {
+          "player": "Za'Darius Smith",
+          "position": "DE",
+          "status": "QUESTIONABLE",
+          "injury": "Neck",
           "dateModified": null
         }
       ],
@@ -9469,6 +9749,20 @@
           "status": "QUESTIONABLE",
           "injury": "Shoulder",
           "dateModified": null
+        },
+        {
+          "player": "Kevin Byard",
+          "position": "S",
+          "status": "QUESTIONABLE",
+          "injury": "Chest",
+          "dateModified": null
+        },
+        {
+          "player": "Morgan Moses",
+          "position": "T",
+          "status": "QUESTIONABLE",
+          "injury": "Foot",
+          "dateModified": null
         }
       ],
       "reportedQBs": [
@@ -9720,6 +10014,27 @@
           "status": "QUESTIONABLE",
           "injury": "Knee",
           "dateModified": null
+        },
+        {
+          "player": "Jonathan Greenard",
+          "position": "LB",
+          "status": "QUESTIONABLE",
+          "injury": "Ankle",
+          "dateModified": null
+        },
+        {
+          "player": "Landon Dickerson",
+          "position": "G",
+          "status": "QUESTIONABLE",
+          "injury": "Knee",
+          "dateModified": null
+        },
+        {
+          "player": "Saquon Barkley",
+          "position": "RB",
+          "status": "QUESTIONABLE",
+          "injury": "Hamstring",
+          "dateModified": null
         }
       ],
       "reportedQBs": []
@@ -9912,6 +10227,13 @@
           "position": "S",
           "status": "QUESTIONABLE",
           "injury": "Knee",
+          "dateModified": null
+        },
+        {
+          "player": "Upton Stout",
+          "position": "CB",
+          "status": "QUESTIONABLE",
+          "injury": "Shoulder",
           "dateModified": null
         }
       ],
@@ -10142,6 +10464,13 @@
           "position": "WR",
           "status": "QUESTIONABLE",
           "injury": "Shoulder",
+          "dateModified": null
+        },
+        {
+          "player": "Samson Ebukam",
+          "position": "DE",
+          "status": "QUESTIONABLE",
+          "injury": "Hamstring",
           "dateModified": null
         }
       ],
@@ -11933,6 +12262,13 @@
           "status": "QUESTIONABLE",
           "injury": "Groin",
           "dateModified": null
+        },
+        {
+          "player": "Marist Liufau",
+          "position": "LB",
+          "status": "QUESTIONABLE",
+          "injury": "Forearm",
+          "dateModified": null
         }
       ],
       "reportedQBs": []
@@ -12622,6 +12958,13 @@
           "status": "QUESTIONABLE",
           "injury": "Calf",
           "dateModified": null
+        },
+        {
+          "player": "Morgan Moses",
+          "position": "T",
+          "status": "QUESTIONABLE",
+          "injury": "Foot",
+          "dateModified": null
         }
       ],
       "reportedQBs": [
@@ -13140,6 +13483,13 @@
           "status": "QUESTIONABLE",
           "injury": "Knee",
           "dateModified": null
+        },
+        {
+          "player": "Roy Lopez",
+          "position": "DT",
+          "status": "QUESTIONABLE",
+          "injury": "Toe",
+          "dateModified": null
         }
       ],
       "reportedQBs": []
@@ -13483,6 +13833,27 @@
           "status": "QUESTIONABLE",
           "injury": "Ankle",
           "dateModified": null
+        },
+        {
+          "player": "Devin Moore",
+          "position": "CB",
+          "status": "QUESTIONABLE",
+          "injury": "Hip",
+          "dateModified": null
+        },
+        {
+          "player": "Joey Porter Jr.",
+          "position": "CB",
+          "status": "QUESTIONABLE",
+          "injury": "Ankle",
+          "dateModified": null
+        },
+        {
+          "player": "Jonathan Bullard",
+          "position": "DT",
+          "status": "QUESTIONABLE",
+          "injury": "Calf",
+          "dateModified": null
         }
       ],
       "reportedQBs": []
@@ -13612,6 +13983,34 @@
           "status": "QUESTIONABLE",
           "injury": "Ankle",
           "dateModified": null
+        },
+        {
+          "player": "Lukas Van Ness",
+          "position": "LB",
+          "status": "QUESTIONABLE",
+          "injury": "Back",
+          "dateModified": null
+        },
+        {
+          "player": "Skyy Moore",
+          "position": "WR",
+          "status": "QUESTIONABLE",
+          "injury": "Ankle",
+          "dateModified": null
+        },
+        {
+          "player": "Travis Glover",
+          "position": "G",
+          "status": "QUESTIONABLE",
+          "injury": "Knee",
+          "dateModified": null
+        },
+        {
+          "player": "Xavier McKinney",
+          "position": "S",
+          "status": "QUESTIONABLE",
+          "injury": "Foot",
+          "dateModified": null
         }
       ],
       "reportedQBs": []
@@ -13682,6 +14081,27 @@
           "position": "CB",
           "status": "QUESTIONABLE",
           "injury": "Hamstring",
+          "dateModified": null
+        },
+        {
+          "player": "Trent Brown",
+          "position": "T",
+          "status": "QUESTIONABLE",
+          "injury": "Wrist",
+          "dateModified": null
+        },
+        {
+          "player": "Will Anderson Jr.",
+          "position": "DE",
+          "status": "QUESTIONABLE",
+          "injury": "Ankle",
+          "dateModified": null
+        },
+        {
+          "player": "Wyatt Teller",
+          "position": "G",
+          "status": "QUESTIONABLE",
+          "injury": "Illness",
           "dateModified": null
         }
       ],
@@ -14005,6 +14425,20 @@
           "status": "QUESTIONABLE",
           "injury": "Fibula",
           "dateModified": null
+        },
+        {
+          "player": "Ladd McConkey",
+          "position": "WR",
+          "status": "QUESTIONABLE",
+          "injury": "Back",
+          "dateModified": null
+        },
+        {
+          "player": "Trey Pipkins",
+          "position": "T",
+          "status": "QUESTIONABLE",
+          "injury": "Not injury related - personal matter",
+          "dateModified": null
         }
       ],
       "reportedQBs": []
@@ -14234,6 +14668,34 @@
           "status": "QUESTIONABLE",
           "injury": "Hamstring",
           "dateModified": null
+        },
+        {
+          "player": "Kevin Byard",
+          "position": "S",
+          "status": "QUESTIONABLE",
+          "injury": "Chest",
+          "dateModified": null
+        },
+        {
+          "player": "Reggie Gilliam",
+          "position": "FB",
+          "status": "QUESTIONABLE",
+          "injury": "Knee",
+          "dateModified": null
+        },
+        {
+          "player": "Rhamondre Stevenson",
+          "position": "RB",
+          "status": "QUESTIONABLE",
+          "injury": "Knee",
+          "dateModified": null
+        },
+        {
+          "player": "Walter Rouse",
+          "position": "T",
+          "status": "QUESTIONABLE",
+          "injury": "Concussion",
+          "dateModified": null
         }
       ],
       "reportedQBs": [
@@ -14399,6 +14861,13 @@
           "position": "WR",
           "status": "QUESTIONABLE",
           "injury": "Ankle",
+          "dateModified": null
+        },
+        {
+          "player": "VJ Payne",
+          "position": "S",
+          "status": "QUESTIONABLE",
+          "injury": "Knee",
           "dateModified": null
         }
       ],
