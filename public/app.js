@@ -873,7 +873,7 @@
     const reviewedBdl=globalThis.BETQGameGrades?.reviewedBdlResult(result)===true;
     const metric=value=>Number.isFinite(value)?value.toFixed(3):'Not scored';
     const direction=(value,p,scored)=>value===true?'Correct':value===false?'Incorrect':scored&&p===.5?'No directional pick':'Not scored';
-    return (globalThis.BETQRetainedForecasts?.quarantineHTML(data.quarantine)||'')+'<p><b>REAL RETAINED NFL RESEARCH · FROZEN VALUES ONLY</b></p>' +
+    return (globalThis.BETQRetainedForecasts?.quarantineHTML(data.quarantine,{compact:true})||'')+'<p><b>REAL RETAINED NFL RESEARCH · FROZEN VALUES ONLY</b></p>' +
       '<p>' + esc(game.away + ' @ ' + game.home) + ' · Kickoff recorded with forecast (UTC): ' + esc(dossierTime(game.commenceTime)) +
       ' · Game ID: ' + esc(game.gameId) + '</p>' + scheduleReviewHTML(game.scheduleReview) +
       '<p>No verified betting edge, CLV or ROI. No wager recommendation. These are archived full-game moneyline research observations, separate from the current sport, market and demo selection.</p>' +

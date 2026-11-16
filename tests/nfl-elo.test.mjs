@@ -64,3 +64,17 @@ test('Unknown, stale and unavailable model probabilities fail closed',()=>{
   artifact.readyForResearch=false;
   assert.equal(predictNflEvent(event,artifact,now).available,false);
 });
+
+test('Venue and training coverage assumptions are explicit, never source-verified by omission',()=>{
+  const event={home_team:'Kansas City Chiefs',away_team:'Las Vegas Raiders'};
+  const artifact={schema:1,version:MODEL_VERSION,readyForResearch:true,generatedAt:'2026-11-01T19:00:00Z',params:{homeAdv:55,scale:1},ratings:{KC:1550,LV:1450},lastGameDate:'2026-10-25',holdout:{n:280,brier:.23,ece:.04}};
+  const now=Date.parse('2026-11-01T20:00:00Z');
+  const assumed=predictNflEvent(event,artifact,now);
+  assert.equal(assumed.venueAssumption,'HOME_ADVANTAGE_UNVERIFIED');
+  assert.equal(assumed.venueSourceVerified,false);
+  assert.equal(assumed.completeScheduleCoverageVerified,false);
+  assert.equal(assumed.trainingFinalityIndependentlyVerified,false);
+  const neutral=predictNflEvent({...event,neutralSite:true},artifact,now);
+  assert.equal(neutral.venueAssumption,'NEUTRAL_SUPPLIED');
+  assert.ok(neutral.homeWinProbability<assumed.homeWinProbability);
+});
