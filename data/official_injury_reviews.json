@@ -1,0 +1,200 @@
+{
+  "schema": 1,
+  "receipts": [
+    {
+      "schema": 1,
+      "source": "OFFICIAL_CLUB_WEBPAGE",
+      "sourceUrl": "https://www.chargers.com/team/injury-report/",
+      "gameId": "2026_10_LAC_BAL",
+      "season": 2026,
+      "week": 10,
+      "home": "BAL",
+      "away": "LAC",
+      "kickoff": "2026-11-17T01:15:00.000Z",
+      "observedAt": "2026-11-16T20:56:14.562Z",
+      "sourcePublishedAt": null,
+      "scheduleBasis": "UNANIMOUS_RETAINED_KICKOFF",
+      "bodySha256": "49549a58a7b4b2078475cf0c73d02c6d85077532ee8a67ac1030fb418ce817c1",
+      "reports": {
+        "LAC": [
+          {
+            "player": "Kayode Awosika",
+            "position": "G",
+            "injury": "Fibula",
+            "status": "QUESTIONABLE"
+          },
+          {
+            "player": "Bud Dupree",
+            "position": "OLB",
+            "injury": "NIR - Rest",
+            "status": "NO_GAME_STATUS"
+          },
+          {
+            "player": "Justin Eboigbe",
+            "position": "DL",
+            "injury": "Ankle",
+            "status": "QUESTIONABLE"
+          },
+          {
+            "player": "Alex Harkey",
+            "position": "G",
+            "injury": "Foot",
+            "status": "NO_GAME_STATUS"
+          },
+          {
+            "player": "Tre Harris",
+            "position": "WR",
+            "injury": "Shoulder",
+            "status": "NO_GAME_STATUS"
+          },
+          {
+            "player": "Cam Hart",
+            "position": "CB",
+            "injury": "Ankle",
+            "status": "NO_GAME_STATUS"
+          },
+          {
+            "player": "Daiyan Henley",
+            "position": "LB",
+            "injury": "NIR - Personal",
+            "status": "NO_GAME_STATUS"
+          },
+          {
+            "player": "Deane Leonard",
+            "position": "DB",
+            "injury": "Concussion",
+            "status": "NO_GAME_STATUS"
+          },
+          {
+            "player": "Khalil Mack",
+            "position": "OLB",
+            "injury": "NIR - Rest",
+            "status": "NO_GAME_STATUS"
+          },
+          {
+            "player": "Ladd McConkey",
+            "position": "WR",
+            "injury": "Back",
+            "status": "OUT"
+          },
+          {
+            "player": "Keaton Mitchell",
+            "position": "RB",
+            "injury": "Hip",
+            "status": "NO_GAME_STATUS"
+          },
+          {
+            "player": "David Njoku",
+            "position": "TE",
+            "injury": "Fibula",
+            "status": "QUESTIONABLE"
+          },
+          {
+            "player": "Denzel Perryman",
+            "position": "LB",
+            "injury": "Pectoral",
+            "status": "QUESTIONABLE"
+          },
+          {
+            "player": "Trey Pipkins",
+            "position": "T",
+            "injury": "NIR - Personal/Knee",
+            "status": "QUESTIONABLE"
+          },
+          {
+            "player": "Rodney Shelley",
+            "position": "CB",
+            "injury": "Calf",
+            "status": "NO_GAME_STATUS"
+          },
+          {
+            "player": "Branson Taylor",
+            "position": "G",
+            "injury": "Ankle",
+            "status": "OUT"
+          },
+          {
+            "player": "Brenen Thompson",
+            "position": "WR",
+            "injury": "Hamstring",
+            "status": "OUT"
+          },
+          {
+            "player": "Isas Waxter",
+            "position": "CB",
+            "injury": "Ankle",
+            "status": "OUT"
+          },
+          {
+            "player": "Kendall Williamson",
+            "position": "S",
+            "injury": "Calf",
+            "status": "OUT"
+          }
+        ],
+        "BAL": [
+          {
+            "player": "Rasheen Ali",
+            "position": "RB",
+            "injury": "Ankle",
+            "status": "NO_GAME_STATUS"
+          },
+          {
+            "player": "Rashod Bateman",
+            "position": "WR",
+            "injury": "Calf",
+            "status": "NO_GAME_STATUS"
+          },
+          {
+            "player": "Calais Campbell",
+            "position": "DE",
+            "injury": "NIR-Rest",
+            "status": "NO_GAME_STATUS"
+          },
+          {
+            "player": "Kyle Hamilton",
+            "position": "SAF",
+            "injury": "Hip",
+            "status": "NO_GAME_STATUS"
+          },
+          {
+            "player": "Jaylinn Hawkins",
+            "position": "SAF",
+            "injury": "Knee",
+            "status": "OUT"
+          },
+          {
+            "player": "Matthew Hibner",
+            "position": "TE",
+            "injury": "Hand",
+            "status": "NO_GAME_STATUS"
+          },
+          {
+            "player": "Olaivavega Ioane",
+            "position": "G",
+            "injury": "Knee/Shoulder",
+            "status": "NO_GAME_STATUS"
+          },
+          {
+            "player": "Adam Randall",
+            "position": "RB",
+            "injury": "Neck/Hamstring",
+            "status": "QUESTIONABLE"
+          },
+          {
+            "player": "Ronnie Stanley",
+            "position": "OT",
+            "injury": "NIR-Rest/Toe",
+            "status": "NO_GAME_STATUS"
+          },
+          {
+            "player": "Nate Wiggins",
+            "position": "CB",
+            "injury": "Illness",
+            "status": "NO_GAME_STATUS"
+          }
+        ]
+      }
+    }
+  ]
+}

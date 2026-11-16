@@ -25,7 +25,7 @@ const readOnlyBaseline = {
   // New manual encrypted sample reviewed separately; no automatic collection.
   'bdl-result-sample': 'faf6f437119254f3b57f9f78177ff95d066e147837e836783e5ddc5e462acd67',
   'retained-evidence-audit': '413e2cba527b1ae7f1712e869f6d7f2457164ede2dd0a85b37b0b0498a21723b',
-  ci: '2dadb4f7fb2302a4d71ff9cc82faf35ee98f5ca4606c26bbfda9fffccd443913',
+  ci: '3d432a992a03606032b46e342d9346ec2e125fbde75f3c9dd5572c29d770de5c',
   'audit-reliability': '87ac38b4fb4f0a7925b16eacf0f50ac662c0a50a6cbe02d8ee74780c5c0de846',
   'prospective-direction-audit': 'd23a2966566e0558eed4fac023c6b965b71e8556085fe0cd0b186fb68efde07e',
   'live-probe': '789cdb21b8abad55806a02309bc5ff77958d82b34658b05b16706349e45b0b1d',

@@ -1,3 +1,4 @@
+import {NFL_TEAMS} from './nfl-elo.mjs';
 import http from 'node:http';
 import {createHash,timingSafeEqual} from 'node:crypto';
 import {describeModelDelivery} from './model-delivery.mjs';
@@ -20,6 +21,8 @@ import { emptyJournal, summarizeEvidence } from './evidence.mjs';
 import { createJournalEvidenceFeed,recomputeJournalEvidence,validateRetainedJournal } from './evidence-journal-feed.mjs';
 import { challengerResearchForEvent } from './nfl-efficiency.mjs';
 import { injuryContextForGame } from './injuries.mjs';
+import {officialInjuryReviews} from './official-injury-review.mjs';
+import {createOfficialInjuryFeed} from './official-injury-feed.mjs';
 import {createInjuryReportFeed} from './injury-feed.mjs';
 import { illustrativePrice, PriceAuditError } from './price-metrics.mjs';
 import { assembleAgentRun } from './agent-run.mjs';
@@ -50,6 +53,7 @@ const NFL_EFFICIENCY=loadResearchArtifact('nfl_efficiency.json',a=>
   a?.sourceManifest?.project==='nflverse/nflverse-data'&&a?.readyForResearch);
 const NFL_INJURIES=loadResearchArtifact('nfl_injuries.json',a=>
   a?.schema===1&&a?.source==='NFLVERSE_INJURIES');
+const OFFICIAL_INJURY_REVIEWS=loadResearchArtifact('official_injury_reviews.json',a=>a?.schema===1&&Array.isArray(a.receipts));
 export function loadEvidenceJournal({read=()=>readFileSync(resolve(dirname(fileURLToPath(import.meta.url)),
   '../data/evidence/nfl-2026.json'),'utf8'),clock=Date.now,onInvalid=()=>{}}={}) {
   try {
@@ -159,6 +163,8 @@ export function createHandler({
   nflArtifact = NFL_ARTIFACT,
   nflEfficiency = NFL_EFFICIENCY,
   nflInjuries = NFL_INJURIES,
+  officialInjuryArtifact = OFFICIAL_INJURY_REVIEWS,
+  officialInjuryFeed = createOfficialInjuryFeed({fallbackArtifact:officialInjuryArtifact,clock,fetchImpl:null}),
   injuryFeed = createInjuryReportFeed({fallbackArtifact:nflInjuries,clock,fetchImpl:null}),
   nflEvidence = NFL_EVIDENCE,
   nflEvidenceJournal = BUNDLED_JOURNAL_AVAILABLE ? NFL_EVIDENCE_JOURNAL : null,
@@ -337,8 +343,8 @@ export function createHandler({
           });
         }
         if (url.pathname === '/api/injuries/nfl') {
-          const current=await injuryFeed.get();
-          return reply(res,200,current.status);
+          const [current,official]=await Promise.all([injuryFeed.get(),officialInjuryFeed.get()]);
+          return reply(res,200,{...current.status,officialReviews:officialInjuryReviews(official.artifact,current.artifact,{now:clock()}),officialRefresh:official.status});
         }
         if (url.pathname === '/api/shadow/status') {
           // Never returns bookmaker identities, prices, article URLs, or DB credentials.
@@ -585,8 +591,9 @@ export function createHandler({
           const producerSelection = !demo && sport === 'americanfootball_nfl' && market === 'h2h'
             ? selectUnambiguousProviderEvents(snapshot.events)
             : {events: snapshot.events, integrity: null};
-          const currentInjuries=!demo&&sport==='americanfootball_nfl'&&market==='h2h'
-            ? (await injuryFeed.get()).artifact : null;
+          const [injuryRead,officialRead]=!demo&&sport==='americanfootball_nfl'&&market==='h2h'
+            ? await Promise.all([injuryFeed.get(),officialInjuryFeed.get()]) : [null,null];
+          const currentInjuries=injuryRead?.artifact||null;
           const captureNow=clock();
           // Private opt-in capture reuses EXACTLY this already paid live response:
           // no second provider call, no demo, no caching-as-new-observation.
@@ -636,6 +643,7 @@ export function createHandler({
                 challengerResearchForEvent(rawGame,projection.homeWinProbability,nflEfficiency,analysisNow) :
                 {available:false,reason:'ELO_BASELINE_NOT_AVAILABLE'};
               game.injuryContext = injuryContextForGame(rawGame,currentInjuries,analysisNow);
+              game.officialInjuryReview = officialInjuryReviews(officialRead?.artifact,currentInjuries,{now:analysisNow}).find(r=>r.home===NFL_TEAMS[rawGame.home_team]&&r.away===NFL_TEAMS[rawGame.away_team]&&Date.parse(r.kickoff)===Date.parse(rawGame.commence_time))||null;
               if (projection.available) {
                 for (const signal of game.opportunities) {
                   const p = signal.side === 'home' ? projection.homeWinProbability
@@ -720,7 +728,8 @@ export function startServer(options = {}) {
     fallbackArtifact:options.nflInjuries===undefined?NFL_INJURIES:options.nflInjuries,
     clock:options.clock??Date.now
   });
-  const server = http.createServer(createHandler({...options,injuryFeed}));
+  const officialInjuryFeed=options.officialInjuryFeed??createOfficialInjuryFeed({fallbackArtifact:options.officialInjuryArtifact??OFFICIAL_INJURY_REVIEWS,clock:options.clock??Date.now});
+  const server = http.createServer(createHandler({...options,injuryFeed,officialInjuryFeed}));
   server.listen(port, '0.0.0.0', () => {
     console.log('[BETQ] terminal listening on port ' + server.address().port);
   });

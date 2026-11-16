@@ -1318,6 +1318,25 @@
       '<div class="nfl4-intel-body"><p><b>Challenger unavailable.</b> '+
       esc(r.reason||'Feature model not yet published')+
       '. Elo remains the source of the published pregame baseline.</p></div>';
+    const officialReviews=(injSource.officialReviews||[]).map(review=>{
+      const context=esc(review.away)+' at '+esc(review.home);
+      const current=review.available===true&&Date.parse(review.observedAt)<=Date.now()&&Date.now()<Date.parse(review.validUntil);
+      if(!current)return '<p class="nfl4-warning">Official club observation for '+context+
+        ' is not current: '+esc(review.reason||'OBSERVATION_EXPIRED')+'. No current availability inferred.</p>';
+      const conflicts=(review.conflicts||[]).map(p=>'<li>'+esc(p.team)+' '+esc(p.player)+
+        ': official '+esc(p.officialStatus)+'; nflverse '+esc(p.nflverseStatus)+'</li>').join('');
+      const missing=(review.unmatched||[]).map(p=>'<li>'+esc(p.team)+' '+esc(p.player)+
+        ': official '+esc(p.officialStatus)+'; not present in retained nflverse flagged list</li>').join('');
+      const players=(review.officialFlaggedPlayers||[]).map(p=>'<li>'+esc(p.team)+' '+esc(p.player)+
+        ' ('+esc(p.position)+'): '+esc(p.status)+'</li>').join('');
+      return '<section class="nfl4-official-review"><h4>Official club observation: '+context+'</h4>'+
+        '<p><a href="'+esc(review.sourceUrl)+'" target="_blank" rel="noopener noreferrer">Official source</a> · observed '+
+        esc(when(review.observedAt))+'. Publication time unknown. Observation expires '+esc(when(review.validUntil))+'.</p>'+
+        (conflicts||missing?'<p class="nfl4-warning"><b>Source disagreement or missing coverage. Do not use nflverse as current availability.</b></p><ul>'+conflicts+missing+'</ul>':'')+
+        '<details><summary>Official report designations ('+(review.officialFlaggedPlayers||[]).length+')</summary><ul>'+players+'</ul></details>'+
+        '<p>Injury report, not confirmed game-day inactives. Missing or undesignated players are not assumed healthy. '+
+        'Kickoff matched to retained schedule, not independently certified here. No probability adjustment.</p></section>';
+    }).join('');
     const injuryStatus=injSource.available ?
       '<p><b>Injury source:</b> nflverse weekly reports · last published '+
        esc(when(injSource.sourceUpdatedAt))+' · '+
@@ -1380,7 +1399,7 @@
         '</span></div>'+model+'</section>'+
       '<section class="panel"><div class="panel-head"><div><span class="panel-kicker">REPORT SOURCE GOVERNANCE</span>'+
       '<h3>Reported injuries ≠ confirmed starters</h3></div></div>'+
-      '<div class="nfl4-intel-body">'+injuryStatus+caution+'</div></section></div>'+
+      '<div class="nfl4-intel-body">'+injuryStatus+officialReviews+caution+'</div></section></div>'+
       '<div class="section-heading nfl4-subtitle"><div><div class="eyebrow subtle">SOURCE-ALIGNED / UPCOMING</div>'+
       '<h2>Game-level research comparisons</h2></div>'+
       '<span class="faint-caption">NO WAGERING EXECUTION</span></div>'+
@@ -1928,6 +1947,14 @@
   setInterval(() => {
     $('clock').textContent = new Date().toLocaleTimeString();
     refreshScheduleLabels();
+    let officialExpired=false;
+    for(const review of state.injurySource?.officialReviews||[]){
+      if(review.available===true&&!(Date.now()<Date.parse(review.validUntil))){
+        review.available=false;review.reason='OBSERVATION_EXPIRED';officialExpired=true;
+      }
+    }
+    if(officialExpired)renderIntelligence();
+
     globalThis.BETQGameStrategies?.refresh(document);
     globalThis.BETQRetainedForecasts?.refresh($('retained-forecasts'));
     if (state.slate) retainQuoteFocus(()=>{renderFeed();renderResearchReadiness();renderMetrics();renderOpportunities();renderSpotlight();renderSignals();});
