@@ -226,3 +226,30 @@ test('Malformed quarantine warning survives a forecast failure without partial e
   assert.match(root.innerHTML,/Schedule conflict details unavailable/);assert.match(root.innerHTML,/excluded games cannot be verified/);
   assert.doesNotMatch(root.innerHTML,/retained-forecast-card/);
 });
+
+test('Opposing challenger is explicit, timestamped and never replaces Elo or grading baseline',()=>{
+  const j=journal();Object.assign(j.snapshots[0],{challengerModelVersion:'nfl-efficiency-1',challengerHomeProbability:.4});
+  const before=JSON.stringify(j),r=api.build(response(j),NOW),out=api.html(r);
+  assert.match(out,/Models favor opposite teams/);assert.match(out,/Frozen EPA challenger: .*40.0%/);
+  assert.match(out,/Built UTC: 2026-11-07T11:00:00.000Z/);assert.match(out,/first frozen scoring baseline remain unchanged/);
+  assert.equal(r.cards[0].selectedProbability,.6);assert.equal(JSON.stringify(j),before);
+});
+test('Challenger display rejects unsupported, future-built or missing provenance',()=>{
+  const s=response().games[0].latestSnapshot;
+  for(const change of [{challengerModelVersion:'unknown'},{challengerBuiltAt:'2026-11-07T12:02:00.000Z'},{challengerResearchOnly:false},{challengerHomeProbability:NaN}]){
+    const out=api.comparison({...s,challengerModelVersion:'nfl-efficiency-1',...change},'Home','Away',NOW);
+    assert.match(out,/challenger unavailable/);assert.doesNotMatch(out,/Models favor/);
+  }
+});
+test('Challenger comparison handles ties, stale builds and escapes team names',()=>{
+  const s=response().games[0].latestSnapshot;Object.assign(s,{challengerModelVersion:'nfl-efficiency-1',challengerHomeProbability:.5,challengerBuiltAt:'2026-10-01T00:00:00.000Z'});
+  const out=api.comparison(s,'<script>','Away',NOW);
+  assert.match(out,/no preferred side/);assert.match(out,/Stale challenger build/);assert.doesNotMatch(out,/<script>/);
+});
+
+test('challenger stale warning follows the seven-day runtime bound',()=>{
+  const s={eligibility:{model:true,challenger:true},modelVersion:'nfl-elo-1',modelHomeProbability:.55,
+    challengerResearchOnly:true,challengerModelVersion:'nfl-efficiency-1',challengerHomeProbability:.45,
+    challengerBuiltAt:'2026-11-01T12:00:00.000Z',capturedAt:'2026-11-02T12:00:00.000Z',commenceTime:'2026-11-03T12:00:00.000Z'};
+  assert.match(api.comparison(s,'Home','Away',Date.parse('2026-11-09T12:00:00.000Z')),/Stale challenger build/);
+});

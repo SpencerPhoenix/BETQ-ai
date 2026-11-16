@@ -117,3 +117,21 @@ test('Stale challenger is not exposed; healthy challenger remains research only'
   assert.ok(p.homeWinProbability>0&&p.homeWinProbability<1);
   assert.equal(challengerResearchForEvent(game,0.64,model,Date.parse('2026-11-12T12:00:00Z')).available,false);
 });
+
+test('Recent challenger artifacts cannot admit post-build or same-game features',()=>{
+  const now=Date.parse('2026-11-02T20:00:00Z');
+  const feature={n:8,netEPA:0,netSuccess:0,offEPA:0,defEPA:0,latestGameDate:'2026-10-25'};
+  const model={version:'nfl-efficiency-1',readyForResearch:true,promotable:false,
+    generatedAt:'2026-11-01T11:00:00Z',teamFeatures:{KC:{...feature},LV:{...feature}},
+    coefficients:{epa:1,success:1,rest:.02}};
+  const game={home_team:'Kansas City Chiefs',away_team:'Las Vegas Raiders',commence_time:'2026-11-02T23:00:00Z'};
+  assert.equal(challengerResearchForEvent(game,.6,model,now).available,true);
+  for(const day of ['2026-11-01','2026-11-02']){
+    const changed=structuredClone(model);changed.teamFeatures.KC.latestGameDate=day;
+    assert.equal(challengerResearchForEvent(game,.6,changed,now).reason,'TEAM_FEATURE_CHRONOLOGY_INVALID');
+  }
+  for(const n of [null,'8',NaN,Infinity,3.5,9]){
+    const changed=structuredClone(model);changed.teamFeatures.LV.n=n;
+    assert.equal(challengerResearchForEvent(game,.6,changed,now).available,false);
+  }
+});

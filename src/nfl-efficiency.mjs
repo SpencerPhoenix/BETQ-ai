@@ -202,12 +202,18 @@ export function challengerResearchForEvent(event,eloHomeProbability,artifact,now
     return {available:false,reason:'UNMAPPED_NFL_EVENT'};
   const ht=artifact.teamFeatures[home],atTeam=artifact.teamFeatures[away];
   const gameDate=nflGameDate(event);
-  if(!ht||!atTeam||ht.n<4||atTeam.n<4)
+  if(!ht||!atTeam||![ht,atTeam].every(t=>Number.isSafeInteger(t.n)&&t.n>=4&&t.n<=8))
     return {available:false,reason:'TEAM_EPA_HISTORY_INSUFFICIENT'};
   if (![ht,atTeam].every(t=>sourceDateFresh(t.latestGameDate,now,28) &&
       ['netEPA','netSuccess','offEPA','defEPA'].every(k=>Number.isFinite(t[k]))) ||
       !artifact.coefficients || !['epa','success','rest'].every(k=>Number.isFinite(artifact.coefficients[k])))
     return {available:false,reason:'TEAM_FEATURES_STALE_OR_INVALID'};
+  // A recent file can still contain future or same-game features. A date-only
+  // feature cannot establish an intraday ordering, so require its whole day
+  // to precede the artifact build and the predicted game's local date.
+  if (![ht,atTeam].every(t=>t.latestGameDate<gameDate &&
+      Date.parse(t.latestGameDate+'T00:00:00Z')+86400000<=at))
+    return {available:false,reason:'TEAM_FEATURE_CHRONOLOGY_INVALID'};
   const restDiff=clamp(
     clamp(Math.round((seasonTime(gameDate)-seasonTime(ht.latestGameDate))/HOURS),0,18)-
     clamp(Math.round((seasonTime(gameDate)-seasonTime(atTeam.latestGameDate))/HOURS),0,18),-10,10);
