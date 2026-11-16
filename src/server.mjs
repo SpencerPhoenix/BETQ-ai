@@ -1,6 +1,7 @@
 import http from 'node:http';
 import {createHash,timingSafeEqual} from 'node:crypto';
 import {describeModelDelivery} from './model-delivery.mjs';
+import {describeMarketCaptureContract,MARKET_CAPTURE_CONTRACT,MARKET_CAPTURE_CONTRACT_ID} from './evidence-compat.mjs';
 import {performance} from 'node:perf_hooks';
 import {collectionHealthFromJournal} from './collection-health.mjs';
 import {gradeRetainedGames} from './game-grading.mjs';
@@ -253,6 +254,7 @@ export function createHandler({
           return reply(res, 200, {
           status: 'ok', app: 'BETQ.ai', version: '0.11.0',
           serverTime: new Date(healthNow).toISOString(), odds,
+          marketCaptureContract:describeMarketCaptureContract(),
           operatorRefresh:{configured:operatorConfigured,authenticationRequired:true,paidIntentRequired:true},
           captureReadiness:{ready:reason===null,reason,scope:'PROVIDER_REFRESH_PREREQUISITES_ONLY'},
           collectionHealth:collectionHealthFromJournal(retained.journal,healthNow,retained.publication),
@@ -565,6 +567,16 @@ export function createHandler({
               !delivered.available||expectedModel!==delivered.artifactCanonicalSha256)
               return reply(res,409,{error:{code:'MODEL_DELIVERY_MISMATCH',message:'Expected model artifact is not available. No provider request was made.'}});
           }
+          const expectedMarketPolicy=req.headers['x-betq-expected-market-policy'];
+          if(expectedMarketPolicy!==undefined&&
+            (demo||sport!=='americanfootball_nfl'||market!=='h2h'||
+              typeof expectedMarketPolicy!=='string'||expectedMarketPolicy!==MARKET_CAPTURE_CONTRACT.policy))
+            return reply(res,409,{error:{code:'MARKET_CAPTURE_POLICY_MISMATCH',message:'Expected market-capture policy is not available for this request. No provider request was made.'}});
+          const expectedMarketContract=req.headers['x-betq-expected-market-contract'];
+          if(expectedMarketContract!==undefined&&
+            (demo||sport!=='americanfootball_nfl'||market!=='h2h'||
+              typeof expectedMarketContract!=='string'||expectedMarketContract!==MARKET_CAPTURE_CONTRACT_ID))
+            return reply(res,409,{error:{code:'MARKET_CAPTURE_CONTRACT_MISMATCH',message:'Expected market freshness and bookmaker identity contract is not available. No provider request was made.'}});
           const snapshot = demo
             ? { events: demoEvents(sport, now), receivedAt: new Date(now).toISOString(), cacheHit: false, quota: null }
             : await source.getOdds(sport, market, {
@@ -642,6 +654,7 @@ export function createHandler({
           return reply(res, 200, {
             ...analysis,
             nflModelDelivery:!demo&&sport==='americanfootball_nfl'&&market==='h2h'?describeModelDelivery(nflArtifact,analysisNow):null,
+            marketCaptureContract:!demo&&sport==='americanfootball_nfl'&&market==='h2h'?describeMarketCaptureContract():null,
             agentRun,
             shadowCapture,
             producerIntegrity: producerSelection.integrity,

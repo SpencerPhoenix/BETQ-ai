@@ -1,3 +1,4 @@
+import {describeMarketCaptureContract} from '../src/evidence-compat.mjs';
 import test from 'node:test';
 import {describeModelDelivery} from '../src/model-delivery.mjs';
 import {syntheticDeliveryArtifact,modelHealthFixture} from './fixtures/model-delivery.mjs';
@@ -38,7 +39,7 @@ test('A delayed collector response uses receipt-time chronology and deliberate p
       if (options.redirect !== 'error') throw Error('Unsafe redirect handling');
       now += 90000; // Longer than the one-minute clock-skew allowance.
       return Response.json({
-        demo: false, source: 'THE_ODDS_API_V4', sport: 'americanfootball_nfl', market: 'h2h',
+        marketCaptureContract:${JSON.stringify(describeMarketCaptureContract())}, demo: false, source: 'THE_ODDS_API_V4', sport: 'americanfootball_nfl', market: 'h2h',
         nflModelDelivery:${JSON.stringify(identity)}, receivedAt: iso(now - 1000), events: [{
           id: 'offline-event', homeTeam: 'Kansas City Chiefs', awayTeam: 'Las Vegas Raiders',
           commenceTime: '2026-11-08T18:00:00.000Z',

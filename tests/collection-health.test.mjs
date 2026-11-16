@@ -1,3 +1,4 @@
+import {describeMarketCaptureContract} from '../src/evidence-compat.mjs';
 import test from 'node:test';
 import {bundledDeliveryArtifact,modelHealthFixture} from './fixtures/model-delivery.mjs';
 import assert from 'node:assert/strict';
@@ -23,7 +24,7 @@ test('Empty, invalid and future-only journal metadata cannot invent a healthy co
     assert.equal(result.liveFreshnessVerified,false);
   }
 });
-const base={status:'ok',app:'BETQ.ai',version:'0.11.0',odds:{configured:true},
+const base={marketCaptureContract:describeMarketCaptureContract(),status:'ok',app:'BETQ.ai',version:'0.11.0',odds:{configured:true},
   nflModel:{available:true},forwardEvidence:{status:'COLLECTING_FORWARD_EVIDENCE'}};
 const cli=new URL('../scripts/verify-evidence-health.mjs',import.meta.url);
 test('Collector preflight refuses absent or blocked operator/budget prerequisite contract',()=>{

@@ -1,3 +1,4 @@
+import {describeMarketCaptureContract} from '../src/evidence-compat.mjs';
 import test from 'node:test';
 import {describeModelDelivery} from '../src/model-delivery.mjs';
 import {syntheticDeliveryArtifact,modelHealthFixture} from './fixtures/model-delivery.mjs';
@@ -18,7 +19,7 @@ const rows=[
   {game_id:'2026_09_BUF_KC',season:2026,game_type:'REG',gameday:'2026-11-08',home_team:'KC',away_team:'BUF'}
 ];
 function slate(at,kickoff='2026-11-08T21:05:00.000Z',includeOther=true){
-  return {demo:false,source:'THE_ODDS_API_V4',sport:'americanfootball_nfl',market:'h2h',receivedAt:iso(at),nflModelDelivery:deliveryIdentity,
+  return {marketCaptureContract:describeMarketCaptureContract(),demo:false,source:'THE_ODDS_API_V4',sport:'americanfootball_nfl',market:'h2h',receivedAt:iso(at),nflModelDelivery:deliveryIdentity,
     events:[['offline-schedule-change','San Francisco 49ers','Las Vegas Raiders',kickoff],
       ...(includeOther?[['offline-unrelated','Kansas City Chiefs','Buffalo Bills','2026-11-08T18:00:00.000Z']]:[])]
       .map(([id,homeTeam,awayTeam,commenceTime])=>({id,homeTeam,awayTeam,commenceTime,

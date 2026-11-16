@@ -9,13 +9,14 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import {readBoundedText} from '../src/integrity.mjs';
 import {compareModelHealth,assertSlateModelDelivery} from '../src/model-delivery.mjs';
-import {compatibleEvidenceHealth} from '../src/evidence-compat.mjs';
+import {compatibleEvidenceHealth,validMarketCaptureContract,MARKET_CAPTURE_CONTRACT} from '../src/evidence-compat.mjs';
 import {readScheduleSourceBytes,prepareScheduleReconciliation} from '../src/schedule-source-receipt.mjs';
 import {
   emptyJournal, validateJournal, observationsFromSlate,
   prepareCaptureAdmission, updateJournal
 } from '../src/evidence.mjs';
 import {recomputeJournalEvidence} from '../src/evidence-journal-feed.mjs';
+import {summarizeWrittenMarketCapture} from '../src/market-capture-diagnostics.mjs';
 
 const SCHEDULES_URL = 'https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv';
 import { operatorRequest } from './operator-auth.mjs';
@@ -50,6 +51,8 @@ async function getSlate() {
   if(health.captureReadiness?.ready!==true)throw Error('MODEL_CAPTURE_PREREQUISITES_UNAVAILABLE');
   if(!modelMatch.compatible)throw Error(modelMatch.reason);
   options.headers['x-betq-expected-model-sha256']=modelMatch.identity.artifactCanonicalSha256;
+  options.headers['x-betq-expected-market-policy']=MARKET_CAPTURE_CONTRACT.policy;
+  options.headers['x-betq-expected-market-contract']=MARKET_CAPTURE_CONTRACT.contractId;
   endpoint.searchParams.set('mode','live');
   endpoint.searchParams.set('sport','americanfootball_nfl');
   endpoint.searchParams.set('market','h2h');
@@ -60,6 +63,7 @@ async function getSlate() {
   if(result?.demo!==false||result?.source!=='THE_ODDS_API_V4')throw Error('Untrusted slate source');
   // A deployment can change between preflight and the sole paid response. Reject, never retry or relabel.
   assertSlateModelDelivery(result,expectedArtifact,Date.now());
+  if(!validMarketCaptureContract(result.marketCaptureContract))throw Error('RUNTIME_MARKET_CAPTURE_CONTRACT_MISMATCH');
   return result;
 }
 
@@ -68,13 +72,14 @@ const original=validateJournal(await loadJson(journalPath,emptyJournal(season)))
 // A known schedule-only conflict remains retained and is excluded from admission.
 prepareCaptureAdmission(original,[],Date.now());
 const {rows:schedule,sourceReceipt}=await getCsv();
-let captures=[],skipped=[],captureStatus='SUCCESS';
+let captures=[],skipped=[],captureStatus='SUCCESS',derivedMarketDiagnostics=null;
 try {
   const slate=await getSlate();
   // Capture at the time of actual receipt, not before possible Render cold-start latency.
   const derived=observationsFromSlate(slate,schedule,Date.now(),season);
   captures=derived.accepted;
   skipped=derived.skipped;
+  derivedMarketDiagnostics=derived.marketDiagnostics;
   if (!captures.length) captureStatus='STARVED: NO_ELIGIBLE_FRESH_CAPTURES';
 } catch(err) {
   // On quota exhaustion, still reconcile final results from nflverse. No retry
@@ -100,10 +105,12 @@ const added=result.added+combined.added;
 const settled=result.settlementRevisions+combined.settlementRevisions;
 const summary=recomputeJournalEvidence(updated,reconciledAt);
 const changed=added>0||settled>0;
+const marketCapture=summarizeWrittenMarketCapture(original,captures,updated);
 console.log(JSON.stringify({
   season,captureStatus,eligible:captures.length,skipped:skipped.length+captureAdmission.skipped.length,
   scheduleConflictSkips:skipped.filter(s=>s.reason==='SCHEDULE_RECONCILIATION_REQUIRED').length,
   captureAdmission:captureAdmission.diagnostics,
+  derivedMarketDiagnostics,marketCapture,
   appended:added,newResultsOrCorrections:settled,
   cumulativeSnapshots:updated.snapshots.length,projectedSnapshots:summary.totalSnapshots,prospectiveGames:summary.prospectiveGames,
   retainedScheduleQuarantine:summary.quarantine,

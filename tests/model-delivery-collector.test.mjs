@@ -1,3 +1,4 @@
+import {describeMarketCaptureContract} from '../src/evidence-compat.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtemp,readFile,writeFile,mkdir,rm} from 'node:fs/promises';
@@ -9,7 +10,7 @@ import {syntheticDeliveryArtifact,modelHealthFixture} from './fixtures/model-del
 const NOW=Date.parse('2026-11-07T12:00:00.000Z');
 const artifact=syntheticDeliveryArtifact('2026-11-07T11:00:00.000Z','2026-11-06');
 const health=modelHealthFixture(artifact,NOW),identity=describeModelDelivery(artifact,NOW);
-const baseSlate={demo:false,source:'THE_ODDS_API_V4',sport:'americanfootball_nfl',market:'h2h',receivedAt:new Date(NOW).toISOString(),nflModelDelivery:identity,events:[]};
+const baseSlate={marketCaptureContract:describeMarketCaptureContract(),demo:false,source:'THE_ODDS_API_V4',sport:'americanfootball_nfl',market:'h2h',receivedAt:new Date(NOW).toISOString(),nflModelDelivery:identity,events:[]};
 async function run(t,{expected=artifact,reported=health,response=baseSlate,healthStatus=200,expectedPaid=0,expectedHealth=1,origin='https://offline-betq.test',oversized=false}={}){
  const directory=await mkdtemp(join(tmpdir(),'betq-model-collector-'));t.after(()=>rm(directory,{recursive:true,force:true}));await mkdir(join(directory,'data'),{recursive:true});
  if(expected!==null)await writeFile(join(directory,'data/nfl_elo.json'),JSON.stringify(expected));
@@ -23,7 +24,7 @@ async function run(t,{expected=artifact,reported=health,response=baseSlate,healt
    return ${oversized?"new Response(' '.repeat(33000))":`Response.json(${JSON.stringify(reported)},{status:${healthStatus}})`};
  }
  if(!u.startsWith('https://offline-betq.test/api/slate?'))throw Error('Unexpected origin or endpoint');
- paid++;if(options.headers['x-betq-expected-model-sha256']!=='${identity.artifactCanonicalSha256}'||options.headers['x-betq-paid-request']!=='true'||options.headers.Authorization!=='Bearer OFFLINE_OPERATOR_FIXTURE_0123456789'||options.redirect!=='error')throw Error('Unsafe paid request');
+ paid++;if(options.headers['x-betq-expected-market-contract']!==${JSON.stringify(describeMarketCaptureContract().contractId)}||options.headers['x-betq-expected-market-policy']!==${JSON.stringify(describeMarketCaptureContract().policy)}||options.headers['x-betq-expected-model-sha256']!=='${identity.artifactCanonicalSha256}'||options.headers['x-betq-paid-request']!=='true'||options.headers.Authorization!=='Bearer OFFLINE_OPERATOR_FIXTURE_0123456789'||options.redirect!=='error')throw Error('Unsafe paid request');
  return Response.json(${JSON.stringify(response)});
  };await import(${JSON.stringify(entry)});
  if(paid!==${expectedPaid}||health!==${expectedHealth}||csv!==1)throw Error('Unexpected fetch counts '+JSON.stringify({paid,health,csv}));`;
@@ -48,4 +49,12 @@ test('Rollback/foreign receiver that ignores expected hash is rejected after sol
  assert.match(await run(t,{response:changed,expectedPaid:1}),/RUNTIME_MODEL_DELIVERY_UNAVAILABLE/);
  const race=structuredClone(baseSlate);race.nflModelDelivery.artifactCanonicalSha256='a'.repeat(64);
  assert.match(await run(t,{response:race,expectedPaid:1}),/RUNTIME_MODEL_ARTIFACT_MISMATCH/);
+});
+
+for(const variant of ['missing','different book identity','backfill allowed'])test('Response capability race fails after one mocked refresh without retries: '+variant,async t=>{
+ const response=structuredClone(baseSlate);
+ if(variant==='missing')delete response.marketCaptureContract;
+ if(variant==='different book identity')response.marketCaptureContract.bookmakerIdentityPolicy='LAST_BOOKMAKER_WINS';
+ if(variant==='backfill allowed')response.marketCaptureContract.historicalBackfillAllowed=true;
+ assert.match(await run(t,{response,expectedPaid:1}),/RUNTIME_MARKET_CAPTURE_CONTRACT_MISMATCH/);
 });
