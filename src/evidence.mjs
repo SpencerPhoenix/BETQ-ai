@@ -1,3 +1,4 @@
+import {BDL_REVIEWED_RESULT_POLICY,isReviewedBdlSettlement,reviewedResultDigest,assertReviewedBdlRevisionTimes} from './bdl-reviewed-result.mjs';
 import {validProjectionDelivery} from './model-delivery.mjs';
 /**
  * Phase 3 forward evidence. Only independent model forecasts and aggregated
@@ -298,19 +299,55 @@ export function updateJournal(existing,captures,results,now=Date.now()) {
   for(const result of results){
     if(!validResult(result))throw Error('Invalid result outcome / score');
     if(!tracked.has(result.gameId))continue;
-    if(!unambiguous.has(result.gameId)||!validNewFinalResult(result,journal.snapshots.find(s=>s.gameId===result.gameId),now))
-      throw Error('Invalid result identity or finality receipt');
-    const prior=latest.get(result.gameId);
+    const shots=journal.snapshots.filter(s=>s.gameId===result.gameId)
+      .sort((a,b)=>a.capturedAt.localeCompare(b.capturedAt)||(a.id<b.id?-1:a.id>b.id?1:0));
+    const snapshot=shots[0],prior=latest.get(result.gameId);
+    if(!unambiguous.has(result.gameId))throw Error('Invalid result identity or finality receipt');
+    const reviewed=result.source==='BALLDONTLIE_NFLVERSE_REVIEWED'||result.policyId===BDL_REVIEWED_RESULT_POLICY||result.review!==undefined;
     const revised={...structuredClone(result),
       resultHash:hash(result.gameId+'|'+result.homeScore+'|'+result.awayScore),
-      verifiedAt:new Date(now).toISOString(),
+      verifiedAt:reviewed?result.verifiedAt:new Date(now).toISOString(),
       revision:(prior?.revision||0)+1};
-    // A real provenance upgrade may append a revision without changing scores.
-    // Routine repeats must not manufacture new outcome samples or revisions.
-    const snapshot=journal.snapshots.find(s=>s.gameId===result.gameId);
-    if(prior&&['homeScore','awayScore','outcome'].every(key=>prior[key]===result[key])&&
-      validNewFinalResult(prior,snapshot,parsed(prior.verifiedAt))&&
-      (!isSourceCorroboratedSettlement(revised,snapshot)||isSourceCorroboratedSettlement(prior,snapshot)))continue;
+    if(reviewed){
+      if(providerContinuityConflicts(journal.snapshots).has(result.gameId)||journal.snapshots.some(s=>
+        s.gameId!==result.gameId&&s.season===snapshot.season&&s.home===snapshot.home&&s.away===snapshot.away&&s.commenceTime===snapshot.commenceTime))
+        throw Error('Reviewed BDL frozen provider mapping requires review');
+      if(!isReviewedBdlSettlement(revised,snapshot)||parsed(revised.verifiedAt)>now)
+        throw Error('Invalid reviewed BDL result');
+      // Replaying an already appended receipt is a no-op, never a restoration of
+      // that score after a later correction. Changed content with that ID fails.
+      const repeated=journal.settlements.find(r=>r.policyId===BDL_REVIEWED_RESULT_POLICY&&r.review?.receiptSha256===revised.review.receiptSha256);
+      if(repeated){
+        if(reviewedResultDigest({...revised,revision:repeated.revision})!==reviewedResultDigest(repeated))
+          throw Error('Reviewed receipt reused with different content');
+        continue;
+      }
+      if(revised.review.retainedResultSha256!==(prior?reviewedResultDigest(prior):null)||
+        revised.review.allFrozenSnapshotsSha256!==reviewedResultDigest(shots)||
+        (prior&&parsed(revised.verifiedAt)<parsed(prior.verifiedAt)))
+        throw Error('Reviewed BDL prior-result or frozen-history binding changed');
+      const native=revised.nativeFinalObservation;
+      for(const old of journal.settlements.filter(r=>r.policyId===BDL_REVIEWED_RESULT_POLICY)){
+        const other=old.nativeFinalObservation;
+        if((old.gameId===revised.gameId&&other.providerGameId!==native.providerGameId)||
+          (old.gameId!==revised.gameId&&other.providerGameId===native.providerGameId))throw Error('Reviewed BDL native game mapping changed or reused');
+        for(const [idKey,teamKey] of [['providerHomeTeamId','home'],['providerAwayTeamId','away']])
+          for(const [otherId,otherTeam] of [['providerHomeTeamId','home'],['providerAwayTeamId','away']])
+            if((native[idKey]===other[otherId])!==(native[teamKey]===other[otherTeam]))throw Error('Reviewed BDL native team mapping changed or reused');
+      }
+      const priorReview=journal.settlements.filter(r=>r.gameId===revised.gameId&&r.policyId===BDL_REVIEWED_RESULT_POLICY).sort((a,b)=>b.revision-a.revision)[0];
+      assertReviewedBdlRevisionTimes(revised,prior,priorReview);
+    }else if(!validNewFinalResult(result,snapshot,now))throw Error('Invalid result identity or finality receipt');
+    // Same-score routine polls never downgrade a descriptive review. A new V2
+    // qualification can still upgrade aggregate eligibility. Real corrections
+    // always append, and their own provenance determines subsequent scoring.
+    if(prior&&['homeScore','awayScore','outcome'].every(key=>prior[key]===result[key])){
+      const priorBdl=isReviewedBdlSettlement(prior,snapshot),nextV2=isSourceCorroboratedSettlement(revised,snapshot);
+      if(priorBdl&&!nextV2)continue;
+      if(validNewFinalResult(prior,snapshot,parsed(prior.verifiedAt))&&
+        (!nextV2||isSourceCorroboratedSettlement(prior,snapshot))&&!reviewed)continue;
+      if(isSourceCorroboratedSettlement(prior,snapshot)&&reviewed)continue;
+    }
     journal.settlements.push(revised);latest.set(result.gameId,revised);revisions++;
   }
   journal.snapshots.sort((a,b)=>a.capturedAt.localeCompare(b.capturedAt)||a.id.localeCompare(b.id));

@@ -3,6 +3,8 @@ import {scheduleReviewFor} from './schedule-review.mjs';
 import {retainedJournalProjection} from './evidence-journal-feed.mjs';
 import {sameFrozenIdentity,isEligibleModelSnapshot,isEligibleMarketSnapshot,isEligibleChallengerSnapshot} from './evidence-integrity.mjs';
 import {isSourceCorroboratedSettlement} from './settlement-qualification.mjs';
+import {BDL_REVIEWED_RESULT_POLICY,isDescriptivelyQualifiedSettlement,describeReviewedSettlement} from './bdl-reviewed-result.mjs';
+import {descriptiveForecastMetrics} from './game-grading.mjs';
 
 export const GAME_DOSSIER_HISTORY_LIMIT=100;
 const fail=(code)=>{const error=new Error(code);error.code=code;throw error;};
@@ -76,13 +78,18 @@ function buildChecked(journal,{gameId,providerEventId,now=Date.now(),publication
   let result=null;
   if(record){
     const sourceCorroborated=isSourceCorroboratedSettlement(record,first);
+    const descriptivelyQualified=isDescriptivelyQualifiedSettlement(record,first);
+    const qualificationDetails=describeReviewedSettlement(record,first);
     const modelQualified=isEligibleModelSnapshot(first);
+    const scoringEligible=descriptivelyQualified&&modelQualified&&record.outcome!=='TIE'&&sameFrozenIdentity(record,first);
     result={...copyFields(record,['gameId','season','home','away','gameDate','commenceTime','homeScore','awayScore','outcome','revision','source','verifiedAt','finalityBasis']),
       communitySourceVintage:record.communitySourceVintage?copyFields(record.communitySourceVintage,['sha256','publicationTimeVerified','collectorObservedAt']):null,
       finalityAttestation:record.finalityAttestation?copyFields(record.finalityAttestation,['status','corroborator','officialLeagueCertification','gameId','season','home','away','gameDate','commenceTime','homeScore','awayScore','eventId','sourceSha256','observedAt']):null,
-      sourceCorroborated,modelQualified,scoringEligible:sourceCorroborated&&modelQualified&&record.outcome!=='TIE'&&sameFrozenIdentity(record,first),
+      sourceCorroborated,descriptivelyQualified,aggregateScoringEligible:sourceCorroborated,qualificationDetails,modelQualified,scoringEligible,
+      metrics:descriptiveForecastMetrics(first,record,{scoringEligible}),
       baselineSnapshotId:first.id,officialLeagueCertification:false,
-      qualification:sourceCorroborated?'SOURCE_CORROBORATED_NOT_LEAGUE_CERTIFIED':'RETAINED_RESULT_NOT_SOURCE_CORROBORATED'};
+      qualification:qualificationDetails?.policyId===BDL_REVIEWED_RESULT_POLICY?'REVIEWED_BDL_SEPARATE_DESCRIPTIVE_COHORT':
+        sourceCorroborated?'SOURCE_CORROBORATED_NOT_LEAGUE_CERTIFIED':'RETAINED_RESULT_NOT_SOURCE_CORROBORATED'};
   }
   // Preserve the original first baseline even when the bounded latest history omits it.
   return {...envelope(journal,now,publication),quarantine:retained.quarantine,game:gameEntry(shots,latest,now),firstFrozenBaseline:projection(first),

@@ -97,3 +97,12 @@ private file handling, failure-before-network, immutable identity, and workflow
 trigger tests. A valid 4 MB schedule prepares and replays under a 256 MB heap; the
 shared parser also survives 12 MB adversarial inputs. These are engineering checks,
 not an actual provider sample. Node 22 CI is verified separately on the release commit.
+
+## Separate reviewed display
+
+The workflow itself remains nonqualifying and never updates the public journal.
+A separately authorized operator can privately replay a completed sample under
+[reviewed descriptive grading V1](BDL_REVIEWED_GRADING.md). That manual import
+adds only an allowlisted derived result revision and cannot qualify the existing
+V2 aggregate cohort or activate provider calls. Original disabled ledger flags
+and the encrypted source archive remain unchanged.

@@ -51,7 +51,13 @@ function checkOperationalBundle(journal,now){
       assert.equal(game.status,'SCHEDULE_CONFLICT_QUARANTINED');assert.equal(game.metrics,null);
     }
     if(game.metrics){
-      assert.equal(game.status,'GRADED');assert.equal(game.result.sourceCorroborated,true);
+      assert.equal(game.status,'GRADED');assert.equal(game.result.descriptivelyQualified,true);
+      if(!game.result.sourceCorroborated){
+        assert.equal(game.result.qualificationDetails.policyId,'BDL_NATIVE_FINAL_NFLVERSE_SCORE_REVIEWED_V1');
+        assert.equal(game.result.aggregateScoringEligible,false);
+        assert.equal(game.result.qualificationDetails.sourceIndependenceVerified,false);
+        assert.equal(game.result.qualificationDetails.sourceAuthenticityIndependentlyVerified,false);
+      }
     }else assert.notEqual(game.status,'GRADED');
   }
   return {summary,grades,index};

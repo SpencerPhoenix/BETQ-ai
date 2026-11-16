@@ -1,3 +1,4 @@
+import {assertReviewedBdlJournalContext} from './bdl-reviewed-result.mjs';
 /** Narrow classification only: never reconcile, rewrite or authorize a frozen schedule. */
 import {canonicalTimestamp,validFrozenIdentity,validProviderEventId,providerContinuityConflicts} from './evidence-integrity.mjs';
 import {latestSettlementsByRevision} from './settlement-qualification.mjs';
@@ -15,7 +16,9 @@ export function assertRetainedObservationTimes(journal,now){
   }
   for(const record of journal.settlements){
     if(![record.verifiedAt,record.communitySourceVintage?.collectorObservedAt,
-      record.terminalStatusReceipt?.observedAt,record.finalityAttestation?.observedAt].every(observed))
+      record.terminalStatusReceipt?.observedAt,record.finalityAttestation?.observedAt,
+      record.nativeFinalObservation?.collectorRetrievedAt,record.nativeFinalObservation?.providerRecordUpdatedAt,
+      record.communityScoreObservation?.collectorRetrievedAt,record.review?.recordedAt].every(observed))
       throw Error('FUTURE_OR_INVALID_OBSERVATION_TIME');
   }
 }
@@ -37,7 +40,8 @@ export function validateRetainedIdentityState(journal,now){
     const times=conflict?.observedCommenceTimes??[shot.commenceTime];
     const kickoff=Math.max(...times.map(canonicalTimestamp));
     if(now<=kickoff)throw Error('RESULT_BEFORE_KICKOFF');
-    const identities=[record,record.communitySourceVintage,record.terminalStatusReceipt,record.finalityAttestation];
+    const identities=[record,record.communitySourceVintage,record.terminalStatusReceipt,record.finalityAttestation,
+      record.nativeFinalObservation,record.communityScoreObservation];
     const receiptKickoffs=new Set();
     for(const identity of identities){
       if(identity==null)continue;
@@ -45,15 +49,19 @@ export function validateRetainedIdentityState(journal,now){
       for(const key of ['gameId','season','home','away','gameDate'])
         if(identity[key]!=null&&identity[key]!==shot[key])throw Error('CONFLICTING_RESULT_IDENTITY');
       if(identity.commenceTime!=null&&!times.includes(identity.commenceTime))throw Error('CONFLICTING_RESULT_IDENTITY');
+      if(identity.providerScheduledKickoff!=null&&!times.includes(identity.providerScheduledKickoff))throw Error('CONFLICTING_RESULT_IDENTITY');
       if(identity.commenceTime!=null)receiptKickoffs.add(identity.commenceTime);
       for(const key of ['homeScore','awayScore'])
         if(identity[key]!=null&&identity[key]!==record[key])throw Error('CONFLICTING_RESULT_IDENTITY');
     }
     if(receiptKickoffs.size>1)throw Error('CONFLICTING_RESULT_IDENTITY');
     for(const value of [record.verifiedAt,record.communitySourceVintage?.collectorObservedAt,
-      record.terminalStatusReceipt?.observedAt,record.finalityAttestation?.observedAt])
+      record.terminalStatusReceipt?.observedAt,record.finalityAttestation?.observedAt,
+      record.nativeFinalObservation?.collectorRetrievedAt,
+      record.communityScoreObservation?.collectorRetrievedAt,record.review?.recordedAt])
       if(value!=null&&canonicalTimestamp(value)<=kickoff)throw Error('RESULT_RECEIPT_BEFORE_KICKOFF');
   }
+  assertReviewedBdlJournalContext(journal,now);
   return {latest,schedules};
 }
 
