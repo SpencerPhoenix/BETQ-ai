@@ -6,6 +6,7 @@
 import { canonicalTeam, NFL_TEAMS } from './nfl-elo.mjs';
 import {scheduledInstant} from './schedule-review.mjs';
 const allowedStatus=new Set(['OUT','DOUBTFUL','QUESTIONABLE']);
+const practiceCodes=new Map([['DNP','DNP'],['DID NOT PARTICIPATE','DNP'],['LP','LP'],['LIMITED PARTICIPATION','LP'],['FP','FP'],['FULL PARTICIPATION','FP']]);
 const norm=s=>String(s??'').trim();
 const weekKey=(team,week)=>canonicalTeam(team)+':'+week;
 
@@ -36,7 +37,7 @@ export function parseGenericCsv(text) {
   return records.map(cols=>Object.fromEntries(headers.map((k,i)=>[k,cols[i]??''])));
 }
 
-export function compileInjuryReports(rows,{season,sourceUpdatedAt,now=Date.now()}={}){
+export function compileInjuryReports(rows,{season,sourceUpdatedAt,now=Date.now(),includeParticipation=false}={}){
   if(!Number.isInteger(season)||season<2020||season>2100||!Array.isArray(rows))
     throw Error('Invalid injury season');
   const teams=new Set(Object.values(NFL_TEAMS));
@@ -59,10 +60,10 @@ export function compileInjuryReports(rows,{season,sourceUpdatedAt,now=Date.now()
     if(conflicts.has(key))continue;
     const old=latest.get(key);
     if(old&&old.dateEpoch>at)continue;
-    // If timestamps are unavailable and a player has conflicting designations,
-    // do not infer which status was published last.
-    if(old&&old.dateModified===null&&!Number.isFinite(actualUpdate)&&
-       old.gameStatus!==(status||'NOT_REPORTED')){
+    // Equal observation times cannot order conflicting practice/designation rows.
+    // This includes source-time fallback when player timestamps are unavailable.
+    if(old&&old.dateEpoch===at&&
+       (old.gameStatus!==(status||'NOT_REPORTED')||old.practiceStatus!==(practice||null))){
       latest.delete(key);conflicts.add(key);continue;
     }
     latest.set(key,{
@@ -99,7 +100,11 @@ export function compileInjuryReports(rows,{season,sourceUpdatedAt,now=Date.now()
         questionable:selected.filter(x=>x.gameStatus==='QUESTIONABLE').length
       },
       flaggedPlayers:listPublic(selected),
-      reportedQBs:listPublic(qb)
+      reportedQBs:listPublic(qb),
+      ...(includeParticipation?{participationRecords:list.map(x=>({player:x.player,position:x.position,
+        practiceParticipation:practiceCodes.get(String(x.practiceStatus||'').toUpperCase())||'NOT_REPORTED',
+        gameDesignation:allowedStatus.has(x.gameStatus)?x.gameStatus:'NOT_REPORTED',
+        inactiveStatus:'NOT_VERIFIED',practiceType:'NOT_VERIFIED',dateModified:x.dateModified}))}:{})
     };
   }
   return {

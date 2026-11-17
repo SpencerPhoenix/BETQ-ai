@@ -22,6 +22,7 @@ import { nflMoneylineConsensus, selectUnambiguousProviderEvents } from './market
 import { emptyJournal, summarizeEvidence } from './evidence.mjs';
 import { createJournalEvidenceFeed,recomputeJournalEvidence,validateRetainedJournal } from './evidence-journal-feed.mjs';
 import { challengerResearchForEvent } from './nfl-efficiency.mjs';
+import {injuryMatchupCoverage} from './injury-matchup-coverage.mjs';
 import { injuryContextForGame } from './injuries.mjs';
 import {officialRosterContext} from './official-roster-context.mjs';
 import {officialInjuryReviews} from './official-injury-review.mjs';
@@ -361,8 +362,10 @@ export function createHandler({
           });
         }
         if (url.pathname === '/api/injuries/nfl') {
+          const injuryGameId=url.searchParams.get('gameId');
+          if(injuryGameId!==null)try{gameScope(injuryGameId);}catch{return reply(res,400,{error:{code:'INVALID_GAME_ID'}});}
           const [current,official]=await Promise.all([injuryFeed.get(),officialInjuryFeed.get()]);
-          return reply(res,200,{...current.status,officialReviews:officialInjuryReviews(official.artifact,current.artifact,{now:clock()}),officialRefresh:official.status,rosterContextReviews:officialRosterContext({now:clock()})});
+          return reply(res,200,{...current.status,matchupCoverage:injuryGameId?injuryMatchupCoverage(injuryGameId,current.artifact,{now:clock()}):null,officialReviews:officialInjuryReviews(official.artifact,current.artifact,{now:clock()}),officialRefresh:official.status,rosterContextReviews:officialRosterContext({now:clock()})});
         }
         if (url.pathname === '/api/shadow/status') {
           // Never returns bookmaker identities, prices, article URLs, or DB credentials.

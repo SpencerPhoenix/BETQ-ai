@@ -138,6 +138,10 @@ test('HTTP injury endpoint, health, config and cached NFL card use the same refr
   const get=async path=>(await fetch(base+path)).json();
   assert.equal((await get('/api/health')).nflIntelligence.injurySourceAvailable,false);assert.equal(reads,0);
   const injuries=await get('/api/injuries/nfl');assert.equal(injuries.available,true);assert.equal(injuries.reportCount,272);
+  const matchup=await get('/api/injuries/nfl?gameId=2026_11_IND_HOU');
+  assert.equal(matchup.matchupCoverage.coverage,'NO_TEAM_WEEK_RECORDS');
+  assert.equal(matchup.matchupCoverage.sourceAvailable,true);
+  assert.equal(matchup.matchupCoverage.probabilitiesAdjusted,false);
   assert.equal((await get('/api/config')).injuryReportAvailable,true);
   assert.equal((await get('/api/health')).nflIntelligence.injurySource.sourceUpdatedAt,NEW.sourceUpdatedAt);
   const slate=await get('/api/slate?sport=americanfootball_nfl&market=h2h');
