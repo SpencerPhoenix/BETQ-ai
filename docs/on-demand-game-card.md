@@ -24,3 +24,19 @@ Validation: `npm run check && npm test` on Node 26.13.1. Optional offline deskto
 mobile browser QA: `CHROMIUM_PATH=/path/to/chromium python tests/on-demand-browser.py`.
 All browser network requests in that test are intercepted fixtures. The current
 container blocks Chromium's local sockets, so that browser test has not passed here.
+
+## Automatic discovery
+
+The homepage and full card now discover nearby upcoming regular-season fixtures
+on opening. A bounded three-week calendar hint selects which official pages to
+inspect; it never creates a fixture. Displayed games must be official, explicitly
+pregame, future kickoffs in the next seven days. The nearest verified fixture is
+selected with game ID as a deterministic tie-break. Partial source failures and
+limited coverage are disclosed. Device-local full dates avoid UTC-midnight hiding
+an evening game. No supported fixture means no substituted pick.
+
+This is on-open generation, not a scheduler or durable archive. The displayed
+outright choice follows the unadjusted Elo probability and is not a value-bet
+recommendation. Current bookmaker odds remain unavailable. Main-page probabilities
+are removed at source expiry; full-card comparisons also expire. Manual matchup
+selection is retained and takes precedence over a late discovery response.

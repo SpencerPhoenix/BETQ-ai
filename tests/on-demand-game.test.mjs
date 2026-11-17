@@ -39,3 +39,16 @@ test('Cached schedule expiry and explicit official pregame state are preserved',
   assert.equal(evaluateOnDemandGame(gameId,{schedule:s,artifact,now}).reason,'OFFICIAL_GAME_NOT_CONFIRMED_PREGAME');
  }
 });
+import {discoveryWeeks,discoverUpcomingGames} from '../src/on-demand-game.mjs';
+test('Discovery checks bounded official weeks and sorts verified future fixtures, not local calendar date',async()=>{
+ const requested=[];const result=await discoverUpcomingGames({getWeek:async(season,week)=>{requested.push(week);const s=schedule();s.receipt.games=week===10?[{...fixture},{...fixture,gameId:'2026_10_KC_LV',home:'LV',away:'KC',kickoff:'2026-11-18T01:00:00.000Z'}]:[];return s;}},{clock:()=>now});
+ assert.deepEqual(requested,[9,10,11]);assert.equal(result.games[0].gameId,'2026_10_LAC_BAL');assert.equal(result.games.length,2);assert.equal(result.providerCreditsUsed,0);assert.equal(result.scheduledGeneration,false);
+ assert.equal(discoveryWeeks(Date.parse('2027-01-01T00:00:00Z')).season,2026);
+ assert.deepEqual(discoveryWeeks(Date.parse('2026-07-01T00:00:00Z')).weeks,[]);
+});
+test('Discovery rejects started, stale, nonpregame and outside-window games, reports partial failure',async()=>{
+ const feed={getWeek:async(_,week)=>{if(week===9)return {available:false};const s=schedule();s.receipt.games=[{...fixture,summaryPhase:'LIVE'},{...fixture,kickoff:new Date(now-1).toISOString()}];return s;}};
+ const r=await discoverUpcomingGames(feed,{clock:()=>now});assert.equal(r.available,false);assert.deepEqual(r.failedWeeks,[9]);
+ const s=schedule();s.receipt.observedAt=new Date(now-300000).toISOString();
+ assert.equal((await discoverUpcomingGames({getWeek:async()=>s},{clock:()=>now})).games.length,0);
+});

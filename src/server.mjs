@@ -1,5 +1,5 @@
 import {NFL_TEAMS} from './nfl-elo.mjs';
-import {createOfficialGameFeed,evaluateOnDemandGame,gameScope} from './on-demand-game.mjs';
+import {createOfficialGameFeed,evaluateOnDemandGame,gameScope,discoverUpcomingGames} from './on-demand-game.mjs';
 import http from 'node:http';
 import {createHash,timingSafeEqual} from 'node:crypto';
 import {describeModelDelivery} from './model-delivery.mjs';
@@ -92,6 +92,7 @@ const NFL_MARKET_CHALLENGE=loadResearchArtifact('market-challenge/summary.json',
 const roundModel = (n, digits = 2) => Number.isFinite(n) ? Number(n.toFixed(digits)) : null;
 const ASSETS = new Map([
   ['/game-card', ['game-card.html','text/html; charset=utf-8']],
+  ['/automatic-card.js', ['automatic-card.js','text/javascript; charset=utf-8']],
   ['/game-card.js', ['game-card.js','text/javascript; charset=utf-8']],
   ['/game-card.css', ['game-card.css','text/css; charset=utf-8']],
   ['/', ['index.html', 'text/html; charset=utf-8']],
@@ -305,6 +306,7 @@ export function createHandler({
           closingLineValueVerified: false,
           wageringEnabled: false, injuryDataConnected: false, halftimeModelConnected: false
         });
+        if (url.pathname === '/api/upcoming-games') return reply(res,200,await discoverUpcomingGames(officialGameFeed,{clock}));
         if (url.pathname === '/api/game-evaluation') {
           const gameId=url.searchParams.get('gameId');
           try{gameScope(gameId);}catch{return reply(res,400,{error:{code:'INVALID_GAME_ID'}});}
