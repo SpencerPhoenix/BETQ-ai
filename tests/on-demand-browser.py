@@ -31,7 +31,7 @@ def route(route):
   return route.fulfill(json={**r,'validUntil':now} if mode=='stale' else r)
  if u.path=='/api/injuries/nfl':
   if mode=='injury-delayed':injury_pending.append(route);return
-  return route.fulfill(json={'officialReviews':[],'rosterContextReviews':[], 'matchupCoverage':{'gameId':r['gameId'],'coverage':'ONE_TEAM_WEEK_RECORD','available':True,'sourceUpdatedAt':now,'validUntil':r['validUntil'],'caveat':'DNP is not OUT. Practice may be estimated.','teams':[{'team':'BAL','participationRecords':[{'player':'Synthetic Practice QB','practiceParticipation':'DNP','gameDesignation':'NOT_REPORTED','inactiveStatus':'NOT_VERIFIED','dateModified':None}]}],'officialSourceLinks':[]}})
+  return route.fulfill(json={'officialReviews':[],'rosterContextReviews':[], 'matchupCoverage':{'gameId':r['gameId'],'coverage':'ONE_TEAM_WEEK_RECORD','available':True,'sourceUpdatedAt':now,'validUntil':r['validUntil'],'caveat':'DNP is not OUT. Practice may be estimated.','teams':[{'team':'BAL','teamWeekRecordPresent':True,'practiceFieldsRetained':True,'participationRecords':[{'player':'Synthetic Practice QB','practiceParticipation':'DNP','gameDesignation':'NOT_REPORTED','inactiveStatus':'NOT_VERIFIED','dateModified':None}]}],'officialSourceLinks':[]}})
  f=ROOT/'public'/('game-card.html' if u.path=='/game-card' else u.path[1:]);types={'.html':'text/html','.js':'application/javascript','.css':'text/css'}
  if f.exists():return route.fulfill(body=f.read_bytes(),content_type=types[f.suffix])
  return route.fulfill(status=404,body='not found')
@@ -46,6 +46,11 @@ with sync_playwright() as p:
   expect(page.locator('#context')).to_contain_text('practice DNP; game designation NOT_REPORTED; inactives NOT_VERIFIED')
   expect(page.locator('#context')).to_contain_text('DNP is not OUT')
   expect(page.locator('#context')).to_contain_text('Synthetic Listed QB')
+  expect(page.locator('.pregame-comparison')).to_have_count(1)
+  expect(page.locator('.pregame-comparison caption')).to_contain_text('away vs home')
+  expect(page.locator('.pregame-comparison')).to_contain_text('No usable team-week report')
+  expect(page.locator('.pregame-comparison')).to_contain_text('Synthetic Practice QB')
+  assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
   expect(page.locator('#context')).to_contain_text('not confirmed starter')
   assert any('gameId=2026_10_LAC_BAL' in x.url for x in requests if '/api/injuries/nfl' in x.url)
   page.locator('#price').fill('-230');page.locator('#compare').click();expect(page.locator('#comparison')).to_contain_text('69.7%')
