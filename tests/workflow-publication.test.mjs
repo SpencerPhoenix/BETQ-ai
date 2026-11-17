@@ -241,6 +241,9 @@ test('Browser release CI preserves reviewed integrity job and uses isolated offl
 
 test('Model-only schedule publishes only a reserved ledger, with isolated credential scope',async()=>{
  const text=await read('model-only-scheduled');
+ assert.doesNotMatch(text.split('    steps:')[0],/runner\./);
+ assert.match(text,/LEDGER_PATH=\$RUNNER_TEMP\/betq-model-only\/ledger.json/);
+ assert.match(text,/>> \"\$GITHUB_ENV\"/);
  assert.match(text,/contents: write/);assert.doesNotMatch(text,/actions: write|permissions: write-all|secrets\.|ODDS_API_KEY|BETQ_OPERATOR_REFRESH_TOKEN|DATABASE_URL/);
  assert.match(text,/group: betq-model-only-scheduled-publication\n  cancel-in-progress: false/);
  assert.match(text,/persist-credentials: false/);

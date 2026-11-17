@@ -17,9 +17,9 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 12
-    env:
-      LEDGER_PATH: ${{ runner.temp }}/betq-model-only/ledger.json
     steps:
+      - name: Initialize runner-local ledger path
+        run: echo "LEDGER_PATH=$RUNNER_TEMP/betq-model-only/ledger.json" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
         with:
           ref: main
