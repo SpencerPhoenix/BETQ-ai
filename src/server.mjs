@@ -7,7 +7,7 @@ import {describeModelDelivery} from './model-delivery.mjs';
 import {describeMarketCaptureContract,MARKET_CAPTURE_CONTRACT,MARKET_CAPTURE_CONTRACT_ID} from './evidence-compat.mjs';
 import {performance} from 'node:perf_hooks';
 import {collectionHealthFromJournal} from './collection-health.mjs';
-import {gradeRetainedGames} from './game-grading.mjs';
+import {gradeGamesWithOfficialFinals} from './official-game-grades.mjs';
 import {listGameDossiers,buildGameDossier,listRetainedForecasts} from './game-dossier.mjs';
 import {getBundledHistoricalEvaluation,HISTORICAL_BUNDLE_DIR} from './historical-bundle.mjs';
 import { readFile } from 'node:fs/promises';
@@ -403,7 +403,7 @@ export function createHandler({
           if([...url.searchParams].length)return reply(res,400,{error:{code:'INVALID_SELECTOR',message:'Retained grades accept no query parameters.'}});
           // Await the same coalesced, validated public journal refresh as other research views.
           const retained=await currentEvidenceSnapshot();
-          const result=gradeRetainedGames(retained.journal,{now:clock()});
+          const result=await gradeGamesWithOfficialFinals(retained.journal,officialGameFeed,{clock});
           return reply(res,result.available?200:503,result);
         }
         if (['/api/research/games','/api/research/game','/api/research/forecasts'].includes(url.pathname)) {

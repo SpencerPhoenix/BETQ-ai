@@ -87,7 +87,8 @@ with sync_playwright() as p:
     count=fixtures['grades']['coverage']['trackedGames']
     expect(grades.locator('tbody tr')).to_have_count(count)
     expect(grades).to_contain_text('0 graded / '+str(count)+' tracked games')
-    expect(grades).to_contain_text('18 recorded results')
+    expect(grades).to_contain_text('18 final scores available')
+    expect(grades).to_contain_text('Original pick:')
     conflict=grades.locator('tbody tr').filter(has_text='2026_09_LV_SF')
     expect(conflict).to_contain_text('Schedule conflict: quarantined')
     expect(conflict).to_contain_text('Withheld')

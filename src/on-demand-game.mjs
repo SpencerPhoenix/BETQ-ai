@@ -17,7 +17,8 @@ export function createOfficialGameFeed({fetchImpl=globalThis.fetch,clock=Date.no
   if(Math.abs(season-new Date(now).getUTCFullYear())>1)return {available:false,reason:'SEASON_OUTSIDE_CURRENT_SCOPE'};
   const key=season+':'+week;let entry=cache.get(key);
   if(entry&&now<entry.until)return entry.promise;
-  if(cache.size>=8)cache.delete(cache.keys().next().value);
+  // Keep both allowed seasons so grading old weeks cannot evict the current slate.
+  if(cache.size>=40)cache.delete(cache.keys().next().value);
   const promise=(async()=>{
    if(typeof fetchImpl!=='function')return {available:false,reason:'OFFICIAL_SCHEDULE_UNAVAILABLE'};
    try{

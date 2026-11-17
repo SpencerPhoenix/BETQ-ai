@@ -82,3 +82,10 @@ test('Absent summary is explicit and distinct from malformed summary for discove
  for(const summary of [{},[],false,42,'PREGAME']){const g=game();g.summary=summary;const r=parseOfficialWeeklyPage(html([g]),context);assert.equal(r.games[0].summaryState,'MALFORMED');assert.equal(r.games[0].final,false);}
  assert.equal(receipt().games[0].summaryState,'PRESENT');
 });
+
+test('Observed FINAL_OVERTIME is terminal only with END_OF_GAME and matched scores',()=>{
+ const g=game();g.summary.phase='FINAL_OVERTIME';const r=parseOfficialWeeklyPage(html([g]),context);
+ assert.equal(r.games[0].final,true);assert.equal(r.games[0].summaryQuarter,'END_OF_GAME');assert.equal(r.games[0].homeScore,21);
+ for(const phase of ['OVERTIME','FINAL_UNKNOWN']){g.summary.phase=phase;assert.throws(()=>parseOfficialWeeklyPage(html([g]),context));}
+ g.summary.phase='FINAL_OVERTIME';g.summary.quarter='OVERTIME';assert.throws(()=>parseOfficialWeeklyPage(html([g]),context));
+});
