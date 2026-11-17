@@ -673,3 +673,5 @@ summary:focus-visible { outline: 3px solid #bee878; outline-offset: 3px; }
 #automatic-game-card summary { cursor: pointer; padding: 12px 0; }
 .hero h2 { font-size: clamp(2rem, 4vw, 3.5rem); line-height: 1.1; }
 @media(max-width: 500px) { #automatic-game-card { padding: 16px; } .section-heading { flex-wrap: wrap; gap: 14px; } }
+
+.page { scroll-margin-top: 88px; }
