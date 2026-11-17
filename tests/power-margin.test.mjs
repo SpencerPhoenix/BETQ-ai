@@ -118,3 +118,55 @@ test('Margin research uses prior-year fit, never stakes, and scores outcome as c
   assert.equal(report.verifiedCLV,null);
   assert.ok(report.pooled.paired95.lower95<=report.pooled.paired95.upper95);
 });
+
+test('Margin ingestion rejects contradictory source duplicates in either order',()=>{
+  const {source,replays}=fakeMargin();
+  for(const changed of [
+    {...source[0],home_score:String(Number(source[0].home_score)+1)},
+    {...source[0],spread_line:'not-a-number'},
+    {...source[0],season:'2021'}
+  ])for(const rows of [[...source,changed],[changed,...source]])
+    assert.throws(()=>buildMarginRows(rows,replays),/Conflicting margin source rows|Margin source season mismatch/);
+  assert.deepEqual(buildMarginRows([...source,{...source[0]}],replays),buildMarginRows(source,replays));
+});
+test('Margin replay rejects duplicated seasons, games, and cross-season joins',()=>{
+  const {source,replays}=fakeMargin();
+  assert.throws(()=>buildMarginRows(source,[...replays,replays[0]]),/duplicate margin replay season/);
+  const duplicate=structuredClone(replays);
+  duplicate[0].decisions.push({...duplicate[0].decisions[0]});
+  assert.throws(()=>buildMarginRows(source,duplicate),/Duplicate margin replay game/);
+  const wrongYear=structuredClone(replays);
+  wrongYear[1].decisions.push({...wrongYear[0].decisions[0]});
+  assert.throws(()=>buildMarginRows(source,wrongYear),/Margin replay season mismatch/);
+});
+test('Margin evaluation rejects direct frame tampering before claiming a prior-year fit',()=>{
+  const {source,replays}=fakeMargin(),clean=buildMarginRows(source,replays);
+  for(const mutation of [
+    frames=>{frames.get(2022)[0].year=2021;},
+    frames=>{frames.get(2022)[0].gameId='2021_other';},
+    frames=>{frames.get(2022).push({...frames.get(2022)[0]});},
+    frames=>{frames.get(2022)[0].date='2022-02-30';},
+    frames=>{frames.get(2022)[0].date='2024-01-01';},
+    frames=>{frames.get(2022)[0].feature=NaN;},
+    frames=>{frames.get(2022)[0].week=0;},
+    frames=>{frames.get(2021)[0].date='2022-12-01';}
+  ]){
+    const frames=structuredClone(clean);mutation(frames);
+    assert.throws(()=>evaluateMarginResearch(frames),/Margin|margin/);
+  }
+});
+test('Margin chronology allows next-calendar-year playoffs but not training/test overlap',()=>{
+  const {source,replays}=fakeMargin();
+  replays[1].decisions[0].date='2022-01-10';
+  const rows=buildMarginRows(source,replays);
+  assert.equal(evaluateMarginResearch(rows).automaticPromotion,false);
+  rows.get(2022)[0].date='2022-01-10';
+  assert.throws(()=>evaluateMarginResearch(rows),/chronology overlap/);
+});
+
+test('Malformed replay dates fail with an intentional audit error before sorting',()=>{
+  for(const date of [null,42,'2021-02-30','']){
+    const {source,replays}=fakeMargin();replays[0].decisions[0].date=date;
+    assert.throws(()=>buildMarginRows(source,replays),/Invalid margin game date/);
+  }
+});
