@@ -10,6 +10,16 @@
    const d=await fetch('/api/upcoming-games',{cache:'no-store'}).then(x=>{if(!x.ok)throw Error();return x.json();});
    if(token!==sequence)return;
    if(!d.available||!d.games?.length){root.replaceChildren();p('No verified upcoming regular-season matchup is available right now. No game or pick was substituted.');link();return;}
+   const upcoming=d.games[0];
+   if(upcoming.forecastReady===false){
+    if(!Number.isFinite(Date.parse(upcoming.validUntil))||Date.now()>=Date.parse(upcoming.validUntil))throw Error();
+    current=upcoming;root.replaceChildren();
+    const h=document.createElement('h2');h.textContent='Next scheduled NFL matchup · '+upcoming.away+' at '+upcoming.home;root.append(h);
+    p('Kickoff '+new Date(upcoming.kickoff).toLocaleString()+' · '+(upcoming.neutralSite?'Neutral venue':'Home venue')+'. Times use your device timezone.');
+    p('Scheduled; game-center pregame status not yet available. No forecast or betting play has been generated.');
+    p('Official schedule observed '+new Date(upcoming.observedAt).toLocaleString()+'.');
+    link();return;
+   }
    const r=await fetch('/api/game-evaluation?gameId='+encodeURIComponent(d.games[0].gameId),{cache:'no-store'}).then(x=>{if(!x.ok)throw Error();return x.json();});
    if(token!==sequence)return;
    if(!r.available||!Number.isFinite(Date.parse(r.validUntil))||Date.now()>=Date.parse(r.validUntil))throw Error();

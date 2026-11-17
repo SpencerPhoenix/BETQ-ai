@@ -52,3 +52,18 @@ test('Discovery rejects started, stale, nonpregame and outside-window games, rep
  const s=schedule();s.receipt.observedAt=new Date(now-300000).toISOString();
  assert.equal((await discoverUpcomingGames({getWeek:async()=>s},{clock:()=>now})).games.length,0);
 });
+
+test('Discovery lists explicit absent-summary scheduled fixtures but never enables forecasts',async()=>{
+ const s=schedule();s.receipt.games=[{...fixture,summaryPhase:null,summaryState:'ABSENT',neutralSite:true}];
+ const r=await discoverUpcomingGames({getWeek:async()=>s},{clock:()=>now});
+ assert.equal(r.games.length,1);assert.equal(r.games[0].forecastReady,false);assert.equal(r.games[0].neutralSite,true);
+ assert.equal(r.games[0].readiness,'SCHEDULED_AWAITING_PREGAME_SUMMARY');
+ assert.equal(evaluateOnDemandGame(gameId,{schedule:s,artifact,now}).available,false);
+ for(const change of [{summaryState:'MALFORMED'},{summaryState:undefined},{summaryPhase:'LIVE'},{summaryPhase:'FINAL'},{scheduleStatus:'CANCELLED'},{scheduleStatus:'POSTPONED'},{kickoff:new Date(now).toISOString()},{kickoff:'bad'},{kickoff:new Date(now+8*86400000).toISOString()}]){
+  s.receipt.games=[{...fixture,summaryPhase:null,summaryState:'ABSENT',...change}];
+  assert.equal((await discoverUpcomingGames({getWeek:async()=>s},{clock:()=>now})).games.length,0,JSON.stringify(change));
+ }
+ s.receipt.games=[{...fixture,summaryPhase:'PREGAME',summaryState:'PRESENT',neutralSite:true}];
+ assert.equal((await discoverUpcomingGames({getWeek:async()=>s},{clock:()=>now})).games[0].forecastReady,true);
+ assert.equal(evaluateOnDemandGame(gameId,{schedule:s,artifact,now}).available,true);
+});
