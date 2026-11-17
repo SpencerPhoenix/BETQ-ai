@@ -32,7 +32,7 @@ export function createOfficialGameFeed({fetchImpl=globalThis.fetch,clock=Date.no
   entry={promise,until:now+300000};cache.set(key,entry);return promise;
  }};
 }
-export function evaluateOnDemandGame(gameId,{schedule,artifact,challengerArtifact,now=Date.now()}={}){
+export function evaluateOnDemandGame(gameId,{schedule,artifact,challengerArtifact,now=Date.now(),allowScheduledPreview=false}={}){
  gameScope(gameId);
  const base={schema:1,gameId,evaluatedAt:new Date(now).toISOString(),use:'RESEARCH_ONLY',
   market:{available:false,reason:'NO_QUOTE_REQUESTED',providerCreditsUsed:0},
@@ -46,16 +46,17 @@ export function evaluateOnDemandGame(gameId,{schedule,artifact,challengerArtifac
  const g=matches[0];
  const fixture={providerGameId:g.providerGameId,home:names[g.home],away:names[g.away],kickoff:g.kickoff,neutralSite:g.neutralSite,
   sourceUrl:r.sourceUrl,observedAt:r.observedAt,sourcePublishedAt:null,sourceBodySha256:r.sourceBodySha256};
- if(g.final||Date.parse(g.kickoff)<=now)return {...base,fixture,available:false,reason:'GAME_STARTED_OR_COMPLETED'};
- if(g.scheduleStatus!=='SCHEDULED'||g.summaryPhase!=='PREGAME')return {...base,fixture,available:false,reason:'OFFICIAL_GAME_NOT_CONFIRMED_PREGAME'};
+ if(!Number.isFinite(Date.parse(g.kickoff))||g.final||Date.parse(g.kickoff)<=now)return {...base,fixture,available:false,reason:'GAME_STARTED_OR_COMPLETED'};
+ const preview=allowScheduledPreview===true&&g.scheduleStatus==='SCHEDULED'&&g.summaryPhase===null&&g.summaryState==='ABSENT'&&Date.parse(g.kickoff)<=now+7*86400000;
+ if(g.scheduleStatus!=='SCHEDULED'||(g.summaryPhase!=='PREGAME'&&!preview))return {...base,fixture,available:false,reason:'OFFICIAL_GAME_NOT_CONFIRMED_PREGAME'};
  const validUntil=new Date(Math.min(observed+300000,Date.parse(g.kickoff))).toISOString();
  const identity=describeModelDelivery(artifact,now);
  if(!identity.available)return {...base,fixture,available:false,reason:identity.reason};
  const event={home_team:fixture.home,away_team:fixture.away,commence_time:g.kickoff,neutralSite:g.neutralSite};
  const baseline=predictNflEvent(event,artifact,now);
  const challenger=baseline.available?challengerResearchForEvent(event,baseline.homeWinProbability,challengerArtifact,now):{available:false,reason:'BASELINE_UNAVAILABLE'};
- return {...base,validUntil,available:baseline.available,reason:baseline.reason||null,fixture,baseline,challenger,modelIdentity:identity,
-  limitations:['Outcome-only baseline: no quarterback, injury or weather adjustment.','No current odds or spread/total probabilities.','Newly evaluated response, not an archived forecast or proven betting edge.']};
+ return {...base,...(preview?{use:'SCHEDULED_MODEL_PREVIEW',preview:true,pregameConfirmed:false,captureEligible:false}:{}),validUntil,available:baseline.available,reason:baseline.reason||null,fixture,baseline,challenger,modelIdentity:identity,
+  limitations:[...(preview?['Scheduled-fixture preview only: game-center pregame status is absent. Not eligible for the frozen pregame ledger.']:[]),'Outcome-only baseline: no quarterback, injury or weather adjustment.','No current odds or spread/total probabilities.','Newly evaluated response, not an archived forecast or proven betting edge.']};
 }
 
 /** Week arithmetic is a search hint only; all displayed fixtures come from official receipts. */

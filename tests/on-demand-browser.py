@@ -24,6 +24,8 @@ def route(route):
  if u.path=='/automatic-test':return route.fulfill(body='<html><head><meta name=viewport content="width=device-width,initial-scale=1"><link rel=stylesheet href=/styles.css></head><body><section id=automatic-game-card class=panel></section><script src=/automatic-card.js></script></body></html>',content_type='text/html')
  if u.path.startswith('/api/game-evaluation'):
   if mode=='refreshed':return route.fulfill(json={**r,'validUntil':'2026-11-16T20:10:00.000Z'})
+  if mode.startswith('scheduled'):
+   return route.fulfill(json={**r,'use':'SCHEDULED_MODEL_PREVIEW','preview':True,'pregameConfirmed':False,'captureEligible':False,'validUntil':('2026-11-16T20:00:02.000Z' if mode=='scheduled-kickoff' else r['validUntil']),'fixture':{**r['fixture'],'neutralSite':True}})
   if mode=='started':return route.fulfill(json={'available':False,'reason':'GAME_STARTED_OR_COMPLETED'})
   return route.fulfill(json={**r,'validUntil':now} if mode=='stale' else r)
  if u.path=='/api/injuries/nfl':
@@ -56,15 +58,15 @@ with sync_playwright() as p:
  mode='scheduled'
  for width in [375,1440]:
   c=b.new_context(viewport={'width':width,'height':1000});c.route('**/*',route);page=c.new_page();page.clock.install(time=datetime(2026,11,16,20,0,tzinfo=timezone.utc))
-  before=len(requests);page.goto('http://betq.test/game-card');expect(page.locator('#status')).to_contain_text('game-center pregame status not yet available');expect(page.locator('#status')).to_contain_text('Neutral venue');expect(page.locator('#result')).to_be_hidden();expect(page.locator('#quote')).to_be_hidden()
-  assert not any('/api/game-evaluation' in x.url for x in requests[before:])
-  page.clock.fast_forward(301000);expect(page.locator('#status')).to_contain_text('snapshot expired');expect(page.locator('#receipt')).to_be_empty();expect(page.locator('#upcoming')).to_contain_text('Schedule expired')
+  before=len(requests);page.goto('http://betq.test/game-card');expect(page.locator('#result')).to_contain_text('SCHEDULED MODEL PREVIEW');expect(page.locator('#result')).to_contain_text('Neutral venue');expect(page.locator('#result')).to_contain_text('PRELIMINARY OUTRIGHT LEAN');expect(page.locator('#quote')).to_be_hidden()
+  assert any('preview=scheduled' in x.url for x in requests[before:])
+  page.clock.fast_forward(301000);expect(page.locator('#status')).to_contain_text('expired');expect(page.locator('#result')).to_be_hidden();expect(page.locator('#upcoming')).to_contain_text('Schedule expired')
   mode='refreshed';page.locator('#upcoming').dispatch_event('change');expect(page.locator('#result')).to_contain_text('Elo baseline');expect(page.locator('#status')).not_to_contain_text('not yet available')
   mode='scheduled';page.close();page=c.new_page();page.clock.install(time=datetime(2026,11,16,20,0,tzinfo=timezone.utc))
-  page.goto('http://betq.test/automatic-test');expect(page.locator('#automatic-game-card')).to_contain_text('Next scheduled NFL matchup');expect(page.locator('#automatic-game-card')).to_contain_text('Neutral venue');expect(page.locator('#automatic-game-card')).not_to_contain_text('MODEL OUTRIGHT PICK')
+  page.goto('http://betq.test/automatic-test');expect(page.locator('#automatic-game-card')).to_contain_text('SCHEDULED MODEL PREVIEW');expect(page.locator('#automatic-game-card')).to_contain_text('PRELIMINARY OUTRIGHT LEAN');expect(page.locator('#automatic-game-card')).not_to_contain_text('MODEL OUTRIGHT PICK')
   page.clock.fast_forward(301000);expect(page.locator('#automatic-game-card')).to_contain_text('expired');c.close()
  # Kickoff invalidates a scheduled-only snapshot even if its validUntil is later.
- mode='scheduled-kickoff';c=b.new_context();c.route('**/*',route);page=c.new_page();page.clock.install(time=datetime(2026,11,16,20,0,tzinfo=timezone.utc));page.goto('http://betq.test/game-card');expect(page.locator('#status')).to_contain_text('not yet available');page.clock.fast_forward(3000);expect(page.locator('#status')).to_contain_text('snapshot expired')
+ mode='scheduled-kickoff';c=b.new_context();c.route('**/*',route);page=c.new_page();page.clock.install(time=datetime(2026,11,16,20,0,tzinfo=timezone.utc));page.goto('http://betq.test/game-card');expect(page.locator('#result')).to_contain_text('not yet available');page.clock.fast_forward(3000);expect(page.locator('#status')).to_contain_text('expired')
  mode='started';page.locator('#upcoming').dispatch_event('change');expect(page.locator('#status')).to_contain_text('GAME_STARTED_OR_COMPLETED');expect(page.locator('#result')).to_be_hidden();c.close()
  # Malformed expiry must bypass cached scheduled-only status and request current evaluation.
  mode='scheduled-invalid';c=b.new_context();c.route('**/*',route);page=c.new_page();page.clock.install(time=datetime(2026,11,16,20,0,tzinfo=timezone.utc));page.goto('http://betq.test/game-card');expect(page.locator('#result')).to_contain_text('Elo baseline');c.close()
