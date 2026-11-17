@@ -178,6 +178,22 @@
         "scopeLimited": false
       },
       "id": "8dd23aba747e34cd8751511b7cf6a54380019fd669d17a1cefc6a06674e287d6"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-17T11:46:44.867Z",
+      "payload": {
+        "runKey": "44076993040.1",
+        "failedWeeks": [
+          9
+        ],
+        "productionCompatible": false,
+        "finalSourceAvailable": null,
+        "resultConflicts": [],
+        "scopeLimited": false
+      },
+      "id": "5b42abe9d5f45b7b050f443edfa1711d20e3b2ea148dd6de6ae9ae100ffc661a"
     }
   ]
 }
