@@ -1,0 +1,28 @@
+import {createHash} from 'node:crypto';
+import test from 'node:test';import assert from 'node:assert/strict';import {classifyNews} from '../research/news-asof.mjs';
+const bytes=Buffer.from('fabricated validation fixture, not actual news');
+const game={id:'fixture',home:'BUF',away:'BAL',kickoffAt:'2025-09-08T00:20:00.000Z'},cut='2025-09-07T23:20:00.000Z';
+const base={gameId:'fixture',home:'BUF',away:'BAL',team:'BUF',kickoffAt:game.kickoffAt,reviewStatus:'VERIFIED_SOURCE_FACT',factType:'QB_OUT',playerId:'fixture-player',reviewerId:'fixture-reviewer',versionEvidenceRef:'fixture-only',bodySha256:createHash('sha256').update(bytes).digest('hex'),sourceUrl:'https://example.com/fixture',sourceApproved:true,publishedAt:'2025-09-07T12:00:00.000Z',firstObservedAt:'2025-09-07T12:01:00.000Z',reviewedAt:'2025-09-07T12:02:00.000Z',versionAvailableAt:'2025-09-07T12:00:00.000Z',versionEvidenceVerified:true};
+const check=(patch,mode)=>classifyNews({...base,...patch},game,cut,mode,bytes);
+test('synthetic eligible reviewed record never changes probability',()=>{assert.equal(check({}).eligible,true);assert.equal(check({}).probabilitiesAdjusted,false)});
+test('newly discovered old news never becomes historical system capture',()=>{let r={firstObservedAt:'2026-11-17T21:00:00.000Z',reviewedAt:'2026-11-17T21:01:00.000Z'};assert.equal(check(r).eligible,false);assert.equal(check(r,'historical-reconstruction').requiresProspectiveCustodyVerification,false)});
+test('old publication with unproven content version rejected',()=>assert.equal(check({versionEvidenceVerified:false},'historical-reconstruction').eligible,false));
+test('post cutoff revision rejected',()=>assert.equal(check({versionAvailableAt:'2025-09-08T01:00:00.000Z'}).eligible,false));
+test('future publication rejected',()=>assert.equal(check({publishedAt:'2026-01-01T00:00:00.000Z'}).eligible,false));
+test('wrong teams rejected',()=>assert.equal(check({away:'NYG'}).eligible,false));
+test('ambiguous date rejected',()=>assert.equal(check({publishedAt:'2025-09-07'}).eligible,false));
+test('unapproved extracted rumor rejected',()=>assert.equal(check({reviewStatus:'MODEL_EXTRACTED'}).eligible,false));
+test('rolled calendar rejected',()=>assert.equal(check({publishedAt:'2025-02-30T00:00:00.000Z'}).eligible,false));
+
+test('hash binds exact supplied source bytes',()=>assert.equal(check({bodySha256:'a'.repeat(64)}).reason,'SOURCE_BYTES_MISMATCH'));
+test('missing bytes fail closed',()=>assert.equal(classifyNews(base,game,cut).eligible,false));
+test('untrusted attestations are never source authentication',()=>assert.equal(check({}).sourceAuthenticityVerified,false));
+test('missing reviewer or player identity rejected',()=>{assert.equal(check({reviewerId:null}).eligible,false);assert.equal(check({playerId:''}).eligible,false)});
+test('source credential URLs rejected',()=>assert.equal(check({sourceUrl:'https://secret@example.com/path'}).eligible,false));
+test('date-only kickoff and future observation invalid',()=>{assert.equal(classifyNews(base,{...game,kickoffAt:'2025-09-08'},cut,'prospective',bytes).eligible,false);assert.equal(check({firstObservedAt:'2025-09-09T00:00:00.000Z'}).eligible,false)});
+test('postcutoff review stays retrospective-only',()=>{assert.equal(check({reviewedAt:'2025-09-08T01:00:00.000Z'}).eligible,false);assert.equal(check({reviewedAt:'2025-09-08T01:00:00.000Z'},'historical-reconstruction').eligible,true)});
+test('output does not expose supplied text or source metadata',()=>{const o=JSON.stringify(check({rawText:'private source text'}));assert.equal(o.includes('private source text'),false);assert.equal(o.includes(base.sourceUrl),false)});
+test('cutoff equality is explicit and a one-ms delay is excluded',()=>{assert.equal(check({firstObservedAt:cut,reviewedAt:cut}).eligible,true);assert.equal(check({firstObservedAt:'2025-09-07T23:20:00.001Z',reviewedAt:'2025-09-07T23:20:00.001Z'}).eligible,false)});
+test('source byte bound rejects before expensive hashing',()=>assert.equal(classifyNews(base,game,cut,'prospective',Buffer.alloc(2*1024*1024+1)).reason,'SOURCE_BYTES_MISMATCH'));
+test('unsupported mode and cutoff at kickoff fail',()=>{assert.equal(check({},'guess').reason,'INVALID_MODE');assert.equal(classifyNews(base,game,game.kickoffAt,'prospective',bytes).reason,'INVALID_CUTOFF')});
+test('consistent later observation cannot rescue late content version',()=>assert.equal(check({firstObservedAt:'2026-11-17T21:00:00.000Z',reviewedAt:'2026-11-17T21:01:00.000Z',versionAvailableAt:'2025-09-08T01:00:00.000Z'},'historical-reconstruction').reason,'CONTENT_VERSION_NOT_PROVEN_AT_CUTOFF'));
