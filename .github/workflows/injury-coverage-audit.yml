@@ -1,0 +1,45 @@
+name: NFL injury coverage audit (read-only)
+on:
+  schedule:
+    - cron: '40 12 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'src/injury-coverage-audit.mjs'
+      - 'src/injury-feed.mjs'
+      - 'src/injuries.mjs'
+      - 'src/integrity.mjs'
+      - 'src/nfl-elo.mjs'
+      - 'src/schedule-review.mjs'
+      - 'data/nfl_injuries.json'
+      - 'scripts/audit-injury-coverage.mjs'
+      - 'tests/injury-coverage-audit.test.mjs'
+      - '.github/workflows/injury-coverage-audit.yml'
+permissions:
+  contents: read
+concurrency:
+  group: injury-coverage-audit-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+          check-latest: true
+      - name: Syntax and isolated regression tests
+        run: |
+          node --check src/injury-coverage-audit.mjs
+          node --check scripts/audit-injury-coverage.mjs
+          node --test tests/injury-coverage-audit.test.mjs
+      - name: Audit retained source freshness and team-week coverage (no provider requests)
+        run: node scripts/audit-injury-coverage.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: injury-coverage-${{ github.run_id }}
+          path: audit-output/injury-coverage.json
+          retention-days: 14
