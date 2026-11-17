@@ -7,22 +7,174 @@
     "description": "NFL schedule release maintained by Lee Sharpe, published by nflverse",
     "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
     "license": "CC BY 4.0",
-    "extractedUTC": "2026-11-16T21:00:43.259Z"
+    "extractedUTC": "2026-11-17T19:50:34.830Z"
   },
-  "generatedAt": "2026-11-16T21:00:43.259Z",
-  "completedGamesSha256": "a9b32c3628d4b19c03e6a3b4c276ac4f9e39a0118cd3a76b8241b55000b532c9",
-  "lastGameDate": "2026-11-15",
+  "generatedAt": "2026-11-17T19:50:34.830Z",
+  "completedGamesSha256": "9f6a643a0df5b31ab840801d0a451904527d147bc766793741375d2790acb412",
+  "trainingInputSafety": {
+    "policy": "NFL_SCHEDULE_DELAYED_RESULTS_V1",
+    "asOf": "2026-11-17T19:50:34.665Z",
+    "minimumHoursAfterUtcGameDay": 12,
+    "acceptedGames": 7426,
+    "rejected": {
+      "recentOrFuture": 122,
+      "explicitNonfinal": 0,
+      "venueUnknown": 0,
+      "conflictingDuplicate": 0,
+      "invalid": 0
+    },
+    "independentlyVerifiedFinality": false,
+    "completeScheduleCoverageVerified": false,
+    "latestSeason": 2026,
+    "teams": {
+      "SEA": {
+        "games": 10,
+        "lastGameDate": "2026-11-15"
+      },
+      "NE": {
+        "games": 10,
+        "lastGameDate": "2026-11-15"
+      },
+      "LA": {
+        "games": 10,
+        "lastGameDate": "2026-11-15"
+      },
+      "SF": {
+        "games": 9,
+        "lastGameDate": "2026-11-15"
+      },
+      "LAC": {
+        "games": 9,
+        "lastGameDate": "2026-11-16"
+      },
+      "ARI": {
+        "games": 10,
+        "lastGameDate": "2026-11-15"
+      },
+      "PIT": {
+        "games": 9,
+        "lastGameDate": "2026-11-15"
+      },
+      "ATL": {
+        "games": 10,
+        "lastGameDate": "2026-11-15"
+      },
+      "IND": {
+        "games": 10,
+        "lastGameDate": "2026-11-15"
+      },
+      "BAL": {
+        "games": 10,
+        "lastGameDate": "2026-11-16"
+      },
+      "HOU": {
+        "games": 9,
+        "lastGameDate": "2026-11-15"
+      },
+      "BUF": {
+        "games": 9,
+        "lastGameDate": "2026-11-15"
+      },
+      "CAR": {
+        "games": 9,
+        "lastGameDate": "2026-11-15"
+      },
+      "CHI": {
+        "games": 9,
+        "lastGameDate": "2026-11-08"
+      },
+      "JAX": {
+        "games": 9,
+        "lastGameDate": "2026-11-15"
+      },
+      "CLE": {
+        "games": 10,
+        "lastGameDate": "2026-11-15"
+      },
+      "NYG": {
+        "games": 9,
+        "lastGameDate": "2026-11-12"
+      },
+      "DAL": {
+        "games": 10,
+        "lastGameDate": "2026-11-15"
+      },
+      "MIN": {
+        "games": 9,
+        "lastGameDate": "2026-11-15"
+      },
+      "GB": {
+        "games": 10,
+        "lastGameDate": "2026-11-15"
+      },
+      "LV": {
+        "games": 10,
+        "lastGameDate": "2026-11-15"
+      },
+      "MIA": {
+        "games": 9,
+        "lastGameDate": "2026-11-15"
+      },
+      "DET": {
+        "games": 9,
+        "lastGameDate": "2026-11-15"
+      },
+      "NO": {
+        "games": 9,
+        "lastGameDate": "2026-11-15"
+      },
+      "TEN": {
+        "games": 9,
+        "lastGameDate": "2026-11-15"
+      },
+      "NYJ": {
+        "games": 10,
+        "lastGameDate": "2026-11-15"
+      },
+      "CIN": {
+        "games": 9,
+        "lastGameDate": "2026-11-15"
+      },
+      "TB": {
+        "games": 9,
+        "lastGameDate": "2026-11-08"
+      },
+      "PHI": {
+        "games": 9,
+        "lastGameDate": "2026-11-08"
+      },
+      "WAS": {
+        "games": 9,
+        "lastGameDate": "2026-11-12"
+      },
+      "KC": {
+        "games": 9,
+        "lastGameDate": "2026-11-15"
+      },
+      "DEN": {
+        "games": 9,
+        "lastGameDate": "2026-11-08"
+      }
+    },
+    "limitations": [
+      "Score presence plus an age embargo is not independent proof of a final result.",
+      "Per-team counts describe accepted source rows, not reconciliation against every scheduled game.",
+      "Unknown venues, explicit nonfinal states and conflicting duplicate IDs are excluded."
+    ]
+  },
+  "finalityCoverage": null,
+  "lastGameDate": "2026-11-16",
   "seasons": [
     1999,
     2026
   ],
-  "completedGames": 7425,
-  "completed2026": 149,
+  "completedGames": 7426,
+  "completed2026": 150,
   "trainingProtocol": {
     "parameterTuning": "2018–2022 games (prior games only)",
     "calibration": "2023–2024 games (after hyperparameter selection)",
     "untouchedTest": "2025 games (not used for hyperparameters or calibration)",
-    "liveRatings": "Includes only completed games through lastGameDate",
+    "liveRatings": "Delayed scored schedule rows through lastGameDate; see trainingInputSafety for unverified finality",
     "leakageControl": "Chronological pregame ratings, season-to-season mean regression"
   },
   "params": {
@@ -69,7 +221,7 @@
   "ratings": {
     "ARI": 1392.176665074981,
     "ATL": 1430.2202815678281,
-    "BAL": 1479.461303133834,
+    "BAL": 1453.7326977859977,
     "BUF": 1673.27637996629,
     "CAR": 1457.5435771502575,
     "CHI": 1611.5450304890646,
@@ -84,7 +236,7 @@
     "JAX": 1607.6822333078833,
     "KC": 1561.3758038213793,
     "LA": 1578.4044818765733,
-    "LAC": 1402.0813713957364,
+    "LAC": 1427.8099767435726,
     "LV": 1399.4493418488744,
     "MIA": 1371.063932589499,
     "MIN": 1605.231518161526,
