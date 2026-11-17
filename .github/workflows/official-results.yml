@@ -1,0 +1,45 @@
+name: BETQ durable official descriptive results
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 * * * *'
+permissions:
+  contents: write
+concurrency:
+  group: betq-official-results-publication
+  cancel-in-progress: false
+jobs:
+  official-results:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Initialize runner-local ledger path
+        run: echo "LEDGER_PATH=$RUNNER_TEMP/betq-official-results/ledger.json" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+          check-latest: true
+      - name: Fetch exact prior one-file result branch without publisher credentials
+        run: node scripts/publish-official-results.mjs prepare "$LEDGER_PATH"
+      - name: Observe free official finals without credentials or forecast generation
+        run: node scripts/collect-official-results.mjs "$LEDGER_PATH"
+      - name: Publish append-only observations with fast-forward and exact byte readback
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/publish-official-results.mjs publish "$LEDGER_PATH"
+      - name: Report partial source outages after successful observations are published
+        run: |
+          node --input-type=module -e 'import fs from "node:fs";const r=JSON.parse(fs.readFileSync(process.env.LEDGER_PATH+".collection.json","utf8"));if(r.degraded){console.error("Official source collection incomplete; previous results preserved. Failed weeks:",r.failedWeeks);process.exitCode=1;}'
+      - name: Preserve observations and publication checkpoint for operator review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-results-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/betq-official-results/
+          retention-days: 30
+          if-no-files-found: warn

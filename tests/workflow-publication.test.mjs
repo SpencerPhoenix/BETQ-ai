@@ -19,7 +19,9 @@ const schedules = {
 const auditSchedules = {'retained-evidence-audit': ['53 */6 * * *'], 'injury-coverage-audit': ['40 12 * * *']};
 // New schedule explicitly reviewed for isolated model-only custody, not market collection.
 const modelOnlySchedules = {'model-only-scheduled': ['7,22,37,52 * * * *']};
-const writerSchedules = {...schedules,...modelOnlySchedules};
+// User-requested durable descriptive finals use a separate evidence-only branch.
+const officialResultSchedules = {'official-results': ['17 * * * *']};
+const writerSchedules = {...schedules,...modelOnlySchedules,...officialResultSchedules};
 const writers = [...manualWriters, ...Object.keys(writerSchedules)];
 // Existing workflows retain reviewed PR16 hashes; the read-only audit and offline browser CI amendment have their own reviewed hashes.
 // Pinning their complete definitions also catches inline/job-level permission
