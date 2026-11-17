@@ -31,7 +31,15 @@ $('request').addEventListener('submit',async e=>{
   }else paragraph(out,'Challenger unavailable: '+r.challenger.reason);
   paragraph(out,'No current odds, validated spread/total probability, or demonstrated betting edge. These probabilities omit quarterback and injury adjustments.','warning');
   $('quote').hidden=false;$('side').options[0].textContent=r.fixture.home;$('side').options[1].textContent=r.fixture.away;
-  const source=await fetch('/api/injuries/nfl',{cache:'no-store'}).then(x=>{if(!x.ok)throw Error('CONTEXT_UNAVAILABLE');return x.json();}).catch(()=>({}));if(token!==generation||current!==r||Date.now()>=Date.parse(r.validUntil))return;
+  const source=await fetch('/api/injuries/nfl?gameId='+encodeURIComponent(gameId),{cache:'no-store'}).then(x=>{if(!x.ok)throw Error('CONTEXT_UNAVAILABLE');return x.json();}).catch(()=>({}));if(token!==generation||current!==r||Date.now()>=Date.parse(r.validUntil))return;
+  const coverage=source.matchupCoverage;
+  if(coverage?.gameId===gameId){
+   paragraph($('context'),'Injury matchup coverage: '+coverage.coverage+'. Source-file freshness is not matchup completeness.','warning');
+   paragraph($('context'),'Source file updated: '+(coverage.sourceUpdatedAt||'unknown')+'. '+coverage.caveat);
+   if(coverage.available&&Number.isFinite(Date.parse(coverage.validUntil)))contextExpires=Math.min(contextExpires??Infinity,Date.parse(coverage.validUntil));
+   for(const team of coverage.teams||[])for(const player of team.participationRecords||[])paragraph($('context'),team.team+' · '+player.player+': practice '+player.practiceParticipation+'; game designation '+player.gameDesignation+'; inactives '+player.inactiveStatus+'; player timestamp '+(player.dateModified||'unknown'));
+   for(const link of coverage.officialSourceLinks||[]){if(!/^https:\/\/www\.(houstontexans|colts)\.com\/news\//.test(link.url))continue;const a=document.createElement('a');a.href=link.url;a.textContent=link.title;a.target='_blank';a.rel='noopener noreferrer';const p=document.createElement('p');p.append(a);$('context').append(p);}
+  }else paragraph($('context'),'Matchup injury coverage unavailable. Global feed freshness is not evidence of coverage.','warning');
   const reviews=[...(source.officialReviews||[]),...(source.rosterContextReviews||[])].filter(x=>x.gameId===gameId);
   paragraph($('context'),'Official context for this matchup (pilot coverage; not model adjustments):');
   if(!reviews.length)paragraph($('context'),'No supported official context. Missing records do not mean healthy or confirmed starters.','warning');

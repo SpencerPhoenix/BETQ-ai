@@ -31,7 +31,7 @@ export function validateInjuryArtifact(a,now=Date.now()){
     !Array.isArray(a.fixtures)||a.fixtures.length>100)bad();
   for(const [key,r] of Object.entries(a.reports)){
     if(!object(r)||!keys(r,['team','week','lastPlayerUpdate','individualTimestampAvailable','flaggedCount',
-        'statusCounts','flaggedPlayers','reportedQBs'])||!teams.has(r.team)||!Number.isInteger(r.week)||r.week<1||r.week>23||
+        'statusCounts','flaggedPlayers','reportedQBs','participationRecords'])||!teams.has(r.team)||!Number.isInteger(r.week)||r.week<1||r.week>23||
       key!==`${r.team}:${r.week}`||!utc(r.lastPlayerUpdate)||
       Date.parse(r.lastPlayerUpdate)>Date.parse(a.sourceUpdatedAt)||
       typeof r.individualTimestampAvailable!=='boolean'||
@@ -40,6 +40,21 @@ export function validateInjuryArtifact(a,now=Date.now()){
       !count(r.flaggedCount)||!object(r.statusCounts)||!keys(r.statusCounts,['out','doubtful','questionable'])||
       !['out','doubtful','questionable'].every(k=>count(r.statusCounts[k]))||
       r.flaggedCount!==r.statusCounts.out+r.statusCounts.doubtful+r.statusCounts.questionable)bad();
+    if(r.participationRecords!==undefined){
+      if(!Array.isArray(r.participationRecords)||r.participationRecords.length>100)bad();
+      const seen=new Set();
+      for(const p of r.participationRecords){
+        if(!object(p)||!keys(p,['player','position','practiceParticipation','gameDesignation','inactiveStatus','practiceType','dateModified'])||
+          !short(p.player,100)||!short(p.position,10)||seen.has(p.player)||
+          !['DNP','LP','FP','NOT_REPORTED'].includes(p.practiceParticipation)||!status.has(p.gameDesignation)||
+          p.inactiveStatus!=='NOT_VERIFIED'||p.practiceType!=='NOT_VERIFIED'||
+          !(p.dateModified===null||(utc(p.dateModified)&&Date.parse(p.dateModified)<=Date.parse(a.sourceUpdatedAt)))||
+          (!r.individualTimestampAvailable&&p.dateModified!==null))bad();
+        const peers=[...(r.flaggedPlayers||[]),...(r.reportedQBs||[])].filter(x=>x.player===p.player);
+        if(peers.some(x=>x.position!==p.position||x.status!==p.gameDesignation||x.dateModified!==p.dateModified))bad();
+        seen.add(p.player);
+      }
+    }
     for(const field of ['flaggedPlayers','reportedQBs']){
       if(!Array.isArray(r[field])||r[field].length>100||
         (field==='flaggedPlayers'&&r[field].length!==r.flaggedCount&&r[field].length!==Math.min(8,r.flaggedCount)))bad();
