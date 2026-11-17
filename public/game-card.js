@@ -4,13 +4,14 @@ const teams=['ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE','DAL','DEN','DET','
 for(const id of ['home','away'])for(const t of teams){const o=document.createElement('option');o.value=o.textContent=t;$(id).append(o);}
 $('season').value=new Date().getFullYear();$('away').value='LAC';$('home').value='BAL';
 let discoveredGames=new Map();
-let generation=0,current=null,contextExpires=null,userTouched=false;
+let generation=0,current=null,scheduledCurrent=null,contextExpires=null,userTouched=false;
+const fixtureFresh=g=>Number.isFinite(Date.parse(g?.validUntil))&&Number.isFinite(Date.parse(g?.kickoff))&&Date.now()<Date.parse(g.validUntil)&&Date.now()<Date.parse(g.kickoff);
 $('request').addEventListener('input',()=>{userTouched=true;});
 $('refresh').addEventListener('click',()=>$('request').requestSubmit());
 function paragraph(root,text,klass=''){const p=document.createElement('p');p.textContent=text;p.className=klass;root.append(p);}
 const percent=x=>(100*x).toFixed(1)+'%';
 $('request').addEventListener('submit',async e=>{
- e.preventDefault();const token=++generation;current=null;contextExpires=null;$('result').hidden=true;$('quote').hidden=true;$('context').replaceChildren();$('comparison').textContent='';$('receipt').textContent='';$('evaluate').disabled=true;$('status').textContent='Checking official schedule and current model…';
+ e.preventDefault();const token=++generation;current=null;scheduledCurrent=null;contextExpires=null;$('result').hidden=true;$('quote').hidden=true;$('context').replaceChildren();$('comparison').textContent='';$('receipt').textContent='';$('evaluate').disabled=true;$('status').textContent='Checking official schedule and current model…';
  const gameId=`${$('season').value}_${String($('week').value).padStart(2,'0')}_${$('away').value}_${$('home').value}`;
  try{
   const response=await fetch('/api/game-evaluation?gameId='+encodeURIComponent(gameId),{cache:'no-store'});const r=await response.json();if(token!==generation)return;
@@ -53,11 +54,14 @@ $('compare').addEventListener('click',()=>{
  const decimal=a>0?1+a/100:1+100/-a,breakeven=1/decimal;
  $('comparison').textContent='User-entered price requires '+percent(breakeven)+' to break even. Unadjusted model: '+percent(p)+'. Arithmetic expected return: '+((p*decimal-1)*100).toFixed(1)+'%. Not a validated edge or recommended stake; quarterback/lineup effects remain unmodeled.';
 });
-setInterval(()=>{if(contextExpires!==null&&Date.now()>=contextExpires){contextExpires=null;$('context').replaceChildren();paragraph($('context'),'Official context expired. Evaluate again to refresh.','warning');}if(current&&(!Number.isFinite(Date.parse(current.validUntil))||Date.now()>=Date.parse(current.validUntil))){current=null;$('status').textContent='This evaluation has expired. Refresh before using it.';$('result').hidden=true;$('quote').hidden=true;$('context').replaceChildren();paragraph($('context'),'Refresh required: the displayed evaluation/context is no longer current.','warning');}},1000);
+setInterval(()=>{
+ for(const option of $('upcoming').options){const g=discoveredGames.get(option.value);if(g&&!fixtureFresh(g)){option.textContent=g.away+' at '+g.home+' · Schedule expired; select to recheck';}}
+ if(scheduledCurrent&&!fixtureFresh(scheduledCurrent)){scheduledCurrent=null;$('status').textContent='Scheduled fixture snapshot expired. Refresh to recheck official status before using it.';$('receipt').textContent='';}
+ if(contextExpires!==null&&Date.now()>=contextExpires){contextExpires=null;$('context').replaceChildren();paragraph($('context'),'Official context expired. Evaluate again to refresh.','warning');}if(current&&(!Number.isFinite(Date.parse(current.validUntil))||Date.now()>=Date.parse(current.validUntil))){current=null;$('status').textContent='This evaluation has expired. Refresh before using it.';$('result').hidden=true;$('quote').hidden=true;$('context').replaceChildren();paragraph($('context'),'Refresh required: the displayed evaluation/context is no longer current.','warning');}},1000);
 
 function chooseGame(gameId){const [season,week,away,home]=gameId.split('_');$('season').value=season;$('week').value=Number(week);$('away').value=away;$('home').value=home;
  const g=discoveredGames.get(gameId);
- if(g?.forecastReady===false){generation++;current=null;contextExpires=null;$('result').hidden=true;$('quote').hidden=true;$('context').replaceChildren();$('comparison').textContent='';$('receipt').textContent=JSON.stringify(g,null,2);$('evaluate').disabled=false;
+ if(g?.forecastReady===false&&fixtureFresh(g)){generation++;current=null;scheduledCurrent=g;contextExpires=null;$('result').hidden=true;$('quote').hidden=true;$('context').replaceChildren();$('comparison').textContent='';$('receipt').textContent=JSON.stringify(g,null,2);$('evaluate').disabled=false;
   $('status').textContent=g.away+' at '+g.home+' · '+new Date(g.kickoff).toLocaleString()+' · '+(g.neutralSite?'Neutral venue':'Home venue')+'. Scheduled; game-center pregame status not yet available. No forecast or betting play generated.';return;}
  $('request').requestSubmit();}
 $('upcoming').addEventListener('change',()=>{userTouched=true;if($('upcoming').value)chooseGame($('upcoming').value);});
