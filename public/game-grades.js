@@ -79,14 +79,30 @@
       '<td>'+fixed(m?.modelBrier)+'<small>Model log loss: '+fixed(m?.modelLogLoss)+'</small>'+fixed(m?.marketBrier)+'<small>Market log loss: '+fixed(m?.marketLogLoss)+'</small></td>'+
       '<td>'+fixed(m?.brierImprovement)+'</td><td>'+esc(g.baselineSnapshotId||'No eligible baseline')+'<small>Captured UTC: '+esc(g.capturedAt||'Not retained')+'</small><small>Model: '+esc(g.modelVersion||'Not retained')+'</small></td></tr>';
   }
+  // Presentation only: never reorder or rewrite the retained evidence itself.
+  const displayTime=g=>Number.isFinite(Date.parse(g.commenceTime))?Date.parse(g.commenceTime):Number.isFinite(Date.parse(g.gameDate))?Date.parse(g.gameDate):0;
+  const hasVisibleResult=g=>g.result!==null&&g.status!=='SCHEDULE_CONFLICT_QUARANTINED';
+  function recentFirst(games){
+    return [...games].sort((a,b)=>Number(hasVisibleResult(b))-Number(hasVisibleResult(a))||displayTime(b)-displayTime(a)||a.gameId.localeCompare(b.gameId));
+  }
+  function latestResult(games){
+    const g=games.find(hasVisibleResult);
+    if(!g)return '<section class="latest-game-result"><h4>Latest result</h4><p>No final score is available yet. Pending games and held records remain below.</p></section>';
+    const r=g.result,m=g.metrics,graded=g.status==='GRADED';
+    return '<section class="latest-game-result" aria-label="Latest game result"><h4>Latest result · '+esc(g.gameDate)+'</h4>'+
+      '<p class="latest-result-score"><strong>'+esc(g.away+' '+r.awayScore+' · '+g.home+' '+r.homeScore)+'</strong></p>'+
+      '<p>'+esc(g.away+' @ '+g.home)+' · '+esc(statuses[g.status])+'</p>'+
+      (graded?'<p>Original pick: <strong>'+esc(g.modelHomeProbability===.5?'No preference':g.modelHomeProbability>.5?g.home:g.away)+'</strong> · '+pct(Math.max(g.modelHomeProbability,1-g.modelHomeProbability))+' win chance</p><p><strong>Model: '+correct(m.modelCorrect,g.modelHomeProbability,true)+'</strong></p>':'<p>Model: Not scored. This result has not met the grading requirements.</p>')+
+      '<p>'+esc(officialResult(r)?'Official NFL final score':reviewedBdlResult(r)?'BDL final with nflverse score agreement':r.sourceCorroborated?'Source corroborated result':'Uncorroborated recorded score')+'. Descriptive result, not proof of a betting edge. Full source and grading details below.</p></section>';
+  }
   function html(data) {
     if(!valid(data))return '<p role="status">Game grading unavailable: complete, compatible retained evidence was not returned. Missing grades are not zeroes. No outcomes or forecasts were generated.</p>';
-    const c=data.coverage;
-    return '<p class="grade-coverage"><b>'+c.gradedGames+' graded / '+c.trackedGames+' tracked games</b> · '+(c.availableFinalScores??c.recordedResults)+' final scores available · '+c.ungradedGames+' ungraded · '+c.pendingGames+' pending results'+(c.quarantinedGames!==undefined?' · '+c.quarantinedGames+' held for conflicting game details':'')+'.</p>'+
+    const c=data.coverage, games=recentFirst(data.games);
+    return latestResult(games)+'<p class="grade-coverage"><b>'+c.gradedGames+' graded / '+c.trackedGames+' tracked games</b> · '+(c.availableFinalScores??c.recordedResults)+' final scores available · '+c.ungradedGames+' ungraded · '+c.pendingGames+' pending results'+(c.quarantinedGames!==undefined?' · '+c.quarantinedGames+' held for conflicting game details':'')+'.</p>'+
       (c.reviewedBdlGradedGames!==undefined?'<p>Official final-score grades: '+(c.officialGradedGames??0)+'. Separate descriptive cohorts: '+c.sourceCorroboratedV2GradedGames+' V2 source-corroborated grades · '+c.reviewedBdlGradedGames+' reviewed BDL grades. Reviewed BDL outcomes are excluded from V2 aggregate reports.</p>':'')+
       (data.officialFinals?.durableLedgerAvailable?'<p>'+esc(data.officialFinals.savedGrades??0)+' official grades have separately saved result evidence.'+(data.officialFinals.durableRefreshFailed?' The saved-result feed could not refresh; showing its last accepted history.':'')+'</p>':'')+
       '<p>All retained games are listed, including excluded and pending records. Qualified non-tie outcomes are scored against the original frozen pregame baseline, with the result policy identified for each game. Missing scores remain “Not scored”.</p>'+
-      (data.games.length?'<div class="game-grades-scroll" role="region" aria-label="Retained NFL game grades" tabindex="0"><table class="game-grades-table"><caption>Frozen per-game probability grades. Home probabilities; model and market shown separately.</caption><thead><tr><th scope="col">Game</th><th scope="col">Status / reason</th><th scope="col">Final score</th><th scope="col">Home probability / direction</th><th scope="col">Brier / log loss</th><th scope="col">Brier improvement</th><th scope="col">Frozen baseline</th></tr></thead><tbody>'+data.games.map(row).join('')+'</tbody></table></div>':'<p>No retained games are available to grade.</p>')+
+      (data.games.length?'<div class="game-grades-scroll" role="region" aria-label="Retained NFL game grades" tabindex="0"><table class="game-grades-table"><caption>Results first, newest game first. Frozen per-game probability grades. Home probabilities; model and market shown separately.</caption><thead><tr><th scope="col">Game</th><th scope="col">Status / reason</th><th scope="col">Final score</th><th scope="col">Home probability / direction</th><th scope="col">Brier / log loss</th><th scope="col">Brier improvement</th><th scope="col">Frozen baseline</th></tr></thead><tbody>'+games.map(row).join('')+'</tbody></table></div>':'<p>No retained games are available to grade.</p>')+
       '<p>Lower Brier score and log loss are better. Brier improvement is market minus model; positive means a lower model Brier score for that game, not proven future improvement. Directional correctness is not a probability-quality score.</p><p>Retained market probabilities are not executable prices, payouts or ROI. Research only; no verified betting edge or wagering recommendation.</p>'+
       (text(data.limitations?.notice)?'<p>'+esc(data.limitations.notice)+'</p>':'');
   }
