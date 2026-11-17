@@ -10,6 +10,31 @@ $('request').addEventListener('input',()=>{userTouched=true;});
 $('refresh').addEventListener('click',()=>$('request').requestSubmit());
 function paragraph(root,text,klass=''){const p=document.createElement('p');p.textContent=text;p.className=klass;root.append(p);}
 const percent=x=>(100*x).toFixed(1)+'%';
+// DOM text only: compare the same observations, never infer missing health or starters.
+function renderPregameComparison(root,r,coverage=null){
+ root.querySelector('.pregame-comparison')?.remove();
+ const table=document.createElement('table');table.className='pregame-comparison';
+ const caption=document.createElement('caption');caption.textContent='Pregame comparison · away vs home';table.append(caption);
+ const sides=r.gameId.split('_').slice(2), names=[r.fixture.away,r.fixture.home];
+ const head=document.createElement('thead'),hr=document.createElement('tr');
+ for(const label of ['Compare',...names]){const th=document.createElement('th');th.scope='col';th.textContent=label;hr.append(th);}head.append(hr);table.append(head);
+ const body=document.createElement('tbody');table.append(body);
+ const row=(label,values)=>{const tr=document.createElement('tr'),th=document.createElement('th');th.scope='row';th.textContent=label;tr.append(th);for(const value of values){const td=document.createElement('td');td.textContent=value;tr.append(td);}body.append(tr);};
+ const fresh=x=>x?.available===true&&Number.isFinite(Date.parse(x.validUntil))&&Date.now()<Date.parse(x.validUntil);
+ const depth=fresh(r.depthContext)?r.depthContext:null;
+ row('Unadjusted win estimate',[percent(r.baseline.awayWinProbability),percent(r.baseline.homeWinProbability)]);
+ row('Listed quarterback',sides.map(team=>depth?.teams?.find(x=>x.team===team)?.player||'Unavailable or stale'));
+ row('Confirmed starter',['Unknown','Unknown']);
+ const usable=coverage?.gameId===r.gameId&&fresh(coverage);
+ const teamRows=sides.map(team=>usable?coverage.teams?.find(x=>x.team===team):null);
+ row('Injury report',teamRows.map(x=>x?.teamWeekRecordPresent?'Team-week record present; completeness unknown':coverage?'No usable team-week report':'Checking source…'));
+ row('Practice / game status',teamRows.map(x=>!x?.teamWeekRecordPresent?'Unknown':!x.practiceFieldsRetained?'Practice fields unavailable':!x.participationRecords?.length?'No player records retained; health unknown':x.participationRecords.map(p=>p.player+': practice '+p.practiceParticipation+'; designation '+p.gameDesignation+'; inactives '+p.inactiveStatus+'; player timestamp '+(p.dateModified||'unknown')).join('\n\n')));
+ row('Depth source loaded',sides.map(()=>depth?new Date(depth.sourceLoadAt).toLocaleString():'Unavailable or stale'));
+ row('Injury file updated',sides.map(()=>coverage?.gameId===r.gameId&&coverage.sourceUpdatedAt?new Date(coverage.sourceUpdatedAt).toLocaleString():'Unknown'));
+ const note=document.createElement('tfoot'),tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=3;td.textContent='Sources: nflverse depth charts and injury feed (CC-BY-4.0). File timestamps are not player-news timestamps. Listed QB is not a confirmed starter. Missing reports do not mean healthy. DNP is not OUT; FP is not starter confirmation. Neither feed adjusts these probabilities.';tr.append(td);note.append(tr);table.append(note);
+ root.prepend(table);
+}
+
 $('request').addEventListener('submit',async e=>{
  e.preventDefault();const token=++generation;current=null;contextExpires=null;$('result').hidden=true;$('quote').hidden=true;$('context').replaceChildren();$('comparison').textContent='';$('receipt').textContent='';$('evaluate').disabled=true;$('status').textContent='Checking official schedule and current model…';
  const gameId=`${$('season').value}_${String($('week').value).padStart(2,'0')}_${$('away').value}_${$('home').value}`;
@@ -26,6 +51,7 @@ $('request').addEventListener('submit',async e=>{
   paragraph(out,(r.preview?'PRELIMINARY OUTRIGHT LEAN: ':'MODEL OUTRIGHT PICK: ')+pick+'. This is not a verified betting recommendation.','warning');
   paragraph(out,'Estimated win chance (Elo baseline): '+r.fixture.home+' '+percent(r.baseline.homeWinProbability)+' · '+r.fixture.away+' '+percent(r.baseline.awayWinProbability));
   paragraph(out,'Why this team: the model compares team strength from past results and venue. It does not yet adjust for current injuries or quarterback changes.');
+  renderPregameComparison($('context'),r);
   const depth=r.depthContext;
   paragraph($('context'),'Pregame quarterback context');
   if(depth?.available&&Number.isFinite(Date.parse(depth.validUntil))&&Date.now()<Date.parse(depth.validUntil)){
@@ -46,6 +72,7 @@ $('request').addEventListener('submit',async e=>{
   $('quote').hidden=r.preview===true;$('side').options[0].textContent=r.fixture.home;$('side').options[1].textContent=r.fixture.away;
   const source=await fetch('/api/injuries/nfl?gameId='+encodeURIComponent(gameId),{cache:'no-store'}).then(x=>{if(!x.ok)throw Error('CONTEXT_UNAVAILABLE');return x.json();}).catch(()=>({}));if(token!==generation||current!==r||Date.now()>=Date.parse(r.validUntil))return;
   const coverage=source.matchupCoverage;
+  renderPregameComparison($('context'),r,coverage||{});
   if(coverage?.gameId===gameId){
    paragraph($('context'),'Injury matchup coverage: '+coverage.coverage+'. Source-file freshness is not matchup completeness.','warning');
    paragraph($('context'),'Source file updated: '+(coverage.sourceUpdatedAt||'unknown')+'. '+coverage.caveat);
