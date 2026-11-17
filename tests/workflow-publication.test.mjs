@@ -14,7 +14,8 @@ const schedules = {
     '15 22 * * 0', '35 0 * * 1', '35 1 * * 1'],
   'train-efficiency': ['37 10 * * 2'],
   'train-nfl': ['17 11 * * *'],
-  'update-injuries': ['24 10 * * *']
+  'update-injuries': ['24 10 * * *'],
+  'update-depth-context': ['17 8,18 * * *']
 };
 const auditSchedules = {'retained-evidence-audit': ['53 */6 * * *'], 'injury-coverage-audit': ['40 12 * * *']};
 // New schedule explicitly reviewed for isolated model-only custody, not market collection.
@@ -85,7 +86,7 @@ test('Every test-running workflow job installs locked dependencies before tests 
       assert.ok(install >= 0 && install < firstTest, `${name}: install must precede npm test`);
     }
   }
-  assert.equal(testedJobs, 16);
+  assert.equal(testedJobs, 17);
 });
 
 test('Collector dependency installation cannot inherit its operator bearer', async () => {

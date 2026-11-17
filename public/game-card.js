@@ -26,6 +26,15 @@ $('request').addEventListener('submit',async e=>{
   paragraph(out,(r.preview?'PRELIMINARY OUTRIGHT LEAN: ':'MODEL OUTRIGHT PICK: ')+pick+'. This is not a verified betting recommendation.','warning');
   paragraph(out,'Estimated win chance (Elo baseline): '+r.fixture.home+' '+percent(r.baseline.homeWinProbability)+' · '+r.fixture.away+' '+percent(r.baseline.awayWinProbability));
   paragraph(out,'Why this team: the model compares team strength from past results and venue. It does not yet adjust for current injuries or quarterback changes.');
+  const depth=r.depthContext;
+  paragraph($('context'),'Pregame quarterback context');
+  if(depth?.available&&Number.isFinite(Date.parse(depth.validUntil))&&Date.now()<Date.parse(depth.validUntil)){
+   contextExpires=Date.parse(depth.validUntil);
+   for(const row of depth.teams||[])paragraph($('context'),row.team+' listed QB1: '+row.player);
+   paragraph($('context'),'Depth-chart source loaded '+new Date(depth.sourceLoadAt).toLocaleString()+'; collected '+new Date(depth.collectedAt).toLocaleString()+'.');
+   paragraph($('context'),'Listed role only, not confirmed starter or injury clearance. These names do not adjust the model probabilities.','warning');
+   paragraph($('context'),'Source: nflverse depth charts (CC-BY-4.0). Source-load time is not the announcement time.');
+  }else paragraph($('context'),'Current quarterback depth-chart context unavailable or stale. Starter status remains unknown.','warning');
   const detail=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Model comparison & build details';detail.append(summary);
   paragraph(detail,'Model built '+new Date(r.baseline.modelBuiltAt).toLocaleString()+' · results through '+r.baseline.throughGameDate);
   if(r.challenger.available){paragraph(detail,'Efficiency challenger: '+r.fixture.home+' '+percent(r.challenger.homeWinProbability)+' · '+r.fixture.away+' '+percent(r.challenger.awayWinProbability));

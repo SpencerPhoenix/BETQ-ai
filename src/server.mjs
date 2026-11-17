@@ -1,3 +1,4 @@
+import {createDepthContextFeed,depthContextForGame} from './depth-context.mjs';
 import {createStaticRelease} from './static-release.mjs';
 import {createScheduledModelFeed} from './scheduled-model-feed.mjs';
 import {NFL_TEAMS} from './nfl-elo.mjs';
@@ -178,6 +179,7 @@ export function createHandler({
   nflArtifact = NFL_ARTIFACT,
   nflEfficiency = NFL_EFFICIENCY,
   nflInjuries = NFL_INJURIES,
+  depthFeed = createDepthContextFeed({fetchImpl:null,clock}),
   officialInjuryArtifact = OFFICIAL_INJURY_REVIEWS,
   officialInjuryFeed = createOfficialInjuryFeed({fallbackArtifact:officialInjuryArtifact,clock,fetchImpl:null}),
   injuryFeed = createInjuryReportFeed({fallbackArtifact:nflInjuries,clock,fetchImpl:null}),
@@ -321,7 +323,9 @@ export function createHandler({
           const gameId=url.searchParams.get('gameId');
           try{gameScope(gameId);}catch{return reply(res,400,{error:{code:'INVALID_GAME_ID'}});}
           const schedule=await officialGameFeed.get(gameId);
-          return reply(res,200,evaluateOnDemandGame(gameId,{schedule,artifact:nflArtifact,challengerArtifact:nflEfficiency,now:clock(),allowScheduledPreview:url.searchParams.get('preview')==='scheduled'}));
+          const evaluation=evaluateOnDemandGame(gameId,{schedule,artifact:nflArtifact,challengerArtifact:nflEfficiency,now:clock(),allowScheduledPreview:url.searchParams.get('preview')==='scheduled'});
+          if(evaluation.available)evaluation.depthContext=depthContextForGame(await depthFeed.get(),gameId,evaluation.fixture,clock());
+          return reply(res,200,evaluation);
         }
         if (url.pathname === '/api/model/nfl') {
           if (!nflArtifact) return reply(res, 200, {
@@ -749,6 +753,8 @@ export function createHandler({
 }
 export function startServer(options = {}) {
   const port = Number(options.port ?? process.env.PORT ?? 3000);
+  let depthArtifact=null;try{depthArtifact=JSON.parse(readFileSync(new URL('../data/nfl_depth_context.json',import.meta.url),'utf8'));}catch{}
+  const depthFeed=options.depthFeed??createDepthContextFeed({artifact:depthArtifact,clock:options.clock??Date.now});
   const injuryFeed=options.injuryFeed??createInjuryReportFeed({
     fallbackArtifact:options.nflInjuries===undefined?NFL_INJURIES:options.nflInjuries,
     clock:options.clock??Date.now
@@ -757,7 +763,7 @@ export function startServer(options = {}) {
   const scheduledModelFeed=options.scheduledModelFeed??createScheduledModelFeed({clock:options.clock??Date.now});
   const officialResultFeed=options.officialResultFeed??createOfficialResultFeed({clock:options.clock??Date.now});
   const officialGameFeed=options.officialGameFeed??createOfficialGameFeed({clock:options.clock??Date.now});
-  const server = http.createServer(createHandler({...options,injuryFeed,officialInjuryFeed,officialGameFeed,officialResultFeed,scheduledModelFeed}));
+  const server = http.createServer(createHandler({...options,depthFeed,injuryFeed,officialInjuryFeed,officialGameFeed,officialResultFeed,scheduledModelFeed}));
   server.listen(port, '0.0.0.0', () => {
     console.log('[BETQ] terminal listening on port ' + server.address().port);
   });
