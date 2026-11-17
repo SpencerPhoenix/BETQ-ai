@@ -73,6 +73,8 @@ with sync_playwright() as p:
     expect(grades).to_contain_text('1 graded / 1 tracked games')
     expect(grades).to_contain_text('0 V2 source-corroborated grades · 1 reviewed BDL grades')
     expect(grades).to_contain_text('Market log loss: Not scored')
+    page.locator('.result-archive > summary').click()
+    grades.locator('.grade-evidence > summary').click()
     opener=page.locator('#retained-games-list [data-dossier-game]').first
     opener.click()
     expect(page.locator('#game-dossier-heading')).to_be_focused()

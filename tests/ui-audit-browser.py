@@ -88,7 +88,8 @@ with sync_playwright() as p:
     expect(page.locator('#banner')).to_contain_text('CACHE RELOAD FAILED')
     cache_ready = True
     navigate(page,'games')
-    expect(page.locator('#research-tools')).to_have_attribute('open','')
+    expect(page.locator('#research-tools')).not_to_have_attribute('open','')
+    page.locator('.result-archive > summary').click()
     expect(page.locator('.game-card')).to_have_count(3)
     expect(page.locator('#game-grid [data-pick]')).to_have_count(3)
     assert '4 sportsbooks · 1 matched contract(s)' in page.locator('#game-grid').inner_text()

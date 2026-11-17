@@ -95,21 +95,40 @@
       (graded?'<p>Original pick: <strong>'+esc(g.modelHomeProbability===.5?'No preference':g.modelHomeProbability>.5?g.home:g.away)+'</strong> · '+pct(Math.max(g.modelHomeProbability,1-g.modelHomeProbability))+' win chance</p><p><strong>Model: '+correct(m.modelCorrect,g.modelHomeProbability,true)+'</strong></p>':'<p>Model: Not scored. This result has not met the grading requirements.</p>')+
       '<p>'+esc(officialResult(r)?'Official NFL final score':reviewedBdlResult(r)?'BDL final with nflverse score agreement':r.sourceCorroborated?'Source corroborated result':'Uncorroborated recorded score')+'. Descriptive result, not proof of a betting edge. Full source and grading details below.</p></section>';
   }
+  function resultCard(g) {
+    const held=g.status==='SCHEDULE_CONFLICT_QUARANTINED', scored=g.status==='GRADED', r=g.result;
+    const label=held?'Held for conflicting game details':scored?correct(g.metrics.modelCorrect,g.modelHomeProbability,true):statuses[g.status];
+    const pick=!held&&probability(g.modelHomeProbability)?(g.modelHomeProbability===.5?'No preference':g.modelHomeProbability>.5?g.home:g.away):null;
+    return '<article class="result-card" data-search="'+esc((g.away+' '+g.home+' '+g.gameDate).toLowerCase())+'" data-result-status="'+esc(g.status)+'"><header><h4>'+esc(g.away+' @ '+g.home)+'</h4><span>'+esc(g.gameDate)+'</span></header>'+
+      '<p class="result-card-score">'+(held?'Score withheld':r?esc(g.away+' '+r.awayScore+' · '+g.home+' '+r.homeScore):'Final score not available')+'</p>'+
+      '<p class="result-badge '+(scored?(g.metrics.modelCorrect===true?'correct':g.metrics.modelCorrect===false?'incorrect':'neutral'):'neutral')+'">'+esc(label)+'</p>'+
+      (pick?'<p>Original pick: <strong>'+esc(pick)+'</strong> · '+pct(Math.max(g.modelHomeProbability,1-g.modelHomeProbability))+' win chance</p>':'<p>Original pick withheld</p>')+
+      '<p class="result-source">'+(held?'Not graded. Conflicting records need review.':officialResult(r)?'Official NFL final · descriptive grade':reviewedBdlResult(r)?'Reviewed BDL final · descriptive grade':r?.sourceCorroborated?'Source-corroborated result':r?'Recorded score · not source corroborated':'Waiting for a verified final result')+'</p>'+
+      (scored?'':'<p>No accuracy grade assigned. See evidence details for the reason.</p>')+'</article>';
+  }
   function html(data) {
     if(!valid(data))return '<p role="status">Game grading unavailable: complete, compatible retained evidence was not returned. Missing grades are not zeroes. No outcomes or forecasts were generated.</p>';
     const c=data.coverage, games=recentFirst(data.games);
-    return latestResult(games)+'<p class="grade-coverage"><b>'+c.gradedGames+' graded / '+c.trackedGames+' tracked games</b> · '+(c.availableFinalScores??c.recordedResults)+' final scores available · '+c.ungradedGames+' ungraded · '+c.pendingGames+' pending results'+(c.quarantinedGames!==undefined?' · '+c.quarantinedGames+' held for conflicting game details':'')+'.</p>'+
+    return (data.officialFinals?.durableRefreshFailed?'<p class="notice warning">Saved-result feed could not refresh. Showing its last accepted history; dates remain unchanged.</p>':'')+latestResult(games)+'<p class="grade-coverage"><b>'+c.gradedGames+' graded / '+c.trackedGames+' tracked games</b> · '+(c.availableFinalScores??c.recordedResults)+' final scores available · '+c.ungradedGames+' ungraded · '+c.pendingGames+' pending results'+(c.quarantinedGames!==undefined?' · '+c.quarantinedGames+' held for conflicting game details':'')+'.</p>'+
+      '<p>Game-winner grades only, not spread or total grades, betting profit, or a proven edge.</p><div class="results-filters"><label>Find a game<input type="search" data-grade-search placeholder="Team or date"></label><label>Show<select data-grade-filter><option value="all">All tracked games</option><option value="GRADED">Graded games</option><option value="PENDING_RESULT">Waiting for results</option><option value="UNGRADED">Not graded</option><option value="TIE_EXCLUDED">Tied games</option><option value="SCHEDULE_CONFLICT_QUARANTINED">Held for review</option></select></label></div><p data-grade-count role="status"></p><div class="result-card-grid">'+games.map(resultCard).join('')+'</div><details class="grade-evidence"><summary>Full grading evidence &amp; probability scores</summary>'+
       (c.reviewedBdlGradedGames!==undefined?'<p>Official final-score grades: '+(c.officialGradedGames??0)+'. Separate descriptive cohorts: '+c.sourceCorroboratedV2GradedGames+' V2 source-corroborated grades · '+c.reviewedBdlGradedGames+' reviewed BDL grades. Reviewed BDL outcomes are excluded from V2 aggregate reports.</p>':'')+
       (data.officialFinals?.durableLedgerAvailable?'<p>'+esc(data.officialFinals.savedGrades??0)+' official grades have separately saved result evidence.'+(data.officialFinals.durableRefreshFailed?' The saved-result feed could not refresh; showing its last accepted history.':'')+'</p>':'')+
       '<p>All retained games are listed, including excluded and pending records. Qualified non-tie outcomes are scored against the original frozen pregame baseline, with the result policy identified for each game. Missing scores remain “Not scored”.</p>'+
       (data.games.length?'<div class="game-grades-scroll" role="region" aria-label="Retained NFL game grades" tabindex="0"><table class="game-grades-table"><caption>Results first, newest game first. Frozen per-game probability grades. Home probabilities; model and market shown separately.</caption><thead><tr><th scope="col">Game</th><th scope="col">Status / reason</th><th scope="col">Final score</th><th scope="col">Home probability / direction</th><th scope="col">Brier / log loss</th><th scope="col">Brier improvement</th><th scope="col">Frozen baseline</th></tr></thead><tbody>'+games.map(row).join('')+'</tbody></table></div>':'<p>No retained games are available to grade.</p>')+
       '<p>Lower Brier score and log loss are better. Brier improvement is market minus model; positive means a lower model Brier score for that game, not proven future improvement. Directional correctness is not a probability-quality score.</p><p>Retained market probabilities are not executable prices, payouts or ROI. Research only; no verified betting edge or wagering recommendation.</p>'+
-      (text(data.limitations?.notice)?'<p>'+esc(data.limitations.notice)+'</p>':'');
+      (text(data.limitations?.notice)?'<p>'+esc(data.limitations.notice)+'</p>':'')+'</details>';
+  }
+  function filterCards(root) {
+    const query=(root.querySelector('[data-grade-search]')?.value||'').trim().toLowerCase();
+    const status=root.querySelector('[data-grade-filter]')?.value||'all';
+    const cards=[...root.querySelectorAll('.result-card')];let shown=0;
+    for(const card of cards){card.hidden=!(card.dataset.search.includes(query)&&(status==='all'||card.dataset.resultStatus===status));if(!card.hidden)shown++;}
+    const count=root.querySelector('[data-grade-count]');if(count)count.textContent=shown+' of '+cards.length+' games shown'+(shown?'.':'. Clear the search or change the filter.');
   }
   async function load(root,request) {
     if(!root)return;
     const serial=(requests.get(root)||0)+1;requests.set(root,serial);
-    try {const data=await request('/api/research/grades');if(requests.get(root)===serial)root.innerHTML=html(data);}
+    try {const data=await request('/api/research/grades');if(requests.get(root)===serial){root.innerHTML=html(data);if(root.querySelectorAll)filterCards(root);if(root.addEventListener&&!root.dataset.gradeFiltersBound){root.addEventListener('input',()=>filterCards(root));root.addEventListener('change',()=>filterCards(root));root.dataset.gradeFiltersBound='true';}}}
     catch {if(requests.get(root)===serial)root.innerHTML=html(null);}
   }
   globalThis.BETQGameGrades=Object.freeze({valid,html,load,reviewedBdlResult,qualifiedResult,officialResult});

@@ -52,6 +52,8 @@ with sync_playwright() as p:
     page.locator('.mode-toggle [data-mode="demo"]').click()
     expect(page.locator('#game-grid .game-card')).to_have_count(3)
     games(page)
+    if page.locator('.result-archive').get_attribute('open') is None:page.locator('.result-archive > summary').click()
+    if page.locator('#research-tools').get_attribute('open') is None:page.locator('#research-tools > summary').click()
     details=page.locator('#game-grid .game-strategies').first
     summary=details.locator('summary')
     summary.focus();before=len(requests);page.keyboard.press('Enter')

@@ -2,7 +2,7 @@
 (()=>{
  const root=document.getElementById('automatic-game-card');if(!root)return;
  let current=null,sequence=0;
- const p=(text,target=root)=>{const node=document.createElement('p');node.textContent=text;target.append(node);};
+ const p=(text,target=root)=>{const node=document.createElement('p');node.textContent=text;target.append(node);return node;};
  const link=()=>{const a=document.createElement('a');a.href='/game-card';a.textContent='Full matchup card and other upcoming games →';root.append(a);};
  async function load(){
   const token=++sequence;current=null;root.replaceChildren();p('Preparing the next verified NFL matchup…');
@@ -17,8 +17,13 @@
    const heading=document.createElement('h2');heading.textContent='Next NFL matchup · '+r.fixture.away+' at '+r.fixture.home;root.append(heading);
    const pick=r.baseline.homeWinProbability===.5?'No outright preference':r.baseline.homeWinProbability>.5?r.fixture.home:r.fixture.away;
    if(r.preview)p('SCHEDULED MODEL PREVIEW: game-center pregame status not yet available. Not a confirmed pregame forecast; excluded from the frozen pregame ledger.');
-   p((r.preview?'PRELIMINARY OUTRIGHT LEAN: ':'MODEL OUTRIGHT PICK: ')+pick+'. Not a verified betting recommendation.');
-   p(r.fixture.home+' '+(100*r.baseline.homeWinProbability).toFixed(1)+'% · '+r.fixture.away+' '+(100*r.baseline.awayWinProbability).toFixed(1)+'% (unadjusted Elo research).');
+   p((r.preview?'PRELIMINARY OUTRIGHT LEAN: ':'MODEL OUTRIGHT PICK: ')+pick+'. Not a verified betting recommendation.').className='outlook-pick';
+   const chances=document.createElement('div');chances.className='matchup-chances';
+   for(const [team,value] of [[r.fixture.away,r.baseline.awayWinProbability],[r.fixture.home,r.baseline.homeWinProbability]]){
+    const box=document.createElement('div');const name=document.createElement('span');name.textContent=team;
+    const chance=document.createElement('strong');chance.textContent=(100*value).toFixed(1)+'%';
+    const label=document.createElement('small');label.textContent='Unadjusted win estimate';box.append(name,chance,label);chances.append(box);
+   }root.append(chances);
    if(r.challenger?.available&&(r.challenger.homeWinProbability-.5)*(r.baseline.homeWinProbability-.5)<0)p('The separate efficiency challenger favors the other team. Models disagree; no automatic promotion.');
    p('Why this team: the model compares team strength from past results and venue. It does not yet adjust for current injuries or quarterback changes.');
    const detail=document.createElement('details');const summary=document.createElement('summary');summary.textContent='How this estimate was made';detail.append(summary);

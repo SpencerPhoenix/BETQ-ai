@@ -130,11 +130,12 @@
 
   function setTab(tab) {
     if (!allowedTabs.includes(tab)) return;
+    document.querySelector('[data-home]')?.removeAttribute('aria-current');
     const researchTools=$('research-tools');
-    if(researchTools)researchTools.open=true;
+    if(researchTools)researchTools.open=tab!=='games';
     if (tab !== 'games') closeGameDossier(false);
     state.tab = tab;
-    document.querySelectorAll('.nav-item').forEach(b => {
+    document.querySelectorAll('.nav-item, .mobile-bottom-nav [data-tab]').forEach(b => {
       b.classList.toggle('active', b.dataset.tab === tab);
       if(b.dataset.tab === tab)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
     });
@@ -1889,6 +1890,14 @@
     if(shadowView&&['live','demo'].includes(shadowView.dataset.shadowView)){
       state.shadowView=shadowView.dataset.shadowView;
       renderShadow();return;
+    }
+    if(event.target.closest('[data-home]')) {
+      closeGameDossier(false);state.tab='overview';$('research-tools').open=false;document.querySelector('.hero').hidden=false;document.querySelector('.hero').style.display='';
+      document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-overview'));
+      document.querySelectorAll('.nav-item, .mobile-bottom-nav [data-tab]').forEach(b=>{b.classList.remove('active');b.removeAttribute('aria-current');});
+      document.querySelector('[data-home]').setAttribute('aria-current','page');
+      $('breadcrumb-page').textContent='GAME OUTLOOK';setNavigation(false,false);
+      $('main-content').focus({preventScroll:true});$('main-content').scrollIntoView({block:'start'});return;
     }
     const tab = event.target.closest('[data-tab]');
     if (tab) { setTab(tab.dataset.tab); return; }

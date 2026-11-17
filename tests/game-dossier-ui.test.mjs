@@ -20,7 +20,7 @@ function harness(request=async()=>data(),state={mode:'live',sport:'americanfootb
     focus(){focus=this;focusCalls++;},contains(target){return target?.parent===this;}});return nodes.get(id);};
   const calls=[];const context={state,$:node,Intl,requestJSON:path=>{calls.push(path);return request(path);},
     allowedTabs:['games','evidence'],setNavigation(){},renderGames(){},renderEvidence(){},
-    document:{querySelectorAll:()=>[],querySelector:()=>({hidden:false,style:{}})},
+    document:{querySelectorAll:()=>[],querySelector:()=>({hidden:false,style:{},removeAttribute(){}})},
     window:{scrollTo(){},matchMedia:()=>({matches:true})}};
   for(const tab of ['games','evidence'])node('page-'+tab).querySelector=()=>node(tab+'-heading');
   vm.createContext(context);
