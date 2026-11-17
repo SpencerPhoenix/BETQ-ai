@@ -104,6 +104,7 @@ with sync_playwright() as p:
     page.locator('[data-action="close-dossier"]').click();expect(page.locator('#game-dossier')).to_be_hidden()
     malformed=True
     page.reload();navigate(page,'games')
+    page.locator('.result-archive > summary').click()
     expect(grades).to_contain_text('Game grading unavailable');expect(grades.locator('tbody tr')).to_have_count(0)
     opener.click();expect(page.locator('#game-dossier-status')).to_contain_text('Dossier unavailable')
     expect(detail).to_be_empty()
