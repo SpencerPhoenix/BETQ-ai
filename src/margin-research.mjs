@@ -18,9 +18,16 @@ const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
 
 export function buildMarginRows(sourceRows,replayYears){
   if(!Array.isArray(sourceRows)||!Array.isArray(replayYears))throw Error('Invalid margin sources');
-  const games=new Map();
+  const games=new Map(),sourceIdentities=new Map();
   for(const r of sourceRows){
     if(typeof r?.game_id!=='string'||!r.game_id)continue;
+    const season=Number(r.season);
+    // Compare before filtering: a malformed duplicate must not hide a conflict.
+    const identity=JSON.stringify([r.season,r.spread_line,r.home_score,r.away_score]
+      .map(value=>String(value??'').trim()));
+    if(sourceIdentities.has(r.game_id)&&sourceIdentities.get(r.game_id)!==identity)
+      throw Error('Conflicting margin source rows: '+r.game_id);
+    sourceIdentities.set(r.game_id,identity);
     const spreadStr=String(r.spread_line??'').trim();
     const hsStr=String(r.home_score??'').trim(),asStr=String(r.away_score??'').trim();
     if(!spreadStr||!hsStr||!asStr)continue;
@@ -28,30 +35,63 @@ export function buildMarginRows(sourceRows,replayYears){
     if(![spread,hs,as].every(finite)||Math.abs(spread)>40||
        !Number.isInteger(hs)||!Number.isInteger(as)||hs<0||as<0||hs>100||as>100)
       continue;
-    games.set(r.game_id,{spread,margin:hs-as});
+    if(!Number.isInteger(season)||!r.game_id.startsWith(season+'_'))
+      throw Error('Margin source season mismatch: '+r.game_id);
+    games.set(r.game_id,{spread,margin:hs-as,season});
   }
   const byYear=new Map();
   for(const rep of replayYears){
+    if(!Number.isInteger(rep?.season)||byYear.has(rep.season)||!Array.isArray(rep.decisions))
+      throw Error('Invalid or duplicate margin replay season');
     const rows=[],seen=new Set();
     for(const d of rep.decisions||[]){
+      if(seen.has(d.gameId))throw Error('Duplicate margin replay game: '+d.gameId);
+      seen.add(d.gameId);
       const source=games.get(d.gameId);
-      if(!source||seen.has(d.gameId)||!finite(d.modelHomeProbability)||
+      if(source&&source.season!==rep.season)throw Error('Margin replay season mismatch: '+d.gameId);
+      if(!source||!finite(d.modelHomeProbability)||
          !finite(d.closeMarketHomeProbability)||
          !(d.modelHomeProbability>0&&d.modelHomeProbability<1)||
          !(d.closeMarketHomeProbability>0&&d.closeMarketHomeProbability<1)||
          !Number.isInteger(d.week)||d.week<1||d.week>25)continue;
-      seen.add(d.gameId);
       rows.push({
         gameId:d.gameId,year:rep.season,week:d.week,date:d.date,
         homeMargin:source.margin,marketHomeMargin:source.spread,
         feature:logit(d.modelHomeProbability)-logit(d.closeMarketHomeProbability)
       });
     }
-    byYear.set(rep.season,rows.sort((a,b)=>a.date.localeCompare(b.date)||
-      a.gameId.localeCompare(b.gameId)));
+    byYear.set(rep.season,rows);
   }
+  validateMarginFrames(byYear);
+  for(const rows of byYear.values())rows.sort((a,b)=>a.date.localeCompare(b.date)||
+    a.gameId.localeCompare(b.gameId));
   return byYear;
 }
+/** Enforce partition identity even for callers supplying frames directly. */
+export function validateMarginFrames(byYear){
+  if(!(byYear instanceof Map))throw Error('Margin source must be year-indexed');
+  const seen=new Set();
+  for(const [year,rows] of byYear){
+    if(!Number.isInteger(year)||!Array.isArray(rows))throw Error('Invalid margin season frame');
+    for(const r of rows){
+      if(r?.year!==year||typeof r.gameId!=='string'||!r.gameId.startsWith(year+'_'))
+        throw Error('Margin frame season mismatch');
+      if(seen.has(r.gameId))throw Error('Duplicate margin frame game: '+r.gameId);
+      seen.add(r.gameId);
+      const date=typeof r.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(r.date)?r.date:null;
+      const time=date?Date.parse(date+'T00:00:00Z'):NaN;
+      if(!finite(time)||new Date(time).toISOString().slice(0,10)!==date||
+         Number(date.slice(0,4))<year||Number(date.slice(0,4))>year+1)
+        throw Error('Invalid margin game date: '+r.gameId);
+      if(!Number.isInteger(r.week)||r.week<1||r.week>25||
+         !finite(r.homeMargin)||!Number.isInteger(r.homeMargin)||Math.abs(r.homeMargin)>100||
+         !finite(r.marketHomeMargin)||Math.abs(r.marketHomeMargin)>40||
+         !finite(r.feature)||Math.abs(r.feature)>20)
+        throw Error('Invalid margin frame values: '+r.gameId);
+    }
+  }
+}
+
 export function assertSpreadDirection(rows){
   if(!Array.isArray(rows)||rows.length<350)throw Error('Insufficient pre-2022 source sign validation');
   const x=rows.map(r=>r.marketHomeMargin),y=rows.map(r=>r.homeMargin);
@@ -139,13 +179,17 @@ function groupedMarginCI(rows,fit,{seed=20261102,repeats=2000}={}){
   };
 }
 export function evaluateMarginResearch(byYear){
-  if(!(byYear instanceof Map))throw Error('Margin source must be year-indexed');
+  validateMarginFrames(byYear);
   const source=assertSpreadDirection([...(byYear.get(2020)||[]),...(byYear.get(2021)||[])]);
   const years=[],paired=[];
   for(const year of [2022,2023,2024,2025]){
     const training=[...(byYear.get(year-2)||[]),...(byYear.get(year-1)||[])];
     const test=byYear.get(year)||[];
     if(training.length<350||test.length<200)throw Error('Insufficient margin rows '+year);
+    const lastTrainingDate=training.reduce((latest,r)=>r.date>latest?r.date:latest,'');
+    const firstTestDate=test.reduce((earliest,r)=>r.date<earliest?r.date:earliest,'9999-12-31');
+    if(lastTrainingDate>=firstTestDate)
+      throw Error('Margin training/test chronology overlap: '+year);
     const fit=fitMarginCorrection(training);
     const base=scoreMargins(test),challenger=scoreMargins(test,fit);
     years.push({
