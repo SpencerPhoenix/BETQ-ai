@@ -316,7 +316,7 @@ export function createHandler({
           const gameId=url.searchParams.get('gameId');
           try{gameScope(gameId);}catch{return reply(res,400,{error:{code:'INVALID_GAME_ID'}});}
           const schedule=await officialGameFeed.get(gameId);
-          return reply(res,200,evaluateOnDemandGame(gameId,{schedule,artifact:nflArtifact,challengerArtifact:nflEfficiency,now:clock()}));
+          return reply(res,200,evaluateOnDemandGame(gameId,{schedule,artifact:nflArtifact,challengerArtifact:nflEfficiency,now:clock(),allowScheduledPreview:url.searchParams.get('preview')==='scheduled'}));
         }
         if (url.pathname === '/api/model/nfl') {
           if (!nflArtifact) return reply(res, 200, {

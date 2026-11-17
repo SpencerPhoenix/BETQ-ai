@@ -10,27 +10,18 @@
    const d=await fetch('/api/upcoming-games',{cache:'no-store'}).then(x=>{if(!x.ok)throw Error();return x.json();});
    if(token!==sequence)return;
    if(!d.available||!d.games?.length){root.replaceChildren();p('No verified upcoming regular-season matchup is available right now. No game or pick was substituted.');link();return;}
-   const upcoming=d.games[0];
-   if(upcoming.forecastReady===false){
-    if(!Number.isFinite(Date.parse(upcoming.validUntil))||Date.now()>=Date.parse(upcoming.validUntil))throw Error();
-    current=upcoming;root.replaceChildren();
-    const h=document.createElement('h2');h.textContent='Next scheduled NFL matchup · '+upcoming.away+' at '+upcoming.home;root.append(h);
-    p('Kickoff '+new Date(upcoming.kickoff).toLocaleString()+' · '+(upcoming.neutralSite?'Neutral venue':'Home venue')+'. Times use your device timezone.');
-    p('Scheduled; game-center pregame status not yet available. No forecast or betting play has been generated.');
-    p('Official schedule observed '+new Date(upcoming.observedAt).toLocaleString()+'.');
-    link();return;
-   }
-   const r=await fetch('/api/game-evaluation?gameId='+encodeURIComponent(d.games[0].gameId),{cache:'no-store'}).then(x=>{if(!x.ok)throw Error();return x.json();});
+   const r=await fetch('/api/game-evaluation?gameId='+encodeURIComponent(d.games[0].gameId)+'&preview=scheduled',{cache:'no-store'}).then(x=>{if(!x.ok)throw Error();return x.json();});
    if(token!==sequence)return;
    if(!r.available||!Number.isFinite(Date.parse(r.validUntil))||Date.now()>=Date.parse(r.validUntil))throw Error();
    current=r;root.replaceChildren();
    const heading=document.createElement('h2');heading.textContent='Next NFL matchup · '+r.fixture.away+' at '+r.fixture.home;root.append(heading);
    const pick=r.baseline.homeWinProbability===.5?'No outright preference':r.baseline.homeWinProbability>.5?r.fixture.home:r.fixture.away;
-   p('MODEL OUTRIGHT PICK: '+pick+'. Not a verified betting recommendation.');
+   if(r.preview)p('SCHEDULED MODEL PREVIEW: game-center pregame status not yet available. Not a confirmed pregame forecast; excluded from the frozen pregame ledger.');
+   p((r.preview?'PRELIMINARY OUTRIGHT LEAN: ':'MODEL OUTRIGHT PICK: ')+pick+'. Not a verified betting recommendation.');
    p(r.fixture.home+' '+(100*r.baseline.homeWinProbability).toFixed(1)+'% · '+r.fixture.away+' '+(100*r.baseline.awayWinProbability).toFixed(1)+'% (unadjusted Elo research).');
    if(r.challenger?.available&&(r.challenger.homeWinProbability-.5)*(r.baseline.homeWinProbability-.5)<0)p('The separate efficiency challenger favors the other team. Models disagree; no automatic promotion.');
    p('Baseline built '+new Date(r.baseline.modelBuiltAt).toLocaleString()+'; results through '+r.baseline.throughGameDate+'.');
-   p('Kickoff '+new Date(r.fixture.kickoff).toLocaleString()+' · evaluated '+new Date(r.evaluatedAt).toLocaleString()+' · official schedule observed '+new Date(r.fixture.observedAt).toLocaleString()+'. Times use your device timezone.');
+   p('Kickoff '+new Date(r.fixture.kickoff).toLocaleString()+' · '+(r.fixture.neutralSite?'Neutral venue':'Home venue')+' · evaluated '+new Date(r.evaluatedAt).toLocaleString()+' · official schedule observed '+new Date(r.fixture.observedAt).toLocaleString()+'. Times use your device timezone.');
    p('Current bookmaker odds: UNAVAILABLE. No verified betting edge. Quarterback, injury and weather effects are not modeled. Read the full card’s official context before interpreting the pick.');
    p('Generated on opening this page, not a scheduled or automatically archived forecast. '+(d.failedWeeks?.length?'Some nearby official weeks could not be verified.':''));
    link();const button=document.createElement('button');button.type='button';button.textContent='Refresh matchup';button.addEventListener('click',load);root.append(button);

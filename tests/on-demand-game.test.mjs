@@ -67,3 +67,32 @@ test('Discovery lists explicit absent-summary scheduled fixtures but never enabl
  assert.equal((await discoverUpcomingGames({getWeek:async()=>s},{clock:()=>now})).games[0].forecastReady,true);
  assert.equal(evaluateOnDemandGame(gameId,{schedule:s,artifact,now}).available,true);
 });
+
+import {freezeModelOnlyReceipt} from '../src/model-only-receipt.mjs';
+test('Scheduled previews are explicit, bounded and cannot be frozen as confirmed pregame',()=>{
+ const s=schedule();s.receipt.games[0]={...fixture,summaryPhase:null,summaryState:'ABSENT',neutralSite:true};
+ const options={schedule:s,artifact,now,allowScheduledPreview:true};
+ const r=evaluateOnDemandGame(gameId,options);
+ assert.equal(r.available,true);assert.equal(r.use,'SCHEDULED_MODEL_PREVIEW');assert.equal(r.preview,true);assert.equal(r.pregameConfirmed,false);assert.equal(r.captureEligible,false);
+ assert.equal(r.baseline.homeWinProbability,predictNflEvent({home_team:'Baltimore Ravens',away_team:'Los Angeles Chargers',commence_time:fixture.kickoff,neutralSite:true},artifact,now).homeWinProbability);
+ assert.equal(r.market.providerCreditsUsed,0);assert.equal(r.spreadProbability,null);assert.equal(r.verifiedBettingEdge,false);
+ assert.throws(()=>freezeModelOnlyReceipt(r,{artifact,requestStartedAt:new Date(now).toISOString(),receivedAt:new Date(now+1000).toISOString()}),/MODEL_ONLY_CAPTURE_INVALID/);
+ assert.equal(evaluateOnDemandGame(gameId,{...options,allowScheduledPreview:false}).available,false);
+ for(const change of [{summaryState:'MALFORMED'},{summaryState:undefined},{summaryPhase:'LIVE'},{summaryPhase:'FINAL'},{scheduleStatus:'CANCELLED'},{scheduleStatus:'POSTPONED'},{final:true},{kickoff:'bad'},{kickoff:new Date(now).toISOString()},{kickoff:new Date(now+8*86400000).toISOString()}]){
+  s.receipt.games[0]={...fixture,summaryPhase:null,summaryState:'ABSENT',...change};assert.equal(evaluateOnDemandGame(gameId,options).available,false,JSON.stringify(change));
+ }
+ s.receipt.games[0]={...fixture,summaryPhase:null,summaryState:'ABSENT'};
+ for(const at of [now-300000,now+1]){s.receipt.observedAt=new Date(at).toISOString();assert.equal(evaluateOnDemandGame(gameId,options).available,false);}
+ s.receipt.observedAt=new Date(now).toISOString();
+ for(const badArtifact of [null,{...artifact,generatedAt:new Date(now+1).toISOString()},{...artifact,lastGameDate:'2026-11-18'}])assert.equal(evaluateOnDemandGame(gameId,{...options,artifact:badArtifact}).available,false);
+ s.receipt.games[0]={...fixture};assert.deepEqual(evaluateOnDemandGame(gameId,options),evaluateOnDemandGame(gameId,{...options,allowScheduledPreview:false}));
+});
+test('HTTP preview opt-in leaves strict capture endpoint unavailable for scheduled-only fixture',async t=>{
+ const s=schedule();s.receipt.games[0]={...fixture,summaryPhase:null,summaryState:'ABSENT'};let calls=0;
+ const server=http.createServer(createHandler({clock:()=>now,nflArtifact:artifact,officialGameFeed:{get:async()=>s},source:{status:()=>({configured:true}),get:()=>{calls++;throw Error('paid forbidden');}}}));
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>server.close(resolve)));
+ const url=`http://127.0.0.1:${server.address().port}/api/game-evaluation?gameId=${gameId}`;
+ assert.equal((await (await fetch(url)).json()).available,false);
+ const r=await (await fetch(url+'&preview=scheduled')).json();assert.equal(r.available,true);assert.equal(r.use,'SCHEDULED_MODEL_PREVIEW');assert.equal(calls,0);
+ assert.equal((await (await fetch(url+'&preview=true')).json()).available,false);
+});
