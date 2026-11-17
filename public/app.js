@@ -130,6 +130,8 @@
 
   function setTab(tab) {
     if (!allowedTabs.includes(tab)) return;
+    const researchTools=$('research-tools');
+    if(researchTools)researchTools.open=true;
     if (tab !== 'games') closeGameDossier(false);
     state.tab = tab;
     document.querySelectorAll('.nav-item').forEach(b => {
@@ -141,8 +143,8 @@
     header.hidden = tab !== 'overview';
     header.style.display = tab === 'overview' ? '' : 'none';
     $('breadcrumb-page').textContent = ({
-      overview: 'COMMAND CENTER', games: 'GAME MONITOR', signals: 'SIGNAL SCANNER',
-      model: 'PREDICTION LAB', evidence: 'FORWARD EVIDENCE', latency: 'QB LATENCY STUDY', replay: 'HISTORICAL REPLAY', pricing: 'ROI & CLV LAB', execution: 'PAPER EXECUTION', audit: 'AUDIT & QUALITY', settings: 'SETTINGS'
+      overview: 'OVERVIEW', games: 'GAMES & RESULTS', signals: 'COMPARE ODDS',
+      model: 'MODEL DETAILS', evidence: 'ACCURACY TRACKING', latency: 'QUARTERBACK RESEARCH', replay: 'HISTORICAL REPLAY', pricing: 'RETURNS & PRICE RESEARCH', execution: 'PRACTICE TRACKER', audit: 'DATA CHECKS', settings: 'SETTINGS'
     })[tab];
     setNavigation(false,false);
     if (tab === 'settings') syncSettings();
@@ -157,7 +159,7 @@
     if (tab === 'games') renderGames();
     const heading=$('page-'+tab).querySelector('h2');
     if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}
-    window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    $('page-'+tab).scrollIntoView?.({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   }
 
   async function requestJSON(path) {

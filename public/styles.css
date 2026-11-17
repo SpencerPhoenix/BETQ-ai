@@ -658,3 +658,20 @@ progress.evidence-meter::-moz-progress-bar {background:var(--lime);border-radius
 
 #prepared-model-ledger { padding:20px; margin-bottom:20px; overflow-wrap:anywhere; }
 #prepared-model-ledger p { line-height:1.6; margin:10px 0; }
+
+/* Keep the everyday game outlook ahead of optional research controls. */
+.research-disclosure { margin-top: 24px; }
+.research-disclosure > summary, main > details > summary { cursor: pointer; padding: 16px; border: 1px solid #445268; border-radius: 10px; line-height: 1.5; }
+.research-disclosure > summary small { display: block; color: #b5c2d6; margin-left: 18px; }
+.research-disclosure[open] > summary { margin-bottom: 20px; }
+summary:focus-visible { outline: 3px solid #bee878; outline-offset: 3px; }
+#automatic-game-card { padding: 24px; }
+#automatic-game-card h2 { font-size: clamp(1.3rem, 3vw, 1.8rem); }
+#automatic-game-card p { line-height: 1.65; overflow-wrap: anywhere; }
+#automatic-game-card button { display: block; margin-top: 18px; min-height: 44px; padding: 10px 16px; cursor: pointer; }
+#automatic-game-card details { margin-top: 16px; }
+#automatic-game-card summary { cursor: pointer; padding: 12px 0; }
+.hero h2 { font-size: clamp(2rem, 4vw, 3.5rem); line-height: 1.1; }
+@media(max-width: 500px) { #automatic-game-card { padding: 16px; } .section-heading { flex-wrap: wrap; gap: 14px; } }
+
+.page { scroll-margin-top: 88px; }

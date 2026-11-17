@@ -72,6 +72,11 @@ with sync_playwright() as p:
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.clock.install()
     page.goto('http://betq.test/')
+    expect(page.locator('#research-tools')).not_to_have_attribute('open','')
+    expect(page.locator('#research-tools > summary')).to_be_visible()
+    page.locator('#research-tools > summary').click()
+    expect(page.locator('#research-tools')).to_have_attribute('open','')
+    page.locator('#research-tools > summary').click()
     expect(page.locator('#banner')).to_contain_text('NO CACHED ODDS AVAILABLE')
     assert not any(r['paid'] for r in requests), requests
     cache_ready = True # Simulate a separate authenticated operator populating cache.
@@ -83,6 +88,7 @@ with sync_playwright() as p:
     expect(page.locator('#banner')).to_contain_text('CACHE RELOAD FAILED')
     cache_ready = True
     navigate(page,'games')
+    expect(page.locator('#research-tools')).to_have_attribute('open','')
     expect(page.locator('.game-card')).to_have_count(3)
     expect(page.locator('#game-grid [data-pick]')).to_have_count(3)
     assert '4 sportsbooks · 1 matched contract(s)' in page.locator('#game-grid').inner_text()
