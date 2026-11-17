@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {syntheticDeliveryArtifact} from './fixtures/model-delivery.mjs';
 import {evaluateOnDemandGame} from '../src/on-demand-game.mjs';
-import {emptyModelLedger,reserveModelGames,appendModelCapture,confirmModelPublication,modelLedgerSummary,validateModelLedger,assertLedgerAppend,ledgerEvent,NFLVERSE_SCHEDULE} from '../src/scheduled-model-ledger.mjs';
+import {emptyModelLedger,reserveModelGames,appendModelCapture,confirmModelPublication,modelLedgerSummary,validateModelLedger,assertLedgerAppend,ledgerEvent,NFLVERSE_SCHEDULE,sameOfficialFinal} from '../src/scheduled-model-ledger.mjs';
 const now=Date.parse('2026-11-17T00:00:00.000Z'),iso=n=>new Date(n).toISOString(),id='2026_10_LAC_BAL';
 const artifact=syntheticDeliveryArtifact('2026-11-16T21:00:00.000Z','2026-11-15');
 const game=()=>({gameId:id,providerGameId:'official-1',season:2026,week:10,home:'BAL',away:'LAC',kickoff:iso(now+75*60000),gameDate:'2026-11-16',neutralSite:false,scheduleStatus:'SCHEDULED',summaryPhase:'PREGAME',final:false,homeScore:null,awayScore:null});
@@ -46,4 +46,12 @@ test('Known final conflict withholds prior grade until a new corroborated final 
  assert.equal(modelLedgerSummary(l,at).games[0].grade,null);
  ledgerEvent(l,'RUN',null,{runKey:'3.1',failedWeeks:[],resultConflicts:[]},at+1000);assert.equal(modelLedgerSummary(l,at+1000).games[0].grade,null);
  const payload=structuredClone(l.events.find(e=>e.type==='FINAL').payload);payload.officialSource.observedAt=iso(at+2000);payload.nflverse.receivedAt=iso(at+2000);ledgerEvent(l,'FINAL',id,payload,at+3000);validateModelLedger(l);assert.notEqual(modelLedgerSummary(l,at+3000).games[0].grade,null);
+});
+
+test('Final no-op comparison cannot skip venue, identity or date corrections',()=>{
+ const a={...game(),final:true,summaryPhase:'FINAL',homeScore:20,awayScore:10};
+ assert.equal(sameOfficialFinal(a,{...a}),true);
+ for(const [key,value] of Object.entries({neutralSite:true,home:'NYG',away:'PHI',gameDate:'2026-11-17',providerGameId:'other',kickoff:iso(now+76*60000)}))assert.equal(sameOfficialFinal(a,{...a,[key]:value}),false,key);
+ const l=final(confirmed()),candidate=structuredClone(l),payload=structuredClone(l.events.at(-1).payload);payload.officialGame.neutralSite=true;ledgerEvent(candidate,'FINAL',id,payload,now+6*3600000);assert.throws(()=>assertLedgerAppend(l,candidate));
+ ledgerEvent(l,'RESULT_CONFLICT',id,{reason:'FINAL_IDENTITY_OR_KICKOFF_CONFLICT'},now+6*3600000);assert.equal(modelLedgerSummary(l).games[0].grade,null);
 });

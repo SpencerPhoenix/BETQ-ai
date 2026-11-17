@@ -20,6 +20,7 @@ function validOfficial(g){
  return g.season===season&&g.week===week&&typeof g.providerGameId==='string'&&g.providerGameId.length>0&&g.providerGameId.length<100&&instant(g.kickoff)&&
   g.gameId===`${season}_${String(week).padStart(2,'0')}_${g.away}_${g.home}`&&typeof g.neutralSite==='boolean';
 }
+export function sameOfficialFinal(a,b){return ['gameId','providerGameId','kickoff','home','away','neutralSite','gameDate','homeScore','awayScore','final','summaryPhase'].every(k=>a?.[k]===b?.[k]);}
 export function validateModelLedger(l){
  if(l?.schema!==1||!isDeepStrictEqual(l.policy,LEDGER_POLICY)||!instant(l.createdAt)||!Array.isArray(l.events)||l.events.length>20000||!l.artifacts||Object.keys(l.artifacts).length>1000)fail();
  const ids=new Set(),seen=new Map();

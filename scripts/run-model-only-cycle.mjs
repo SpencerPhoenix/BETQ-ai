@@ -6,7 +6,7 @@ import {createOfficialGameFeed,discoveryWeeks,gameScope} from '../src/on-demand-
 import {readBoundedText} from '../src/integrity.mjs';import {parseCsv,cleanGames} from '../src/nfl-elo.mjs';
 import {compareModelHealth} from '../src/model-delivery.mjs';
 import {GAME_CARD_ORIGIN} from '../src/model-only-receipt.mjs';
-import {emptyModelLedger,validateModelLedger,assertLedgerAppend,reserveModelGames,appendModelCapture,ledgerEvent,NFLVERSE_SCHEDULE} from '../src/scheduled-model-ledger.mjs';
+import {emptyModelLedger,validateModelLedger,assertLedgerAppend,reserveModelGames,appendModelCapture,ledgerEvent,NFLVERSE_SCHEDULE,sameOfficialFinal} from '../src/scheduled-model-ledger.mjs';
 const [mode,path,...extra]=process.argv.slice(2),runKey=`${process.env.GITHUB_RUN_ID}.${process.env.GITHUB_RUN_ATTEMPT}`;
 if(!['reserve','capture'].includes(mode)||!path||extra.length||!/^\d+\.\d+$/.test(runKey))throw Error('Expected reserve|capture NEW_LEDGER_PATH and workflow run identity');
 let original;try{const text=await readFile(path,'utf8');if(text.length>8000000)throw Error('LEDGER_SIZE_LIMIT');original=validateModelLedger(JSON.parse(text));}catch(e){if(e.code==='ENOENT'&&mode==='reserve')original=emptyModelLedger(Date.now());else throw e;}
@@ -33,7 +33,7 @@ if(mode==='reserve'){
     const source=games.filter(g=>g.id===game.gameId),old=ledger.events.filter(e=>e.type==='FINAL'&&e.gameId===game.gameId).at(-1);
     if(source.length!==1||source[0].home!==game.home||source[0].away!==game.away||source[0].homeScore!==game.homeScore||source[0].awayScore!==game.awayScore||source[0].date!==game.gameDate){resultConflicts.push({gameId:game.gameId,reason:'FINAL_SOURCES_DISAGREE_OR_MISSING'});continue;}
     const conflict=ledger.events.filter(e=>e.type==='RESULT_CONFLICT'&&e.gameId===game.gameId).at(-1);
-    if(old&&(!conflict||ledger.events.indexOf(conflict)<ledger.events.indexOf(old))&&old.payload.officialGame.homeScore===game.homeScore&&old.payload.officialGame.awayScore===game.awayScore&&old.payload.officialGame.kickoff===game.kickoff&&old.payload.officialGame.providerGameId===game.providerGameId)continue;
+    if(old&&(!conflict||ledger.events.indexOf(conflict)<ledger.events.indexOf(old))&&sameOfficialFinal(old.payload.officialGame,game))continue;
     const candidate=structuredClone(ledger);ledgerEvent(candidate,'FINAL',game.gameId,{officialGame:game,officialSource:{url:receipt.sourceUrl,observedAt:receipt.observedAt,bodySha256:receipt.sourceBodySha256},nflverse:{url:NFLVERSE_SCHEDULE,bodySha256:hash,receivedAt,gameId:game.gameId,date:source[0].date,home:source[0].home,away:source[0].away,homeScore:source[0].homeScore,awayScore:source[0].awayScore}},clock());
     try{assertLedgerAppend(ledger,candidate);ledger=candidate;}catch{resultConflicts.push({gameId:game.gameId,reason:'FINAL_IDENTITY_OR_KICKOFF_CONFLICT'});}
    }
