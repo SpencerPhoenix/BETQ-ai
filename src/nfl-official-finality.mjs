@@ -46,9 +46,10 @@ export function parseOfficialWeeklyPage(html,{season,week,observedAt,sourceUrl}=
     if(seen.has(gameId))fail('OFFICIAL_GAME_DUPLICATE');seen.add(gameId);providerIds.add(g.id);
     // The schedule entity's status stays SCHEDULED even after completion.
     // Require the separate summary's FINAL phase AND END_OF_GAME quarter.
-    const final=s?.phase==='FINAL'&&s?.quarter==='END_OF_GAME';
+    const terminal=['FINAL','FINAL_OVERTIME'].includes(s?.phase);
+    const final=terminal&&s?.quarter==='END_OF_GAME';
     if(final&&!['SCHEDULED','FINAL'].includes(g.status))fail('OFFICIAL_SCHEDULE_STATUS_CONFLICT');
-    if((s?.phase==='FINAL')!==(s?.quarter==='END_OF_GAME'))fail('OFFICIAL_FINAL_STATE_CONFLICT');
+    if(terminal!==(s?.quarter==='END_OF_GAME'))fail('OFFICIAL_FINAL_STATE_CONFLICT');
     let homeScore=null,awayScore=null;
     if(final){
       if(s.gameId!==g.id||s.homeTeam?.teamId!==g.homeTeam.id||s.awayTeam?.teamId!==g.awayTeam.id||
@@ -56,7 +57,7 @@ export function parseOfficialWeeklyPage(html,{season,week,observedAt,sourceUrl}=
       homeScore=s.homeTeam.score.total;awayScore=s.awayTeam.score.total;
     }
     games.push({gameId,providerGameId:g.id,season,week,home,away,kickoff:new Date(g.time).toISOString(),
-      gameDate:day(g.time),neutralSite:g.neutralSite,scheduleStatus:g.status??null,summaryPhase:s?.phase??null,summaryState:s==null?'ABSENT':typeof s==='object'&&!Array.isArray(s)&&typeof s.phase==='string'?'PRESENT':'MALFORMED',final,homeScore,awayScore});
+      gameDate:day(g.time),neutralSite:g.neutralSite,scheduleStatus:g.status??null,summaryPhase:s?.phase??null,summaryQuarter:s?.quarter??null,summaryState:s==null?'ABSENT':typeof s==='object'&&!Array.isArray(s)&&typeof s.phase==='string'?'PRESENT':'MALFORMED',final,homeScore,awayScore});
   }
   return {schema:1,policy:OFFICIAL_FINALITY_POLICY,sourceUrl,season,week,observedAt:new Date(observedAt).toISOString(),
     sourcePublishedAt:null,sourceBodySha256:hash(html),games,
