@@ -6,7 +6,7 @@ test('game outlook precedes collapsed optional research with working navigation'
  const html=read('index.html');
  assert.ok(html.indexOf('id="automatic-game-card"')<html.indexOf('id="research-tools"'));
  assert.match(html,/<details id="research-tools" class="research-disclosure">/);
- assert.match(html,/href="\/game-card">Choose a game/);
+ assert.match(html,/href="\/game-card">Choose an upcoming game/);
  assert.match(read('app.js'),/if\(researchTools\)researchTools.open=true/);
  assert.match(read('app.js'),/scrollIntoView/);
  assert.match(html,/Games &amp; results|Games & results/);

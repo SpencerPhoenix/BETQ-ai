@@ -71,3 +71,24 @@ test('backend qualified grade with missing model version remains visible',()=>{
  assert.equal(data.games[0].status,'GRADED');assert.equal(data.games[0].modelVersion,null);
  assert.equal(ui.valid(data),true);const html=ui.html(data);assert.match(html,/1 graded \/ 1 tracked games/);assert.match(html,/Model: Not retained/);assert.doesNotMatch(html,/Game grading unavailable/);
 });
+
+test('latest result is first without future games burying it or mutating evidence',()=>{
+ const data=fixture(),original=data.games[0];
+ const latest={...structuredClone(original),gameId:'latest',home:'BAL',away:'LAC',gameDate:'2026-11-16',commenceTime:'2026-11-17T01:15:00.000Z',modelHomeProbability:.656,result:{...original.result,homeScore:20,awayScore:23},metrics:{...original.metrics,modelCorrect:false}};
+ const pending={...structuredClone(original),gameId:'pending',gameDate:'2026-11-22',commenceTime:'2026-11-22T18:00:00.000Z',status:'PENDING_RESULT',result:null,metrics:null};
+ data.games.push(pending,latest);Object.assign(data.coverage,{trackedGames:3,recordedResults:2,gradedGames:2,pendingGames:1});
+ const before=JSON.stringify(data),html=ui.html(data);
+ assert.match(html,/Latest result · 2026-11-16/);assert.match(html,/LAC 23 · BAL 20/);assert.match(html,/Original pick: <strong>BAL<\/strong> · 65.6%/);assert.match(html,/Model: Incorrect/);
+ const rows=html.slice(html.indexOf('<tbody>'));assert.ok(rows.indexOf('LAC @ BAL')<rows.indexOf('Away @ Home'));
+ assert.equal(JSON.stringify(data),before);
+});
+test('latest result never turns an ungraded or conflicting result into a win or loss',()=>{
+ const data=fixture();data.games[0].status='UNGRADED';data.games[0].metrics=null;data.games[0].result.sourceCorroborated=false;Object.assign(data.coverage,{gradedGames:0,ungradedGames:1});
+ let summary=ui.html(data).split('</section>')[0];assert.match(summary,/Model: Not scored/);assert.match(summary,/Uncorroborated recorded score/);assert.doesNotMatch(summary,/Model: Correct|Original pick:/);
+ data.games[0].status='SCHEDULE_CONFLICT_QUARANTINED';summary=ui.html(data).split('</section>')[0];assert.match(summary,/No final score is available yet/);assert.doesNotMatch(summary,/Home 24/);
+});
+test('latest result escapes labels, preserves neutral forecasts and has a direct homepage entry',()=>{
+ const data=fixture();data.games[0].home='<img>';data.games[0].modelHomeProbability=.5;data.games[0].metrics.modelCorrect=null;
+ const html=ui.html(data).split('</section>')[0];assert.match(html,/&lt;img&gt;/);assert.doesNotMatch(html,/<img>/);assert.match(html,/No preference/);assert.match(html,/No directional pick/);
+ const index=fs.readFileSync(new URL('../public/index.html',import.meta.url),'utf8');assert.match(index,/data-tab="games">Latest results/);
+});

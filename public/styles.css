@@ -675,3 +675,9 @@ summary:focus-visible { outline: 3px solid #bee878; outline-offset: 3px; }
 @media(max-width: 500px) { #automatic-game-card { padding: 16px; } .section-heading { flex-wrap: wrap; gap: 14px; } }
 
 .page { scroll-margin-top: 88px; }
+
+/* Keep the latest actual result readable without a wide research table. */
+.outlook-actions{display:flex;flex-wrap:wrap;gap:10px}
+.latest-game-result{border:1px solid var(--border,#303846);border-radius:10px;padding:16px;margin:16px 0;max-width:100%;overflow-wrap:anywhere}
+.latest-game-result h4{font-size:1rem;margin:0 0 10px}
+.latest-result-score{font-size:1.4rem}

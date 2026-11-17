@@ -82,7 +82,8 @@ with sync_playwright() as p:
     # Python Playwright numeric clock times are seconds; journal values are JS milliseconds.
     page.clock.install(time=fixtures['now']/1000)
     page.goto('http://betq.test/')
-    navigate(page,'games')
+    page.get_by_role('button',name='Latest results →',exact=True).click()
+    expect(page.locator('#page-games')).to_have_class('page active')
     grades=page.locator('#game-grades')
     count=fixtures['grades']['coverage']['trackedGames']
     expect(grades.locator('tbody tr')).to_have_count(count)
@@ -102,6 +103,9 @@ with sync_playwright() as p:
     expect(grades).to_have_text(before,use_inner_text=True)
     for width in [320,390,768]:
         page.set_viewport_size({'width':width,'height':844}); no_overflow(page)
+        latest=grades.locator('.latest-game-result')
+        expect(latest).to_be_visible()
+        assert latest.evaluate('(el)=>el.scrollWidth<=el.clientWidth+1')
         region=grades.locator('.game-grades-scroll')
         region.focus(); page.keyboard.press('ArrowRight'); expect(region).to_be_focused()
         assert region.evaluate('(el)=>el.scrollWidth>el.clientWidth')
