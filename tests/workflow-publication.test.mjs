@@ -16,7 +16,7 @@ const schedules = {
   'train-nfl': ['17 11 * * *'],
   'update-injuries': ['24 10 * * *']
 };
-const auditSchedules = {'retained-evidence-audit': ['53 */6 * * *']};
+const auditSchedules = {'retained-evidence-audit': ['53 */6 * * *'], 'injury-coverage-audit': ['40 12 * * *']};
 // New schedule explicitly reviewed for isolated model-only custody, not market collection.
 const modelOnlySchedules = {'model-only-scheduled': ['7,22,37,52 * * * *']};
 const writerSchedules = {...schedules,...modelOnlySchedules};
@@ -25,6 +25,7 @@ const writers = [...manualWriters, ...Object.keys(writerSchedules)];
 // Pinning their complete definitions also catches inline/job-level permission
 // or API-write changes that a text search for `git push` cannot classify.
 const readOnlyBaseline = {
+  'injury-coverage-audit': 'b8ebc10e8fe51d63e8e91dee90b1d8e63d7fb7964de130b025ba2a53d584f311',
   // New manual encrypted sample reviewed separately; no automatic collection.
   'bdl-result-sample': '7dd8a44daaed324435cef33ee1547c54188b121ab8551113a99b18844abde1d4',
   'retained-evidence-audit': '24a6bc9009daf141496935498722ace6ef3146ca64002bd79b20fe5da6c96991',
