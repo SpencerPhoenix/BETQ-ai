@@ -44,7 +44,7 @@ export function evaluateOnDemandGame(gameId,{schedule,artifact,challengerArtifac
  const matches=r.games.filter(g=>g.gameId===gameId);
  if(matches.length!==1)return {...base,available:false,reason:'OFFICIAL_MATCHUP_NOT_FOUND'};
  const g=matches[0];
- const fixture={home:names[g.home],away:names[g.away],kickoff:g.kickoff,neutralSite:g.neutralSite,
+ const fixture={providerGameId:g.providerGameId,home:names[g.home],away:names[g.away],kickoff:g.kickoff,neutralSite:g.neutralSite,
   sourceUrl:r.sourceUrl,observedAt:r.observedAt,sourcePublishedAt:null,sourceBodySha256:r.sourceBodySha256};
  if(g.final||Date.parse(g.kickoff)<=now)return {...base,fixture,available:false,reason:'GAME_STARTED_OR_COMPLETED'};
  if(g.scheduleStatus!=='SCHEDULED'||g.summaryPhase!=='PREGAME')return {...base,fixture,available:false,reason:'OFFICIAL_GAME_NOT_CONFIRMED_PREGAME'};

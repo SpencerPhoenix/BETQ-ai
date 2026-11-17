@@ -1,3 +1,4 @@
+import {createScheduledModelFeed} from './scheduled-model-feed.mjs';
 import {NFL_TEAMS} from './nfl-elo.mjs';
 import {createOfficialGameFeed,evaluateOnDemandGame,gameScope,discoverUpcomingGames} from './on-demand-game.mjs';
 import http from 'node:http';
@@ -92,6 +93,7 @@ const NFL_MARKET_CHALLENGE=loadResearchArtifact('market-challenge/summary.json',
 const roundModel = (n, digits = 2) => Number.isFinite(n) ? Number(n.toFixed(digits)) : null;
 const ASSETS = new Map([
   ['/game-card', ['game-card.html','text/html; charset=utf-8']],
+  ['/prepared-ledger.js', ['prepared-ledger.js','text/javascript; charset=utf-8']],
   ['/automatic-card.js', ['automatic-card.js','text/javascript; charset=utf-8']],
   ['/game-card.js', ['game-card.js','text/javascript; charset=utf-8']],
   ['/game-card.css', ['game-card.css','text/css; charset=utf-8']],
@@ -166,6 +168,7 @@ export function createHandler({
   source = createOddsSource(),
   operatorRefreshToken = process.env.BETQ_OPERATOR_REFRESH_TOKEN || '',
   clock = Date.now,
+  scheduledModelFeed = createScheduledModelFeed({clock,fetchImpl:null}),
   officialGameFeed = createOfficialGameFeed({clock,fetchImpl:null}),
   nflArtifact = NFL_ARTIFACT,
   nflEfficiency = NFL_EFFICIENCY,
@@ -265,7 +268,7 @@ export function createHandler({
             odds.budget?.persistent!==true || odds.budget?.available!==true || odds.budget?.ready!==true ?
               odds.budget?.reason||'DURABLE_BUDGET_NOT_READY' : null);
           return reply(res, 200, {
-          status: 'ok', app: 'BETQ.ai', version: '0.11.0',
+          status: 'ok', app: 'BETQ.ai', version: '0.11.0', modelOnlyCaptureSchema:2,
           serverTime: new Date(healthNow).toISOString(), odds,
           marketCaptureContract:describeMarketCaptureContract(),
           operatorRefresh:{configured:operatorConfigured,authenticationRequired:true,paidIntentRequired:true},
@@ -306,6 +309,7 @@ export function createHandler({
           closingLineValueVerified: false,
           wageringEnabled: false, injuryDataConnected: false, halftimeModelConnected: false
         });
+        if (url.pathname === '/api/prepared-games') return reply(res,200,await scheduledModelFeed.get());
         if (url.pathname === '/api/upcoming-games') return reply(res,200,await discoverUpcomingGames(officialGameFeed,{clock}));
         if (url.pathname === '/api/game-evaluation') {
           const gameId=url.searchParams.get('gameId');
@@ -743,8 +747,9 @@ export function startServer(options = {}) {
     clock:options.clock??Date.now
   });
   const officialInjuryFeed=options.officialInjuryFeed??createOfficialInjuryFeed({fallbackArtifact:options.officialInjuryArtifact??OFFICIAL_INJURY_REVIEWS,clock:options.clock??Date.now});
+  const scheduledModelFeed=options.scheduledModelFeed??createScheduledModelFeed({clock:options.clock??Date.now});
   const officialGameFeed=options.officialGameFeed??createOfficialGameFeed({clock:options.clock??Date.now});
-  const server = http.createServer(createHandler({...options,injuryFeed,officialInjuryFeed,officialGameFeed}));
+  const server = http.createServer(createHandler({...options,injuryFeed,officialInjuryFeed,officialGameFeed,scheduledModelFeed}));
   server.listen(port, '0.0.0.0', () => {
     console.log('[BETQ] terminal listening on port ' + server.address().port);
   });

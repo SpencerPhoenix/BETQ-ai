@@ -1,0 +1,52 @@
+name: BETQ scheduled model-only evidence
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: betq-model-only-scheduled-publication
+  cancel-in-progress: false
+
+jobs:
+  model-only:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      LEDGER_PATH: ${{ runner.temp }}/betq-model-only/ledger.json
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+          check-latest: true
+      - name: Fetch exact prior one-file evidence branch without publisher credentials
+        run: node scripts/publish-model-only-ledger.mjs prepare "$LEDGER_PATH"
+      - name: Reserve official fixtures before any model capture
+        run: node scripts/run-model-only-cycle.mjs reserve "$LEDGER_PATH"
+      - name: Publish reservations with fast-forward and exact byte readback
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/publish-model-only-ledger.mjs reserve "$LEDGER_PATH"
+      - name: Capture only this run attempt's durably reserved fixtures without credentials
+        run: node scripts/run-model-only-cycle.mjs capture "$LEDGER_PATH"
+      - name: Publish captures then persist separately verified custody acknowledgments
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/publish-model-only-ledger.mjs final "$LEDGER_PATH"
+      - name: Preserve candidates and publication checkpoint for explicit operator recovery
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-only-ledger-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/betq-model-only/
+          retention-days: 30
+          if-no-files-found: warn

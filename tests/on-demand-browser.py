@@ -14,6 +14,10 @@ injury_pending=[]
 def route(route):
  u=urlparse(route.request.url);requests.append(route.request)
  assert u.hostname=='betq.test'
+ if u.path=='/api/prepared-games':
+  if mode=='ledger':return route.fulfill(json={'available':True,'publicationReadbackVerified':True,'remoteLedgerObservedAt':now,'lastRunAt':now,'schedulerStale':True,'games':[{'gameId':r['gameId'],'kickoff':r['fixture']['kickoff'],'status':'PROVISIONAL_TWO_SOURCE_GRADE','captureId':'fixture','custody':{'remoteCommit':'a'*40},'forecastEvaluatedAt':now,'homeWinProbability':.65,'grade':{'homeScore':20,'awayScore':20,'tie':True,'pickWon':None,'brier':None}}]})
+  return route.fulfill(json={'available':False,'publicationReadbackVerified':False})
+ if u.path=='/prepared-test':return route.fulfill(body='<html><body><section id=prepared-model-ledger></section><script src=/prepared-ledger.js></script></body></html>',content_type='text/html')
  if u.path=='/api/upcoming-games':
   if mode=='delayed':pending.append(route);return
   return route.fulfill(json={'available':mode!='empty','games':[] if mode=='empty' else [{'gameId':r['gameId'],**r['fixture']}],'failedWeeks':[]})
@@ -50,6 +54,8 @@ with sync_playwright() as p:
  mode='delayed';c=b.new_context();c.route('**/*',route);page=c.new_page();page.clock.install(time=datetime(2026,11,16,20,0,tzinfo=timezone.utc));page.goto('http://betq.test/game-card');page.locator('summary').first.click();page.locator('#evaluate').click();expect(page.locator('#result')).to_contain_text('Elo baseline')
  for route_ in pending:route_.fulfill(json={'available':False,'games':[]})
  expect(page.locator('#result')).to_contain_text('Elo baseline');c.close()
+ c=b.new_context();c.route('**/*',route);page=c.new_page();page.goto('http://betq.test/prepared-test');expect(page.locator('#prepared-model-ledger')).to_contain_text('No automatic-save claim');c.close()
+ mode='ledger';c=b.new_context();c.route('**/*',route);page=c.new_page();page.goto('http://betq.test/prepared-test');expect(page.locator('#prepared-model-ledger')).to_contain_text('Saved original forecast');expect(page.locator('#prepared-model-ledger')).to_contain_text('SCHEDULER STALE');expect(page.locator('#prepared-model-ledger')).to_contain_text('Tie: binary scores withheld');expect(page.locator('#prepared-model-ledger')).to_contain_text('not independent timestamp');c.close()
  b.close()
 assert not any(x.headers.get('x-betq-paid-request') or x.headers.get('authorization') for x in requests)
 print('On-demand card desktop/mobile, disagreement, arithmetic, expiry, no paid calls: PASS')

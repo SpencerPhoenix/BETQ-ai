@@ -17,7 +17,10 @@ const schedules = {
   'update-injuries': ['24 10 * * *']
 };
 const auditSchedules = {'retained-evidence-audit': ['53 */6 * * *']};
-const writers = [...manualWriters, ...Object.keys(schedules)];
+// New schedule explicitly reviewed for isolated model-only custody, not market collection.
+const modelOnlySchedules = {'model-only-scheduled': ['7,22,37,52 * * * *']};
+const writerSchedules = {...schedules,...modelOnlySchedules};
+const writers = [...manualWriters, ...Object.keys(writerSchedules)];
 // Existing workflows retain reviewed PR16 hashes; the read-only audit and offline browser CI amendment have their own reviewed hashes.
 // Pinning their complete definitions also catches inline/job-level permission
 // or API-write changes that a text search for `git push` cannot classify.
@@ -93,7 +96,7 @@ test('Collector dependency installation cannot inherit its operator bearer', asy
 test('All writers are manual or retain only their exact existing schedules, never push-triggered', async () => {
   for (const name of writers) {
     const text = await read(name);
-    assertWriterEvents(text, name, schedules[name]);
+    assertWriterEvents(text, name, writerSchedules[name]);
     assert.match(text, /^jobs:\n  [a-z-]+:\n    if: github.ref == 'refs\/heads\/main'\n/m, name);
   }
 });
@@ -107,7 +110,7 @@ test('Every main writer is guarded before checkout and cannot publish a feature-
     const stem = workflowStem(name);
     publishers.push(stem);
     assert.ok(writers.includes(stem), `${name}: unreviewed writer workflow`);
-    assertWriterEvents(text, name, schedules[stem]);
+    assertWriterEvents(text, name, writerSchedules[stem]);
     const jobs = text.split(/^jobs:\n/m)[1]?.split(/^  [a-zA-Z0-9_-]+:\n/m).filter(section => section.trim()) || [];
     assert.equal(jobs.length, 1, `${name}: review additional writer jobs`);
     for (const job of jobs) {
@@ -137,7 +140,7 @@ test('Writer schedules are unchanged and the read-only audit has its reviewed in
     const cron = [...events(text).matchAll(/cron: '([^']+)'/g)].map(match => match[1]);
     if (cron.length) found[workflowStem(name)] = cron;
   }
-  assert.deepEqual(found, {...schedules,...auditSchedules});
+  assert.deepEqual(found, {...writerSchedules,...auditSchedules});
 });
 
 test('Read-only workflows match their explicitly reviewed baselines', async () => {
@@ -233,4 +236,21 @@ test('Browser release CI preserves reviewed integrity job and uses isolated offl
     assert.match(script,/game-grades\.js/);assert.match(script,/retained-forecasts\.js/);
     assert.match(script,/os\.environ\.get\('CHROMIUM_PATH'\)/);
   }
+});
+
+
+test('Model-only schedule publishes only a reserved ledger, with isolated credential scope',async()=>{
+ const text=await read('model-only-scheduled');
+ assert.match(text,/contents: write/);assert.doesNotMatch(text,/actions: write|permissions: write-all|secrets\.|ODDS_API_KEY|BETQ_OPERATOR_REFRESH_TOKEN|DATABASE_URL/);
+ assert.match(text,/group: betq-model-only-scheduled-publication\n  cancel-in-progress: false/);
+ assert.match(text,/persist-credentials: false/);
+ const steps=text.split(/^      - /m);
+ const tokenSteps=steps.filter(s=>s.includes('GITHUB_TOKEN:'));
+ assert.equal(tokenSteps.length,2);for(const step of tokenSteps)assert.match(step,/run: node scripts\/publish-model-only-ledger\.mjs (reserve|final)/);
+ assert.ok(text.indexOf('publish-model-only-ledger.mjs reserve')<text.indexOf('run-model-only-cycle.mjs capture'));
+ assert.match(text,/if: always\(\)/);assert.match(text,/actions\/upload-artifact@v4/);
+ const publisher=await readFile(new URL('../scripts/publish-model-only-ledger.mjs',import.meta.url),'utf8');
+ assert.match(publisher,/BRANCH='evidence\/model-only-scheduled'/);
+ assert.match(publisher,/force:false/);assert.match(publisher,/actual.data!==content/);
+ assert.match(publisher,/delete env.GITHUB_TOKEN/);assert.match(publisher,/response.headers.get\('date'\)/);
 });

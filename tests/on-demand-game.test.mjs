@@ -3,7 +3,7 @@ import {predictNflEvent} from '../src/nfl-elo.mjs';
 import {gameScope,evaluateOnDemandGame,createOfficialGameFeed} from '../src/on-demand-game.mjs';
 const artifact=syntheticDeliveryArtifact('2026-11-16T21:00:00.000Z','2026-11-15'),now=Date.parse('2026-11-16T23:00:00Z');
 const expected=predictNflEvent({home_team:'Baltimore Ravens',away_team:'Los Angeles Chargers',commence_time:'2026-11-17T01:15:00Z'},artifact,now).homeWinProbability;
-const gameId='2026_10_LAC_BAL',fixture={gameId,home:'BAL',away:'LAC',kickoff:'2026-11-17T01:15:00Z',neutralSite:false,scheduleStatus:'SCHEDULED',summaryPhase:'PREGAME',final:false};
+const gameId='2026_10_LAC_BAL',fixture={gameId,providerGameId:'fixture-provider',home:'BAL',away:'LAC',kickoff:'2026-11-17T01:15:00Z',neutralSite:false,scheduleStatus:'SCHEDULED',summaryPhase:'PREGAME',final:false};
 const schedule=()=>({available:true,receipt:{observedAt:new Date(now).toISOString(),games:[{...fixture}],sourceUrl:'https://www.nfl.com/scores/2026/week-10',sourceBodySha256:'a'.repeat(64)}});
 test('Current artifact evaluates an official future fixture without prices or changing history',()=>{
  const r=evaluateOnDemandGame(gameId,{schedule:schedule(),artifact,now});assert.equal(r.available,true);assert.equal(r.baseline.homeWinProbability,expected);assert.equal(r.market.available,false);assert.equal(r.market.providerCreditsUsed,0);assert.equal(r.injuryAdjusted,false);assert.equal(r.durablyArchived,false);assert.equal(r.spreadProbability,null);assert.equal(r.gradeBaselineChanged,false);
