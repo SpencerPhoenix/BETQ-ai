@@ -7,6 +7,7 @@ import {describeModelDelivery} from './model-delivery.mjs';
 import {describeMarketCaptureContract,MARKET_CAPTURE_CONTRACT,MARKET_CAPTURE_CONTRACT_ID} from './evidence-compat.mjs';
 import {performance} from 'node:perf_hooks';
 import {collectionHealthFromJournal} from './collection-health.mjs';
+import {createOfficialResultFeed} from './official-result-feed.mjs';
 import {gradeGamesWithOfficialFinals} from './official-game-grades.mjs';
 import {listGameDossiers,buildGameDossier,listRetainedForecasts} from './game-dossier.mjs';
 import {getBundledHistoricalEvaluation,HISTORICAL_BUNDLE_DIR} from './historical-bundle.mjs';
@@ -171,6 +172,7 @@ export function createHandler({
   clock = Date.now,
   scheduledModelFeed = createScheduledModelFeed({clock,fetchImpl:null}),
   officialGameFeed = createOfficialGameFeed({clock,fetchImpl:null}),
+  officialResultFeed = createOfficialResultFeed({clock,fetchImpl:null}),
   nflArtifact = NFL_ARTIFACT,
   nflEfficiency = NFL_EFFICIENCY,
   nflInjuries = NFL_INJURIES,
@@ -189,6 +191,7 @@ export function createHandler({
   historicalEvaluation = getBundledHistoricalEvaluation,
   maxAgeMs = Number(process.env.ODDS_MAX_AGE_MS) || 600000
 } = {}) {
+  const officialGradeConflicts=new Map();
   // Freeze a private copy: a caller cannot mutate the artifact behind its identity.
   nflArtifact=nflArtifact===null?null:structuredClone(nflArtifact);
   function localEvidenceSnapshot(){
@@ -402,8 +405,8 @@ export function createHandler({
           if(req.method!=='GET')return reply(res,405,{error:{code:'METHOD_NOT_ALLOWED',message:'Retained grades support GET only.'}},{Allow:'GET'});
           if([...url.searchParams].length)return reply(res,400,{error:{code:'INVALID_SELECTOR',message:'Retained grades accept no query parameters.'}});
           // Await the same coalesced, validated public journal refresh as other research views.
-          const retained=await currentEvidenceSnapshot();
-          const result=await gradeGamesWithOfficialFinals(retained.journal,officialGameFeed,{clock});
+          const [retained,durable]=await Promise.all([currentEvidenceSnapshot(),officialResultFeed.get()]);
+          const result=await gradeGamesWithOfficialFinals(retained.journal,officialGameFeed,{clock,durableLedger:durable?.available?durable.ledger:null,durableStatus:durable,conflictMemory:officialGradeConflicts});
           return reply(res,result.available?200:503,result);
         }
         if (['/api/research/games','/api/research/game','/api/research/forecasts'].includes(url.pathname)) {
@@ -751,8 +754,9 @@ export function startServer(options = {}) {
   });
   const officialInjuryFeed=options.officialInjuryFeed??createOfficialInjuryFeed({fallbackArtifact:options.officialInjuryArtifact??OFFICIAL_INJURY_REVIEWS,clock:options.clock??Date.now});
   const scheduledModelFeed=options.scheduledModelFeed??createScheduledModelFeed({clock:options.clock??Date.now});
+  const officialResultFeed=options.officialResultFeed??createOfficialResultFeed({clock:options.clock??Date.now});
   const officialGameFeed=options.officialGameFeed??createOfficialGameFeed({clock:options.clock??Date.now});
-  const server = http.createServer(createHandler({...options,injuryFeed,officialInjuryFeed,officialGameFeed,scheduledModelFeed}));
+  const server = http.createServer(createHandler({...options,injuryFeed,officialInjuryFeed,officialGameFeed,officialResultFeed,scheduledModelFeed}));
   server.listen(port, '0.0.0.0', () => {
     console.log('[BETQ] terminal listening on port ' + server.address().port);
   });
