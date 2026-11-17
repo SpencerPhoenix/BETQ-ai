@@ -3,7 +3,9 @@ const $=id=>document.getElementById(id);
 const teams=['ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE','DAL','DEN','DET','GB','HOU','IND','JAX','KC','LA','LAC','LV','MIA','MIN','NE','NO','NYG','NYJ','PHI','PIT','SEA','SF','TB','TEN','WAS'];
 for(const id of ['home','away'])for(const t of teams){const o=document.createElement('option');o.value=o.textContent=t;$(id).append(o);}
 $('season').value=new Date().getFullYear();$('away').value='LAC';$('home').value='BAL';
-let generation=0,current=null,contextExpires=null;
+let generation=0,current=null,contextExpires=null,userTouched=false;
+$('request').addEventListener('input',()=>{userTouched=true;});
+$('refresh').addEventListener('click',()=>$('request').requestSubmit());
 function paragraph(root,text,klass=''){const p=document.createElement('p');p.textContent=text;p.className=klass;root.append(p);}
 const percent=x=>(100*x).toFixed(1)+'%';
 $('request').addEventListener('submit',async e=>{
@@ -17,6 +19,8 @@ $('request').addEventListener('submit',async e=>{
   const out=$('result');out.replaceChildren();out.hidden=false;
   const h=document.createElement('h2');h.textContent=r.fixture.away+' at '+r.fixture.home;out.append(h);
   paragraph(out,'Kickoff: '+new Date(r.fixture.kickoff).toLocaleString()+' · '+(r.fixture.neutralSite?'Neutral venue':'Home venue'));
+  const pick=r.baseline.homeWinProbability===.5?'No outright preference':r.baseline.homeWinProbability>.5?r.fixture.home:r.fixture.away;
+  paragraph(out,'MODEL OUTRIGHT PICK: '+pick+'. This is not a verified betting recommendation.','warning');
   paragraph(out,'Elo baseline: '+r.fixture.home+' '+percent(r.baseline.homeWinProbability)+' · '+r.fixture.away+' '+percent(r.baseline.awayWinProbability));
   paragraph(out,'Model built '+new Date(r.baseline.modelBuiltAt).toLocaleString()+' · results through '+r.baseline.throughGameDate);
   if(r.challenger.available){paragraph(out,'Efficiency challenger: '+r.fixture.home+' '+percent(r.challenger.homeWinProbability)+' · '+r.fixture.away+' '+percent(r.challenger.awayWinProbability));
@@ -49,3 +53,17 @@ $('compare').addEventListener('click',()=>{
  $('comparison').textContent='User-entered price requires '+percent(breakeven)+' to break even. Unadjusted model: '+percent(p)+'. Arithmetic expected return: '+((p*decimal-1)*100).toFixed(1)+'%. Not a validated edge or recommended stake; quarterback/lineup effects remain unmodeled.';
 });
 setInterval(()=>{if(contextExpires!==null&&Date.now()>=contextExpires){contextExpires=null;$('context').replaceChildren();paragraph($('context'),'Official context expired. Evaluate again to refresh.','warning');}if(current&&(!Number.isFinite(Date.parse(current.validUntil))||Date.now()>=Date.parse(current.validUntil))){$('status').textContent='This evaluation has expired. Refresh before using it.';$('quote').hidden=true;$('context').replaceChildren();paragraph($('context'),'Refresh required: the displayed evaluation/context is no longer current.','warning');}},1000);
+
+function chooseGame(gameId){const [season,week,away,home]=gameId.split('_');$('season').value=season;$('week').value=Number(week);$('away').value=away;$('home').value=home;$('request').requestSubmit();}
+$('upcoming').addEventListener('change',()=>{userTouched=true;if($('upcoming').value)chooseGame($('upcoming').value);});
+(async()=>{
+ try{
+  const response=await fetch('/api/upcoming-games',{cache:'no-store'});if(!response.ok)throw Error('DISCOVERY_UNAVAILABLE');
+  const r=await response.json();if(userTouched||generation!==0)return;
+  $('upcoming').replaceChildren();
+  if(!r.available||!r.games?.length){const o=document.createElement('option');o.textContent='No verified upcoming matchup available';o.value='';$('upcoming').append(o);$('discovery').textContent='No current verified regular-season game found in the next seven days. Manual selection remains available; no fixture was invented.';return;}
+  for(const g of r.games){const o=document.createElement('option');o.value=g.gameId;o.textContent=g.away+' at '+g.home+' · '+new Date(g.kickoff).toLocaleString();$('upcoming').append(o);}
+  $('discovery').textContent='Nearest verified future kickoff selected. Times use your device timezone. '+(r.failedWeeks?.length?'Some official weeks could not be verified. ':'')+'Coverage is limited to nearby regular-season weeks; no paid odds requested.';
+  chooseGame(r.games[0].gameId);
+ }catch{if(!userTouched&&generation===0){$('upcoming').options[0].textContent='Automatic discovery unavailable';$('discovery').textContent='Could not verify upcoming fixtures. Use manual selection or reload; no substitute fixture was generated.';}}
+})();

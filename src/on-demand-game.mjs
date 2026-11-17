@@ -12,8 +12,8 @@ export function gameScope(gameId){
 }
 export function createOfficialGameFeed({fetchImpl=globalThis.fetch,clock=Date.now}={}){
  const cache=new Map();
- return {async get(gameId){
-  const {season,week}=gameScope(gameId),now=clock();
+ return {async get(gameId){const {season,week}=gameScope(gameId);return this.getWeek(season,week);},async getWeek(season,week){
+  officialWeeklyUrl(season,week);const now=clock();
   if(Math.abs(season-new Date(now).getUTCFullYear())>1)return {available:false,reason:'SEASON_OUTSIDE_CURRENT_SCOPE'};
   const key=season+':'+week;let entry=cache.get(key);
   if(entry&&now<entry.until)return entry.promise;
@@ -56,4 +56,33 @@ export function evaluateOnDemandGame(gameId,{schedule,artifact,challengerArtifac
  const challenger=baseline.available?challengerResearchForEvent(event,baseline.homeWinProbability,challengerArtifact,now):{available:false,reason:'BASELINE_UNAVAILABLE'};
  return {...base,validUntil,available:baseline.available,reason:baseline.reason||null,fixture,baseline,challenger,modelIdentity:identity,
   limitations:['Outcome-only baseline: no quarterback, injury or weather adjustment.','No current odds or spread/total probabilities.','Newly evaluated response, not an archived forecast or proven betting edge.']};
+}
+
+/** Week arithmetic is a search hint only; all displayed fixtures come from official receipts. */
+export function discoveryWeeks(now=Date.now()){
+ const d=new Date(now),year=d.getUTCFullYear(),season=d.getUTCMonth()<3?year-1:year;
+ const sept=new Date(Date.UTC(season,8,1)),laborDay=1+(8-sept.getUTCDay())%7;
+ const firstThursday=Date.UTC(season,8,laborDay+3),guess=Math.floor((now-firstThursday)/604800000)+1;
+ return {season,weeks:[guess-1,guess,guess+1].filter(w=>w>=1&&w<=18)};
+}
+export async function discoverUpcomingGames(feed,{clock=Date.now,horizonMs=7*86400000}={}){
+ const initial=clock(),scope=discoveryWeeks(initial);
+ const reads=await Promise.all(scope.weeks.map(async week=>({week,...await feed.getWeek(scope.season,week)})));
+ const now=clock(),games=[],failedWeeks=[];
+ for(const read of reads){
+  const r=read.receipt,observed=Date.parse(r?.observedAt);
+  if(!read.available||!Number.isFinite(observed)||observed>now||now-observed>=300000){failedWeeks.push(read.week);continue;}
+  for(const g of r.games){
+   const kickoff=Date.parse(g.kickoff);
+   if(g.final||g.scheduleStatus!=='SCHEDULED'||g.summaryPhase!=='PREGAME'||kickoff<=now||kickoff>now+horizonMs)continue;
+   games.push({gameId:g.gameId,home:names[g.home],away:names[g.away],kickoff:g.kickoff,neutralSite:g.neutralSite,
+    observedAt:r.observedAt,validUntil:new Date(Math.min(observed+300000,kickoff)).toISOString(),sourceUrl:r.sourceUrl});
+  }
+ }
+ games.sort((a,b)=>Date.parse(a.kickoff)-Date.parse(b.kickoff)||a.gameId.localeCompare(b.gameId));
+ const unique=games.filter((g,i)=>games.findIndex(x=>x.gameId===g.gameId)===i);
+ return {available:unique.length>0,reason:unique.length?null:failedWeeks.length?'OFFICIAL_DISCOVERY_PARTIAL_OR_UNAVAILABLE':'NO_VERIFIED_UPCOMING_REGULAR_SEASON_GAMES',
+  discoveredAt:new Date(now).toISOString(),windowEnd:new Date(now+horizonMs).toISOString(),season:scope.season,weeksChecked:scope.weeks,
+  failedWeeks,completeLeagueCoverageVerified:false,selection:'NEAREST_VERIFIED_FUTURE_KICKOFF_THEN_GAME_ID',
+  scheduledGeneration:false,durablyArchived:false,providerCreditsUsed:0,games:unique};
 }

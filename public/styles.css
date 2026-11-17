@@ -651,3 +651,7 @@ progress.evidence-meter::-moz-progress-bar {background:var(--lime);border-radius
 .game-grades-table th,.game-grades-table td{padding:12px;vertical-align:top;text-align:left;border-bottom:1px solid var(--border,#303846);max-width:250px}
 .game-grades-table small{display:block;font-weight:400;color:var(--text-muted,#a4aec2);margin:4px 0 10px}
 @media(max-width:600px){.game-grades{padding:16px}}
+
+#automatic-game-card { padding:20px; margin-bottom:20px; overflow-wrap:anywhere; }
+#automatic-game-card p { line-height:1.6; margin:10px 0; }
+#automatic-game-card a { display:inline-block; margin:12px 16px 12px 0; }
