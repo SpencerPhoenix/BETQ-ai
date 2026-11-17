@@ -68,6 +68,38 @@
         <div class="section-heading"><div><h1>NFL game outlook</h1><p>Model estimates, not guaranteed winners. Check the limitations beside each pick.</p></div><div class="outlook-actions"><button class="outline-button" type="button" data-tab="games">Latest results →</button><a class="outline-button" href="/game-card">Choose an upcoming game →</a></div></div>
         <section id="automatic-game-card" class="panel" aria-live="polite" aria-label="Automatic upcoming NFL card"></section>
         <details><summary>Saved forecasts &amp; system status</summary><section id="prepared-model-ledger" class="panel" aria-live="polite"></section></details>
+        <section class="page" id="page-games" aria-label="Game monitor">
+          <div class="section-heading"><div><div class="eyebrow subtle">02 / GAME MONITOR</div><h2 id="games-heading" tabindex="-1">Results</h2></div><button class="outline-button" type="button" data-action="scores" title="Read cached scores">Read cached scores ↗</button></div>
+          <div id="scores" class="scores-panel"></div>
+          <section id="game-dossier" class="panel game-dossier" aria-labelledby="game-dossier-heading" hidden>
+            <button class="outline-button" type="button" data-action="close-dossier">← Back to games</button>
+            <h3 id="game-dossier-heading" tabindex="-1">Game research dossier</h3>
+            <div id="game-dossier-status" role="status" aria-live="polite"></div>
+            <div id="game-dossier-content"></div>
+          </section>
+          <p class="capability-note"><a class="historical-entry" href="/historical-2025">Inspect the complete 2025 historical evaluation ↗</a>. 285 previously evaluated games with actual margins, frozen forecasts and descriptive analogs. Separate from the prospective records below; no verified betting edge.</p>
+          <section class="panel game-grades" aria-labelledby="game-grades-heading">
+            <h3 id="game-grades-heading">Every retained game: results &amp; grades</h3>
+            <p>Outcome coverage and frozen forecast accuracy, separate from the historical evaluation and fictional demo.</p>
+            <div id="game-grades" aria-live="polite">Reading retained game grades…</div>
+          </section>
+          <details class="result-archive"><summary>Saved forecasts &amp; research archive</summary>
+          <section class="panel retained-forecasts" aria-labelledby="retained-forecasts-heading">
+            <h3 id="retained-forecasts-heading">BETQ saved NFL forecasts</h3>
+            <p>Experimental outright-win probabilities from the latest retained Elo capture for each game. Separate from live odds, the selected league and fictional demo.</p>
+            <div id="retained-forecasts" aria-live="polite">Reading saved forecasts…</div>
+          </section>
+          <section class="panel retained-games" aria-labelledby="retained-games-heading">
+            <h3 id="retained-games-heading">Retained NFL game research</h3>
+            <p>Real retained NFL records, separate from the selected odds slate and fictional demo. Frozen research values only, not live recommendations.</p>
+            <div id="retained-games-list" aria-live="polite">Reading the retained journal…</div>
+          </section>
+
+          <p class="faint-caption">Times include your device time zone. Provider-scheduled kickoff is not official game status. A passed start time does not confirm that play began; dated schedule conflicts are shown separately.</p>
+          <div class="game-grid" id="game-grid"></div>
+          </details>
+        </section>
+
         <details id="research-tools" class="research-disclosure"><summary>Odds comparison &amp; research tools <small>Optional advanced detail</small></summary>
         <section class="hero">
           <div class="hero-lines" aria-hidden="true"></div>
@@ -151,35 +183,6 @@
               </div>
             </section>
           </div>
-        </section>
-
-        <section class="page" id="page-games" aria-label="Game monitor">
-          <div class="section-heading"><div><div class="eyebrow subtle">02 / GAME MONITOR</div><h2 id="games-heading" tabindex="-1">Game intelligence</h2></div><button class="outline-button" type="button" data-action="scores" title="Read cached scores">Read cached scores ↗</button></div>
-          <section id="game-dossier" class="panel game-dossier" aria-labelledby="game-dossier-heading" hidden>
-            <button class="outline-button" type="button" data-action="close-dossier">← Back to games</button>
-            <h3 id="game-dossier-heading" tabindex="-1">Game research dossier</h3>
-            <div id="game-dossier-status" role="status" aria-live="polite"></div>
-            <div id="game-dossier-content"></div>
-          </section>
-          <p class="capability-note"><a class="historical-entry" href="/historical-2025">Inspect the complete 2025 historical evaluation ↗</a>. 285 previously evaluated games with actual margins, frozen forecasts and descriptive analogs. Separate from the prospective records below; no verified betting edge.</p>
-          <section class="panel game-grades" aria-labelledby="game-grades-heading">
-            <h3 id="game-grades-heading">Every retained game: results &amp; grades</h3>
-            <p>Outcome coverage and frozen forecast accuracy, separate from the historical evaluation and fictional demo.</p>
-            <div id="game-grades" aria-live="polite">Reading retained game grades…</div>
-          </section>
-          <section class="panel retained-forecasts" aria-labelledby="retained-forecasts-heading">
-            <h3 id="retained-forecasts-heading">BETQ saved NFL forecasts</h3>
-            <p>Experimental outright-win probabilities from the latest retained Elo capture for each game. Separate from live odds, the selected league and fictional demo.</p>
-            <div id="retained-forecasts" aria-live="polite">Reading saved forecasts…</div>
-          </section>
-          <section class="panel retained-games" aria-labelledby="retained-games-heading">
-            <h3 id="retained-games-heading">Retained NFL game research</h3>
-            <p>Real retained NFL records, separate from the selected odds slate and fictional demo. Frozen research values only, not live recommendations.</p>
-            <div id="retained-games-list" aria-live="polite">Reading the retained journal…</div>
-          </section>
-          <div id="scores" class="scores-panel"></div>
-          <p class="faint-caption">Times include your device time zone. Provider-scheduled kickoff is not official game status. A passed start time does not confirm that play began; dated schedule conflicts are shown separately.</p>
-          <div class="game-grid" id="game-grid"></div>
         </section>
 
         <section class="page" id="page-signals" aria-label="Signal scanner">
@@ -310,9 +313,11 @@
         </section>
         </details>
       </main>
+  <nav class="mobile-bottom-nav" aria-label="Quick navigation"><button type="button" data-home aria-current="page">Game outlook</button><button type="button" data-tab="games">Results</button><button type="button" data-tab="signals">Odds</button><a href="/game-card">All games</a></nav>
       <footer class="app-footer"><span>BETQ.ai <span class="footer-faint">/ GAME INSIGHTS TERMINAL</span></span><span>Research only · No validated betting edge · No real wagering</span></footer>
     </div>
   </div>
+
   <div class="toast" role="status" id="toast" aria-live="polite"></div>
 </body>
 </html>

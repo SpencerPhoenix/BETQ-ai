@@ -60,6 +60,8 @@ with sync_playwright() as p:
     page.clock.install(time=fixtures['now']/1000)
     page.goto('http://betq.test/')
     page.locator('.nav-item[data-tab="games"]').click()
+    page.locator('.result-archive > summary').click()
+    page.locator('#research-tools > summary').click()
     root=page.locator('#retained-forecasts')
     expect(root.locator('.retained-forecast-card')).to_have_count(len(fixtures['forecasts']['games']))
     kc=root.locator('[data-retained-forecast="2026_09_NYJ_KC"]')

@@ -681,3 +681,30 @@ summary:focus-visible { outline: 3px solid #bee878; outline-offset: 3px; }
 .latest-game-result{border:1px solid var(--border,#303846);border-radius:10px;padding:16px;margin:16px 0;max-width:100%;overflow-wrap:anywhere}
 .latest-game-result h4{font-size:1rem;margin:0 0 10px}
 .latest-result-score{font-size:1.4rem}
+
+/* Everyday results are cards, with the complete audit available on demand. */
+.result-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:20px 0}
+.result-card{min-width:0;border:1px solid #344157;border-radius:14px;padding:18px;background:#111a29;overflow-wrap:anywhere}
+.result-card header{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:center}
+.result-card h4{font-size:1.15rem;margin:0;color:#f1f5fa}.result-card header span{font-size:.8rem;color:#bac5d5}
+.result-card .result-card-score{font-size:1.35rem;font-weight:700;color:#f1f5fa;margin:16px 0}
+.result-card p{margin:8px 0}.result-card .result-badge{display:inline-block;border-radius:6px;padding:5px 10px;font-weight:700;font-size:.9rem}
+.result-badge.correct{background:#173c30;color:#b3f0cd}.result-badge.incorrect{background:#422b31;color:#ffc7ce}.result-badge.neutral{background:#303747;color:#e0e6ef}
+.result-card .result-source{font-size:.85rem;color:#b9c6da}
+.grade-evidence>summary,.result-archive>summary{padding:16px;cursor:pointer;border:1px solid #445268;border-radius:10px;min-height:48px;line-height:1.5}
+.result-archive{margin-top:20px}.result-archive[open]>summary{margin-bottom:16px}
+#automatic-game-card .outlook-pick{font-size:1.25rem;font-weight:700;color:#e4f4ce;padding:16px;border-left:3px solid #b5d775;background:#1c2a29;border-radius:5px}
+#automatic-game-card .outlook-probability{font-size:1.15rem;font-weight:600;color:#f1f5fa}
+.mobile-bottom-nav{display:none}
+@media(max-width:760px){
+ .result-card-grid{grid-template-columns:1fr}.game-grades{padding:16px}.result-card{padding:16px}
+ .mobile-bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:20;background:#111a29;border-top:1px solid #445268;padding:8px 8px calc(8px + env(safe-area-inset-bottom));gap:4px}
+ .mobile-bottom-nav>a,.mobile-bottom-nav>button{flex:1;min-width:0;min-height:48px;display:flex;align-items:center;justify-content:center;text-align:center;border:0;border-radius:8px;background:transparent;color:#d4deed;font-family:inherit;font-size:12px;font-weight:600;line-height:1.4;text-decoration:none;padding:8px 3px}
+ .mobile-bottom-nav [aria-current=page]{background:#263a32;color:#d9f4b6}.mobile-bottom-nav :focus-visible{outline:3px solid #bee878;outline-offset:-3px}
+ .app-footer{padding-bottom:100px}.toast{bottom:90px}.main-content{padding-bottom:32px}
+ .outlook-actions{width:100%}.outlook-actions>*{min-height:48px;display:flex;align-items:center;justify-content:center;flex:1}
+ #automatic-game-card{border-radius:16px}#automatic-game-card h2{line-height:1.3}
+}
+.results-filters{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}.results-filters label{display:flex;flex:1;min-width:140px;flex-direction:column;gap:8px;color:#d4deed;font-size:.9rem}.results-filters input,.results-filters select{width:100%;min-height:48px;padding:12px;background:#101827;border:1px solid #526078;border-radius:8px;color:#f1f5fa;font:inherit}.result-card[hidden]{display:none}
+.matchup-chances{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}.matchup-chances>div{padding:16px;border:1px solid #445268;border-radius:12px;display:flex;flex-direction:column;gap:8px}.matchup-chances span{font-size:1rem;font-weight:600}.matchup-chances strong{font-size:2rem;color:#edf5e1}.matchup-chances small{color:#bdc9d8;font-size:.8rem}
+@media(max-width:360px){.matchup-chances{gap:8px}.matchup-chances>div{padding:10px}.matchup-chances strong{font-size:1.7rem}}

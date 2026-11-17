@@ -92,3 +92,12 @@ test('latest result escapes labels, preserves neutral forecasts and has a direct
  const html=ui.html(data).split('</section>')[0];assert.match(html,/&lt;img&gt;/);assert.doesNotMatch(html,/<img>/);assert.match(html,/No preference/);assert.match(html,/No directional pick/);
  const index=fs.readFileSync(new URL('../public/index.html',import.meta.url),'utf8');assert.match(index,/data-tab="games">Latest results/);
 });
+
+test('compact result cards keep source and correctness separate from the collapsed audit',()=>{
+ const d=fixture(),html=ui.html(d),card=html.match(/<article class="result-card"[\s\S]*?<\/article>/)[0];
+ assert.match(card,/Original pick: <strong>Home<\/strong>/);assert.match(card,/60.0% win chance/);assert.match(card,/Correct/);assert.match(card,/Source-corroborated result/);
+ assert.ok(html.indexOf('result-card-grid')<html.indexOf('Full grading evidence'));assert.match(html,/<details class="grade-evidence">/);
+ assert.match(html,/data-grade-search/);assert.match(html,/data-grade-filter/);
+ const held=structuredClone(d);held.games[0].status='SCHEDULE_CONFLICT_QUARANTINED';held.games[0].metrics=null;held.coverage.gradedGames=0;
+ const h=ui.html(held).match(/<article class="result-card"[\s\S]*?<\/article>/)[0];assert.match(h,/Score withheld/);assert.match(h,/Original pick withheld/);assert.doesNotMatch(h,/60.0%|Correct|Incorrect/);
+});
