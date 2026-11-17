@@ -1,3 +1,4 @@
+import {createStaticRelease} from './static-release.mjs';
 import {createScheduledModelFeed} from './scheduled-model-feed.mjs';
 import {NFL_TEAMS} from './nfl-elo.mjs';
 import {createOfficialGameFeed,evaluateOnDemandGame,gameScope,discoverUpcomingGames} from './on-demand-game.mjs';
@@ -111,6 +112,7 @@ const ASSETS = new Map([
   ['/historical-evaluation.css', ['historical-evaluation.css', 'text/css; charset=utf-8']],
   ['/favicon.svg', ['favicon.svg', 'image/svg+xml']]
 ]);
+const STATIC_RELEASE = createStaticRelease(ASSETS, file => readFileSync(join(PUBLIC_DIR, file)));
 const CSP = [
   "default-src 'self'", "base-uri 'none'", "connect-src 'self'",
   "script-src 'self'", "style-src 'self'", "img-src 'self' data:",
@@ -732,17 +734,16 @@ export function createHandler({
           'X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY','Referrer-Policy':'no-referrer','Content-Security-Policy':CSP});
         return res.end(req.method==='HEAD'?undefined:body);
       }
-      const asset = ASSETS.get(url.pathname);
+      const asset = STATIC_RELEASE.get(url);
       if (!asset) return reply(res, 404, { error: { code: 'NOT_FOUND', message: 'File not found.' } });
-      const body = await readFile(join(PUBLIC_DIR, asset[0]));
-      res.writeHead(200, {
-        'Content-Type': asset[1],
-        'Cache-Control': asset[0] === 'index.html' ? 'no-cache' : 'public, max-age=300',
+      res.writeHead(asset.status, {
+        'Content-Type': asset.type,
+        'Cache-Control': asset.cache,
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY', 'Referrer-Policy': 'no-referrer',
         'Content-Security-Policy': CSP
       });
-      res.end(req.method === 'HEAD' ? undefined : body);
+      res.end(req.method === 'HEAD' ? undefined : asset.body);
     } catch (err) { safeError(res, err); }
   };
 }

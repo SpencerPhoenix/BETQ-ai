@@ -161,3 +161,18 @@ An isolated [offline BALLDONTLIE receipt preparation tool](docs/BDL_OFFLINE_RECE
 See `docs/ARCHITECTURE.md` and `docs/MODEL.md` for data lineage, caveats, reproducibility, and next-phase milestones.
 
 Manual-only provider compatibility review: [encrypted BDL result sample](docs/BDL_MANUAL_SAMPLE.md). Publishing it does not collect data or activate grading.
+
+### Release-safe browser assets
+
+The server snapshots allowlisted public assets at startup. All HTML entry points
+are `no-store` and receive content-hashed script/style URLs plus SHA-256 integrity
+attributes. Matching versioned assets may be cached immutably; legacy unversioned
+URLs are `no-store`. This bypasses the former five-minute JS/CSS cache on a normal
+page reload. There is no service worker and no browser storage reset: saved
+preferences and paper records are untouched. A version mismatch during a rolling
+deploy or rollback returns a non-cacheable 409, never bytes from another version.
+Reload the page if it was fetched across that deployment boundary. Already-open
+pages are not forcibly refreshed, and previously cached HTML from older secondary
+pages can persist for their former five-minute TTL on the initial upgrade.
+
+Offline release-cache regressions: `node --test tests/static-release.test.mjs tests/static-resource-delivery.test.mjs`.
