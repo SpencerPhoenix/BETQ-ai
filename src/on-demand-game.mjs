@@ -74,8 +74,8 @@ export async function discoverUpcomingGames(feed,{clock=Date.now,horizonMs=7*864
   if(!read.available||!Number.isFinite(observed)||observed>now||now-observed>=300000){failedWeeks.push(read.week);continue;}
   for(const g of r.games){
    const kickoff=Date.parse(g.kickoff);
-   if(g.final||g.scheduleStatus!=='SCHEDULED'||g.summaryPhase!=='PREGAME'||kickoff<=now||kickoff>now+horizonMs)continue;
-   games.push({gameId:g.gameId,home:names[g.home],away:names[g.away],kickoff:g.kickoff,neutralSite:g.neutralSite,
+   if(g.final||g.scheduleStatus!=='SCHEDULED'||!(g.summaryPhase==='PREGAME'||(g.summaryPhase===null&&g.summaryState==='ABSENT'))||!Number.isFinite(kickoff)||kickoff<=now||kickoff>now+horizonMs)continue;
+   games.push({forecastReady:g.summaryPhase==='PREGAME',readiness:g.summaryPhase==='PREGAME'?'CONFIRMED_PREGAME':'SCHEDULED_AWAITING_PREGAME_SUMMARY',gameId:g.gameId,home:names[g.home],away:names[g.away],kickoff:g.kickoff,neutralSite:g.neutralSite,
     observedAt:r.observedAt,validUntil:new Date(Math.min(observed+300000,kickoff)).toISOString(),sourceUrl:r.sourceUrl});
   }
  }

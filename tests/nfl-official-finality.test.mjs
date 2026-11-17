@@ -76,3 +76,9 @@ test('Training opt-in cannot silently bypass verification via typo, duplicate or
  assert.deepEqual(trainingReceiptOptions(['--finality-receipts','r.json','--finality-weeks','9,10']),{path:'r.json',weeks:[9,10]});
  for(const args of [['--finality-receipt','x'],['--finality-receipts','x'],['--finality-weeks','10'],['--finality-receipts','x','--finality-weeks','10,10'],['--finality-receipts','x','--finality-weeks','10','--finality-weeks','9'],['--finality-receipts','--finality-weeks','10']])assert.throws(()=>trainingReceiptOptions(args));
 });
+
+test('Absent summary is explicit and distinct from malformed summary for discovery',()=>{
+ for(const summary of [null,undefined]){const g=game();g.summary=summary;const r=parseOfficialWeeklyPage(html([g]),context);assert.equal(r.games[0].summaryState,'ABSENT');assert.equal(r.games[0].summaryPhase,null);assert.equal(r.games[0].final,false);}
+ for(const summary of [{},[],false,42,'PREGAME']){const g=game();g.summary=summary;const r=parseOfficialWeeklyPage(html([g]),context);assert.equal(r.games[0].summaryState,'MALFORMED');assert.equal(r.games[0].final,false);}
+ assert.equal(receipt().games[0].summaryState,'PRESENT');
+});

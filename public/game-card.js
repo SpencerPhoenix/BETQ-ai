@@ -3,6 +3,7 @@ const $=id=>document.getElementById(id);
 const teams=['ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE','DAL','DEN','DET','GB','HOU','IND','JAX','KC','LA','LAC','LV','MIA','MIN','NE','NO','NYG','NYJ','PHI','PIT','SEA','SF','TB','TEN','WAS'];
 for(const id of ['home','away'])for(const t of teams){const o=document.createElement('option');o.value=o.textContent=t;$(id).append(o);}
 $('season').value=new Date().getFullYear();$('away').value='LAC';$('home').value='BAL';
+let discoveredGames=new Map();
 let generation=0,current=null,contextExpires=null,userTouched=false;
 $('request').addEventListener('input',()=>{userTouched=true;});
 $('refresh').addEventListener('click',()=>$('request').requestSubmit());
@@ -54,7 +55,11 @@ $('compare').addEventListener('click',()=>{
 });
 setInterval(()=>{if(contextExpires!==null&&Date.now()>=contextExpires){contextExpires=null;$('context').replaceChildren();paragraph($('context'),'Official context expired. Evaluate again to refresh.','warning');}if(current&&(!Number.isFinite(Date.parse(current.validUntil))||Date.now()>=Date.parse(current.validUntil))){current=null;$('status').textContent='This evaluation has expired. Refresh before using it.';$('result').hidden=true;$('quote').hidden=true;$('context').replaceChildren();paragraph($('context'),'Refresh required: the displayed evaluation/context is no longer current.','warning');}},1000);
 
-function chooseGame(gameId){const [season,week,away,home]=gameId.split('_');$('season').value=season;$('week').value=Number(week);$('away').value=away;$('home').value=home;$('request').requestSubmit();}
+function chooseGame(gameId){const [season,week,away,home]=gameId.split('_');$('season').value=season;$('week').value=Number(week);$('away').value=away;$('home').value=home;
+ const g=discoveredGames.get(gameId);
+ if(g?.forecastReady===false){generation++;current=null;contextExpires=null;$('result').hidden=true;$('quote').hidden=true;$('context').replaceChildren();$('comparison').textContent='';$('receipt').textContent=JSON.stringify(g,null,2);$('evaluate').disabled=false;
+  $('status').textContent=g.away+' at '+g.home+' · '+new Date(g.kickoff).toLocaleString()+' · '+(g.neutralSite?'Neutral venue':'Home venue')+'. Scheduled; game-center pregame status not yet available. No forecast or betting play generated.';return;}
+ $('request').requestSubmit();}
 $('upcoming').addEventListener('change',()=>{userTouched=true;if($('upcoming').value)chooseGame($('upcoming').value);});
 (async()=>{
  try{
@@ -62,7 +67,8 @@ $('upcoming').addEventListener('change',()=>{userTouched=true;if($('upcoming').v
   const r=await response.json();if(userTouched||generation!==0)return;
   $('upcoming').replaceChildren();
   if(!r.available||!r.games?.length){const o=document.createElement('option');o.textContent='No verified upcoming matchup available';o.value='';$('upcoming').append(o);$('discovery').textContent='No current verified regular-season game found in the next seven days. Manual selection remains available; no fixture was invented.';return;}
-  for(const g of r.games){const o=document.createElement('option');o.value=g.gameId;o.textContent=g.away+' at '+g.home+' · '+new Date(g.kickoff).toLocaleString();$('upcoming').append(o);}
+  discoveredGames=new Map(r.games.map(g=>[g.gameId,g]));
+  for(const g of r.games){const o=document.createElement('option');o.value=g.gameId;o.textContent=g.away+' at '+g.home+' · '+new Date(g.kickoff).toLocaleString()+(g.neutralSite?' · Neutral venue':'')+(g.forecastReady===false?' · Scheduled, awaiting pregame status':'');$('upcoming').append(o);}
   $('discovery').textContent='Nearest verified future kickoff selected. Times use your device timezone. '+(r.failedWeeks?.length?'Some official weeks could not be verified. ':'')+'Coverage is limited to nearby regular-season weeks; no paid odds requested.';
   chooseGame(r.games[0].gameId);
  }catch{if(!userTouched&&generation===0){$('upcoming').options[0].textContent='Automatic discovery unavailable';$('discovery').textContent='Could not verify upcoming fixtures. Use manual selection or reload; no substitute fixture was generated.';}}

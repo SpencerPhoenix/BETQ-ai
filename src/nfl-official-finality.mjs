@@ -56,7 +56,7 @@ export function parseOfficialWeeklyPage(html,{season,week,observedAt,sourceUrl}=
       homeScore=s.homeTeam.score.total;awayScore=s.awayTeam.score.total;
     }
     games.push({gameId,providerGameId:g.id,season,week,home,away,kickoff:new Date(g.time).toISOString(),
-      gameDate:day(g.time),neutralSite:g.neutralSite,scheduleStatus:g.status??null,summaryPhase:s?.phase??null,final,homeScore,awayScore});
+      gameDate:day(g.time),neutralSite:g.neutralSite,scheduleStatus:g.status??null,summaryPhase:s?.phase??null,summaryState:s==null?'ABSENT':typeof s==='object'&&!Array.isArray(s)&&typeof s.phase==='string'?'PRESENT':'MALFORMED',final,homeScore,awayScore});
   }
   return {schema:1,policy:OFFICIAL_FINALITY_POLICY,sourceUrl,season,week,observedAt:new Date(observedAt).toISOString(),
     sourcePublishedAt:null,sourceBodySha256:hash(html),games,
