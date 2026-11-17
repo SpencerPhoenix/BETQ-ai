@@ -14,7 +14,7 @@ $('request').addEventListener('submit',async e=>{
  try{
   const response=await fetch('/api/game-evaluation?gameId='+encodeURIComponent(gameId),{cache:'no-store'});const r=await response.json();if(token!==generation)return;
   $('receipt').textContent=JSON.stringify(r,null,2);
-  if(!response.ok||!r.available){$('status').textContent='No current evaluation: '+(r.reason||r.error?.code||'unavailable');return;}
+  if(!response.ok||!r.available||!Number.isFinite(Date.parse(r.validUntil))||Date.now()>=Date.parse(r.validUntil)){$('status').textContent='No current evaluation: '+(r.reason||r.error?.code||'unavailable');return;}
   current=r;$('status').textContent='Evaluated '+new Date(r.evaluatedAt).toLocaleString()+'. Official schedule observed '+new Date(r.fixture.observedAt).toLocaleString();
   const out=$('result');out.replaceChildren();out.hidden=false;
   const h=document.createElement('h2');h.textContent=r.fixture.away+' at '+r.fixture.home;out.append(h);
@@ -29,7 +29,7 @@ $('request').addEventListener('submit',async e=>{
   }else paragraph(out,'Challenger unavailable: '+r.challenger.reason);
   paragraph(out,'No current odds, validated spread/total probability, or demonstrated betting edge. These probabilities omit quarterback and injury adjustments.','warning');
   $('quote').hidden=false;$('side').options[0].textContent=r.fixture.home;$('side').options[1].textContent=r.fixture.away;
-  const source=await fetch('/api/injuries/nfl',{cache:'no-store'}).then(x=>{if(!x.ok)throw Error('CONTEXT_UNAVAILABLE');return x.json();}).catch(()=>({}));if(token!==generation)return;
+  const source=await fetch('/api/injuries/nfl',{cache:'no-store'}).then(x=>{if(!x.ok)throw Error('CONTEXT_UNAVAILABLE');return x.json();}).catch(()=>({}));if(token!==generation||current!==r||Date.now()>=Date.parse(r.validUntil))return;
   const reviews=[...(source.officialReviews||[]),...(source.rosterContextReviews||[])].filter(x=>x.gameId===gameId);
   paragraph($('context'),'Official context for this matchup (pilot coverage; not model adjustments):');
   if(!reviews.length)paragraph($('context'),'No supported official context. Missing records do not mean healthy or confirmed starters.','warning');
@@ -52,7 +52,7 @@ $('compare').addEventListener('click',()=>{
  const decimal=a>0?1+a/100:1+100/-a,breakeven=1/decimal;
  $('comparison').textContent='User-entered price requires '+percent(breakeven)+' to break even. Unadjusted model: '+percent(p)+'. Arithmetic expected return: '+((p*decimal-1)*100).toFixed(1)+'%. Not a validated edge or recommended stake; quarterback/lineup effects remain unmodeled.';
 });
-setInterval(()=>{if(contextExpires!==null&&Date.now()>=contextExpires){contextExpires=null;$('context').replaceChildren();paragraph($('context'),'Official context expired. Evaluate again to refresh.','warning');}if(current&&(!Number.isFinite(Date.parse(current.validUntil))||Date.now()>=Date.parse(current.validUntil))){$('status').textContent='This evaluation has expired. Refresh before using it.';$('quote').hidden=true;$('context').replaceChildren();paragraph($('context'),'Refresh required: the displayed evaluation/context is no longer current.','warning');}},1000);
+setInterval(()=>{if(contextExpires!==null&&Date.now()>=contextExpires){contextExpires=null;$('context').replaceChildren();paragraph($('context'),'Official context expired. Evaluate again to refresh.','warning');}if(current&&(!Number.isFinite(Date.parse(current.validUntil))||Date.now()>=Date.parse(current.validUntil))){current=null;$('status').textContent='This evaluation has expired. Refresh before using it.';$('result').hidden=true;$('quote').hidden=true;$('context').replaceChildren();paragraph($('context'),'Refresh required: the displayed evaluation/context is no longer current.','warning');}},1000);
 
 function chooseGame(gameId){const [season,week,away,home]=gameId.split('_');$('season').value=season;$('week').value=Number(week);$('away').value=away;$('home').value=home;$('request').requestSubmit();}
 $('upcoming').addEventListener('change',()=>{userTouched=true;if($('upcoming').value)chooseGame($('upcoming').value);});

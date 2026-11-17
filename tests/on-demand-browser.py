@@ -10,6 +10,7 @@ r={'schema':1,'gameId':'2026_10_LAC_BAL','available':True,'evaluatedAt':now,'val
 requests=[]
 mode="normal"
 pending=[]
+injury_pending=[]
 def route(route):
  u=urlparse(route.request.url);requests.append(route.request)
  assert u.hostname=='betq.test'
@@ -17,8 +18,10 @@ def route(route):
   if mode=='delayed':pending.append(route);return
   return route.fulfill(json={'available':mode!='empty','games':[] if mode=='empty' else [{'gameId':r['gameId'],**r['fixture']}],'failedWeeks':[]})
  if u.path=='/automatic-test':return route.fulfill(body='<html><head><meta name=viewport content="width=device-width,initial-scale=1"><link rel=stylesheet href=/styles.css></head><body><section id=automatic-game-card class=panel></section><script src=/automatic-card.js></script></body></html>',content_type='text/html')
- if u.path.startswith('/api/game-evaluation'):return route.fulfill(json=r)
- if u.path=='/api/injuries/nfl':return route.fulfill(json={'officialReviews':[],'rosterContextReviews':[]})
+ if u.path.startswith('/api/game-evaluation'):return route.fulfill(json={**r,'validUntil':now} if mode=='stale' else r)
+ if u.path=='/api/injuries/nfl':
+  if mode=='injury-delayed':injury_pending.append(route);return
+  return route.fulfill(json={'officialReviews':[],'rosterContextReviews':[]})
  f=ROOT/'public'/('game-card.html' if u.path=='/game-card' else u.path[1:]);types={'.html':'text/html','.js':'application/javascript','.css':'text/css'}
  if f.exists():return route.fulfill(body=f.read_bytes(),content_type=types[f.suffix])
  return route.fulfill(status=404,body='not found')
@@ -31,7 +34,7 @@ with sync_playwright() as p:
   expect(page.locator('#context')).to_contain_text('Missing records do not mean healthy')
   page.locator('#price').fill('-230');page.locator('#compare').click();expect(page.locator('#comparison')).to_contain_text('69.7%')
   expect(page.locator('#comparison')).to_contain_text('Not a validated edge')
-  page.clock.fast_forward(301000);expect(page.locator('#quote')).to_be_hidden();expect(page.locator('#status')).to_contain_text('expired')
+  page.clock.fast_forward(301000);expect(page.locator('#quote')).to_be_hidden();expect(page.locator('#result')).to_be_hidden();expect(page.locator('#status')).to_contain_text('expired')
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth');assert not errors,errors;c.close()
  # Isolated homepage widget uses production script/styles, verifies automatic pick and expiry.
  for width in [375,1440]:
@@ -39,6 +42,10 @@ with sync_playwright() as p:
   expect(page.locator('#automatic-game-card')).to_contain_text('MODEL OUTRIGHT PICK: Baltimore Ravens')
   expect(page.locator('#automatic-game-card')).to_contain_text('Current bookmaker odds: UNAVAILABLE')
   page.clock.fast_forward(301000);expect(page.locator('#automatic-game-card')).to_contain_text('expired');expect(page.locator('#automatic-game-card')).not_to_contain_text('65.0%');c.close()
+ mode='stale';c=b.new_context();c.route('**/*',route);page=c.new_page();page.clock.install(time=datetime(2026,11,16,20,0,tzinfo=timezone.utc));page.goto('http://betq.test/game-card');expect(page.locator('#status')).to_contain_text('No current evaluation');expect(page.locator('#result')).to_be_hidden();c.close()
+ mode='injury-delayed';c=b.new_context();c.route('**/*',route);page=c.new_page();page.clock.install(time=datetime(2026,11,16,20,0,tzinfo=timezone.utc));page.goto('http://betq.test/game-card');expect(page.locator('#result')).to_be_visible();page.clock.fast_forward(301000);expect(page.locator('#result')).to_be_hidden()
+ for route_ in injury_pending:route_.fulfill(json={'officialReviews':[],'rosterContextReviews':[]})
+ expect(page.locator('#context')).to_contain_text('Refresh required');c.close()
  mode='empty';c=b.new_context();c.route('**/*',route);page=c.new_page();page.goto('http://betq.test/game-card');expect(page.locator('#discovery')).to_contain_text('No current verified');expect(page.locator('#result')).to_be_hidden();c.close()
  mode='delayed';c=b.new_context();c.route('**/*',route);page=c.new_page();page.clock.install(time=datetime(2026,11,16,20,0,tzinfo=timezone.utc));page.goto('http://betq.test/game-card');page.locator('summary').first.click();page.locator('#evaluate').click();expect(page.locator('#result')).to_contain_text('Elo baseline')
  for route_ in pending:route_.fulfill(json={'available':False,'games':[]})

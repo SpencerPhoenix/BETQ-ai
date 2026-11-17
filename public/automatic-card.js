@@ -18,6 +18,8 @@
    const pick=r.baseline.homeWinProbability===.5?'No outright preference':r.baseline.homeWinProbability>.5?r.fixture.home:r.fixture.away;
    p('MODEL OUTRIGHT PICK: '+pick+'. Not a verified betting recommendation.');
    p(r.fixture.home+' '+(100*r.baseline.homeWinProbability).toFixed(1)+'% · '+r.fixture.away+' '+(100*r.baseline.awayWinProbability).toFixed(1)+'% (unadjusted Elo research).');
+   if(r.challenger?.available&&(r.challenger.homeWinProbability-.5)*(r.baseline.homeWinProbability-.5)<0)p('The separate efficiency challenger favors the other team. Models disagree; no automatic promotion.');
+   p('Baseline built '+new Date(r.baseline.modelBuiltAt).toLocaleString()+'; results through '+r.baseline.throughGameDate+'.');
    p('Kickoff '+new Date(r.fixture.kickoff).toLocaleString()+' · evaluated '+new Date(r.evaluatedAt).toLocaleString()+' · official schedule observed '+new Date(r.fixture.observedAt).toLocaleString()+'. Times use your device timezone.');
    p('Current bookmaker odds: UNAVAILABLE. No verified betting edge. Quarterback, injury and weather effects are not modeled. Read the full card’s official context before interpreting the pick.');
    p('Generated on opening this page, not a scheduled or automatically archived forecast. '+(d.failedWeeks?.length?'Some nearby official weeks could not be verified.':''));
