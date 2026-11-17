@@ -1227,7 +1227,7 @@
       return;
     }
     const h = report.holdout, c = report.calibration, t = report.tuning;
-    const stats = '<div class="metric-grid">' +
+    const stats = '<p><a href="/game-card">Open an on-demand NFL game card without paid odds ↗</a></p><div class="metric-grid">' +
       metric('2025 REFERENCE GAMES', String(h.n), 'Repeatedly inspected; not a fresh holdout', '', '◇') +
       metric('WINNER ACCURACY', num(h.accuracy * 100, 2) + '%', '2025 pregame outcomes', 'lime', '⌁') +
       metric('2025 BRIER', num(h.brier, 5), 'Lower is better · 0.25 coin flip', 'violet', '∑') +
@@ -1526,7 +1526,7 @@
     const progress = Math.min(30, sample);
     const qualified = Boolean(scoring.forward);
     const positive = scoring.benchmark?.consensusMinusModelBrier > 0;
-    const stats = '<div class="metric-grid">' +
+    const stats = '<p><a href="/game-card">Open an on-demand NFL game card without paid odds ↗</a></p><div class="metric-grid">' +
       metric('PREGAME FORECASTS', String(e.prospectiveGames || 0), 'Unique frozen before kickoff', 'cyan', '◫') +
       metric('RESULTS RECORDED', String(recorded), sample + ' source-corroborated · ties excluded', 'lime', '✓') +
       metric('SAME-TIME MARKET PAIRS', String(scoring.market), 'Source-corroborated outcome pairs', 'violet', '⌁') +
