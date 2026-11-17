@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#080c17">
   <meta name="description" content="BETQ.ai — Transparent, market-first sports quant research and paper execution terminal.">
-  <title>BETQ.ai | Quant Intelligence Terminal</title>
+  <title>BETQ.ai | Games & Forecasts</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles.css">
   <script defer src="/game-strategies.js"></script>
@@ -22,21 +22,21 @@
       <button class="mobile-nav-close" type="button" id="menu-close" aria-label="Close navigation">✕</button>
       <a class="brand" href="/" aria-label="BETQ.ai home">
         <span class="brand-mark">BQ<span class="brand-flare">.</span></span>
-        <span class="brand-copy"><strong>BETQ<span>.ai</span></strong><small>QUANT INTELLIGENCE</small></span>
+        <span class="brand-copy"><strong>BETQ<span>.ai</span></strong><small>GAME INSIGHTS</small></span>
       </a>
-      <div class="sidebar-overline">TERMINAL / v0.11.0</div>
+      <div class="sidebar-overline">BETQ / v0.11.0</div>
       <nav class="nav-list" aria-label="Terminal views">
-        <button class="nav-item active" type="button" data-tab="overview" aria-current="page"><span class="nav-icon">◫</span><span>Command Center</span><span class="nav-shortcut">01</span></button>
-        <button class="nav-item" type="button" data-tab="games"><span class="nav-icon">◉</span><span>Game Monitor</span><span class="nav-shortcut">02</span></button>
-        <button class="nav-item" type="button" data-tab="signals"><span class="nav-icon">⌁</span><span>Signal Scanner</span><span class="nav-shortcut">03</span></button>
-        <button class="nav-item" type="button" data-tab="model"><span class="nav-icon">⊞</span><span>Prediction Lab</span><span class="nav-shortcut">04</span></button>
-        <button class="nav-item" type="button" data-tab="evidence"><span class="nav-icon">▤</span><span>Evidence Lab</span><span class="nav-shortcut">05</span></button>
-        <button class="nav-item" type="button" data-tab="latency"><span class="nav-icon">◷</span><span>QB Latency Lab</span><span class="nav-shortcut">06</span></button>
+        <button class="nav-item active" type="button" data-tab="overview" aria-current="page"><span class="nav-icon">◫</span><span>Overview</span><span class="nav-shortcut">01</span></button>
+        <button class="nav-item" type="button" data-tab="games"><span class="nav-icon">◉</span><span>Games & results</span><span class="nav-shortcut">02</span></button>
+        <button class="nav-item" type="button" data-tab="signals"><span class="nav-icon">⌁</span><span>Compare odds</span><span class="nav-shortcut">03</span></button>
+        <button class="nav-item" type="button" data-tab="model"><span class="nav-icon">⊞</span><span>Model details</span><span class="nav-shortcut">04</span></button>
+        <button class="nav-item" type="button" data-tab="evidence"><span class="nav-icon">▤</span><span>Accuracy tracking</span><span class="nav-shortcut">05</span></button>
+        <button class="nav-item" type="button" data-tab="latency"><span class="nav-icon">◷</span><span>Quarterback research</span><span class="nav-shortcut">06</span></button>
         <button class="nav-item" type="button" data-tab="replay"><span class="nav-icon">↺</span><span>Historical Replay</span><span class="nav-shortcut">07</span></button>
         <a class="nav-item" href="/historical-2025" aria-label="Historical 2025 evaluation, frozen development evidence"><span class="nav-icon">▦</span><span>2025 Evaluation</span><span class="nav-shortcut">↗</span></a>
-        <button class="nav-item" type="button" data-tab="pricing"><span class="nav-icon">%</span><span>ROI &amp; CLV Lab</span><span class="nav-shortcut">08</span></button>
-        <button class="nav-item" type="button" data-tab="execution"><span class="nav-icon">⇅</span><span>Paper Execution</span><span class="nav-shortcut">09</span></button>
-        <button class="nav-item" type="button" data-tab="audit"><span class="nav-icon">◇</span><span>Audit & Quality</span><span class="nav-shortcut">10</span></button>
+        <button class="nav-item" type="button" data-tab="pricing"><span class="nav-icon">%</span><span>Returns & price research</span><span class="nav-shortcut">08</span></button>
+        <button class="nav-item" type="button" data-tab="execution"><span class="nav-icon">⇅</span><span>Practice tracker</span><span class="nav-shortcut">09</span></button>
+        <button class="nav-item" type="button" data-tab="audit"><span class="nav-icon">◇</span><span>Data checks</span><span class="nav-shortcut">10</span></button>
         <button class="nav-item" type="button" data-tab="settings"><span class="nav-icon">⚙</span><span>Settings</span><span class="nav-shortcut">11</span></button>
       </nav>
       <div class="sidebar-spacer"></div>
@@ -54,7 +54,7 @@
       <header class="topbar">
         <div class="topbar-left">
           <button class="mobile-nav-button" type="button" id="menu-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar">☰</button>
-          <div class="breadcrumb">WORKSPACE <span>/</span> <b id="breadcrumb-page">COMMAND CENTER</b></div>
+          <div class="breadcrumb">WORKSPACE <span>/</span> <b id="breadcrumb-page">GAME OUTLOOK</b></div>
         </div>
         <div class="topbar-right">
           <span class="time-now" id="clock">--:--:--</span>
@@ -65,16 +65,18 @@
       </header>
 
       <main class="main-content" id="main-content" tabindex="-1">
+        <div class="section-heading"><div><h1>NFL game outlook</h1><p>Model estimates, not guaranteed winners. Check the limitations beside each pick.</p></div><a class="outline-button" href="/game-card">Choose a game →</a></div>
         <section id="automatic-game-card" class="panel" aria-live="polite" aria-label="Automatic upcoming NFL card"></section>
-        <details><summary>Background preparation and saved grades</summary><section id="prepared-model-ledger" class="panel" aria-live="polite"></section></details>
+        <details><summary>Saved forecasts &amp; system status</summary><section id="prepared-model-ledger" class="panel" aria-live="polite"></section></details>
+        <details id="research-tools" class="research-disclosure"><summary>Odds comparison &amp; research tools <small>Optional advanced detail</small></summary>
         <section class="hero">
           <div class="hero-lines" aria-hidden="true"></div>
           <div class="hero-main">
-            <div class="eyebrow"><span class="eyebrow-square"></span> BETQ QUANT LAB <span class="eyebrow-slash">//</span> SPORTS MARKET INTELLIGENCE</div>
-            <h1>Inspect the <em>price.</em><br>Demand the evidence.</h1>
+            <div class="eyebrow"><span class="eyebrow-square"></span> OPTIONAL RESEARCH <span class="eyebrow-slash">//</span> SPORTS MARKET INTELLIGENCE</div>
+            <h2>Compare prices.<br>Review the evidence.</h2>
             <p>Compare sportsbook prices and inspect NFL forecasting research. Market estimates are not verified win probabilities or a proven betting edge.</p>
             <div class="hero-actions">
-              <button class="primary-button" data-tab="signals" type="button">Open signal scanner <span>↗</span></button>
+              <button class="primary-button" data-tab="signals" type="button">Compare sportsbook odds <span>↗</span></button>
               <span class="hero-subtag"><span class="hollow-dot"></span> RESEARCH TERMINAL / NO AUTO-BETTING</span>
             </div>
           </div>
@@ -306,8 +308,9 @@
             </section>
           </div>
         </section>
+        </details>
       </main>
-      <footer class="app-footer"><span>BETQ.ai <span class="footer-faint">/ QUANT INTELLIGENCE TERMINAL</span></span><span>Research only · No validated betting edge · No real wagering</span></footer>
+      <footer class="app-footer"><span>BETQ.ai <span class="footer-faint">/ GAME INSIGHTS TERMINAL</span></span><span>Research only · No validated betting edge · No real wagering</span></footer>
     </div>
   </div>
   <div class="toast" role="status" id="toast" aria-live="polite"></div>
