@@ -42,6 +42,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/publish-model-only-ledger.mjs final "$LEDGER_PATH"
+      - name: Report capture versus degraded heartbeat after durable publication
+        run: node scripts/report-model-only-run.mjs "$LEDGER_PATH"
       - name: Preserve candidates and publication checkpoint for explicit operator recovery
         if: always()
         uses: actions/upload-artifact@v4

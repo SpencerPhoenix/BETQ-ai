@@ -4,7 +4,7 @@ import {readFile,writeFile,rename} from 'node:fs/promises';
 import {resolve,dirname} from 'node:path';import {fileURLToPath} from 'node:url';import {createHash} from 'node:crypto';
 import {createOfficialGameFeed,discoveryWeeks,gameScope} from '../src/on-demand-game.mjs';
 import {readBoundedText} from '../src/integrity.mjs';import {parseCsv,cleanGames} from '../src/nfl-elo.mjs';
-import {compareModelHealth} from '../src/model-delivery.mjs';
+import {inspectModelOnlyHealth} from '../src/model-only-health.mjs';
 import {GAME_CARD_ORIGIN} from '../src/model-only-receipt.mjs';
 import {emptyModelLedger,validateModelLedger,assertLedgerAppend,reserveModelGames,appendModelCapture,ledgerEvent,NFLVERSE_SCHEDULE,sameOfficialFinal} from '../src/scheduled-model-ledger.mjs';
 const [mode,path,...extra]=process.argv.slice(2),runKey=`${process.env.GITHUB_RUN_ID}.${process.env.GITHUB_RUN_ATTEMPT}`;
@@ -14,12 +14,12 @@ async function saveCandidate(candidate){assertLedgerAppend(original,candidate);c
 let ledger=structuredClone(original);const clock=Date.now,root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const artifact=JSON.parse(await readFile(resolve(root,'data/nfl_elo.json'),'utf8')),challengerArtifact=JSON.parse(await readFile(resolve(root,'data/nfl_efficiency.json'),'utf8'));
 if(mode==='reserve'){
+ ledgerEvent(ledger,'RUN',null,{runKey,failedWeeks:[],phase:'STARTED'},clock());
  const scope=discoveryWeeks(clock()),weeks=new Set(scope.weeks);
  for(const e of ledger.events.filter(e=>e.type==='RESERVED'))if(clock()-Date.parse(e.payload.game.kickoff)<14*86400000&&gameScope(e.gameId).season===scope.season)weeks.add(gameScope(e.gameId).week);
  const feed=createOfficialGameFeed(),reads=await Promise.all([...weeks].slice(0,6).map(async week=>({week,...await feed.getWeek(scope.season,week)})));
  const receipts=reads.filter(r=>r.available).map(r=>r.receipt),failedWeeks=reads.filter(r=>!r.available).map(r=>r.week);
- let productionCompatible=false;
- try{const h=await fetch(GAME_CARD_ORIGIN+'/api/health',{credentials:'omit',redirect:'error',signal:AbortSignal.timeout(15000)});if(h.ok){const health=JSON.parse(await readBoundedText(h,250000));productionCompatible=health.modelOnlyCaptureSchema===2&&compareModelHealth(artifact,health,clock()).compatible;}}catch{}
+ const productionHealth=await inspectModelOnlyHealth(artifact,{clock}),productionCompatible=productionHealth.compatible;
  if(productionCompatible)ledger=reserveModelGames(ledger,receipts,{now:clock(),runKey,failedWeeks});
  const resultConflicts=[];let finalSourceAvailable=null;
  if(ledger.events.some(e=>e.type==='CUSTODY')){
@@ -40,7 +40,7 @@ if(mode==='reserve'){
   }catch{finalSourceAvailable=false;}
  }
  for(const c of resultConflicts){const latest=ledger.events.filter(e=>e.gameId===c.gameId&&['RESULT_CONFLICT','FINAL'].includes(e.type)).at(-1);if(latest?.type!=='RESULT_CONFLICT'||latest.payload.reason!==c.reason)ledgerEvent(ledger,'RESULT_CONFLICT',c.gameId,{reason:c.reason},clock());}
- ledgerEvent(ledger,'RUN',null,{runKey,failedWeeks,productionCompatible,finalSourceAvailable,resultConflicts,scopeLimited:weeks.size>6},clock());
+ ledgerEvent(ledger,'RUN',null,{runKey,failedWeeks,productionCompatible,productionHealth,finalSourceAvailable,resultConflicts,scopeLimited:weeks.size>6},clock());
 }else{
  const proof=JSON.parse(await readFile(path+'.publication-checkpoint.json','utf8')),bytes=await readFile(path);
  if(!/^[a-f0-9]{40}$/.test(proof.sha||'')||proof.reservationContentSha256!==createHash('sha256').update(bytes).digest('hex')||!Number.isFinite(Date.parse(proof.reservationServerDate))||clock()-Date.parse(proof.reservationServerDate)>120000||Date.parse(proof.reservationServerDate)>clock()+1500)throw Error('RESERVATION_REMOTE_READBACK_REQUIRED');
