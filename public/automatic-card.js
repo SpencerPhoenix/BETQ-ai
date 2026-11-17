@@ -26,6 +26,11 @@
    }root.append(chances);
    if(r.challenger?.available&&(r.challenger.homeWinProbability-.5)*(r.baseline.homeWinProbability-.5)<0)p('The separate efficiency challenger favors the other team. Models disagree; no automatic promotion.');
    p('Why this team: the model compares team strength from past results and venue. It does not yet adjust for current injuries or quarterback changes.');
+   const depth=r.depthContext;
+   if(depth?.available&&Number.isFinite(Date.parse(depth.validUntil))&&Date.now()<Date.parse(depth.validUntil)){
+    p('Listed quarterbacks: '+(depth.teams||[]).map(x=>x.team+' '+x.player).join(' · '));
+    p('Depth chart loaded '+new Date(depth.sourceLoadAt).toLocaleString()+'. Listed roles only, not confirmed starters or injury clearance; probabilities remain unadjusted. Source: nflverse (CC-BY-4.0).');
+   }else p('Current quarterback depth-chart context unavailable or stale. Starter status remains unknown.');
    const detail=document.createElement('details');const summary=document.createElement('summary');summary.textContent='How this estimate was made';detail.append(summary);
    p('Baseline built '+new Date(r.baseline.modelBuiltAt).toLocaleString()+'; results through '+r.baseline.throughGameDate+'.',detail);
    p('Kickoff '+new Date(r.fixture.kickoff).toLocaleString()+' · '+(r.fixture.neutralSite?'Neutral venue':'Home venue')+'. Times use your device timezone.');
@@ -36,6 +41,6 @@
    link();const button=document.createElement('button');button.type='button';button.textContent='Refresh matchup';button.addEventListener('click',load);root.append(button);
   }catch{if(token===sequence){current=null;root.replaceChildren();p('Current matchup evaluation unavailable. No stale pick or price was substituted.');link();}}
  }
- setInterval(()=>{if(current&&Date.now()>=Date.parse(current.validUntil)){current=null;root.replaceChildren();p('Pregame evaluation expired. Refresh to verify a current matchup.');link();const b=document.createElement('button');b.type='button';b.textContent='Refresh matchup';b.addEventListener('click',load);root.append(b);}},1000);
+ setInterval(()=>{if(current&&(Date.now()>=Date.parse(current.validUntil)||(current.depthContext?.available&&Date.now()>=Date.parse(current.depthContext.validUntil)))){current=null;root.replaceChildren();p('Pregame evaluation expired. Refresh to verify a current matchup.');link();const b=document.createElement('button');b.type='button';b.textContent='Refresh matchup';b.addEventListener('click',load);root.append(b);}},1000);
  load();
 })();

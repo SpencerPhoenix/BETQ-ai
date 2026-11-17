@@ -1,0 +1,139 @@
+{
+  "schema": 1,
+  "season": 2026,
+  "source": "NFLVERSE_DEPTH_CHARTS",
+  "sourceUrl": "https://github.com/nflverse/nflverse-data/releases/download/depth_charts/depth_charts_2026.csv.gz",
+  "sourceLoadAt": "2026-11-17T16:52:03.000Z",
+  "collectedAt": "2026-11-17T23:33:15.833Z",
+  "sourceSha256": "e10b3719c21791e6fad759d34ee991a70333ef61f39fb991fe8a5b39a7fd8e74",
+  "teams": {
+    "ARI": {
+      "player": "Carson Beck",
+      "playerId": "4430841"
+    },
+    "ATL": {
+      "player": "Michael Penix Jr.",
+      "playerId": "4360423"
+    },
+    "BAL": {
+      "player": "Jacoby Brissett",
+      "playerId": "2578570"
+    },
+    "BUF": {
+      "player": "Josh Allen",
+      "playerId": "3918298"
+    },
+    "CAR": {
+      "player": "Bryce Young",
+      "playerId": "4685720"
+    },
+    "CHI": {
+      "player": "Caleb Williams",
+      "playerId": "4431611"
+    },
+    "CIN": {
+      "player": "Joe Burrow",
+      "playerId": "3915511"
+    },
+    "CLE": {
+      "player": "Deshaun Watson",
+      "playerId": "3122840"
+    },
+    "DAL": {
+      "player": "Dak Prescott",
+      "playerId": "2577417"
+    },
+    "DEN": {
+      "player": "Bo Nix",
+      "playerId": "4426338"
+    },
+    "DET": {
+      "player": "Jared Goff",
+      "playerId": "3046779"
+    },
+    "GB": {
+      "player": "Jordan Love",
+      "playerId": "4036378"
+    },
+    "HOU": {
+      "player": "C.J. Stroud",
+      "playerId": "4432577"
+    },
+    "IND": {
+      "player": "Daniel Jones",
+      "playerId": "3917792"
+    },
+    "JAX": {
+      "player": "Trevor Lawrence",
+      "playerId": "4360310"
+    },
+    "KC": {
+      "player": "Patrick Mahomes",
+      "playerId": "3139477"
+    },
+    "LA": {
+      "player": "Matthew Stafford",
+      "playerId": "12483"
+    },
+    "LAC": {
+      "player": "Justin Herbert",
+      "playerId": "4038941"
+    },
+    "LV": {
+      "player": "Fernando Mendoza",
+      "playerId": "4837248"
+    },
+    "MIA": {
+      "player": "Kyle McCord",
+      "playerId": "4433971"
+    },
+    "MIN": {
+      "player": "Kirk Cousins",
+      "playerId": "14880"
+    },
+    "NE": {
+      "player": "Drake Maye",
+      "playerId": "4431452"
+    },
+    "NO": {
+      "player": "Tyler Shough",
+      "playerId": "4360689"
+    },
+    "NYG": {
+      "player": "J.J. McCarthy",
+      "playerId": "4433970"
+    },
+    "NYJ": {
+      "player": "Geno Smith",
+      "playerId": "15864"
+    },
+    "PHI": {
+      "player": "Joe Milton III",
+      "playerId": "4360698"
+    },
+    "PIT": {
+      "player": "Aaron Rodgers",
+      "playerId": "8439"
+    },
+    "SEA": {
+      "player": "Sam Darnold",
+      "playerId": "3912547"
+    },
+    "SF": {
+      "player": "Brock Purdy",
+      "playerId": "4361741"
+    },
+    "TB": {
+      "player": "Baker Mayfield",
+      "playerId": "3052587"
+    },
+    "TEN": {
+      "player": "Cam Ward",
+      "playerId": "4688380"
+    },
+    "WAS": {
+      "player": "Jayden Daniels",
+      "playerId": "4426348"
+    }
+  }
+}

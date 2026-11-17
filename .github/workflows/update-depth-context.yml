@@ -1,0 +1,46 @@
+name: NFL listed quarterback context refresh
+on:
+  # Code publication must not run research or publish generated artifacts.
+  workflow_dispatch:
+  schedule:
+    - cron: '17 8,18 * * *'
+permissions:
+  contents: write
+concurrency:
+  group: betq-depth-context-refresh
+  cancel-in-progress: false
+jobs:
+  refresh:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+          check-latest: true
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Test source timestamp controls
+        run: |
+          npm run check
+          npm test
+      - name: Compile current listed quarterback roles
+        run: |
+          python3 scripts/update-depth-context.py
+          node --input-type=module -e "import {readFileSync} from 'node:fs'; import {validateDepthContext} from './src/depth-context.mjs'; validateDepthContext(JSON.parse(readFileSync('data/nfl_depth_context.json','utf8')));"
+      - name: Publish source-vintage changes only
+        shell: bash
+        run: |
+          if [[ -n "$(git status --porcelain -- data/nfl_depth_context.json)" ]]; then
+            git config user.name 'betq-depth-context-bot'
+            git config user.email 'actions@users.noreply.github.com'
+            git add data/nfl_depth_context.json
+            git commit -m 'data: refresh listed quarterback context without starter assumptions'
+            git fetch origin main
+            git rebase origin/main
+            git push origin HEAD:main
+          else
+            echo 'No new source vintage.'
+          fi

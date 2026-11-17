@@ -7,6 +7,7 @@ from playwright.sync_api import sync_playwright,expect
 ROOT=Path(__file__).resolve().parents[1]
 now='2026-11-16T20:00:00.000Z'
 r={'schema':1,'gameId':'2026_10_LAC_BAL','available':True,'evaluatedAt':now,'validUntil':'2026-11-16T20:05:00.000Z','fixture':{'home':'Baltimore Ravens','away':'Los Angeles Chargers','kickoff':'2026-11-17T01:15:00.000Z','observedAt':now,'neutralSite':False},'baseline':{'homeWinProbability':.65,'awayWinProbability':.35,'modelBuiltAt':now,'throughGameDate':'2026-11-15'},'challenger':{'available':True,'generatedAt':now,'homeWinProbability':.49,'awayWinProbability':.51}}
+r['depthContext']={'available':True,'validUntil':'2026-11-16T20:02:00.000Z','sourceLoadAt':now,'collectedAt':now,'teams':[{'team':'LAC','player':'Synthetic Listed QB'},{'team':'BAL','player':'Synthetic Other QB'}]}
 requests=[]
 mode="normal"
 pending=[]
@@ -44,9 +45,12 @@ with sync_playwright() as p:
   expect(page.locator('#context')).to_contain_text('ONE_TEAM_WEEK_RECORD')
   expect(page.locator('#context')).to_contain_text('practice DNP; game designation NOT_REPORTED; inactives NOT_VERIFIED')
   expect(page.locator('#context')).to_contain_text('DNP is not OUT')
+  expect(page.locator('#context')).to_contain_text('Synthetic Listed QB')
+  expect(page.locator('#context')).to_contain_text('not confirmed starter')
   assert any('gameId=2026_10_LAC_BAL' in x.url for x in requests if '/api/injuries/nfl' in x.url)
   page.locator('#price').fill('-230');page.locator('#compare').click();expect(page.locator('#comparison')).to_contain_text('69.7%')
   expect(page.locator('#comparison')).to_contain_text('Not a validated edge')
+  page.clock.fast_forward(121000);expect(page.locator('#context')).not_to_contain_text('Synthetic Listed QB');expect(page.locator('#result')).to_be_visible()
   page.clock.fast_forward(301000);expect(page.locator('#quote')).to_be_hidden();expect(page.locator('#result')).to_be_hidden();expect(page.locator('#status')).to_contain_text('expired')
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth');assert not errors,errors;c.close()
  # Isolated homepage widget uses production script/styles, verifies automatic pick and expiry.
@@ -54,6 +58,8 @@ with sync_playwright() as p:
   c=b.new_context(viewport={'width':width,'height':1000});c.route('**/*',route);page=c.new_page();page.clock.install(time=datetime(2026,11,16,20,0,tzinfo=timezone.utc));page.goto('http://betq.test/automatic-test')
   expect(page.locator('#automatic-game-card')).to_contain_text('MODEL OUTRIGHT PICK: Baltimore Ravens')
   expect(page.locator('#automatic-game-card')).to_contain_text('Current bookmaker odds: UNAVAILABLE')
+  expect(page.locator('#automatic-game-card')).to_contain_text('Synthetic Listed QB')
+  page.clock.fast_forward(121000);expect(page.locator('#automatic-game-card')).not_to_contain_text('Synthetic Listed QB')
   page.clock.fast_forward(301000);expect(page.locator('#automatic-game-card')).to_contain_text('expired');expect(page.locator('#automatic-game-card')).not_to_contain_text('65.0%');c.close()
  mode='scheduled'
  for width in [375,1440]:
