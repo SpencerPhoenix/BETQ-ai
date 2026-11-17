@@ -6,6 +6,9 @@
  * using pre-2022 observations, never choose sign from target-season outcomes.
  * All prices are historical closing references, not time-stamped offers.
  */
+import { canonicalTeam, NFL_TEAMS } from './nfl-elo.mjs';
+import { validDay } from './integrity.mjs';
+
 const round=(n,d=5)=>Number.isFinite(n)?Number(n.toFixed(d)):null;
 const finite=Number.isFinite;
 const capProb=p=>Math.max(1e-6,Math.min(1-1e-6,p));
@@ -19,11 +22,15 @@ const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
 export function buildMarginRows(sourceRows,replayYears){
   if(!Array.isArray(sourceRows)||!Array.isArray(replayYears))throw Error('Invalid margin sources');
   const games=new Map(),sourceIdentities=new Map();
+  const teams=new Set(Object.values(NFL_TEAMS));
   for(const r of sourceRows){
     if(typeof r?.game_id!=='string'||!r.game_id)continue;
-    const season=Number(r.season);
+    const season=Number(r.season),date=r.gameday,
+      home=canonicalTeam(r.home_team),away=canonicalTeam(r.away_team);
+    if(!validDay(date)||!teams.has(home)||!teams.has(away)||home===away)
+      throw Error('Invalid margin source identity: '+r.game_id);
     // Compare before filtering: a malformed duplicate must not hide a conflict.
-    const identity=JSON.stringify([r.season,r.spread_line,r.home_score,r.away_score]
+    const identity=JSON.stringify([r.season,date,home,away,r.spread_line,r.home_score,r.away_score]
       .map(value=>String(value??'').trim()));
     if(sourceIdentities.has(r.game_id)&&sourceIdentities.get(r.game_id)!==identity)
       throw Error('Conflicting margin source rows: '+r.game_id);
@@ -37,7 +44,7 @@ export function buildMarginRows(sourceRows,replayYears){
       continue;
     if(!Number.isInteger(season)||!r.game_id.startsWith(season+'_'))
       throw Error('Margin source season mismatch: '+r.game_id);
-    games.set(r.game_id,{spread,margin:hs-as,season});
+    games.set(r.game_id,{spread,margin:hs-as,season,date,home,away});
   }
   const byYear=new Map();
   for(const rep of replayYears){
@@ -49,6 +56,10 @@ export function buildMarginRows(sourceRows,replayYears){
       seen.add(d.gameId);
       const source=games.get(d.gameId);
       if(source&&source.season!==rep.season)throw Error('Margin replay season mismatch: '+d.gameId);
+      if(!validDay(d.date))throw Error('Invalid margin game date: '+d.gameId);
+      if(source&&(source.date!==d.date||source.home!==canonicalTeam(d.home)||
+         source.away!==canonicalTeam(d.away)))
+        throw Error('Margin replay identity mismatch: '+d.gameId);
       if(!source||!finite(d.modelHomeProbability)||
          !finite(d.closeMarketHomeProbability)||
          !(d.modelHomeProbability>0&&d.modelHomeProbability<1)||

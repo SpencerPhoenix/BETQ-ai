@@ -36,11 +36,12 @@ function fakeMargin(){
       const id=season+'_'+i;
       source.push({
         game_id:id,season:String(season),spread_line:String(spread),
+        gameday:season+'-10-'+String(i%28+1).padStart(2,'0'),home_team:'PHI',away_team:'DAL',
         home_score:String(home),away_score:String(away)
       });
       const market=.5+.25*Math.tanh(spread/12);
       decisions.push({
-        gameId:id,week:1+Math.floor(i/15),date:season+'-10-'+String(i%28+1).padStart(2,'0'),
+        gameId:id,home:'PHI',away:'DAL',week:1+Math.floor(i/15),date:season+'-10-'+String(i%28+1).padStart(2,'0'),
         modelHomeProbability:Math.max(.02,Math.min(.98,market+.05*Math.sin(i))),
         closeMarketHomeProbability:market
       });
@@ -158,6 +159,7 @@ test('Margin evaluation rejects direct frame tampering before claiming a prior-y
 test('Margin chronology allows next-calendar-year playoffs but not training/test overlap',()=>{
   const {source,replays}=fakeMargin();
   replays[1].decisions[0].date='2022-01-10';
+  source.find(r=>r.game_id===replays[1].decisions[0].gameId).gameday='2022-01-10';
   const rows=buildMarginRows(source,replays);
   assert.equal(evaluateMarginResearch(rows).automaticPromotion,false);
   rows.get(2022)[0].date='2022-01-10';
@@ -169,4 +171,34 @@ test('Malformed replay dates fail with an intentional audit error before sorting
     const {source,replays}=fakeMargin();replays[0].decisions[0].date=date;
     assert.throws(()=>buildMarginRows(source,replays),/Invalid margin game date/);
   }
+});
+
+
+test('Margin joins bind date and both teams, not only ID and season',()=>{
+  for(const patch of [{date:'2020-10-02'},{home:'KC'},{away:'BUF'},
+    {home:'DAL',away:'PHI'},{home:null},{away:''}]){
+    const {source,replays}=fakeMargin();
+    Object.assign(replays[0].decisions[0],patch);
+    assert.throws(()=>buildMarginRows(source,replays),/Margin replay identity mismatch/);
+  }
+});
+test('Margin duplicate conflicts include date and canonical team identity before filtering',()=>{
+  const {source,replays}=fakeMargin();
+  for(const patch of [{gameday:'2020-10-02'},{home_team:'KC'},{away_team:'BUF'},
+    {home_team:'DAL',away_team:'PHI'}]){
+    const changed={...source[0],...patch};
+    for(const rows of [[...source,changed],[changed,...source]])
+      assert.throws(()=>buildMarginRows(rows,replays),/Conflicting margin source rows/);
+  }
+  for(const patch of [{gameday:'2020-02-30'},{home_team:'UNKNOWN'},{away_team:'PHI'}])
+    assert.throws(()=>buildMarginRows([{...source[0],...patch}],replays),/Invalid margin source identity/);
+});
+test('Margin team aliases preserve an otherwise identical historical join',()=>{
+  const {source,replays}=fakeMargin();
+  source[0].home_team='OAK';source[0].away_team='SD';
+  replays[0].decisions[0].home='LV';replays[0].decisions[0].away='LAC';
+  const expected=buildMarginRows(source,replays);
+  assert.deepEqual(buildMarginRows([...source,{...source[0],home_team:'LV',away_team:'LAC'}],replays),expected);
+  replays[0].decisions[0].home='OAK';replays[0].decisions[0].away='SD';
+  assert.deepEqual(buildMarginRows(source,replays),expected);
 });
