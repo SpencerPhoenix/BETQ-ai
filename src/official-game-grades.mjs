@@ -52,8 +52,8 @@ export async function gradeGamesWithOfficialFinals(journal,feed,{clock=Date.now}
  }
  const games=report.games,c=report.coverage;
  Object.assign(c,{gradedGames:games.filter(g=>g.status==='GRADED').length,
-  recordedResults:games.filter(g=>g.hasRecordedResult).length,availableFinalScores:games.filter(g=>g.result!==null).length,ungradedGames:games.filter(g=>(g.hasRecordedResult||g.hasObservedOfficialFinal)&&g.status!=='GRADED').length,
-  pendingGames:games.filter(g=>!g.hasRecordedResult&&!g.hasObservedOfficialFinal).length,officialGradedGames,
+  recordedResults:games.filter(g=>g.hasRecordedResult).length,availableFinalScores:games.filter(g=>g.result!==null).length,ungradedGames:games.filter(g=>['UNGRADED','TIE_EXCLUDED'].includes(g.status)).length,quarantinedGames:games.filter(g=>g.status==='SCHEDULE_CONFLICT_QUARANTINED').length,
+  pendingGames:games.filter(g=>g.status==='PENDING_RESULT').length,officialGradedGames,
   sourceCorroboratedV2GradedGames:games.filter(g=>g.status==='GRADED'&&g.result.sourceCorroborated).length,
   reviewedBdlGradedGames:games.filter(g=>g.status==='GRADED'&&g.result.qualificationDetails?.policyId==='BDL_NATIVE_FINAL_NFLVERSE_SCORE_REVIEWED_V1').length});
  report.generatedAt=new Date(now).toISOString();

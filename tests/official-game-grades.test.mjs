@@ -49,3 +49,10 @@ test('fresh explicit nonfinal state withholds a previously qualified grade',asyn
  receipt.games[0].final=false;receipt.games[0].summaryPhase='LIVE';receipt.games[0].summaryQuarter='Q4';receipt.games[0].homeScore=receipt.games[0].awayScore=null;
  const r=await run(j,receipt);assert.equal(r.games[0].status,'UNGRADED');assert.equal(r.games[0].metrics,null);assert.equal(r.coverage.sourceCorroboratedV2GradedGames,0);
 });
+
+test('quarantined games are held for review, never called pending final results',async()=>{
+ const j=JSON.parse(readFileSync(new URL('./fixtures/retained-20261114/nfl-2026.json',import.meta.url),'utf8'));
+ const r=await gradeGamesWithOfficialFinals(j,{getWeek:async()=>({available:false})},{clock:()=>now});
+ assert.equal(r.coverage.pendingGames,r.games.filter(g=>g.status==='PENDING_RESULT').length);
+ assert.ok(r.coverage.quarantinedGames>0);assert.match(UI.html(r),/held for conflicting game details/);
+});
