@@ -10,7 +10,8 @@
  * closing-price hypothetical, NEVER verified fill/CLV/realized ROI.
  */
 import { noVigPair, toDecimal } from './engine.mjs';
-import { calibrate, eloProbability, canonicalTeam } from './nfl-elo.mjs';
+import { validDay } from './integrity.mjs';
+import { calibrate, eloProbability, canonicalTeam, NFL_TEAMS } from './nfl-elo.mjs';
 
 export const REPLAY_VERSION='nfl-replay-v2';
 export const DEFAULT_THRESHOLDS=Object.freeze([0,0.03,0.05]);
@@ -32,10 +33,26 @@ function validMoneyline(s){
 /** Read odds separately: model game data deliberately do not contain prices. */
 export function indexedHistoricalClosing(rows){
   if(!Array.isArray(rows))throw Error('Schedules rows missing');
-  const prices=new Map();
+  const prices=new Map(),seen=new Map();
+  const teams=new Set(Object.values(NFL_TEAMS));
   for(const r of rows){
     if(!r?.game_id)continue;
     const home=validMoneyline(r.home_moneyline),away=validMoneyline(r.away_moneyline);
+    const identity={season:Number(r.season),date:r.gameday,
+      home:canonicalTeam(r.home_team),away:canonicalTeam(r.away_team)};
+    if(!Number.isInteger(identity.season)||identity.season<1999||identity.season>2099||
+       !validDay(identity.date)||!teams.has(identity.home)||!teams.has(identity.away)||
+       identity.home===identity.away)throw Error('Invalid historical closing identity');
+    // Compare before filtering: a malformed later duplicate cannot silently
+    // replace, or disappear behind, an otherwise usable quote.
+    const signature=JSON.stringify([identity,String(r.home_moneyline??'').trim(),
+      String(r.away_moneyline??'').trim()]);
+    const id=String(r.game_id);
+    if(seen.has(id)){
+      if(seen.get(id)!==signature)throw Error('Conflicting historical closing records');
+      continue;
+    }
+    seen.set(id,signature);
     if(home===null||away===null)continue;
     const rawHome=1/toDecimal(home),rawAway=1/toDecimal(away);
     const overround=rawHome+rawAway-1;
@@ -43,7 +60,7 @@ export function indexedHistoricalClosing(rows){
     const fair=noVigPair(home,away);
     if(!fair)continue;
     prices.set(String(r.game_id),{
-      homeAmerican:home,awayAmerican:away,
+      identity,homeAmerican:home,awayAmerican:away,
       homeMarketProbability:fair[0],awayMarketProbability:fair[1],
       overround:round(overround,6),
       basis:'RETROSPECTIVE_UNTIMESTAMPED_CLOSING_MONEYLINE'
@@ -248,6 +265,9 @@ export function replaySeason(games,closingIndex,testSeason,{
   for(const game of tested){
     const tie=game.actual===0.5;
     const closing=closingIndex.get(game.id);
+    if(closing&&(!closing.identity||['season','date','home','away']
+      .some(key=>closing.identity[key]!==game[key])))
+      throw Error('Historical closing identity does not match replay game');
     const p=game.prediction;
     const candidate=candidateForGame(game,p,closing);
     if(!tie){

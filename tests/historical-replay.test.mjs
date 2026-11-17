@@ -18,7 +18,7 @@ function syntheticData(){
         const win=rnd()<0.48+((i%5)-2)*0.02;
         const homeScore=win?24:17,awayScore=win?17:24;
         games.push({id,season:year,date,week,home,away,neutral:false,homeScore,awayScore});
-        rows.push({game_id:id,season:year,home_moneyline:i%7===0?'':i%2?'-120':'+115',
+        rows.push({game_id:id,season:year,gameday:date,home_team:home,away_team:away,home_moneyline:i%7===0?'':i%2?'-120':'+115',
           away_moneyline:i%7===0?'':i%2?'+108':'-125'});
       }
     }
@@ -33,7 +33,7 @@ test('Historical closing prices are filtered and never treated as filled offers'
     {game_id:'bad_vig',home_moneyline:'-5000',away_moneyline:'-5000'},
     {game_id:'bad_fraction',home_moneyline:'-100.5',away_moneyline:'+130'}
   ];
-  const p=indexedHistoricalClosing(source);
+  const p=indexedHistoricalClosing(source.map(r=>({...r,season:2025,gameday:'2025-09-01',home_team:'PHI',away_team:'DAL'})));
   assert.equal(p.size,1);
   assert.equal(p.get('good').homeAmerican,-110);
   assert.equal(p.get('good').basis,'RETROSPECTIVE_UNTIMESTAMPED_CLOSING_MONEYLINE');
@@ -105,4 +105,47 @@ test('Fixed thresholds are compared; no selection rule optimized against final o
       assert.ok(d.modelHomeProbability>0&&d.modelHomeProbability<1);
     }
   }
+});
+
+test('Closing quotes bind identity and conflicting duplicates fail in either order',()=>{
+  const row={game_id:'2025_01_DAL_PHI',season:2025,gameday:'2025-09-01',
+    home_team:'PHI',away_team:'DAL',home_moneyline:'-120',away_moneyline:'+110'};
+  assert.equal(indexedHistoricalClosing([row,{...row}]).size,1);
+  for(const patch of [{home_moneyline:'+200',away_moneyline:'-220'},
+    {home_team:'KC'},{away_team:'BUF'},{season:2024},{gameday:'2025-09-02'},
+    {home_moneyline:''},{home_team:''}]){
+    for(const rows of [[row,{...row,...patch}],[{...row,...patch},row]])
+      assert.throws(()=>indexedHistoricalClosing(rows),/historical closing/i);
+  }
+});
+test('Replay cannot join a quote to different teams, date or season by ID alone',()=>{
+  const {games,rows}=syntheticData();
+  const target=rows.find(r=>r.season===2025&&r.home_moneyline);
+  for(const patch of [{home_team:'ARI',away_team:'ATL'},{season:2024},{gameday:'2025-09-02'}]){
+    const altered=rows.map(r=>r===target?{...r,...patch}:r);
+    assert.throws(()=>buildSeasonReplay(games,altered,{seasons:[2025]}),/identity does not match/);
+  }
+});
+
+test('Closing identities reject rolled calendar dates and unknown teams',()=>{
+  const row={game_id:'2025_01_DAL_PHI',season:2025,gameday:'2025-09-01',
+    home_team:'PHI',away_team:'DAL',home_moneyline:'-120',away_moneyline:'+110'};
+  for(const patch of [{gameday:'2025-02-29'},{gameday:'2025-04-31'},
+    {gameday:'2025-13-01'},{home_team:'UNKNOWN'},{away_team:'UNKNOWN'},
+    {home_team:'DAL'},{season:2025.5}])
+    assert.throws(()=>indexedHistoricalClosing([{...row,...patch}]),/Invalid historical closing identity/);
+});
+test('Historical aliases are canonicalized before duplicate and replay identity comparisons',()=>{
+  const row={game_id:'2015_01_SD_OAK',season:2015,gameday:'2015-09-01',
+    home_team:'OAK',away_team:'SD',home_moneyline:'-120',away_moneyline:'+110'};
+  const prices=indexedHistoricalClosing([row,{...row,home_team:'LV',away_team:'LAC'}]);
+  assert.equal(prices.size,1);
+  assert.deepEqual(prices.get(row.game_id).identity,
+    {season:2015,date:'2015-09-01',home:'LV',away:'LAC'});
+  const {games,rows}=syntheticData();
+  const original=buildSeasonReplay(games,rows,{seasons:[2025]});
+  const historical=rows.map(r=>({...r,
+    home_team:r.home_team==='LV'?'OAK':r.home_team==='LAC'?'SD':r.home_team,
+    away_team:r.away_team==='LV'?'OAK':r.away_team==='LAC'?'SD':r.away_team}));
+  assert.deepEqual(buildSeasonReplay(games,historical,{seasons:[2025]}),original);
 });
