@@ -62,7 +62,7 @@ jobs:
           mkdir -p browser-output
           git rev-parse HEAD > browser-output/source-commit.txt
           status=0
-          for script in ui-audit-browser game-strategies-browser retained-forecasts-browser release-browser official-injury-browser; do
+          for script in ui-audit-browser game-strategies-browser retained-forecasts-browser release-browser official-injury-browser on-demand-browser; do
             .browser-venv/bin/python "tests/${script}.py" "browser-output/${script}" 2>&1 | tee "browser-output/${script}.log" || status=1
           done
           exit "$status"

@@ -1,4 +1,5 @@
 import {NFL_TEAMS} from './nfl-elo.mjs';
+import {createOfficialGameFeed,evaluateOnDemandGame,gameScope} from './on-demand-game.mjs';
 import http from 'node:http';
 import {createHash,timingSafeEqual} from 'node:crypto';
 import {describeModelDelivery} from './model-delivery.mjs';
@@ -90,6 +91,9 @@ const NFL_MARKET_CHALLENGE=loadResearchArtifact('market-challenge/summary.json',
   a?.verifiedCLV===null&&a?.verifiedROI===null&&Array.isArray(a.years));
 const roundModel = (n, digits = 2) => Number.isFinite(n) ? Number(n.toFixed(digits)) : null;
 const ASSETS = new Map([
+  ['/game-card', ['game-card.html','text/html; charset=utf-8']],
+  ['/game-card.js', ['game-card.js','text/javascript; charset=utf-8']],
+  ['/game-card.css', ['game-card.css','text/css; charset=utf-8']],
   ['/', ['index.html', 'text/html; charset=utf-8']],
   ['/index.html', ['index.html', 'text/html; charset=utf-8']],
   ['/styles.css', ['styles.css', 'text/css; charset=utf-8']],
@@ -161,6 +165,7 @@ export function createHandler({
   source = createOddsSource(),
   operatorRefreshToken = process.env.BETQ_OPERATOR_REFRESH_TOKEN || '',
   clock = Date.now,
+  officialGameFeed = createOfficialGameFeed({clock,fetchImpl:null}),
   nflArtifact = NFL_ARTIFACT,
   nflEfficiency = NFL_EFFICIENCY,
   nflInjuries = NFL_INJURIES,
@@ -300,6 +305,12 @@ export function createHandler({
           closingLineValueVerified: false,
           wageringEnabled: false, injuryDataConnected: false, halftimeModelConnected: false
         });
+        if (url.pathname === '/api/game-evaluation') {
+          const gameId=url.searchParams.get('gameId');
+          try{gameScope(gameId);}catch{return reply(res,400,{error:{code:'INVALID_GAME_ID'}});}
+          const schedule=await officialGameFeed.get(gameId);
+          return reply(res,200,evaluateOnDemandGame(gameId,{schedule,artifact:nflArtifact,challengerArtifact:nflEfficiency,now:clock()}));
+        }
         if (url.pathname === '/api/model/nfl') {
           if (!nflArtifact) return reply(res, 200, {
             available: false, modelVersion: MODEL_VERSION, reason: 'ARTIFACT_NOT_AVAILABLE'
@@ -730,7 +741,8 @@ export function startServer(options = {}) {
     clock:options.clock??Date.now
   });
   const officialInjuryFeed=options.officialInjuryFeed??createOfficialInjuryFeed({fallbackArtifact:options.officialInjuryArtifact??OFFICIAL_INJURY_REVIEWS,clock:options.clock??Date.now});
-  const server = http.createServer(createHandler({...options,injuryFeed,officialInjuryFeed}));
+  const officialGameFeed=options.officialGameFeed??createOfficialGameFeed({clock:options.clock??Date.now});
+  const server = http.createServer(createHandler({...options,injuryFeed,officialInjuryFeed,officialGameFeed}));
   server.listen(port, '0.0.0.0', () => {
     console.log('[BETQ] terminal listening on port ' + server.address().port);
   });
