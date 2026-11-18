@@ -51,4 +51,11 @@ A model older than 14 days, a source that fails validation, a missing team mappi
 
 ## API quota safety
 
-BETQ.ai no longer automatically requests paid odds every two minutes. It uses manual refresh plus a five-minute server cache, a 12-credit UTC daily server budget, and a 50-credit provider reserve when the API quota headers are available. These safeguards are in memory and **do not survive a Render restart**. A durable quota ledger and authentication are necessary for commercial/public usage.
+The current source separates quota accounting from the odds cache:
+
+- Public reads are cache-only. Paid refresh requires explicit paid-request intent and operator authentication; the browser does not receive the operator credential.
+- The production-default budget adapter requires an account-bound PostgreSQL ledger with verified TLS. Missing configuration, an unavailable ledger, or an absent/stale verified quota baseline blocks paid provider access; there is no in-memory budget fallback.
+- The default configured limits are 12 credits per UTC day and a 50-credit provider reserve. These are code defaults, not verified live settings. Ledger reservations precede provider requests, and unresolved reservations block further spending until reconciled. Database-backed accounting is designed to survive application restarts; it does not automatically provision a database, migrate its schema, or seed quota.
+- The odds-response cache is in memory by default (five-minute default TTL) and is separate from durable credit accounting. The optional PostgreSQL snapshot adapter is preparation, not automatic production wiring; restoring a snapshot never seeds or refreshes provider quota.
+
+These statements describe source capabilities, **not a verified live deployment, connected database, or enabled paid refresh**. Deployment version, operator configuration, ledger readiness and current account quota must be checked before activation. See [provider budget setup and recovery](PROVIDER_BUDGET.md) and [private odds snapshot operations and activation prerequisites](../ODDS_SNAPSHOT_OPERATIONS.md).
