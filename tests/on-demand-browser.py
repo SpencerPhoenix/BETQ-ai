@@ -58,7 +58,7 @@ with sync_playwright() as p:
   expect(page.locator('#result')).to_contain_text('Sportsbook snapshot')
   expect(page.locator('#result')).to_contain_text('Spread analysis')
   expect(page.locator('#result')).to_contain_text('Total analysis')
-  expect(page.locator('#result')).to_contain_text('Projected score Not supported')
+  expect(page.locator('.analysis-metric').filter(has_text='Projected score')).to_contain_text('Not supported')
   page.screenshot(path=str(OUT/f'analysis-{width}.png'),full_page=True)
   expect(page.locator('#context')).to_contain_text('not confirmed starter')
   assert any('gameId=2026_10_LAC_BAL' in x.url for x in requests if '/api/injuries/nfl' in x.url)
