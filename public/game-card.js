@@ -60,7 +60,7 @@ function selectCachedLines(slates,r,now=Date.now()){
     ['over','under'].includes(q?.side)&&pointValid&&point>=0&&q.contractId==='total:'+point;
    const key=q?.contractId+'|'+q?.side;
    if(!q||q.eventId!==e.id||q.market!==market||(q.period!=null&&q.period!=='full_game')||!contractValid||keys.has(key)||
-     typeof q.bookmaker!=='string'||!q.bookmaker.trim()||q.bookmaker.length>100||typeof q.bookmakerKey!=='string'||!(/^[a-z0-9_]{1,80}$/).test(q.bookmakerKey)||
+     typeof q.bookmaker!=='string'||!q.bookmaker.trim()||q.bookmaker.length>100||typeof q.bookmakerKey!=='string'||!(/^[a-z0-9_-]{1,80}$/).test(q.bookmakerKey)||
      !Number.isFinite(q.americanOdds)||!Number.isInteger(q.americanOdds)||Math.abs(q.americanOdds)<100||Math.abs(q.americanOdds)>1000000||
      !Number.isFinite(at)||at>received||at>now||now-at>=600000){invalid=true;break;}
    keys.add(key);expires=Math.min(expires,at+600000);
