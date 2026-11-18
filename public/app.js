@@ -15,7 +15,7 @@
   };
   const prefs = safeGet(STORE, {});
   const state = {
-    tab: location.hash === '#game-grades' ? 'games' : 'overview',
+    tab: 'overview',
     sport: Object.hasOwn(sportLabels, prefs.sport) ? prefs.sport : 'americanfootball_nfl',
     market: Object.hasOwn(marketLabels, prefs.market) ? prefs.market : 'h2h',
     mode: prefs.mode === 'demo' ? 'demo' : 'live',
@@ -1989,6 +1989,7 @@
   // Operator authentication and paid source requests never belong in this client.
   syncSettings();
   render();
+  if (location.hash === '#game-grades') setTab('games');
   loadHealth();
   loadRetainedGames();
   globalThis.BETQGameGrades?.load($('game-grades'), requestJSON);

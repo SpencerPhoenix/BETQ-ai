@@ -1,10 +1,12 @@
 """Offline desktop/mobile game card QA. No external data or paid calls."""
-import os,json
+import os,json,sys
 from datetime import datetime,timezone
 from pathlib import Path
 from urllib.parse import urlparse
 from playwright.sync_api import sync_playwright,expect
 ROOT=Path(__file__).resolve().parents[1]
+OUT=Path(sys.argv[1]) if len(sys.argv)>1 else Path('/tmp/betq-analysis-browser')
+OUT.mkdir(parents=True,exist_ok=True)
 now='2026-11-16T20:00:00.000Z'
 r={'schema':1,'gameId':'2026_10_LAC_BAL','available':True,'evaluatedAt':now,'validUntil':'2026-11-16T20:05:00.000Z','fixture':{'home':'Baltimore Ravens','away':'Los Angeles Chargers','kickoff':'2026-11-17T01:15:00.000Z','observedAt':now,'neutralSite':False},'baseline':{'homeWinProbability':.65,'awayWinProbability':.35,'modelBuiltAt':now,'throughGameDate':'2026-11-15'},'challenger':{'available':True,'generatedAt':now,'homeWinProbability':.49,'awayWinProbability':.51}}
 r['depthContext']={'available':True,'validUntil':'2026-11-16T20:02:00.000Z','sourceLoadAt':now,'collectedAt':now,'teams':[{'team':'LAC','player':'Synthetic Listed QB'},{'team':'BAL','player':'Synthetic Other QB'}]}
@@ -57,7 +59,7 @@ with sync_playwright() as p:
   expect(page.locator('#result')).to_contain_text('Spread analysis')
   expect(page.locator('#result')).to_contain_text('Total analysis')
   expect(page.locator('#result')).to_contain_text('Projected score Not supported')
-  page.screenshot(path=f'/tmp/betq-analysis-{width}.png',full_page=True)
+  page.screenshot(path=str(OUT/f'analysis-{width}.png'),full_page=True)
   expect(page.locator('#context')).to_contain_text('not confirmed starter')
   assert any('gameId=2026_10_LAC_BAL' in x.url for x in requests if '/api/injuries/nfl' in x.url)
   page.locator('#price').fill('-230');page.locator('#compare').click();expect(page.locator('#comparison')).to_contain_text('69.7%')
