@@ -1,34 +1,21 @@
-name: Neon staging storage verification
+name: BETQ zero-credit odds quota diagnostic
 on:
   workflow_dispatch:
-    inputs:
-      idle_probe:
-        description: Wait 330 seconds before reconnect (does not prove suspension)
-        type: boolean
-        required: false
-        default: true
 permissions:
   contents: read
-concurrency:
-  group: neon-staging-storage-verification
-  cancel-in-progress: false
 jobs:
-  verify:
-    if: github.repository == 'SpencerPhoenix/BETQ-ai' && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/feat/neon-staging-verification'
+  quota:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 2
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@v4
         with:
           persist-credentials: false
-          ref: ${{ github.sha }}
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '26'
           check-latest: true
-      - run: npm ci --ignore-scripts --no-audit --no-fund
-      - name: Verify isolated staging storage only
+      - name: Observe usage headers only (no odds, no budget changes)
         env:
-          BETQ_NEON_STAGING_DATABASE_URL: ${{ secrets.BETQ_NEON_STAGING_DATABASE_URL }}
-          BETQ_NEON_IDLE_PROBE: ${{ inputs.idle_probe }}
-        run: node scripts/verify-neon-staging.mjs
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: node scripts/probe-odds-quota.mjs
