@@ -76,8 +76,11 @@ and preserves each supplied timestamp separately from BETQ's `receivedAt`.
 Every supplied timestamp must be canonical and no later than the receipt; at
 least one provider timestamp must exist. Neither is copied into the other.
 Stale provider timestamps may be retained but are not refreshed by receipt or
-restore. The existing NFL consensus gate still requires a fresh market-level
-timestamp; storing a legacy book-only payload does not qualify it for scoring.
+restore. Both the price scanner (moneyline, spread and total) and NFL consensus
+require a valid, fresh market-level timestamp. HTTP analysis also binds it to
+the original receipt and rejects absent, future or preceding receipts. Storing a
+legacy book-only payload does not qualify it for displayed quotes or scoring.
+Legacy raw records remain unchanged; they are not repaired by inferred times.
 Compatibility tests use documented-shape synthetic payloads and injected SQL
 responses. They do not establish the actual account payload, production
 activation, or hosted database availability.
