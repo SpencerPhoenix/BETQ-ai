@@ -1,3 +1,4 @@
+import {retainedOddsObservation} from './retained-odds-observation.mjs';
 import {createDepthContextFeed,depthContextForGame} from './depth-context.mjs';
 import {createStaticRelease} from './static-release.mjs';
 import {createScheduledModelFeed} from './scheduled-model-feed.mjs';
@@ -172,6 +173,9 @@ function createHealthStatusReader(source) {
 export function createHandler({
   source = createOddsSource(),
   operatorRefreshToken = process.env.BETQ_OPERATOR_REFRESH_TOKEN || '',
+  ownerRefreshHandler = null, // Explicit injection only; no environment activation or browser bearer.
+  retainedObservationReader = null, // Explicit opt-in public-safe projection, no source refresh.
+  retainedObservationAccountId = null,
   clock = Date.now,
   scheduledModelFeed = createScheduledModelFeed({clock,fetchImpl:null}),
   officialGameFeed = createOfficialGameFeed({clock,fetchImpl:null}),
@@ -235,6 +239,10 @@ export function createHandler({
   const tokenDigest=operatorConfigured ? createHash('sha256').update(operatorRefreshToken).digest() : null;
   function paidPermission(req){
     if(req.headers['x-betq-paid-request']!=='true')return false;
+    // An injected owner trial must be the only HTTP spending boundary. Legacy
+    // operator GET credentials cannot bypass the additional trial ledger.
+    if(typeof ownerRefreshHandler==='function')throw new OddsError('OWNER_TRIAL_ROUTE_REQUIRED',403,
+      'Paid refresh must use the owner trial route.');
     if(!operatorConfigured)throw new OddsError('OPERATOR_REFRESH_NOT_CONFIGURED',503,
       'Paid refresh is disabled until operator authentication is configured. Public reads use cached data only.');
     const header=req.headers.authorization;
@@ -246,6 +254,12 @@ export function createHandler({
   }
   return async (req, res) => {
     try {
+      const requestUrl = new URL(req.url || '/', 'http://localhost');
+      if(requestUrl.pathname==='/api/owner/refresh'){
+        if(typeof ownerRefreshHandler!=='function')return reply(res,404,{error:{code:'OWNER_REFRESH_DISABLED',message:'Owner refresh is not enabled.'}});
+        const result=await ownerRefreshHandler(req);
+        return reply(res,result.status,result.body);
+      }
       if (req.method !== 'GET' && req.method !== 'HEAD') {
         res.setHeader('Allow', 'GET, HEAD');
         return reply(res, 405, { error: { code: 'METHOD_NOT_ALLOWED', message: 'Read-only API.' } });
@@ -581,6 +595,13 @@ export function createHandler({
               return reply(res,400,{error:{code:error.code,message:error.message}});
             throw error;
           }
+        }
+        if(url.pathname==='/api/retained-odds-observation'){
+          if(typeof retainedObservationReader!=='function')return reply(res,404,{error:{code:'RETAINED_VIEW_DISABLED',message:'Saved observation view is not enabled.'}});
+          const market=url.searchParams.get('market')||'h2h';
+          if([...url.searchParams.keys()].some(k=>k!=='market')||url.searchParams.getAll('market').length>1||!['h2h','spreads','totals'].includes(market))return reply(res,400,{error:{code:'INVALID_FILTER',message:'Unsupported market.'}});
+          const record=await retainedObservationReader(`odds:americanfootball_nfl:${market}`);
+          return reply(res,200,retainedOddsObservation(record,{accountId:retainedObservationAccountId,market,now}));
         }
         if (url.pathname === '/api/slate') {
           const sport = url.searchParams.get('sport') || 'americanfootball_nfl';

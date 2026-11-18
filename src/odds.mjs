@@ -110,7 +110,8 @@ export function createOddsSource({
         last: intHeader(response.headers, 'x-requests-last')
       };
       Object.assign(headersSnapshot, quota);
-      try { await budgetStore.reconcile(reservation,quota); }
+      let reconciliation;
+      try { reconciliation=await budgetStore.reconcile(reservation,quota); }
       catch(error) {
         lastError={at:new Date(clock()).toISOString(),code:'BUDGET_RECONCILIATION_FAILED'};
         throw budgetError(error);
@@ -132,12 +133,16 @@ export function createOddsSource({
       lastSuccess = receivedAt;
       lastError = null;
       const payload = { events: data, receivedAt, cacheHit: false, quota };
+      let snapshotStored=false;
       cache.set(cacheId, { storedAt: Date.parse(receivedAt), payload });
       if (snapshotStore && cacheId.startsWith('odds:')) {
         try { const persisted = await bounded(() => snapshotStore.write(cacheId, payload));
-          snapshotWriteError = persisted?.stored === true ? null : 'SNAPSHOT_NOT_WRITTEN'; }
+          snapshotStored=persisted?.stored===true;
+          snapshotWriteError = snapshotStored ? null : 'SNAPSHOT_NOT_WRITTEN'; }
         catch { snapshotWriteError = 'SNAPSHOT_WRITE_FAILED'; }
       }
+      payload.refreshReceipt=Object.freeze({reconciled:reconciliation?.reconciled===true,
+        reservationId:reservation.id,snapshotStored});
       return payload;
     })().finally(() => { inflight.delete(cacheId); });
     inflight.set(cacheId, pending);
