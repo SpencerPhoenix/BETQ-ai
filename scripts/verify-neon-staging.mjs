@@ -43,6 +43,8 @@ async function tlsAndIdentity(p){
       rolsuper,rolcreatedb,rolcreaterole,rolreplication,rolbypassrls
       FROM pg_roles WHERE rolname=current_user`);
     assert.equal(r.db,'betq');assert.equal(r.role,'betq_runtime');
+    const memberships=await client.query('SELECT 1 FROM pg_auth_members WHERE member=(SELECT oid FROM pg_roles WHERE rolname=current_user)');
+    assert.equal(memberships.rowCount,0);
     for(const k of ['rolsuper','rolcreatedb','rolcreaterole','rolreplication','rolbypassrls'])assert.equal(r[k],false);
   }finally{client.release();}
 }
