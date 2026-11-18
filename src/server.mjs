@@ -644,7 +644,7 @@ export function createHandler({
           // or kickoff boundaries. Evaluate response state after all awaits.
           const analysisNow=clock();
           const analysis = analyzeEvents(producerSelection.events, {
-            sport, market, asOf: analysisNow, maxAgeMs, demo
+            sport, market, asOf: analysisNow, maxAgeMs, demo, receivedAt: snapshot.receivedAt ?? null
           });
           if (!demo && sport === 'americanfootball_nfl' && market === 'h2h') {
             const rawById = new Map(producerSelection.events.map(e => [e.id, e]));
