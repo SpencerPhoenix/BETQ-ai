@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createOddsSnapshotStore,validateOddsSnapshot} from '../src/odds-snapshot-store.mjs';
 import {createOddsSource} from '../src/odds.mjs';
+import {nflMoneylineConsensus} from '../src/market-consensus.mjs';
+import {analyzeEvents} from '../src/engine.mjs';
 import {planOddsRefresh} from '../src/odds-refresh-plan.mjs';
 const now=Date.parse('2026-11-18T01:00:00Z'),cacheId='odds:americanfootball_nfl:h2h',accountId='test-account';
 const record=()=>({version:1,accountId,cacheId,receivedAt:new Date(now).toISOString(),events:[{id:'event',sport_key:'americanfootball_nfl',commence_time:'2026-11-19T01:00:00Z',home_team:'A',away_team:'B',bookmakers:[{key:'book',title:'Book',last_update:'2026-11-18T00:59:00Z',markets:[{key:'h2h',outcomes:[{name:'A',price:-110},{name:'B',price:110}]}]}]}]});
@@ -61,4 +63,79 @@ test('hung private restore is bounded and a late result cannot become a cache en
  await assert.rejects(source.getOdds('americanfootball_nfl','h2h'),e=>e.code==='PAID_REFRESH_REQUIRED');
  finish(record());await new Promise(r=>setImmediate(r));
  const status=await source.status();assert.equal(status.cacheEntries,0);assert.equal(status.snapshots.readError,'SNAPSHOT_READ_FAILED');
+});
+
+// Documented current shape; synthetic fixture, not an account/live observation.
+const marketRecord=()=>{
+ const r=record();
+ const b=r.events[0].bookmakers[0];
+ b.markets[0].last_update=b.last_update;
+ delete b.last_update;
+ return r;
+};
+test('market-only timestamps round trip exactly; legacy book-only stays unmodified',()=>{
+ for(const r of [marketRecord(),record()]){
+  const before=JSON.stringify(r),copy=validateOddsSnapshot(r,options);
+  assert.equal(JSON.stringify(copy),before);assert.equal(JSON.stringify(r),before);
+  assert.notEqual(copy,r);
+ }
+ const r=marketRecord();r.events[0].bookmakers[0].last_update='2026-11-18T00:59:30Z';
+ assert.deepEqual(validateOddsSnapshot(r,options),r);
+});
+test('missing both clocks and malformed/future supplied clocks fail without fallback',()=>{
+ for(const mutate of [
+  b=>delete b.markets[0].last_update,
+  b=>b.markets[0].last_update=null,
+  b=>b.markets[0].last_update='',
+  b=>b.markets[0].last_update='2026-11-18T02:00:00Z',
+  b=>b.markets[0].last_update='2026-11-18T00:59:00',
+  b=>b.last_update=null,
+  b=>b.last_update='2026-11-18T02:00:00Z',
+  b=>{b.last_update='2026-11-18T00:59:30Z';b.markets[0].last_update='bad';},
+ ]){
+  const r=marketRecord();mutate(r.events[0].bookmakers[0]);
+  assert.throws(()=>validateOddsSnapshot(r,options),/ODDS_SNAPSHOT_INVALID/);
+ }
+});
+test('documented market-only response persists and restores after source restart without new fetch',async()=>{
+ let stored=null,fetches=0,reserves=0;
+ const pool={async query(sql,args){
+  if(sql.startsWith('SELECT'))return {rows:stored?[{snapshot:stored}]:[]};
+  stored=JSON.parse(args[3]);return {rowCount:1};
+ }};
+ const snapshotStore=createOddsSnapshotStore({accountId,clock:()=>now+1000,pool});
+ const first=createOddsSource({apiKey:'test',clock:()=>now,snapshotStore,
+  budgetStore:{async reserve(){reserves++;return {};},async reconcile(){},async status(){return {};}},
+  fetchImpl:async()=>{fetches++;return new Response(JSON.stringify(marketRecord().events));}});
+ const live=await first.getOdds('americanfootball_nfl','h2h',{allowPaid:true});
+ assert.equal((await first.status()).snapshots.writeError,null);
+ assert.equal(stored.receivedAt,live.receivedAt);
+ assert.deepEqual(stored.events,marketRecord().events);
+ const second=createOddsSource({apiKey:'test',clock:()=>now+1000,snapshotStore,
+  budgetStore:{reserve(){throw Error('must not reserve');}},fetchImpl(){throw Error('must not fetch');}});
+ const restored=await second.getOdds('americanfootball_nfl','h2h');
+ assert.equal(restored.restoredFromPrivateSnapshot,true);
+ assert.equal(restored.receivedAt,live.receivedAt);
+ assert.deepEqual(restored.events,live.events);
+ assert.equal(fetches,1);assert.equal(reserves,1);
+});
+test('storage preserves stale market time; fresh bookmaker and receipt cannot qualify it',()=>{
+ const r=marketRecord(),book=r.events[0].bookmakers[0];
+ book.last_update=r.receivedAt;
+ book.markets[0].last_update='2026-11-18T00:00:00Z';
+ const copy=validateOddsSnapshot(r,options);
+ assert.equal(copy.events[0].bookmakers[0].markets[0].last_update,book.markets[0].last_update);
+ assert.equal(analyzeEvents(copy.events,{sport:'americanfootball_nfl',asOf:now}).summary.signals,0);
+});
+test('consensus after persistence requires actual fresh market timestamps, not book or receipt',()=>{
+ for(const shape of ['fresh','stale','missing']){
+  const r=marketRecord(),base=r.events[0].bookmakers[0];
+  base.last_update=r.receivedAt;
+  if(shape==='stale')base.markets[0].last_update='2026-11-18T00:00:00Z';
+  if(shape==='missing')delete base.markets[0].last_update;
+  r.events[0].bookmakers=Array.from({length:3},(_,i)=>({...structuredClone(base),key:`book${i}`}));
+  const copy=validateOddsSnapshot(r,options);
+  const result=nflMoneylineConsensus(copy.events[0],{asOf:now,receivedAt:copy.receivedAt});
+  assert.equal(result.available,shape==='fresh',shape);
+ }
 });
