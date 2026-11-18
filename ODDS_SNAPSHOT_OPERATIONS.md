@@ -66,3 +66,18 @@ restart restoration without provider/ledger access, stale/future/missing/error
 reads, private write failure, disabled and bounded plans. Existing checks and
 full test suite must pass before a draft PR is considered for review. Production
 activation and real-DB integration tests remain unperformed.
+
+## Provider timestamp compatibility
+
+The [provider's v4 guide](https://the-odds-api.com/liveapi/guides/v4/#more-info-1)
+deprecates bookmaker-level `last_update` in favor of market-level `last_update`.
+Storage accepts market-only timestamps, or the legacy bookmaker-only shape,
+and preserves each supplied timestamp separately from BETQ's `receivedAt`.
+Every supplied timestamp must be canonical and no later than the receipt; at
+least one provider timestamp must exist. Neither is copied into the other.
+Stale provider timestamps may be retained but are not refreshed by receipt or
+restore. The existing NFL consensus gate still requires a fresh market-level
+timestamp; storing a legacy book-only payload does not qualify it for scoring.
+Compatibility tests use documented-shape synthetic payloads and injected SQL
+responses. They do not establish the actual account payload, production
+activation, or hosted database availability.
