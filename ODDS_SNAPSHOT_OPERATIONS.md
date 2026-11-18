@@ -84,3 +84,32 @@ Legacy raw records remain unchanged; they are not repaired by inferred times.
 Compatibility tests use documented-shape synthetic payloads and injected SQL
 responses. They do not establish the actual account payload, production
 activation, or hosted database availability.
+
+## Prepared production wiring (disabled by default)
+
+`configuredOddsSnapshotStore` is the default `createOddsSource` snapshot factory.
+Only `BETQ_ODDS_SNAPSHOTS_ENABLED=true` opts in; absent or exact `false` returns no
+adapter and loads no PostgreSQL driver. Other values fail closed with a sanitized
+configuration diagnostic. Explicit `snapshotStore:null` still disables injection.
+
+When enabled, `BETQ_ODDS_SNAPSHOT_DATABASE_URL` must be a query-free TCP PostgreSQL
+URL accepted by `verifiedPostgresOptions`. There is no automatic credential fallback
+or URI parameter stripping. A reviewed Neon connection URI must have its known
+provider query options removed separately; the driver always verifies certificate
+and hostname through explicit TLS options. `BETQ_BUDGET_ACCOUNT_ID` is the sole
+snapshot account scope. This does not seed or enable the budget ledger.
+
+The shared pool is lazy: snapshot reads/writes, not health, instantiate it. It has
+at most 3 clients, a 3-second connection timeout, 5-second query/statement timeouts,
+3-second lock timeout and 10-second idle timeout. `allowExitOnIdle` prevents idle
+snapshot clients keeping an otherwise closed process alive. Existing idle-error
+handling is reused; failed initialization may be retried by a later operation,
+never by an automatic provider retry. There are no migrations or scheduler calls.
+
+Before enabling: migrate only the approved snapshot database, verify restricted
+role grants and real TLS, then test the configured HTTP path and restart against
+isolated hosted staging. Budget baseline, operator authentication, explicit caps
+and scheduler coordination remain independent rollout gates. Snapshot health
+configuration is not evidence the DB is reachable. Five-minute stale data still
+cannot become current quotes. This preparation changes no Render variables and
+makes no provider requests.
