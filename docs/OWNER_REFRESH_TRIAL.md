@@ -11,8 +11,8 @@ migration or activation is included. The existing one-time pilot remains closed.
 module requires a trusted, server-side owner-session verifier, same-origin POST,
 JSON, CSRF validation and an operation UUID. Request parameters never establish
 owner identity. Do not put the existing operator bearer in browser JavaScript,
-HTML, localStorage or a URL. The current app has no production owner-session
-adapter: integrating and reviewing authentication is a **release blocker**.
+HTML, localStorage or a URL. The disabled owner-session adapter is described in `OWNER_SESSION_ADAPTER.md`.
+Actual verified owner login and durable session/rate stores remain **release blockers**.
 
 The trial store is an additional spending restriction, not a substitute for the
 existing durable provider budget. Its policy must be explicitly provisioned
@@ -49,8 +49,10 @@ is **not delivered** by this draft; it needs separate UX and licensing review.
 ## Before any activation
 
 1. Independently review migration, role grants, concurrency and authorization.
-2. Test actual PostgreSQL transaction/race/crash behavior in isolated staging.
-   Offline mocks are not proof of real database isolation.
+2. Run the disposable PostgreSQL 17 CI integration checks for real transaction
+   races, caps, restart persistence, expiry and restricted privileges. These tests
+   use synthetic localhost data and do not prove Neon network/TLS or crash recovery.
+   Reverify the eventual restricted production role before activation.
 3. Integrate a verified owner session, secure cookies/session expiry and CSRF
    delivery. Add owner-level abuse controls and test repeated tabs/devices.
 4. Integrate an authenticated, fixed zero-credit probe with the exact runtime
@@ -84,5 +86,8 @@ before source access, including scores. Thus an old operator credential cannot
 bypass the additional trial ledger. Account-scoped operation IDs cannot be reused
 for another market. Unexpected charges above the one-credit contract must be
 recorded as unknown atomically, before any following claim can be admitted.
-The trial store accepts a pool supplied by the trusted integration; a verified
-TLS, bounded-connection production factory remains part of the activation work.
+The explicit `configuredOwnerTrial` factory defaults disabled, accepts no ambient
+environment, enforces verified TLS and bounded connections/timeouts, and does not
+seed policy or run migrations. It remains unwired to production startup. Its unit
+tests verify configuration; disposable PostgreSQL CI tests real store behavior
+without claiming a new Neon TLS test.
