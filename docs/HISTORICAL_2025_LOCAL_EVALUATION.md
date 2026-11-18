@@ -71,7 +71,7 @@ The experiment's probability scores use research residual distributions around p
 ## Verification and remaining release gates
 
 ```sh
-node --test tests/historical-evaluation.test.mjs tests/historical-app-integration.test.mjs
+npm test -- tests/historical-evaluation.test.mjs tests/historical-app-integration.test.mjs
 npm run check
 npm test
 npm run historical:verify -- /absolute/path/to/betq-history-pilot/output

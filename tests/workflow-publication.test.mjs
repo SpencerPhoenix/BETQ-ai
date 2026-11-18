@@ -30,7 +30,7 @@ const writers = [...manualWriters, ...Object.keys(writerSchedules)];
 const readOnlyBaseline = {
   // Manual fixed-endpoint, quota-free observation; no data publication or ledger writes.
   'odds-quota-diagnostic': '4224b9912059092720da1ac79d7067af5ded4c1c91a2db4b7b6c8e6c9e7e092b',
-  'injury-coverage-audit': 'b8ebc10e8fe51d63e8e91dee90b1d8e63d7fb7964de130b025ba2a53d584f311',
+  'injury-coverage-audit': 'ae17baafa47b9f8b0b94de1702eaf2e89954b8cf20d7b337571710cb1d3d955e',
   // New manual encrypted sample reviewed separately; no automatic collection.
   'bdl-result-sample': '7dd8a44daaed324435cef33ee1547c54188b121ab8551113a99b18844abde1d4',
   'retained-evidence-audit': '24a6bc9009daf141496935498722ace6ef3146ca64002bd79b20fe5da6c96991',
@@ -88,7 +88,7 @@ test('Every test-running workflow job installs locked dependencies before tests 
       assert.ok(install >= 0 && install < firstTest, `${name}: install must precede npm test`);
     }
   }
-  assert.equal(testedJobs, 17);
+  assert.equal(testedJobs, 18);
 });
 
 test('Collector dependency installation cannot inherit its operator bearer', async () => {

@@ -50,6 +50,6 @@ These are rights-review flags, not conclusions about enforceability or every pos
 
 ## Reproduction and next decision
 
-`node --test tests/official-score-review.test.mjs`, direct `node --test`, and the direct Node syntax checks listed in package.json exercise metadata binding, same-score amendments, idempotency, stale/future/backdated receipts, conflicts, identity aliases, unchanged scoring, and ledger tampering. Fixtures are explicitly fabricated and remain in-memory test data, never actual observations.
+`npm test -- tests/official-score-review.test.mjs`, `npm test`, and the direct Node syntax checks listed in package.json exercise metadata binding, same-score amendments, idempotency, stale/future/backdated receipts, conflicts, identity aliases, unchanged scoring, and ledger tampering. Fixtures are explicitly fabricated and remain in-memory test data, never actual observations.
 
 The next decision is a rights-compatible source and a separately approved actual observation procedure. Existing official links can remain prior-audit references; this implementation cannot turn them into fresh receipts. No production automation should be enabled until rights and source contracts are resolved. Retain the full 16-game exploratory scorecard, including misses and market benchmarks, separately from any future qualified cohort.

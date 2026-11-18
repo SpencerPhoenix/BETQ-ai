@@ -175,4 +175,4 @@ Reload the page if it was fetched across that deployment boundary. Already-open
 pages are not forcibly refreshed, and previously cached HTML from older secondary
 pages can persist for their former five-minute TTL on the initial upgrade.
 
-Offline release-cache regressions: `node --test tests/static-release.test.mjs tests/static-resource-delivery.test.mjs`.
+Offline release-cache regressions: `npm test -- tests/static-release.test.mjs tests/static-resource-delivery.test.mjs`.

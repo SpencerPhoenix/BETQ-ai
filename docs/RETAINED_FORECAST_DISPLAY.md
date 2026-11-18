@@ -18,7 +18,7 @@ The independent asset loads one same-origin retained endpoint and exposes no ref
 
 ## Offline verification
 
-`node --test tests/retained-forecasts.test.mjs` covers original-versus-latest selection, unchanged journal inputs, actual bundled values, unsupported/missing Elo, fixed-primary behavior, two-team complements, date-local rankings, market distinction, 50/50, stale/model/kickoff/result/conflict states, malformed and future provenance, source digests, read-failure disclosure, escaping, repeated and interrupted loads, focus-safe aging and read-only HTTP behavior.
+`npm test -- tests/retained-forecasts.test.mjs` covers original-versus-latest selection, unchanged journal inputs, actual bundled values, unsupported/missing Elo, fixed-primary behavior, two-team complements, date-local rankings, market distinction, 50/50, stale/model/kickoff/result/conflict states, malformed and future provenance, source digests, read-failure disclosure, escaping, repeated and interrupted loads, focus-safe aging and read-only HTTP behavior.
 
 `python tests/retained-forecasts-browser.py [artifact-directory]` intercepts every browser request and serves only local assets and retained fixture responses. It covers desktop/mobile overflow, actual bundled forecasts, demo/non-NFL separation, repeated dossier opening/closing, keyboard focus across clock updates, stale transition and unavailable responses. No provider, public-journal or other external service is called. Fixtures are test-only, never journal publications.
 

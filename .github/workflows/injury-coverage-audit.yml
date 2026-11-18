@@ -30,11 +30,12 @@ jobs:
         with:
           node-version: '26'
           check-latest: true
+      - run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Syntax and isolated regression tests
         run: |
           node --check src/injury-coverage-audit.mjs
           node --check scripts/audit-injury-coverage.mjs
-          node --test tests/injury-coverage-audit.test.mjs
+          npm test -- tests/injury-coverage-audit.test.mjs
       - name: Audit retained source freshness and team-week coverage (no provider requests)
         run: node scripts/audit-injury-coverage.mjs
       - uses: actions/upload-artifact@v4

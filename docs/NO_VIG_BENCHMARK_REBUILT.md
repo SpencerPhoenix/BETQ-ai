@@ -46,7 +46,7 @@ Chronology, eligibility and authenticated outcomes are separate requirements. Ti
 Run without networking or installations:
 
 ```
-node --test tests/no-vig-benchmark.test.mjs
+npm test -- tests/no-vig-benchmark.test.mjs
 node scripts/audit-no-vig-benchmark.mjs
 node --check research/no-vig/benchmark.mjs
 node --check research/no-vig/calibration-fixtures.mjs

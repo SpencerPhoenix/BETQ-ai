@@ -140,7 +140,7 @@ the 30-game reporting threshold automatically, establish ROI/CLV, or authorize b
 
 ## Verification
 
-Run `node --test tests/bdl-receipt-ledger.test.mjs tests/bdl-receipt-cli.test.mjs`
+Run `npm test -- tests/bdl-receipt-ledger.test.mjs tests/bdl-receipt-cli.test.mjs`
 and the normal `npm run check` / `npm test` aggregate gates. The CLI tests run in a
 child process with HTTP, HTTPS, TCP, TLS and fetch calls disabled and an explicitly
 synthetic test clock. These are offline engineering tests, not live-provider checks.
