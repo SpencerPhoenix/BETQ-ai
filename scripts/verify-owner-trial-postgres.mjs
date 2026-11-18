@@ -14,6 +14,9 @@ const {default:assert}=await import('node:assert/strict');
 const {randomUUID}=await import('node:crypto');
 const {readFile}=await import('node:fs/promises');
 const {createOwnerTrialStore}=await import('../src/owner-trial-store.mjs');
+const {createOwnerRefreshHandler}=await import('../src/owner-refresh.mjs');
+const {createOddsSource}=await import('../src/odds.mjs');
+const {Readable}=await import('node:stream');
 const {createOwnerSessionStores}=await import('../src/owner-session-store.mjs');
 const {createHash,randomBytes}=await import('node:crypto');
 const suffix=randomUUID().replaceAll('-','');
@@ -102,6 +105,66 @@ try{
     ])await assert.rejects(runtime.query(sql),{code:'42501'});
     const flags=await runtime.query('SELECT rolsuper,rolcreaterole,rolcreatedb,rolbypassrls FROM pg_roles WHERE rolname=current_user');
     assert.ok(Object.values(flags.rows[0]).every(x=>x===false));
+  });
+  await check('real trial ledger deduplicates distinct IDs across independent source caches (mock provider/budget/snapshot)',async()=>{
+    const id=account();await seed(id,12,12);
+    const snapshots=new Map(),keys=new Set();let fetches=0,reserves=0;
+    const syntheticEvents=['synthetic-game-a','synthetic-game-b'].map((eventId,i)=>({
+      id:eventId,sport_key:'americanfootball_nfl',commence_time:new Date(Date.now()+3600000).toISOString(),
+      home_team:'Synthetic Home '+i,away_team:'Synthetic Away '+i,bookmakers:[]
+    }));
+    let releaseFetch,markStarted;
+    const started=new Promise(resolve=>markStarted=resolve);
+    const held=new Promise(resolve=>releaseFetch=resolve);
+    let releaseWrite,markWriteStarted,reconciled=false;
+    const writeStarted=new Promise(resolve=>markWriteStarted=resolve);
+    const heldWrite=new Promise(resolve=>releaseWrite=resolve);
+    const snapshotStore={async read(key){keys.add(key);return structuredClone(snapshots.get(key)??null);},
+      async write(key,payload){keys.add(key);assert.equal(reconciled,true);markWriteStarted();await heldWrite;snapshots.set(key,structuredClone(payload));return {stored:true};}};
+    // These are deliberately synthetic budget receipts, NOT real provider accounting proof.
+    const budgetStore={async status(){return {persistent:true,available:true,ready:true,baselineCurrent:true,unresolvedReservations:0};},
+      async reserve({estimatedCredits}){assert.equal(estimatedCredits,1);reserves++;return {id:randomUUID()};},
+      async reconcile(){reconciled=true;return {reconciled:true};}};
+    const fetchImpl=async url=>{
+      fetches++;const u=new URL(url);assert.equal(u.pathname,'/v4/sports/americanfootball_nfl/odds');
+      assert.equal(u.searchParams.get('regions'),'us');assert.equal(u.searchParams.get('markets'),'h2h');
+      assert.equal(u.searchParams.has('eventIds'),false);markStarted();await held;
+      return new Response(JSON.stringify(syntheticEvents),{headers:{'x-requests-remaining':'99','x-requests-used':'1','x-requests-last':'1'}});
+    };
+    const sources=Array.from({length:2},()=>createOddsSource({apiKey:'synthetic-never-sent',fetchImpl,budgetStore,snapshotStore}));
+    const origin='https://synthetic.example',csrfToken='x'.repeat(43);
+    const handlers=sources.map(source=>createOwnerRefreshHandler({enabled:true,origin,ownerId:'synthetic-owner',
+      resolveSession:async()=>({verified:true,userId:'synthetic-owner',csrfToken}),store:makeStore(id),source}));
+    const request=()=>{const r=Readable.from([JSON.stringify({market:'h2h',idempotencyKey:randomUUID(),csrfToken})]);
+      r.method='POST';r.url='/api/owner/refresh';r.headers={origin,'sec-fetch-site':'same-origin','content-type':'application/json'};return r;};
+    const runs=handlers.map(h=>h(request()));
+    try{
+      await started;
+      // One distinct operation remains unresolved while the other is denied by real PG.
+      const denied=await Promise.race(runs);assert.equal(denied.status,409);
+      assert.equal(fetches,1);assert.equal(reserves,1);
+    }finally{releaseFetch();}
+    try{
+      await writeStarted;
+      // Provider-budget reconciliation alone must not release the owner trial.
+      // The shared snapshot is not yet visible: this is the exact cross-cache gap.
+      assert.equal(reconciled,true);assert.equal(snapshots.size,0);
+      const third=await handlers[1](request());
+      assert.equal(third.status,409);assert.equal(fetches,1);assert.equal(reserves,1);
+    }finally{releaseWrite();}
+    const results=await Promise.all(runs);
+    assert.deepEqual(results.map(r=>r.status).sort(),[200,409]);
+    const loser=results.findIndex(r=>r.status===409);
+    const restored=await handlers[loser](request());
+    assert.equal(restored.status,200);assert.equal(restored.body.cacheHit,true);
+    assert.equal(restored.body.actualChargedCredits,0);assert.equal(fetches,1);assert.equal(reserves,1);
+    // Game selection consumes the same retained league/market slate, not per-game fetches.
+    for(const eventId of syntheticEvents.map(e=>e.id)){
+      const slate=await sources[loser].getOdds('americanfootball_nfl','h2h');
+      assert.equal(slate.events.filter(e=>e.id===eventId).length,1);assert.equal(slate.cacheHit,true);
+    }
+    assert.deepEqual([...keys],['odds:americanfootball_nfl:h2h']);assert.equal(fetches,1);
+    assert.equal((await makeStore(id).status()).lifetimeUsed,2); // cached operation retains its trial reservation.
   });
   const stores=ownerId=>createOwnerSessionStores({enabled:true,pool:runtime,ownerId});
   const session=userId=>{const now=Date.now();return {userId,sessionHash:randomBytes(32).toString('hex'),csrfToken:randomBytes(32).toString('base64url'),createdAt:now,lastSeenAt:now,expiresAt:now+900000,revoked:false};};

@@ -110,3 +110,25 @@ The server forwards only the cookie header and prohibits CORS/cache policy overr
 Authentication errors are sanitized before generic logging. This is not completed
 live sign-in: real owner verification, enrollment, provider integration and browser
 validation still require separate work.
+
+## Shared slate reuse and deduplication boundary
+
+Odds snapshots are keyed by league and market, not selected game. Switching game
+cards reads the same retained NFL slate with its original receipt time and never
+requests a per-game paid refresh. Separate moneyline/spread/total markets remain
+separate observations. Freshness is unchanged; stale data is not renewed by reads.
+
+The owner trial's account-wide unresolved operation blocks another distinct UUID
+until the first operation has persisted its snapshot and completed. A later
+instance reads that shared fresh snapshot and costs zero provider credits. Such
+an explicitly requested cached refresh still consumes one conservative trial
+allowance; ordinary game-card cache reads consume neither allowance nor credits.
+A failed/timed-out shared snapshot read now prevents any paid reservation, because
+failure does not establish that another instance lacks a fresh observation.
+
+This is an owner-boundary guarantee, not a general distributed lock inside the
+raw odds client. Legacy raw clients alone can race after budget reconciliation
+and before snapshot persistence. They must not bypass the owner boundary;
+legacy paid GET is blocked when that boundary is configured. The current disabled
+production pilot remains closed. CI uses real PostgreSQL trial claims but mocked
+provider/budget/snapshot responses; it makes no live-provider concurrency claim.
