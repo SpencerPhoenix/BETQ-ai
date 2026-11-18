@@ -4,7 +4,7 @@ const teams=['ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE','DAL','DEN','DET','
 for(const id of ['home','away'])for(const t of teams){const o=document.createElement('option');o.value=o.textContent=t;$(id).append(o);}
 $('season').value=new Date().getFullYear();$('away').value='LAC';$('home').value='BAL';
 let discoveredGames=new Map();
-let generation=0,current=null,contextExpires=null,userTouched=false;
+let generation=0,current=null,contextExpires=null,userTouched=false,cachedLines=null;
 const fixtureFresh=g=>Number.isFinite(Date.parse(g?.validUntil))&&Number.isFinite(Date.parse(g?.kickoff))&&Date.now()<Date.parse(g.validUntil)&&Date.now()<Date.parse(g.kickoff);
 $('request').addEventListener('input',()=>{userTouched=true;});
 $('refresh').addEventListener('click',()=>$('request').requestSubmit());
@@ -35,6 +35,70 @@ function renderPregameComparison(root,r,coverage=null){
  root.prepend(table);
 }
 
+// Only existing public cache reads. Never send the paid-request header or credentials.
+function selectCachedLines(slates,r,now=Date.now()){
+ const instant=x=>{const at=typeof x==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(x)?Date.parse(x):NaN;return Number.isFinite(at)&&new Date(at).toISOString()===x?at:NaN;};
+ const result={groups:[],expiresAt:Infinity,checkedAt:now};
+ const eventIds=new Set();
+ for(const market of ['h2h','spreads','totals']){
+  const data=slates?.[market],received=instant(data?.receivedAt),kickoff=Date.parse(r.fixture.kickoff);
+  const group={market,quotes:[],reason:'No fresh matching quote in the shared cache.'};result.groups.push(group);
+  if(!Number.isFinite(now)||!Number.isFinite(received)||received>now||now-received>=300000||
+    !Number.isFinite(kickoff)||kickoff-now<=300000||data?.source!=='THE_ODDS_API_V4'||data.demo!==false||data.cacheHit!==true||
+    data.sport!=='americanfootball_nfl'||data.market!==market||!Array.isArray(data.events))continue;
+  const matches=data.events.filter(e=>e?.homeTeam===r.fixture.home&&e?.awayTeam===r.fixture.away);
+  if(matches.length!==1)continue;
+  const e=matches[0];
+  if(typeof e.id!=='string'||!e.id.trim()||data.events.filter(other=>other?.id===e.id).length!==1||e.demo!==false||e.started!==false||Date.parse(e.commenceTime)!==kickoff||
+    ['SCHEDULE_RECONCILIATION_REQUIRED','SCHEDULE_REVIEW_IDENTITY_MISMATCH'].includes(e.scheduleReview?.status)||!Array.isArray(e.opportunities)||!e.opportunities.length)continue;
+  const keys=new Set(),quotes=[];let expires=received+300000,invalid=false;
+  for(const q of e.opportunities){
+   const at=instant(q?.lastUpdated),point=q?.point;
+   const pointValid=Number.isFinite(point)&&Math.abs(point)<=1000&&Number.isInteger(point*2);
+   const contractValid=market==='h2h'?['home','away'].includes(q?.side)&&q.contractId==='h2h'&&point===null:
+    market==='spreads'?['home','away'].includes(q?.side)&&pointValid&&q.contractId==='spread:'+(q.side==='home'?point:-point):
+    ['over','under'].includes(q?.side)&&pointValid&&point>=0&&q.contractId==='total:'+point;
+   const key=q?.contractId+'|'+q?.side;
+   if(!q||q.eventId!==e.id||q.market!==market||(q.period!=null&&q.period!=='full_game')||!contractValid||keys.has(key)||
+     typeof q.bookmaker!=='string'||!q.bookmaker.trim()||q.bookmaker.length>100||typeof q.bookmakerKey!=='string'||!(/^[a-z0-9_-]{1,80}$/).test(q.bookmakerKey)||
+     !Number.isFinite(q.americanOdds)||!Number.isInteger(q.americanOdds)||Math.abs(q.americanOdds)<100||Math.abs(q.americanOdds)>1000000||
+     !Number.isFinite(at)||at>received||at>now||now-at>=600000){invalid=true;break;}
+   keys.add(key);expires=Math.min(expires,at+600000);
+   const team=q.side==='home'?r.fixture.home:r.fixture.away;
+   const label=market==='totals'?(q.side==='over'?'Over ':'Under ')+point:team+(market==='spreads'?' '+(point>0?'+':'')+point:' to win');
+   quotes.push({label,price:q.americanOdds,book:q.bookmaker,bookKey:q.bookmakerKey,quoteAt:q.lastUpdated,receivedAt:data.receivedAt});
+  }
+  if(invalid||!quotes.length)continue;
+  eventIds.add(e.id);group.quotes=quotes;group.reason=null;
+  result.expiresAt=Math.min(result.expiresAt,expires,kickoff-300000,Date.parse(r.validUntil));
+ }
+ if(eventIds.size>1){for(const g of result.groups){g.quotes=[];g.reason='Provider game identity differs across cached markets.';}result.expiresAt=Infinity;}
+ return result;
+}
+function renderCachedLines(root,report){
+ if(!root)return;root.replaceChildren();
+ const h=document.createElement('h3');h.textContent='Sportsbook snapshot';root.append(h);
+ for(const group of report.groups){
+  const label={h2h:'Moneyline',spreads:'Spread',totals:'Total'}[group.market];
+  const h4=document.createElement('h4');h4.textContent=label;root.append(h4);
+  if(!group.quotes.length){paragraph(root,group.reason,'muted');continue;}
+  for(const q of group.quotes){
+   paragraph(root,q.label+' · '+(q.price>0?'+':'')+q.price+' · '+q.book+' ('+q.bookKey+')');
+   paragraph(root,'Quote '+q.quoteAt+' · Received '+q.receivedAt,'muted');
+  }
+ }
+ paragraph(root,'Selected cached quotes, not a complete sportsbook board or verified offer. Prices do not create a BETQ spread/total prediction or a saved graded pick. No paid refresh requested.','muted');
+}
+async function loadCachedLines(r,token){
+ const markets=['h2h','spreads','totals'];
+ const reads=await Promise.all(markets.map(async market=>{
+  try{const response=await fetch('/api/slate?sport=americanfootball_nfl&market='+market+'&mode=live',{cache:'no-store',credentials:'omit'});return response.ok?await response.json():null;}catch{return null;}
+ }));
+ if(token!==generation||current!==r||Date.now()>=Date.parse(r.validUntil))return;
+ cachedLines=selectCachedLines(Object.fromEntries(markets.map((m,i)=>[m,reads[i]])),r);
+ renderCachedLines($('market-snapshot'),cachedLines);
+}
+
 // Read-only analysis surface. Winner probability is never converted to cover/total probability.
 function renderAnalysisCard(root,r){
  const block=(tag,klass,text,parent=root)=>{const el=document.createElement(tag);el.className=klass;el.textContent=text;parent.append(el);return el;};
@@ -51,9 +115,9 @@ function renderAnalysisCard(root,r){
  block('p','muted','Based on past results and venue. Current injuries, quarterbacks and weather are not included.',summary);
  block('p','warning','Research estimate, not a validated betting recommendation.',summary);
  const grid=block('div','analysis-grid','');
- const market=section('Sportsbook snapshot',grid);
+ const market=section('Sportsbook snapshot',grid);market.id='market-snapshot';
  metric(market,'Spread','Not available');metric(market,'Total','Not available');metric(market,'Odds / bookmaker','Not available');
- block('p','muted','No sportsbook quote was requested. No quote timestamp or executable price is available.',market);
+ block('p','muted','Checking existing shared cache only. No paid quote will be requested.',market);
  const model=section('BETQ model',grid);
  metric(model,r.fixture.away+' win',percent(away));metric(model,r.fixture.home+' win',percent(home));
  metric(model,'Fair spread / total','Not supported');metric(model,'Projected score','Not supported');
@@ -73,7 +137,7 @@ function renderAnalysisCard(root,r){
 }
 
 $('request').addEventListener('submit',async e=>{
- e.preventDefault();const token=++generation;current=null;contextExpires=null;$('result').hidden=true;$('quote').hidden=true;$('context').replaceChildren();$('comparison').textContent='';$('receipt').textContent='';$('evaluate').disabled=true;$('status').textContent='Checking official schedule and current model…';
+ e.preventDefault();const token=++generation;current=null;cachedLines=null;contextExpires=null;$('result').hidden=true;$('quote').hidden=true;$('context').replaceChildren();$('comparison').textContent='';$('receipt').textContent='';$('evaluate').disabled=true;$('status').textContent='Checking official schedule and current model…';
  const gameId=`${$('season').value}_${String($('week').value).padStart(2,'0')}_${$('away').value}_${$('home').value}`;
  try{
   const response=await fetch('/api/game-evaluation?gameId='+encodeURIComponent(gameId)+'&preview=scheduled',{cache:'no-store'});const r=await response.json();if(token!==generation)return;
@@ -82,6 +146,7 @@ $('request').addEventListener('submit',async e=>{
   current=r;$('status').textContent='Evaluated '+new Date(r.evaluatedAt).toLocaleString()+'. Official schedule observed '+new Date(r.fixture.observedAt).toLocaleString();
   const out=$('result');out.replaceChildren();out.hidden=false;
   renderAnalysisCard(out,r);
+  void loadCachedLines(r,token);
   renderPregameComparison($('context'),r);
   const depth=r.depthContext;
   paragraph($('context'),'Pregame quarterback context');
@@ -134,6 +199,7 @@ $('compare').addEventListener('click',()=>{
  $('comparison').textContent='User-entered price requires '+percent(breakeven)+' to break even. Unadjusted model: '+percent(p)+'. Arithmetic expected return: '+((p*decimal-1)*100).toFixed(1)+'%. Not a validated edge or recommended stake; quarterback/lineup effects remain unmodeled.';
 });
 setInterval(()=>{
+ if(cachedLines&&(Date.now()>=cachedLines.expiresAt||Date.now()<cachedLines.checkedAt)){cachedLines=null;const root=$('market-snapshot');if(root){root.replaceChildren();paragraph(root,'Cached lines expired. Refresh the matchup to check the shared cache again.','warning');}}
  for(const option of $('upcoming').options){const g=discoveredGames.get(option.value);if(g&&!fixtureFresh(g)){option.textContent=g.away+' at '+g.home+' · Schedule expired; select to recheck';}}
  if(contextExpires!==null&&Date.now()>=contextExpires){contextExpires=null;$('context').replaceChildren();paragraph($('context'),'Official context expired. Evaluate again to refresh.','warning');}if(current&&(!Number.isFinite(Date.parse(current.validUntil))||Date.now()>=Date.parse(current.validUntil))){current=null;$('status').textContent='This evaluation has expired. Refresh before using it.';$('result').hidden=true;$('quote').hidden=true;$('context').replaceChildren();paragraph($('context'),'Refresh required: the displayed evaluation/context is no longer current.','warning');}},1000);
 
