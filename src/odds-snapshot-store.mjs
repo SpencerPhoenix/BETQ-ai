@@ -23,11 +23,15 @@ export function validateOddsSnapshot(record,{accountId,cacheId,now=Date.now()}={
       (e.sport_title!==undefined&&!text(e.sport_title))||!instant(e.commence_time)||!Array.isArray(e.bookmakers)||e.bookmakers.length>100)fail();
     ids.add(e.id); const books=new Set();
     for(const b of e.bookmakers){
-      if(!keys(b,['key','title','last_update','markets'])||!text(b.key)||books.has(b.key)||!text(b.title)||!instant(b.last_update)||
-        Date.parse(b.last_update)>Date.parse(record.receivedAt)||!Array.isArray(b.markets)||b.markets.length!==1)fail();
+      if(!keys(b,['key','title','last_update','markets'])||!text(b.key)||books.has(b.key)||!text(b.title)||
+        (b.last_update!==undefined&&(!instant(b.last_update)||Date.parse(b.last_update)>Date.parse(record.receivedAt)))||!Array.isArray(b.markets)||b.markets.length!==1)fail();
       books.add(b.key);
       const m=b.markets[0];
+      // Provider market timestamps supersede deprecated bookmaker timestamps.
+      // Retain either supplied shape verbatim; never manufacture the other.
+      // Legacy book-only storage does not establish market freshness for scoring.
       if(!keys(m,['key','last_update','outcomes'])||m.key!==market||(m.last_update!==undefined&&(!instant(m.last_update)||Date.parse(m.last_update)>Date.parse(record.receivedAt)))||
+        (b.last_update===undefined&&m.last_update===undefined)||
         !Array.isArray(m.outcomes)||m.outcomes.length!==2)fail();
       const [a,z]=m.outcomes;
       for(const o of m.outcomes)if(!keys(o,['name','price','point'])||!text(o.name)||toDecimal(o.price)===null||
