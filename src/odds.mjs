@@ -1,6 +1,7 @@
 import { SPORTS, MARKETS } from './engine.mjs';
 import {readBoundedText} from './integrity.mjs';
 import {configuredProviderBudget} from './configured-provider-budget.mjs';
+import {configuredOddsSnapshotStore} from './configured-odds-snapshots.mjs';
 
 export class OddsError extends Error {
   constructor(code, status, message) {
@@ -19,7 +20,7 @@ export function createOddsSource({
   clock = Date.now,
   ttlMs = Number(process.env.CACHE_TTL_MS) || 300000,
   budgetStore = configuredProviderBudget(),
-  snapshotStore = null
+  snapshotStore = configuredOddsSnapshotStore({clock})
 } = {}) {
   apiKey = typeof apiKey==='string' ? apiKey.trim() : '';
   ttlMs = Number.isFinite(ttlMs) && ttlMs>0 ? ttlMs : 300000;
@@ -146,7 +147,9 @@ export function createOddsSource({
     configured,
     async status() { return { configured, lastSuccess, lastError, quota: { ...headersSnapshot },
       budget: await ledgerStatus(), cacheEntries: cache.size,
-      snapshots: {configured:Boolean(snapshotStore), error:snapshotWriteError || snapshotReadError,
+      snapshots: {configured:Boolean(snapshotStore)&&!snapshotStore.configurationError,
+        configurationError:snapshotStore?.configurationError||null,
+        error:snapshotStore?.configurationError || snapshotWriteError || snapshotReadError,
         readError:snapshotReadError, writeError:snapshotWriteError} }; },
     getOdds(sport, market, options = {}) {
       if (!Object.hasOwn(SPORTS, sport) || !Object.hasOwn(MARKETS, market)) {
