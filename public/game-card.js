@@ -44,7 +44,7 @@ function selectCachedLines(slates,r,now=Date.now()){
   const data=slates?.[market],received=instant(data?.receivedAt),kickoff=Date.parse(r.fixture.kickoff);
   const group={market,quotes:[],reason:'No fresh matching quote in the shared cache.'};result.groups.push(group);
   if(!Number.isFinite(now)||!Number.isFinite(received)||received>now||now-received>=300000||
-    !Number.isFinite(kickoff)||kickoff-now<=300000||data?.source!=='THE_ODDS_API_V4'||data.demo!==false||data.cacheHit!==true||
+    !Number.isFinite(kickoff)||kickoff<=now||data?.source!=='THE_ODDS_API_V4'||data.demo!==false||data.cacheHit!==true||
     data.sport!=='americanfootball_nfl'||data.market!==market||!Array.isArray(data.events))continue;
   const matches=data.events.filter(e=>e?.homeTeam===r.fixture.home&&e?.awayTeam===r.fixture.away);
   if(matches.length!==1)continue;
@@ -70,14 +70,14 @@ function selectCachedLines(slates,r,now=Date.now()){
   }
   if(invalid||!quotes.length)continue;
   eventIds.add(e.id);group.quotes=quotes;group.reason=null;
-  result.expiresAt=Math.min(result.expiresAt,expires,kickoff-300000,Date.parse(r.validUntil));
+  result.expiresAt=Math.min(result.expiresAt,expires,kickoff,Date.parse(r.validUntil));
  }
  if(eventIds.size>1){for(const g of result.groups){g.quotes=[];g.reason='Provider game identity differs across cached markets.';}result.expiresAt=Infinity;}
  return result;
 }
 function renderCachedLines(root,report){
  if(!root)return;root.replaceChildren();
- const h=document.createElement('h3');h.textContent='Sportsbook snapshot';root.append(h);
+ const h=document.createElement('h3');h.textContent='Last-observed sportsbook snapshot';root.append(h);
  for(const group of report.groups){
   const label={h2h:'Moneyline',spreads:'Spread',totals:'Total'}[group.market];
   const h4=document.createElement('h4');h4.textContent=label;root.append(h4);
@@ -87,7 +87,7 @@ function renderCachedLines(root,report){
    paragraph(root,'Quote '+q.quoteAt+' · Received '+q.receivedAt,'muted');
   }
  }
- paragraph(root,'Selected cached quotes, not a complete sportsbook board or verified offer. Prices do not create a BETQ spread/total prediction or a saved graded pick. No paid refresh requested.','muted');
+ paragraph(root,'Last-observed quotes only; a market may have moved, closed or been suspended since observation. Not a complete sportsbook board or verified offer. Prices do not create a BETQ spread/total prediction or a saved graded pick. No paid refresh requested.','muted');
 }
 async function loadCachedLines(r,token){
  const markets=['h2h','spreads','totals'];

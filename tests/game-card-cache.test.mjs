@@ -18,3 +18,42 @@ test('quote freshness and kickoff reduce expiry; live client uses only fixed pub
 test('actual public slate producer contracts feed the selector without schema or sign adapters',async()=>{const {analyzeEvents}=await import('../src/engine.mjs');const {demoEvents}=await import('../src/demo.mjs');for(const market of ['h2h','spreads','totals']){const produced=analyzeEvents(demoEvents('americanfootball_nfl',now),{sport:'americanfootball_nfl',market,asOf:now,demo:false});const e=produced.events[0];const evaluation={validUntil:r.validUntil,fixture:{home:e.homeTeam,away:e.awayTeam,kickoff:e.commenceTime}};const report=read({[market]:{...produced,receivedAt:stamp,cacheHit:true}},evaluation);const quotes=report.groups.find(g=>g.market===market).quotes;assert.equal(quotes.length,e.opportunities.length);for(let i=0;i<quotes.length;i++){assert.equal(quotes[i].price,e.opportunities[i].americanOdds);assert.equal(quotes[i].quoteAt,e.opportunities[i].lastUpdated);assert.equal(quotes[i].bookKey,e.opportunities[i].bookmakerKey);}}});
 
 test('a provider ID reused for a different matchup invalidates the matching quote',()=>{const s=slate();s.events.push({...structuredClone(s.events[0]),homeTeam:'Other home',awayTeam:'Other away'});assert.equal(read({spreads:s}).groups[1].quotes.length,0);});
+
+
+test('last-observed quotes stay visible across five-minute boundary but expire at kickoff',()=>{
+ for(const delta of [300001,300000,299999,1]){
+  const kickoff=new Date(now+delta).toISOString(),s=slate(),evaluation={...r,fixture:{...r.fixture,kickoff}};
+  s.events[0].commenceTime=kickoff;
+  const report=read({spreads:s},evaluation);
+  assert.equal(report.groups[1].quotes.length,2);
+  assert.equal(report.expiresAt,Math.min(now+300000,now+delta));
+ }
+ for(const delta of [0,-1]){
+  const kickoff=new Date(now+delta).toISOString(),s=slate();s.events[0].commenceTime=kickoff;
+  assert.equal(read({spreads:s},{...r,fixture:{...r.fixture,kickoff}}).groups[1].quotes.length,0);
+ }
+});
+test('near-kickoff last-observed display never bypasses stale, started or schedule conflict gates',()=>{
+ const kickoff=new Date(now+120000).toISOString(),evaluation={...r,fixture:{...r.fixture,kickoff}};
+ for(const mutate of [s=>s.receivedAt=new Date(now-300000).toISOString(),s=>s.events[0].started=true,s=>s.events[0].scheduleReview={status:'SCHEDULE_RECONCILIATION_REQUIRED'},s=>s.events[0].scheduleReview={status:'SCHEDULE_REVIEW_IDENTITY_MISMATCH'}]){
+  const s=slate();s.events[0].commenceTime=kickoff;mutate(s);
+  assert.equal(read({spreads:s},evaluation).groups[1].quotes.length,0);
+ }
+ assert.match(js,/Last-observed sportsbook snapshot/);
+ assert.match(js,/market may have moved, closed or been suspended/);
+});
+
+
+test('all public producer markets remain observational in final five pregame minutes',async()=>{
+ const {analyzeEvents}=await import('../src/engine.mjs');const {demoEvents}=await import('../src/demo.mjs');
+ for(const market of ['h2h','spreads','totals']){
+  const events=demoEvents('americanfootball_nfl',now);events[0].commence_time=new Date(now+120000).toISOString();
+  const produced=analyzeEvents(events,{sport:'americanfootball_nfl',market,asOf:now,receivedAt:stamp,demo:false});
+  const e=produced.events[0],evaluation={validUntil:r.validUntil,fixture:{home:e.homeTeam,away:e.awayTeam,kickoff:e.commenceTime}};
+  assert.ok(e.opportunities.length);assert.ok(e.opportunities.every(q=>q.status==='PASS'&&q.theoreticalUnits===0));
+  const report=read({[market]:{...produced,receivedAt:stamp,cacheHit:true}},evaluation);
+  assert.equal(report.groups.find(g=>g.market===market).quotes.length,e.opportunities.length);
+  assert.ok(report.groups.flatMap(g=>g.quotes).every(q=>!('status' in q)&&!('theoreticalUnits' in q)&&!('evPercent' in q)));
+  assert.equal(report.expiresAt,now+120000);
+ }
+});
