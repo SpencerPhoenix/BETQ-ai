@@ -67,7 +67,7 @@ All spending against this provider account must use this gate. Manual provider a
 
 ## Verification scope
 
-`node --test tests/provider-budget.test.mjs` exercises configuration, admission, reserve floors, SQL sequencing, unresolved outcomes, rollback handling, reconciliation monotonicity and shared-state behavior using an explicitly labeled SQL protocol simulator. The simulator serializes transactions; it is **not evidence of PostgreSQL concurrency or crash durability**.
+`npm test -- tests/provider-budget.test.mjs` exercises configuration, admission, reserve floors, SQL sequencing, unresolved outcomes, rollback handling, reconciliation monotonicity and shared-state behavior using an explicitly labeled SQL protocol simulator. The simulator serializes transactions; it is **not evidence of PostgreSQL concurrency or crash durability**.
 
 Isolated real PostgreSQL 17.11 integration was completed on 2026-11-07 after transport/error-handling fixes. See [the transport review](POSTGRES_TRANSPORT_REVIEW.md) for exact results and limits. Production configuration still needs separate verification. The isolated checks covered:
 
