@@ -49,7 +49,7 @@ function selectCachedLines(slates,r,now=Date.now()){
   const matches=data.events.filter(e=>e?.homeTeam===r.fixture.home&&e?.awayTeam===r.fixture.away);
   if(matches.length!==1)continue;
   const e=matches[0];
-  if(typeof e.id!=='string'||!e.id.trim()||e.demo!==false||e.started!==false||Date.parse(e.commenceTime)!==kickoff||
+  if(typeof e.id!=='string'||!e.id.trim()||data.events.filter(other=>other?.id===e.id).length!==1||e.demo!==false||e.started!==false||Date.parse(e.commenceTime)!==kickoff||
     ['SCHEDULE_RECONCILIATION_REQUIRED','SCHEDULE_REVIEW_IDENTITY_MISMATCH'].includes(e.scheduleReview?.status)||!Array.isArray(e.opportunities)||!e.opportunities.length)continue;
   const keys=new Set(),quotes=[];let expires=received+300000,invalid=false;
   for(const q of e.opportunities){

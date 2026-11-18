@@ -81,6 +81,7 @@ with sync_playwright() as p:
   expect(page.locator('#market-snapshot')).to_contain_text('2026-11-16T19:51:00.000Z')
   expect(page.locator('#result')).to_contain_text('Not evaluated')
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+  page.screenshot(path=str(OUT/f'cached-lines-{width}.png'),full_page=True)
   page.clock.fast_forward(61000);expect(page.locator('#market-snapshot')).to_contain_text('Cached lines expired');expect(page.locator('#market-snapshot')).not_to_contain_text('Fixture Book');expect(page.locator('#result')).to_be_visible();c.close()
  mode='normal'
  # Isolated homepage widget uses production script/styles, verifies automatic pick and expiry.
