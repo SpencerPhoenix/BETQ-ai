@@ -24,7 +24,8 @@ jobs:
           ref: ${{ github.sha }}
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: '26.13.1'
+          node-version: '26'
+          check-latest: true
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Verify isolated staging storage only
         env:
