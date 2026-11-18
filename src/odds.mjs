@@ -18,7 +18,8 @@ export function createOddsSource({
   fetchImpl = globalThis.fetch,
   clock = Date.now,
   ttlMs = Number(process.env.CACHE_TTL_MS) || 300000,
-  budgetStore = configuredProviderBudget()
+  budgetStore = configuredProviderBudget(),
+  snapshotStore = null
 } = {}) {
   apiKey = typeof apiKey==='string' ? apiKey.trim() : '';
   ttlMs = Number.isFinite(ttlMs) && ttlMs>0 ? ttlMs : 300000;
@@ -26,6 +27,16 @@ export function createOddsSource({
   const inflight = new Map();
   let lastSuccess = null;
   let lastError = null;
+  let snapshotReadError = null;
+  let snapshotWriteError = null;
+  const restoring = new Map();
+  const freshAt = entry => entry && clock() >= entry.storedAt && clock() - entry.storedAt < Math.max(5000, ttlMs);
+  async function bounded(work) {
+    let timer;
+    try { return await Promise.race([Promise.resolve().then(work), new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error('SNAPSHOT_TIMEOUT')), 3000);
+    })]); } finally { clearTimeout(timer); }
+  }
   const configured = Boolean(apiKey.trim());
   const headersSnapshot = { remaining: null, used: null, last: null };
   const budgetError = (error) => new OddsError(
@@ -39,8 +50,31 @@ export function createOddsSource({
 
   async function request(path, query, cacheId,estimatedCredits=1,{allowPaid=false}={}) {
     if (!configured) throw new OddsError('SETUP_REQUIRED', 503, 'Set ODDS_API_KEY in the running server environment to enable live odds.');
+    // Optional private storage is read-only on public loads. No fallback may
+    // reset observation time, seed quota, or join an operator's paid request.
+    if (!freshAt(cache.get(cacheId)) && snapshotStore && cacheId.startsWith('odds:')) {
+      if (!restoring.has(cacheId)) {
+        const restore = (async () => {
+          try {
+            const retained = await bounded(() => snapshotStore.read(cacheId));
+            const age = retained ? clock() - Date.parse(retained.receivedAt) : Infinity;
+            const previous = cache.get(cacheId);
+            if (retained && age >= 0 && age < Math.max(5000, ttlMs) &&
+              (!previous || Date.parse(retained.receivedAt) > previous.storedAt)) {
+              cache.set(cacheId, {storedAt: Date.parse(retained.receivedAt), payload: {
+                events: retained.events, receivedAt: retained.receivedAt, cacheHit: true,
+                quota: {remaining:null,used:null,last:null}, restoredFromPrivateSnapshot:true
+              }});
+            }
+            snapshotReadError = null;
+          } catch { snapshotReadError = 'SNAPSHOT_READ_FAILED'; }
+        })().finally(() => restoring.delete(cacheId));
+        restoring.set(cacheId, restore);
+      }
+      await restoring.get(cacheId);
+    }
     const fresh = cache.get(cacheId);
-    if (fresh && clock() - fresh.storedAt < Math.max(5000, ttlMs)) {
+    if (freshAt(fresh)) {
       return { ...fresh.payload, cacheHit: true };
     }
     // Ordinary page loads may reuse fresh data, never open an upstream request.
@@ -97,7 +131,12 @@ export function createOddsSource({
       lastSuccess = receivedAt;
       lastError = null;
       const payload = { events: data, receivedAt, cacheHit: false, quota };
-      cache.set(cacheId, { storedAt: clock(), payload });
+      cache.set(cacheId, { storedAt: Date.parse(receivedAt), payload });
+      if (snapshotStore && cacheId.startsWith('odds:')) {
+        try { const persisted = await bounded(() => snapshotStore.write(cacheId, payload));
+          snapshotWriteError = persisted?.stored === true ? null : 'SNAPSHOT_NOT_WRITTEN'; }
+        catch { snapshotWriteError = 'SNAPSHOT_WRITE_FAILED'; }
+      }
       return payload;
     })().finally(() => { inflight.delete(cacheId); });
     inflight.set(cacheId, pending);
@@ -106,7 +145,9 @@ export function createOddsSource({
   return {
     configured,
     async status() { return { configured, lastSuccess, lastError, quota: { ...headersSnapshot },
-      budget: await ledgerStatus(), cacheEntries: cache.size }; },
+      budget: await ledgerStatus(), cacheEntries: cache.size,
+      snapshots: {configured:Boolean(snapshotStore), error:snapshotWriteError || snapshotReadError,
+        readError:snapshotReadError, writeError:snapshotWriteError} }; },
     getOdds(sport, market, options = {}) {
       if (!Object.hasOwn(SPORTS, sport) || !Object.hasOwn(MARKETS, market)) {
         throw new OddsError('INVALID_FILTER', 400, 'Unsupported sport or market.');
