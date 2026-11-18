@@ -15,7 +15,7 @@
   };
   const prefs = safeGet(STORE, {});
   const state = {
-    tab: 'overview',
+    tab: location.hash === '#game-grades' ? 'games' : 'overview',
     sport: Object.hasOwn(sportLabels, prefs.sport) ? prefs.sport : 'americanfootball_nfl',
     market: Object.hasOwn(marketLabels, prefs.market) ? prefs.market : 'h2h',
     mode: prefs.mode === 'demo' ? 'demo' : 'live',
