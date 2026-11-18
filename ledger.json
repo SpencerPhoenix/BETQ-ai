@@ -274,6 +274,46 @@
         "scopeLimited": false
       },
       "id": "c3ba1b15a3189a560e0a2d1d49e19c93796f0d6fb94962b9c33d484d4cd0aed1"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-18T08:40:02.771Z",
+      "payload": {
+        "runKey": "44268936669.1",
+        "failedWeeks": [],
+        "phase": "STARTED"
+      },
+      "id": "22aee703262f7b7ea6adcb1ff2cc1ba54936e985e23099a8b3d7f691f1cca7b8"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-18T08:40:16.724Z",
+      "payload": {
+        "runKey": "44268936669.1",
+        "failedWeeks": []
+      },
+      "id": "0d90cdf2dbdc94c19c0a884174904bc1272089222922929a06197998f140a370"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-18T08:40:16.726Z",
+      "payload": {
+        "runKey": "44268936669.1",
+        "failedWeeks": [],
+        "productionCompatible": true,
+        "productionHealth": {
+          "compatible": true,
+          "reason": null,
+          "httpStatus": 200
+        },
+        "finalSourceAvailable": null,
+        "resultConflicts": [],
+        "scopeLimited": false
+      },
+      "id": "6069347567f2cbbd039090d3275adc9010a2e5e88ac45e4b080fa12ed6582592"
     }
   ]
 }
