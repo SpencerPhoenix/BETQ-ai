@@ -12,7 +12,8 @@ module requires a trusted, server-side owner-session verifier, same-origin POST,
 JSON, CSRF validation and an operation UUID. Request parameters never establish
 owner identity. Do not put the existing operator bearer in browser JavaScript,
 HTML, localStorage or a URL. The disabled owner-session adapter is described in `OWNER_SESSION_ADAPTER.md`.
-Actual verified owner login and durable session/rate stores remain **release blockers**.
+Actual verified owner login remains a **release blocker**. Durable session/rate
+stores and bounded HTTP adapter are implemented but not provisioned or enabled.
 
 The trial store is an additional spending restriction, not a substitute for the
 existing durable provider budget. Its policy must be explicitly provisioned
@@ -53,8 +54,10 @@ is **not delivered** by this draft; it needs separate UX and licensing review.
    races, caps, restart persistence, expiry and restricted privileges. These tests
    use synthetic localhost data and do not prove Neon network/TLS or crash recovery.
    Reverify the eventual restricted production role before activation.
-3. Integrate a verified owner session, secure cookies/session expiry and CSRF
-   delivery. Add owner-level abuse controls and test repeated tabs/devices.
+3. Connect a genuine owner identity verifier to the disabled login adapter.
+   Review/provision the durable session/rate stores and verify actual browser
+   login, secure cookies, expiry, CSRF, logout and repeated tabs/devices.
+   PostgreSQL tests use synthetic identities, not real authentication.
 4. Integrate an authenticated, fixed zero-credit probe with the exact runtime
    provider key. Never infer a renewal date or raise a baseline from stale logs.
 5. Obtain concrete approval for total credits, daily cap, trial expiry, reserve,
@@ -91,3 +94,19 @@ environment, enforces verified TLS and bounded connections/timeouts, and does no
 seed policy or run migrations. It remains unwired to production startup. Its unit
 tests verify configuration; disposable PostgreSQL CI tests real store behavior
 without claiming a new Neon TLS test.
+
+## Durable owner authentication preparation
+
+`owner-session-store.mjs` and `sql/owner-session.sql` provide separate session/rate
+storage, with one current session and four fixed-window counters per configured
+owner. Database time governs expiry and monotonic checks; observed expiry revokes
+without refreshing activity. Session rotation does not reset rate counters.
+`configured-owner-session.mjs` supplies explicit disabled bounded TLS wiring.
+The SQL is an offline migration, not executed on startup. No identity is seeded.
+
+`createHandler` accepts an optional `ownerSessionHandler` for the three bounded
+private authentication routes. Startup supplies none, so they remain unavailable.
+The server forwards only the cookie header and prohibits CORS/cache policy overrides.
+Authentication errors are sanitized before generic logging. This is not completed
+live sign-in: real owner verification, enrollment, provider integration and browser
+validation still require separate work.

@@ -174,6 +174,7 @@ export function createHandler({
   source = createOddsSource(),
   operatorRefreshToken = process.env.BETQ_OPERATOR_REFRESH_TOKEN || '',
   ownerRefreshHandler = null, // Explicit injection only; no environment activation or browser bearer.
+  ownerSessionHandler = null, // Explicit reviewed auth adapter only; startup never supplies one.
   retainedObservationReader = null, // Explicit opt-in public-safe projection, no source refresh.
   retainedObservationAccountId = null,
   clock = Date.now,
@@ -255,6 +256,20 @@ export function createHandler({
   return async (req, res) => {
     try {
       const requestUrl = new URL(req.url || '/', 'http://localhost');
+      if(['/api/owner/session','/api/owner/session-info','/api/owner/logout'].includes(requestUrl.pathname)){
+        if(typeof ownerSessionHandler!=='function')return reply(res,404,{code:'OWNER_AUTH_DISABLED'});
+        try{
+          const result=await ownerSessionHandler(req);
+          if(!result||!Number.isInteger(result.status)||result.status<200||result.status>599)throw Error();
+          const headers={'Cache-Control':'no-store','Pragma':'no-cache'};
+          const cookie=result.headers?.['Set-Cookie'];
+          if(cookie!==undefined){
+            if(typeof cookie!=='string'||cookie.length>1024||/[\r\n]/.test(cookie))throw Error();
+            headers['Set-Cookie']=cookie;
+          }
+          return reply(res,result.status,result.body,headers);
+        }catch{return reply(res,503,{code:'OWNER_AUTH_UNAVAILABLE'});}
+      }
       if(requestUrl.pathname==='/api/owner/refresh'){
         if(typeof ownerRefreshHandler!=='function')return reply(res,404,{error:{code:'OWNER_REFRESH_DISABLED',message:'Owner refresh is not enabled.'}});
         const result=await ownerRefreshHandler(req);

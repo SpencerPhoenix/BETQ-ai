@@ -46,13 +46,13 @@ export function createOwnerSessionAdapter({enabled=false,origin,ownerId,sessionS
   async resolveSession(req){const s=await authenticate(req);return s?{verified:true,userId:s.userId,csrfToken:s.csrfToken}:null;},
   /** No route automatically calls this. verifyLogin must consume a genuine one-use
    * server-bound WebAuthn/OIDC challenge and return its verified subject. */
-  async establishSession(req){
+  async establishSession(req,{proof}={}){
    if(enabled!==true)return output(404,'NOT_FOUND');
    if(!configured||typeof verifyLogin!=='function')return output(503,'OWNER_LOGIN_UNAVAILABLE');
    if(req.method!=='POST'||req.url!=='/api/owner/session'||!sameOrigin(req))return output(403,'OWNER_LOGIN_REJECTED');
    try{
     if(!await rate('owner-login','global',5))return output(429,'OWNER_LOGIN_RATE_LIMITED');
-    const identity=await bounded(()=>verifyLogin(req));
+    const identity=await bounded(()=>verifyLogin(req,{proof}));
     if(identity?.verified!==true||identity.subject!==ownerId||identity.challengeConsumed!==true)return output(401,'OWNER_LOGIN_REJECTED');
     const time=now(),raw=randomBytes(32).toString('base64url'),csrfToken=randomBytes(32).toString('base64url');
     const record={sessionHash:digest(raw),userId:ownerId,csrfToken,createdAt:time,lastSeenAt:time,expiresAt:time+absoluteMs,revoked:false};
