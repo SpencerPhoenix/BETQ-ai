@@ -46,14 +46,17 @@ const round = (n, digits = 2) => Number.isFinite(n) ? Number(n.toFixed(digits)) 
 const norm = n => Object.is(n,-0) ? 0 : n; // Never merge different point lines through rounding.
 const iso = (time) => new Date(time).toISOString();
 
-function toPair(event, bookmaker, marketKey, now, maxAgeMs) {
+function toPair(event, bookmaker, marketKey, now, maxAgeMs, received) {
   if (!bookmaker || typeof bookmaker !== 'object') return null;
   const market = Array.isArray(bookmaker.markets)
     ? bookmaker.markets.find(m => m && m.key === marketKey) : null;
   if (!market || !Array.isArray(market.outcomes) || market.outcomes.length !== 2) return null;
-  const updatedAt = Date.parse(market.last_update || bookmaker.last_update || '');
-  if (!Number.isFinite(updatedAt) || updatedAt > now + 60000) return null;
-  const ageMs = Math.max(0, now - updatedAt);
+  // A bookmaker update is not proof that this specific market was refreshed.
+  // Missing/invalid market times must never inherit bookmaker or receipt time.
+  const updatedAt = scheduledInstant(market.last_update);
+  if (!Number.isFinite(updatedAt) || !Number.isFinite(received) || received > now ||
+      updatedAt > received || updatedAt > now) return null;
+  const ageMs = now - updatedAt;
   if (ageMs > maxAgeMs) return null;
   const [one, two] = market.outcomes;
   if (!one || !two || typeof one !== 'object' || typeof two !== 'object' || one.name === two.name) return null;
@@ -162,10 +165,13 @@ function analyzeContract(event, market, contractId, quotes, now) {
   return picks;
 }
 
-export function analyzeEvents(events, { sport, market = 'h2h', asOf = Date.now(), maxAgeMs = 600000, demo = false } = {}) {
+export function analyzeEvents(events, { sport, market = 'h2h', asOf = Date.now(), maxAgeMs = 600000, demo = false, receivedAt } = {}) {
   if (!Object.hasOwn(MARKETS, market)) throw new Error('Unsupported market');
   const now = Number(asOf);
   if (!Number.isFinite(now) || !Number.isFinite(maxAgeMs) || maxAgeMs<=0) throw new Error('Invalid analysis time policy');
+  // Pure callers can use their analysis instant; HTTP callers must supply the
+  // original receipt explicitly (including null when absent).
+  const received = receivedAt === undefined ? now : scheduledInstant(receivedAt);
   const analyzed = [];
   for (const event of Array.isArray(events) ? events : []) {
     if (!event || !event.id || !event.home_team || !event.away_team
@@ -174,7 +180,7 @@ export function analyzeEvents(events, { sport, market = 'h2h', asOf = Date.now()
     const scheduleReview = eventScheduleReview({...event,sport_key:event.sport_key || sport},now);
     const groups = new Map();
     for (const book of event.bookmakers) {
-      const quote = toPair(event, book, market, now, maxAgeMs);
+      const quote = toPair(event, book, market, now, maxAgeMs, received);
       if (!quote || !quote.id) continue;
       if (!groups.has(quote.contractId)) groups.set(quote.contractId, new Map());
       groups.get(quote.contractId).set(quote.id, quote);
