@@ -1989,6 +1989,7 @@
   // Operator authentication and paid source requests never belong in this client.
   syncSettings();
   render();
+  if (location.hash === '#game-grades') setTab('games');
   loadHealth();
   loadRetainedGames();
   globalThis.BETQGameGrades?.load($('game-grades'), requestJSON);

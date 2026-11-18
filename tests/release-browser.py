@@ -81,7 +81,8 @@ with sync_playwright() as p:
     page=context.new_page(); page.on('pageerror',lambda e:errors.append(str(e)))
     # Python Playwright numeric clock times are seconds; journal values are JS milliseconds.
     page.clock.install(time=fixtures['now']/1000)
-    page.goto('http://betq.test/')
+    page.goto('http://betq.test/#game-grades')
+    expect(page.locator('#page-games')).to_be_visible()
     page.get_by_role('button',name='Latest results →',exact=True).click()
     expect(page.locator('#page-games')).to_have_class('page active')
     grades=page.locator('#game-grades')

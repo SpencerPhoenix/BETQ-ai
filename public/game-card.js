@@ -35,6 +35,43 @@ function renderPregameComparison(root,r,coverage=null){
  root.prepend(table);
 }
 
+// Read-only analysis surface. Winner probability is never converted to cover/total probability.
+function renderAnalysisCard(root,r){
+ const block=(tag,klass,text,parent=root)=>{const el=document.createElement(tag);el.className=klass;el.textContent=text;parent.append(el);return el;};
+ const section=(title,parent=root)=>{const box=block('section','analysis-panel','',parent);block('h3','',title,box);return box;};
+ const metric=(box,label,value)=>{const row=block('div','analysis-metric','',box);block('span','metric-label',label,row);block('strong','metric-value',value,row);};
+ const home=r.baseline.homeWinProbability,away=r.baseline.awayWinProbability;
+ const pick=home===.5?'No outright preference':home>.5?r.fixture.home:r.fixture.away;
+ block('p','eyebrow',r.preview?'NFL · Scheduled preview':'NFL · Pregame research');
+ block('h2','matchup-title',r.fixture.away+' at '+r.fixture.home);
+ block('p','muted','Kickoff '+new Date(r.fixture.kickoff).toLocaleString()+' · '+(r.fixture.neutralSite?'Neutral venue':'Home venue'));
+ const summary=section('BETQ outlook');summary.className+=' model-outlook';
+ block('p','outlook-pick',pick,summary);
+ block('p','',home===.5?'The model is evenly split.':(r.preview?'Preliminary outright lean':'Model outright pick')+' · '+percent(Math.max(home,away))+' estimated win chance',summary);
+ block('p','muted','Based on past results and venue. Current injuries, quarterbacks and weather are not included.',summary);
+ block('p','warning','Research estimate, not a validated betting recommendation.',summary);
+ const grid=block('div','analysis-grid','');
+ const market=section('Sportsbook snapshot',grid);
+ metric(market,'Spread','Not available');metric(market,'Total','Not available');metric(market,'Odds / bookmaker','Not available');
+ block('p','muted','No sportsbook quote was requested. No quote timestamp or executable price is available.',market);
+ const model=section('BETQ model',grid);
+ metric(model,r.fixture.away+' win',percent(away));metric(model,r.fixture.home+' win',percent(home));
+ metric(model,'Fair spread / total','Not supported');metric(model,'Projected score','Not supported');
+ block('p','muted','Win chance is not the chance of covering a spread.',model);
+ const markets=block('div','analysis-grid','');
+ for(const [name,reason] of [['Spread analysis','To choose against the spread, BETQ needs a current line and a tested scoring-margin model. The outright favorite may still fail to cover.'],['Total analysis','To choose over or under, BETQ needs a current total and a tested combined-score model. Winner probabilities do not provide either.']]){
+  const card=section(name,markets);block('p','availability','Not evaluated',card);
+  block('p','',reason,card);metric(card,'Pick / probability','Unavailable');metric(card,'Edge / stake','Not calculated');
+ }
+ const details=block('details','analysis-explanation','');block('summary','','Why this outlook & what could change it',details);
+ block('p','','The Elo baseline compares team strength from completed games and venue. Quarterback availability, injuries and weather may change the real matchup, but they are not adjustments in this estimate.',details);
+ block('p','','No verified betting edge or recommended stake. A higher outright win chance is not evidence that the sportsbook price is good.',details);
+ if(r.preview)block('p','warning','Scheduled-fixture preview only: game-center pregame status is not confirmed. This response is not an archived pregame forecast.',details);
+ const grade=section('Results & grading');
+ block('p','','This on-demand outlook is not automatically saved or graded. Saved pregame forecasts are graded separately against recorded results; this view does not replace them.',grade);
+ const link=block('a','','See saved forecasts and game results',grade);link.href='/#game-grades';
+}
+
 $('request').addEventListener('submit',async e=>{
  e.preventDefault();const token=++generation;current=null;contextExpires=null;$('result').hidden=true;$('quote').hidden=true;$('context').replaceChildren();$('comparison').textContent='';$('receipt').textContent='';$('evaluate').disabled=true;$('status').textContent='Checking official schedule and current model…';
  const gameId=`${$('season').value}_${String($('week').value).padStart(2,'0')}_${$('away').value}_${$('home').value}`;
@@ -44,13 +81,7 @@ $('request').addEventListener('submit',async e=>{
   if(!response.ok||!r.available||!Number.isFinite(Date.parse(r.validUntil))||Date.now()>=Date.parse(r.validUntil)){$('status').textContent='No current evaluation: '+(r.reason||r.error?.code||'unavailable');return;}
   current=r;$('status').textContent='Evaluated '+new Date(r.evaluatedAt).toLocaleString()+'. Official schedule observed '+new Date(r.fixture.observedAt).toLocaleString();
   const out=$('result');out.replaceChildren();out.hidden=false;
-  const h=document.createElement('h2');h.textContent=r.fixture.away+' at '+r.fixture.home;out.append(h);
-  paragraph(out,'Kickoff: '+new Date(r.fixture.kickoff).toLocaleString()+' · '+(r.fixture.neutralSite?'Neutral venue':'Home venue'));
-  const pick=r.baseline.homeWinProbability===.5?'No outright preference':r.baseline.homeWinProbability>.5?r.fixture.home:r.fixture.away;
-  if(r.preview)paragraph(out,'SCHEDULED MODEL PREVIEW: game-center pregame status not yet available. Not a confirmed pregame forecast; excluded from the frozen pregame ledger.','warning');
-  paragraph(out,(r.preview?'PRELIMINARY OUTRIGHT LEAN: ':'MODEL OUTRIGHT PICK: ')+pick+'. This is not a verified betting recommendation.','warning');
-  paragraph(out,'Estimated win chance (Elo baseline): '+r.fixture.home+' '+percent(r.baseline.homeWinProbability)+' · '+r.fixture.away+' '+percent(r.baseline.awayWinProbability));
-  paragraph(out,'Why this team: the model compares team strength from past results and venue. It does not yet adjust for current injuries or quarterback changes.');
+  renderAnalysisCard(out,r);
   renderPregameComparison($('context'),r);
   const depth=r.depthContext;
   paragraph($('context'),'Pregame quarterback context');
@@ -68,7 +99,6 @@ $('request').addEventListener('submit',async e=>{
    if((r.challenger.homeWinProbability-.5)*(r.baseline.homeWinProbability-.5)<0)paragraph(out,'Models favor opposite teams. Neither is automatically promoted.','warning');
   }else paragraph(detail,'Challenger unavailable: '+r.challenger.reason);
   out.append(detail);
-  paragraph(out,'No current odds, validated spread/total probability, or demonstrated betting edge. These probabilities omit quarterback and injury adjustments.','warning');
   $('quote').hidden=r.preview===true;$('side').options[0].textContent=r.fixture.home;$('side').options[1].textContent=r.fixture.away;
   const source=await fetch('/api/injuries/nfl?gameId='+encodeURIComponent(gameId),{cache:'no-store'}).then(x=>{if(!x.ok)throw Error('CONTEXT_UNAVAILABLE');return x.json();}).catch(()=>({}));if(token!==generation||current!==r||Date.now()>=Date.parse(r.validUntil))return;
   const coverage=source.matchupCoverage;
