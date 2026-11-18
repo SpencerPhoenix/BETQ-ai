@@ -15,7 +15,7 @@ test('technical detail is optional while preview and unadjusted warnings remain 
  const card=read('automatic-card.js'), full=read('game-card.js');
  assert.match(card,/p\('Baseline built '[^\n]+detail\)/);
  assert.match(card,/p\('Current bookmaker odds: UNAVAILABLE[^\n]+\);/);
- assert.match(full,/No sportsbook quote was requested/);
+ assert.match(full,/No paid quote will be requested/);
  assert.match(full,/Research estimate, not a validated betting recommendation/);
  assert.match(full,/r.preview\?'NFL · Scheduled preview'/);
  assert.match(full,/paragraph\(out,'Models favor opposite teams/);

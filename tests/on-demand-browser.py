@@ -2,7 +2,7 @@
 import os,json,sys
 from datetime import datetime,timezone
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urlparse,parse_qs
 from playwright.sync_api import sync_playwright,expect
 ROOT=Path(__file__).resolve().parents[1]
 OUT=Path(sys.argv[1]) if len(sys.argv)>1 else Path('/tmp/betq-analysis-browser')
@@ -17,6 +17,12 @@ injury_pending=[]
 def route(route):
  u=urlparse(route.request.url);requests.append(route.request)
  assert u.hostname=='betq.test'
+ if u.path=='/api/slate':
+  if mode!='cache':return route.fulfill(status=409,json={'error':{'code':'PAID_REFRESH_REQUIRED'}})
+  market=parse_qs(u.query)['market'][0]
+  sides=['over','under'] if market=='totals' else ['home','away']
+  quotes=[{'eventId':'cache1','market':market,'contractId':('spread:-3.5' if market=='spreads' else 'total:45.5' if market=='totals' else 'h2h'),'side':side,'point':(-3.5 if side=='home' else 3.5) if market=='spreads' else 45.5 if market=='totals' else None,'americanOdds':-110,'bookmaker':'Fixture Book','bookmakerKey':'fixture_book','lastUpdated':'2026-11-16T19:51:00.000Z'} for side in sides]
+  return route.fulfill(json={'source':'THE_ODDS_API_V4','demo':False,'cacheHit':True,'sport':'americanfootball_nfl','market':market,'receivedAt':now,'events':[{'id':'cache1','homeTeam':r['fixture']['home'],'awayTeam':r['fixture']['away'],'commenceTime':r['fixture']['kickoff'],'demo':False,'started':False,'opportunities':quotes}]})
  if u.path=='/api/prepared-games':
   if mode=='ledger':return route.fulfill(json={'available':True,'publicationReadbackVerified':True,'remoteLedgerObservedAt':now,'lastRunAt':now,'schedulerStale':True,'games':[{'gameId':r['gameId'],'kickoff':r['fixture']['kickoff'],'status':'PROVISIONAL_TWO_SOURCE_GRADE','captureId':'fixture','custody':{'remoteCommit':'a'*40},'forecastEvaluatedAt':now,'homeWinProbability':.65,'grade':{'homeScore':20,'awayScore':20,'tie':True,'pickWon':None,'brier':None}}]})
   return route.fulfill(json={'available':False,'publicationReadbackVerified':False})
@@ -67,6 +73,16 @@ with sync_playwright() as p:
   page.clock.fast_forward(121000);expect(page.locator('#context')).not_to_contain_text('Synthetic Listed QB');expect(page.locator('#result')).to_be_visible()
   page.clock.fast_forward(301000);expect(page.locator('#quote')).to_be_hidden();expect(page.locator('#result')).to_be_hidden();expect(page.locator('#status')).to_contain_text('expired')
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth');assert not errors,errors;c.close()
+ mode='cache'
+ for width in [375,1440]:
+  c=b.new_context(viewport={'width':width,'height':1000});c.route('**/*',route);page=c.new_page();page.clock.install(time=datetime(2026,11,16,20,0,tzinfo=timezone.utc));page.goto('http://betq.test/game-card')
+  expect(page.locator('#market-snapshot')).to_contain_text('Baltimore Ravens -3.5 · -110 · Fixture Book')
+  expect(page.locator('#market-snapshot')).to_contain_text('Over 45.5')
+  expect(page.locator('#market-snapshot')).to_contain_text('2026-11-16T19:51:00.000Z')
+  expect(page.locator('#result')).to_contain_text('Not evaluated')
+  assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+  page.clock.fast_forward(61000);expect(page.locator('#market-snapshot')).to_contain_text('Cached lines expired');expect(page.locator('#market-snapshot')).not_to_contain_text('Fixture Book');expect(page.locator('#result')).to_be_visible();c.close()
+ mode='normal'
  # Isolated homepage widget uses production script/styles, verifies automatic pick and expiry.
  for width in [375,1440]:
   c=b.new_context(viewport={'width':width,'height':1000});c.route('**/*',route);page=c.new_page();page.clock.install(time=datetime(2026,11,16,20,0,tzinfo=timezone.utc));page.goto('http://betq.test/automatic-test')
