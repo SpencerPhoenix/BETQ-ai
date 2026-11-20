@@ -1682,6 +1682,434 @@
         }
       ],
       "entrySha256": "5362fbaa362e3c3efa398e8fbbe1edfa7d50f1cf41b6302de3a62882c9e55570"
+    },
+    {
+      "sequence": 5,
+      "previousHash": "5362fbaa362e3c3efa398e8fbbe1edfa7d50f1cf41b6302de3a62882c9e55570",
+      "recordedAt": "2026-11-20T10:06:38.602Z",
+      "receipt": {
+        "schema": 1,
+        "policy": "NFL_OFFICIAL_WEEKLY_OBSERVATION_V1",
+        "sourceUrl": "https://www.nfl.com/scores/2026/week-11",
+        "season": 2026,
+        "week": 11,
+        "observedAt": "2026-11-20T10:06:38.586Z",
+        "sourcePublishedAt": null,
+        "sourceBodySha256": "82793bd23af94602bb640fb2c14bab673e45bbc544b7400e8b9dead73dc8a6a2",
+        "games": [
+          {
+            "gameId": "2026_11_IND_HOU",
+            "providerGameId": "ab997d97-4feb-11f1-abca-2c54536568a9",
+            "season": 2026,
+            "week": 11,
+            "home": "HOU",
+            "away": "IND",
+            "kickoff": "2026-11-20T01:15:00.000Z",
+            "gameDate": "2026-11-19",
+            "neutralSite": false,
+            "scheduleStatus": "SCHEDULED",
+            "summaryPhase": "FINAL",
+            "summaryQuarter": "END_OF_GAME",
+            "summaryState": "PRESENT",
+            "final": true,
+            "homeScore": 26,
+            "awayScore": 3
+          },
+          {
+            "gameId": "2026_11_MIA_BUF",
+            "providerGameId": "ab998769-4feb-11f1-abca-2c54536568a9",
+            "season": 2026,
+            "week": 11,
+            "home": "BUF",
+            "away": "MIA",
+            "kickoff": "2026-11-22T18:00:00.000Z",
+            "gameDate": "2026-11-22",
+            "neutralSite": false,
+            "scheduleStatus": "SCHEDULED",
+            "summaryPhase": null,
+            "summaryQuarter": null,
+            "summaryState": "ABSENT",
+            "final": false,
+            "homeScore": null,
+            "awayScore": null
+          },
+          {
+            "gameId": "2026_11_BAL_CAR",
+            "providerGameId": "ab998b7f-4feb-11f1-abca-2c54536568a9",
+            "season": 2026,
+            "week": 11,
+            "home": "CAR",
+            "away": "BAL",
+            "kickoff": "2026-11-22T18:00:00.000Z",
+            "gameDate": "2026-11-22",
+            "neutralSite": false,
+            "scheduleStatus": "SCHEDULED",
+            "summaryPhase": null,
+            "summaryQuarter": null,
+            "summaryState": "ABSENT",
+            "final": false,
+            "homeScore": null,
+            "awayScore": null
+          },
+          {
+            "gameId": "2026_11_NO_CHI",
+            "providerGameId": "ab998f5e-4feb-11f1-abca-2c54536568a9",
+            "season": 2026,
+            "week": 11,
+            "home": "CHI",
+            "away": "NO",
+            "kickoff": "2026-11-22T18:00:00.000Z",
+            "gameDate": "2026-11-22",
+            "neutralSite": false,
+            "scheduleStatus": "SCHEDULED",
+            "summaryPhase": null,
+            "summaryQuarter": null,
+            "summaryState": "ABSENT",
+            "final": false,
+            "homeScore": null,
+            "awayScore": null
+          },
+          {
+            "gameId": "2026_11_TEN_DAL",
+            "providerGameId": "ab99929a-4feb-11f1-abca-2c54536568a9",
+            "season": 2026,
+            "week": 11,
+            "home": "DAL",
+            "away": "TEN",
+            "kickoff": "2026-11-22T18:00:00.000Z",
+            "gameDate": "2026-11-22",
+            "neutralSite": false,
+            "scheduleStatus": "SCHEDULED",
+            "summaryPhase": null,
+            "summaryQuarter": null,
+            "summaryState": "ABSENT",
+            "final": false,
+            "homeScore": null,
+            "awayScore": null
+          },
+          {
+            "gameId": "2026_11_TB_DET",
+            "providerGameId": "ab999586-4feb-11f1-abca-2c54536568a9",
+            "season": 2026,
+            "week": 11,
+            "home": "DET",
+            "away": "TB",
+            "kickoff": "2026-11-22T18:00:00.000Z",
+            "gameDate": "2026-11-22",
+            "neutralSite": false,
+            "scheduleStatus": "SCHEDULED",
+            "summaryPhase": null,
+            "summaryQuarter": null,
+            "summaryState": "ABSENT",
+            "final": false,
+            "homeScore": null,
+            "awayScore": null
+          },
+          {
+            "gameId": "2026_11_ARI_KC",
+            "providerGameId": "ab999891-4feb-11f1-abca-2c54536568a9",
+            "season": 2026,
+            "week": 11,
+            "home": "KC",
+            "away": "ARI",
+            "kickoff": "2026-11-22T18:00:00.000Z",
+            "gameDate": "2026-11-22",
+            "neutralSite": false,
+            "scheduleStatus": "SCHEDULED",
+            "summaryPhase": null,
+            "summaryQuarter": null,
+            "summaryState": "ABSENT",
+            "final": false,
+            "homeScore": null,
+            "awayScore": null
+          },
+          {
+            "gameId": "2026_11_PIT_PHI",
+            "providerGameId": "abbf1908-4feb-11f1-abca-2c54536568a9",
+            "season": 2026,
+            "week": 11,
+            "home": "PHI",
+            "away": "PIT",
+            "kickoff": "2026-11-22T18:00:00.000Z",
+            "gameDate": "2026-11-22",
+            "neutralSite": false,
+            "scheduleStatus": "SCHEDULED",
+            "summaryPhase": null,
+            "summaryQuarter": null,
+            "summaryState": "ABSENT",
+            "final": false,
+            "homeScore": null,
+            "awayScore": null
+          },
+          {
+            "gameId": "2026_11_NYJ_LAC",
+            "providerGameId": "ab999e6f-4feb-11f1-abca-2c54536568a9",
+            "season": 2026,
+            "week": 11,
+            "home": "LAC",
+            "away": "NYJ",
+            "kickoff": "2026-11-22T21:05:00.000Z",
+            "gameDate": "2026-11-22",
+            "neutralSite": false,
+            "scheduleStatus": "SCHEDULED",
+            "summaryPhase": null,
+            "summaryQuarter": null,
+            "summaryState": "ABSENT",
+            "final": false,
+            "homeScore": null,
+            "awayScore": null
+          },
+          {
+            "gameId": "2026_11_JAX_NYG",
+            "providerGameId": "ab999b80-4feb-11f1-abca-2c54536568a9",
+            "season": 2026,
+            "week": 11,
+            "home": "NYG",
+            "away": "JAX",
+            "kickoff": "2026-11-22T21:25:00.000Z",
+            "gameDate": "2026-11-22",
+            "neutralSite": false,
+            "scheduleStatus": "SCHEDULED",
+            "summaryPhase": null,
+            "summaryQuarter": null,
+            "summaryState": "ABSENT",
+            "final": false,
+            "homeScore": null,
+            "awayScore": null
+          },
+          {
+            "gameId": "2026_11_LV_DEN",
+            "providerGameId": "ab99a17b-4feb-11f1-abca-2c54536568a9",
+            "season": 2026,
+            "week": 11,
+            "home": "DEN",
+            "away": "LV",
+            "kickoff": "2026-11-22T21:25:00.000Z",
+            "gameDate": "2026-11-22",
+            "neutralSite": false,
+            "scheduleStatus": "SCHEDULED",
+            "summaryPhase": null,
+            "summaryQuarter": null,
+            "summaryState": "ABSENT",
+            "final": false,
+            "homeScore": null,
+            "awayScore": null
+          },
+          {
+            "gameId": "2026_11_MIN_SF",
+            "providerGameId": "abbf2213-4feb-11f1-abca-2c54536568a9",
+            "season": 2026,
+            "week": 11,
+            "home": "SF",
+            "away": "MIN",
+            "kickoff": "2026-11-23T01:20:00.000Z",
+            "gameDate": "2026-11-22",
+            "neutralSite": true,
+            "scheduleStatus": "SCHEDULED",
+            "summaryPhase": null,
+            "summaryQuarter": null,
+            "summaryState": "ABSENT",
+            "final": false,
+            "homeScore": null,
+            "awayScore": null
+          },
+          {
+            "gameId": "2026_11_CIN_WAS",
+            "providerGameId": "abbf25b8-4feb-11f1-abca-2c54536568a9",
+            "season": 2026,
+            "week": 11,
+            "home": "WAS",
+            "away": "CIN",
+            "kickoff": "2026-11-24T01:15:00.000Z",
+            "gameDate": "2026-11-23",
+            "neutralSite": false,
+            "scheduleStatus": "SCHEDULED",
+            "summaryPhase": null,
+            "summaryQuarter": null,
+            "summaryState": "ABSENT",
+            "final": false,
+            "homeScore": null,
+            "awayScore": null
+          }
+        ],
+        "sourceUpstreamIndependenceVerified": false,
+        "sourceAuthenticityIndependentlyAttested": false,
+        "completeLeagueCoverageVerified": false,
+        "historicalAvailabilityProven": false,
+        "aggregateScoringEligible": false
+      },
+      "bindings": [
+        {
+          "gameId": "2026_11_ARI_KC",
+          "baselineSnapshotId": "f6ee0c3c1d4ade6a1031f0d0",
+          "baselineSnapshotSha256": "eef26fd44810faa7f31e6efcbc82e709d7d71d8e3714f85b265aa8cc8d790e81",
+          "frozenIdentity": {
+            "gameId": "2026_11_ARI_KC",
+            "season": 2026,
+            "home": "KC",
+            "away": "ARI",
+            "gameDate": "2026-11-22",
+            "commenceTime": "2026-11-22T18:00:00.000Z"
+          }
+        },
+        {
+          "gameId": "2026_11_BAL_CAR",
+          "baselineSnapshotId": "ed22bae4b9ce95ad366b93fd",
+          "baselineSnapshotSha256": "0c5590e453dc141aa90cee64a67dd51bc8febeafbda041d9574a5b56db740a0f",
+          "frozenIdentity": {
+            "gameId": "2026_11_BAL_CAR",
+            "season": 2026,
+            "home": "CAR",
+            "away": "BAL",
+            "gameDate": "2026-11-22",
+            "commenceTime": "2026-11-22T18:00:00.000Z"
+          }
+        },
+        {
+          "gameId": "2026_11_CIN_WAS",
+          "baselineSnapshotId": "a32d882742a0008c417581c4",
+          "baselineSnapshotSha256": "ec8f934c4ee32708f9edd2264493884b949f949ca3cd5356063124143789e3a4",
+          "frozenIdentity": {
+            "gameId": "2026_11_CIN_WAS",
+            "season": 2026,
+            "home": "WAS",
+            "away": "CIN",
+            "gameDate": "2026-11-23",
+            "commenceTime": "2026-11-24T01:15:00.000Z"
+          }
+        },
+        {
+          "gameId": "2026_11_IND_HOU",
+          "baselineSnapshotId": "328f079cde6dc317f771a160",
+          "baselineSnapshotSha256": "2c8c5ee57be1dacee4849fcd15fcdcf38213b3da6c540430446fb4a1a7f18c32",
+          "frozenIdentity": {
+            "gameId": "2026_11_IND_HOU",
+            "season": 2026,
+            "home": "HOU",
+            "away": "IND",
+            "gameDate": "2026-11-19",
+            "commenceTime": "2026-11-20T01:15:00.000Z"
+          }
+        },
+        {
+          "gameId": "2026_11_JAX_NYG",
+          "baselineSnapshotId": "6b91dff9aff072f4b092a8da",
+          "baselineSnapshotSha256": "42df3f25584ece2def2dc4464d734727fdc0ba6a6c2c3e22cccd4222b3cf912e",
+          "frozenIdentity": {
+            "gameId": "2026_11_JAX_NYG",
+            "season": 2026,
+            "home": "NYG",
+            "away": "JAX",
+            "gameDate": "2026-11-22",
+            "commenceTime": "2026-11-22T21:25:00.000Z"
+          }
+        },
+        {
+          "gameId": "2026_11_LV_DEN",
+          "baselineSnapshotId": "d70956b5808ea55d7f68231d",
+          "baselineSnapshotSha256": "f353a3e9cbe95eab96e862d43950c89d6884c748c7c3c20414cdb6efa3363baf",
+          "frozenIdentity": {
+            "gameId": "2026_11_LV_DEN",
+            "season": 2026,
+            "home": "DEN",
+            "away": "LV",
+            "gameDate": "2026-11-22",
+            "commenceTime": "2026-11-22T21:25:00.000Z"
+          }
+        },
+        {
+          "gameId": "2026_11_MIA_BUF",
+          "baselineSnapshotId": "3cce45de8eb3445d5bb9e7ee",
+          "baselineSnapshotSha256": "367d9fe47c0f8ec5f0ef9e8d3ef84ffe68063f88b0479169dddbe297a7a02bb2",
+          "frozenIdentity": {
+            "gameId": "2026_11_MIA_BUF",
+            "season": 2026,
+            "home": "BUF",
+            "away": "MIA",
+            "gameDate": "2026-11-22",
+            "commenceTime": "2026-11-22T18:00:00.000Z"
+          }
+        },
+        {
+          "gameId": "2026_11_MIN_SF",
+          "baselineSnapshotId": "1284b03391a9a99624ac6077",
+          "baselineSnapshotSha256": "be9ffa54b774680ee6c1c7a31f8785b38c93a2b9ed32f8658c8324ed5120b3a8",
+          "frozenIdentity": {
+            "gameId": "2026_11_MIN_SF",
+            "season": 2026,
+            "home": "SF",
+            "away": "MIN",
+            "gameDate": "2026-11-22",
+            "commenceTime": "2026-11-23T01:20:00.000Z"
+          }
+        },
+        {
+          "gameId": "2026_11_NO_CHI",
+          "baselineSnapshotId": "11bdb7ff23a6fb880947f064",
+          "baselineSnapshotSha256": "cad0e4f57f5b199f950efe415222a153517e56d1edbedeb37e101f9720a36ba5",
+          "frozenIdentity": {
+            "gameId": "2026_11_NO_CHI",
+            "season": 2026,
+            "home": "CHI",
+            "away": "NO",
+            "gameDate": "2026-11-22",
+            "commenceTime": "2026-11-22T18:00:00.000Z"
+          }
+        },
+        {
+          "gameId": "2026_11_NYJ_LAC",
+          "baselineSnapshotId": "4eb09a98020007109b451a15",
+          "baselineSnapshotSha256": "351b5afc6bbfd911f3c86322718252e791f624f4871b83a749bc52cf79cd073d",
+          "frozenIdentity": {
+            "gameId": "2026_11_NYJ_LAC",
+            "season": 2026,
+            "home": "LAC",
+            "away": "NYJ",
+            "gameDate": "2026-11-22",
+            "commenceTime": "2026-11-22T21:05:00.000Z"
+          }
+        },
+        {
+          "gameId": "2026_11_PIT_PHI",
+          "baselineSnapshotId": "e1e057fab8d7aeb2f1a49013",
+          "baselineSnapshotSha256": "defa0dd1913076db4c2726e695c8f7b4535989eed6cd695562c14254253201db",
+          "frozenIdentity": {
+            "gameId": "2026_11_PIT_PHI",
+            "season": 2026,
+            "home": "PHI",
+            "away": "PIT",
+            "gameDate": "2026-11-22",
+            "commenceTime": "2026-11-22T18:00:00.000Z"
+          }
+        },
+        {
+          "gameId": "2026_11_TB_DET",
+          "baselineSnapshotId": "08ba2d8485110aabde2b6988",
+          "baselineSnapshotSha256": "156120294cde9fe0533e423ef29823bf4d477f6018bcde0658f65b930cb2a162",
+          "frozenIdentity": {
+            "gameId": "2026_11_TB_DET",
+            "season": 2026,
+            "home": "DET",
+            "away": "TB",
+            "gameDate": "2026-11-22",
+            "commenceTime": "2026-11-22T18:00:00.000Z"
+          }
+        },
+        {
+          "gameId": "2026_11_TEN_DAL",
+          "baselineSnapshotId": "7b161e3829bbc9c564de580b",
+          "baselineSnapshotSha256": "0af7045f4872f403d674da23ef2eded1f1e1241bb0a85cb2ce4f99196b3cc881",
+          "frozenIdentity": {
+            "gameId": "2026_11_TEN_DAL",
+            "season": 2026,
+            "home": "DAL",
+            "away": "TEN",
+            "gameDate": "2026-11-22",
+            "commenceTime": "2026-11-22T18:00:00.000Z"
+          }
+        }
+      ],
+      "entrySha256": "680fcaf91af604525c4bcb8d8f91c131a9b835abf63201870c5b9d5de03d5c6e"
     }
   ]
 }
