@@ -2,11 +2,14 @@
 import {readBoundedText} from './integrity.mjs';
 import {compareModelHealth} from './model-delivery.mjs';
 import {GAME_CARD_ORIGIN} from './model-only-receipt.mjs';
+// Render Free can take 50+ seconds to wake. One bounded, odds-free health read
+// tolerates startup without retrying capture or changing any eligibility gate.
+export const MODEL_ONLY_HEALTH_TIMEOUT_MS=75000;
 export async function inspectModelOnlyHealth(artifact,{fetchImpl=fetch,clock=Date.now}={}){
  let httpStatus=null;
  const result=(compatible,reason)=>({compatible,reason,httpStatus});
  try{
-  const response=await fetchImpl(GAME_CARD_ORIGIN+'/api/health',{credentials:'omit',redirect:'error',signal:AbortSignal.timeout(15000)});
+  const response=await fetchImpl(GAME_CARD_ORIGIN+'/api/health',{credentials:'omit',redirect:'error',signal:AbortSignal.timeout(MODEL_ONLY_HEALTH_TIMEOUT_MS)});
   httpStatus=Number.isInteger(response.status)&&response.status>=100&&response.status<=599?response.status:null;
   if(!response.ok){await response.body?.cancel().catch(()=>{});return result(false,'HEALTH_HTTP_ERROR');}
   const health=JSON.parse(await readBoundedText(response,250000));

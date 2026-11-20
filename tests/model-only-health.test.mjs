@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';
-import {inspectModelOnlyHealth,modelOnlyRunStatus} from '../src/model-only-health.mjs';
+import {inspectModelOnlyHealth,modelOnlyRunStatus,MODEL_ONLY_HEALTH_TIMEOUT_MS} from '../src/model-only-health.mjs';
 import {describeModelDelivery} from '../src/model-delivery.mjs';
 const artifact=JSON.parse(await readFile(new URL('../data/nfl_elo.json',import.meta.url),'utf8'));
 const now=Date.parse(artifact.generatedAt)+1000,health=()=>({modelOnlyCaptureSchema:2,serverTime:new Date(now).toISOString(),nflModel:{deliveryIdentity:describeModelDelivery(artifact,now)}});
@@ -45,4 +45,34 @@ test('actual missed windows degrade but historical policy-start misses do not',(
 test('run start includes reconciled finals even when health is incompatible',async()=>{
  const text=await readFile(new URL('../scripts/run-model-only-cycle.mjs',import.meta.url),'utf8');assert.ok(text.indexOf("phase:'STARTED'")<text.indexOf('inspectModelOnlyHealth(artifact'));
  const status=report([run({phase:'STARTED'}),{type:'FINAL'},run({productionCompatible:false})]);assert.equal(status.counts.FINAL,1);assert.equal(status.status,'DEGRADED');
+});
+
+
+test('cold startup uses exactly one fixed 75-second health deadline, within workflow budget',async t=>{
+ const controller=new AbortController();let deadlines=[],calls=0;
+ t.mock.method(AbortSignal,'timeout',ms=>{deadlines.push(ms);return controller.signal;});
+ const result=await inspect(async(url,options)=>{calls++;assert.equal(options.signal,controller.signal);return Response.json(health());});
+ assert.equal(result.compatible,true);assert.equal(calls,1);assert.deepEqual(deadlines,[75000]);assert.equal(MODEL_ONLY_HEALTH_TIMEOUT_MS,75000);
+ const workflow=await readFile(new URL('../.github/workflows/model-only-scheduled.yml',import.meta.url),'utf8');assert.match(workflow,/timeout-minutes: 12/);
+});
+test('health timeout and transient HTTP errors remain single-attempt closed failures',async()=>{
+ for(const response of [()=>{throw new DOMException('timed out','TimeoutError');},()=>new Response('',{status:503})]){
+  let calls=0;const result=await inspect(async()=>{calls++;return response();});
+  assert.equal(result.compatible,false);assert.equal(calls,1);
+ }
+});
+test('a 60-second cold start validates against the completion clock, not request start',async()=>{
+ let current=now;
+ const result=await inspectModelOnlyHealth(artifact,{clock:()=>current,fetchImpl:async()=>{
+  current+=60000;return Response.json({...health(),serverTime:new Date(current).toISOString()});
+ }});
+ assert.equal(result.compatible,true);
+ const stale=await inspectModelOnlyHealth(artifact,{clock:()=>now+75000,fetchImpl:async()=>Response.json(health())});
+ assert.equal(stale.reason,'MODEL_HEALTH_TIME_INVALID_OR_STALE');
+});
+test('reservation and capture still evaluate current window after the health wait',async()=>{
+ const text=await readFile(new URL('../scripts/run-model-only-cycle.mjs',import.meta.url),'utf8');
+ assert.match(text,/if\(productionCompatible\)ledger=reserveModelGames\(ledger,receipts,\{now:clock\(\),runKey,failedWeeks\}\)/);
+ assert.match(text,/if\(clock\(\)>Date.parse\(reserved.payload.game.kickoff\)-45\*60000\)throw Error\('WINDOW_CLOSED'\)/);
+ assert.match(text,/AbortSignal.timeout\(20000\)/);
 });

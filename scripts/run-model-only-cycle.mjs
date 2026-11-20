@@ -4,6 +4,7 @@ import {readFile,writeFile,rename} from 'node:fs/promises';
 import {resolve,dirname} from 'node:path';import {fileURLToPath} from 'node:url';import {createHash} from 'node:crypto';
 import {createOfficialGameFeed,discoveryWeeks,gameScope} from '../src/on-demand-game.mjs';
 import {readBoundedText} from '../src/integrity.mjs';import {parseCsv,cleanGames} from '../src/nfl-elo.mjs';
+import {projectModelOnlyResponse} from '../src/model-only-projection.mjs';
 import {inspectModelOnlyHealth} from '../src/model-only-health.mjs';
 import {GAME_CARD_ORIGIN} from '../src/model-only-receipt.mjs';
 import {emptyModelLedger,validateModelLedger,assertLedgerAppend,reserveModelGames,appendModelCapture,ledgerEvent,NFLVERSE_SCHEDULE,sameOfficialFinal} from '../src/scheduled-model-ledger.mjs';
@@ -51,7 +52,7 @@ if(mode==='reserve'){
    const requestStartedAt=new Date().toISOString(),response=await fetch(GAME_CARD_ORIGIN+'/api/game-evaluation?gameId='+encodeURIComponent(reserved.gameId),{credentials:'omit',redirect:'error',headers:{Accept:'application/json'},signal:AbortSignal.timeout(20000)});
    if(!response.ok||!response.headers.get('content-type')?.includes('application/json'))throw Error('GAME_CARD_UNAVAILABLE');
    const data=JSON.parse(await readBoundedText(response,100000));
-   ledger=appendModelCapture(ledger,reserved.gameId,data,{artifact,challengerArtifact,requestStartedAt,receivedAt:new Date().toISOString(),runKey});
+   ledger=appendModelCapture(ledger,reserved.gameId,projectModelOnlyResponse(data),{artifact,challengerArtifact,requestStartedAt,receivedAt:new Date().toISOString(),runKey});
   }catch{ledgerEvent(ledger,'CAPTURE_FAILED',reserved.gameId,{reservationId:reserved.id,reason:'SOURCE_MODEL_OR_WINDOW_UNAVAILABLE'},clock());}
   await saveCandidate(ledger);
  }

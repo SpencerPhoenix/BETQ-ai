@@ -96,3 +96,17 @@ test('HTTP preview opt-in leaves strict capture endpoint unavailable for schedul
  const r=await (await fetch(url+'&preview=scheduled')).json();assert.equal(r.available,true);assert.equal(r.use,'SCHEDULED_MODEL_PREVIEW');assert.equal(calls,0);
  assert.equal((await (await fetch(url+'&preview=true')).json()).available,false);
 });
+
+import {projectModelOnlyResponse} from '../src/model-only-projection.mjs';
+test('actual HTTP display-enriched response projects into unchanged strict V2 capture',async t=>{
+ let paid=0;const server=http.createServer(createHandler({clock:()=>now,nflArtifact:artifact,nflEfficiency:null,
+ officialGameFeed:{get:async()=>{const s=schedule();s.receipt.games[0].kickoff='2026-11-17T01:15:00.000Z';return s;}},depthFeed:{get:async()=>null},
+ source:{status:()=>({configured:false}),getOdds:()=>{paid++;throw Error('paid forbidden');}}}));
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>server.close(resolve)));
+ const response=await fetch(`http://127.0.0.1:${server.address().port}/api/game-evaluation?gameId=${gameId}`);
+ const body=await response.json();assert.ok(Object.hasOwn(body,'depthContext'));
+ const options={artifact,challengerArtifact:null,requestStartedAt:new Date(now).toISOString(),receivedAt:new Date(now).toISOString()};
+ assert.throws(()=>freezeModelOnlyReceipt(body,options));
+ const record=freezeModelOnlyReceipt(projectModelOnlyResponse(body),options);
+ assert.equal(record.response.baseline.homeWinProbability,expected);assert.equal(paid,0);
+});

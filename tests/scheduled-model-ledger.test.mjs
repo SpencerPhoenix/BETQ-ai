@@ -55,3 +55,11 @@ test('Final no-op comparison cannot skip venue, identity or date corrections',()
  const l=final(confirmed()),candidate=structuredClone(l),payload=structuredClone(l.events.at(-1).payload);payload.officialGame.neutralSite=true;ledgerEvent(candidate,'FINAL',id,payload,now+6*3600000);assert.throws(()=>assertLedgerAppend(l,candidate));
  ledgerEvent(l,'RESULT_CONFLICT',id,{reason:'FINAL_IDENTITY_OR_KICKOFF_CONFLICT'},now+6*3600000);assert.equal(modelLedgerSummary(l).games[0].grade,null);
 });
+
+
+test('cold-start health delay crossing reservation cutoff records a miss, never a late reservation',()=>{
+ const r=receipt();r.games[0].kickoff=iso(now+45*60000+30000);
+ const l=reserveModelGames(emptyModelLedger(now-3600000),[r],{now:now+60000,runKey:'1.1'});
+ assert.equal(l.events.filter(e=>e.type==='RESERVED').length,0);
+ assert.equal(l.events.find(e=>e.type==='MISSED').payload.reason,'WINDOW_ELAPSED');
+});
