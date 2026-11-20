@@ -24,3 +24,32 @@ test('Digest and append custody reject changes, removal or duplicates',()=>{
  const changed=structuredClone(r);changed.response.baseline.homeWinProbability=.9;
  assert.throws(()=>assertModelOnlyReceipt(changed,{artifact}));assert.throws(()=>assertModelOnlyAppend([r],[changed]));assert.throws(()=>assertModelOnlyAppend([r],[]));assert.throws(()=>assertModelOnlyAppend([],[r,r]));
 });
+
+
+import {projectModelOnlyResponse} from '../src/model-only-projection.mjs';
+const display=()=>({available:false,starterVerified:false,probabilitiesAdjusted:false,reason:'DEPTH_CONTEXT_UNAVAILABLE',teams:[]});
+test('collector strips only recognized display context; frozen receipt equals original forecast',()=>{
+ const original=response(),enriched={...structuredClone(original),depthContext:display()};
+ assert.throws(()=>freezeModelOnlyReceipt(enriched,options()));
+ const record=freezeModelOnlyReceipt(projectModelOnlyResponse(enriched),options());
+ assert.deepEqual(record,freezeModelOnlyReceipt(original,options()));assertModelOnlyReceipt(record,{artifact});
+ assert.ok(Object.hasOwn(enriched,'depthContext'));assert.ok(!Object.hasOwn(record.response,'depthContext'));
+ assert.deepEqual(projectModelOnlyResponse(original),original);
+});
+test('projection cannot strip unknown fields or weaken original safety checks',()=>{
+ for(const mutate of [r=>r.extra=true,r=>r.market.available=true,r=>r.fixture.extra=true,r=>r.injuryAdjusted=true,r=>r.modelIdentity.artifactCanonicalSha256='b'.repeat(64),r=>r.baseline.homeWinProbability=.99,r=>r.evaluatedAt=iso(now+2000)]){
+  const r={...response(),depthContext:display()};mutate(r);assert.throws(()=>freezeModelOnlyReceipt(projectModelOnlyResponse(r),options()));
+ }
+ for(const d of [null,[],{...display(),starterVerified:true},{...display(),probabilitiesAdjusted:true},{...display(),secret:1},{...display(),teams:[{team:'BAL',player:'a',playerId:'1',extra:true}]},{...display(),reason:'x'.repeat(20001)}])assert.throws(()=>projectModelOnlyResponse({...response(),depthContext:d}));
+});
+test('known available display context is ignored, not interpreted as model evidence',()=>{
+ const d={...display(),available:true,reason:null,teams:[{team:'BAL',player:'Display Only',playerId:'1'}],sourceUrl:'display-only',validUntil:'display-only'};
+ assert.deepEqual(freezeModelOnlyReceipt(projectModelOnlyResponse({...response(),depthContext:d}),options()),freezeModelOnlyReceipt(response(),options()));
+});
+
+
+test('recognized numeric source player ID remains discard-only context',()=>{
+ const d={...display(),available:true,reason:null,teams:[{team:'BAL',player:'Display Only',playerId:123}]};
+ assert.deepEqual(freezeModelOnlyReceipt(projectModelOnlyResponse({...response(),depthContext:d}),options()),freezeModelOnlyReceipt(response(),options()));
+ for(const playerId of [-1,Infinity,1.5,{},1000000000000])assert.throws(()=>projectModelOnlyResponse({...response(),depthContext:{...d,teams:[{...d.teams[0],playerId}]}}));
+});
