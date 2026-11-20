@@ -28,6 +28,8 @@ const writers = [...manualWriters, ...Object.keys(writerSchedules)];
 // Pinning their complete definitions also catches inline/job-level permission
 // or API-write changes that a text search for `git push` cannot classify.
 const readOnlyBaseline = {
+  // GitHub-read-only, manual restricted-Neon-staging probe; no production/provider access.
+  'neon-staging-verify': '81cd2c35dfa110b9380aeef00db79e5e9aa4315afb42b3d9a3dcebde2366f2c8',
   // Manual fixed-endpoint, quota-free observation; no data publication or ledger writes.
   'odds-quota-diagnostic': '4224b9912059092720da1ac79d7067af5ded4c1c91a2db4b7b6c8e6c9e7e092b',
   'injury-coverage-audit': 'ae17baafa47b9f8b0b94de1702eaf2e89954b8cf20d7b337571710cb1d3d955e',
