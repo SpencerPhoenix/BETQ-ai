@@ -484,6 +484,78 @@
         "scopeLimited": false
       },
       "id": "62448bdf01093c6aa44f01317248c5b49881e88eda5dc575e6dd512fd187ee7e"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-20T00:08:31.981Z",
+      "payload": {
+        "runKey": "44643389867.1",
+        "failedWeeks": [],
+        "phase": "STARTED"
+      },
+      "id": "bbd1c31c0c3814b091f2db2a4ba2af9182f457f8a4bf6e48bb002322471f4bf4"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-20T00:08:32.572Z",
+      "payload": {
+        "runKey": "44643389867.1",
+        "failedWeeks": []
+      },
+      "id": "2395a0d3165144e9ed8b6aee49e7180782ec437378610b9d30dcb036ba9be4f8"
+    },
+    {
+      "type": "RESERVED",
+      "gameId": "2026_11_IND_HOU",
+      "at": "2026-11-20T00:08:32.572Z",
+      "payload": {
+        "runKey": "44643389867.1",
+        "game": {
+          "gameId": "2026_11_IND_HOU",
+          "providerGameId": "ab997d97-4feb-11f1-abca-2c54536568a9",
+          "season": 2026,
+          "week": 11,
+          "home": "HOU",
+          "away": "IND",
+          "kickoff": "2026-11-20T01:15:00.000Z",
+          "gameDate": "2026-11-19",
+          "neutralSite": false,
+          "scheduleStatus": "SCHEDULED",
+          "summaryPhase": "PREGAME",
+          "summaryQuarter": "Q1",
+          "summaryState": "PRESENT",
+          "final": false,
+          "homeScore": null,
+          "awayScore": null
+        },
+        "source": {
+          "url": "https://www.nfl.com/scores/2026/week-11",
+          "observedAt": "2026-11-20T00:08:32.230Z",
+          "bodySha256": "73209131a511a68da65e89e7ee2fd6dbc96c41053ad3a040a269b932a0bc6cb8"
+        }
+      },
+      "id": "5892c259fd1c2134b2028aebb64cb0ede5a5c577c754a02cf69d3c45b0899f5f"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-20T00:08:32.574Z",
+      "payload": {
+        "runKey": "44643389867.1",
+        "failedWeeks": [],
+        "productionCompatible": true,
+        "productionHealth": {
+          "compatible": true,
+          "reason": null,
+          "httpStatus": 200
+        },
+        "finalSourceAvailable": null,
+        "resultConflicts": [],
+        "scopeLimited": false
+      },
+      "id": "480f0d1cdf27835d2be55e30d747dfa1f064cd8cbdf9f5a1343352db36c862e6"
     }
   ]
 }
