@@ -7,17 +7,17 @@
     "description": "NFL schedule release maintained by Lee Sharpe, published by nflverse",
     "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
     "license": "CC BY 4.0",
-    "extractedUTC": "2026-11-17T19:50:34.830Z"
+    "extractedUTC": "2026-11-20T19:05:58.458Z"
   },
-  "generatedAt": "2026-11-17T19:50:34.830Z",
-  "completedGamesSha256": "9f6a643a0df5b31ab840801d0a451904527d147bc766793741375d2790acb412",
+  "generatedAt": "2026-11-20T19:05:58.458Z",
+  "completedGamesSha256": "680b8ee8d4da922bb8681ee1b2ebca63db3e68f40c43f15407ff570b5564c8ff",
   "trainingInputSafety": {
     "policy": "NFL_SCHEDULE_DELAYED_RESULTS_V1",
-    "asOf": "2026-11-17T19:50:34.665Z",
+    "asOf": "2026-11-20T19:05:58.309Z",
     "minimumHoursAfterUtcGameDay": 12,
-    "acceptedGames": 7426,
+    "acceptedGames": 7427,
     "rejected": {
-      "recentOrFuture": 122,
+      "recentOrFuture": 121,
       "explicitNonfinal": 0,
       "venueUnknown": 0,
       "conflictingDuplicate": 0,
@@ -60,16 +60,16 @@
         "lastGameDate": "2026-11-15"
       },
       "IND": {
-        "games": 10,
-        "lastGameDate": "2026-11-15"
+        "games": 11,
+        "lastGameDate": "2026-11-19"
       },
       "BAL": {
         "games": 10,
         "lastGameDate": "2026-11-16"
       },
       "HOU": {
-        "games": 9,
-        "lastGameDate": "2026-11-15"
+        "games": 10,
+        "lastGameDate": "2026-11-19"
       },
       "BUF": {
         "games": 9,
@@ -163,13 +163,13 @@
     ]
   },
   "finalityCoverage": null,
-  "lastGameDate": "2026-11-16",
+  "lastGameDate": "2026-11-19",
   "seasons": [
     1999,
     2026
   ],
-  "completedGames": 7426,
-  "completed2026": 150,
+  "completedGames": 7427,
+  "completed2026": 151,
   "trainingProtocol": {
     "parameterTuning": "2018–2022 games (prior games only)",
     "calibration": "2023–2024 games (after hyperparameter selection)",
@@ -231,8 +231,8 @@
     "DEN": 1659.674743265848,
     "DET": 1613.9226761294285,
     "GB": 1543.0683203715664,
-    "HOU": 1493.881548460966,
-    "IND": 1410.2239464155784,
+    "HOU": 1507.8229628164424,
+    "IND": 1396.282532060102,
     "JAX": 1607.6822333078833,
     "KC": 1561.3758038213793,
     "LA": 1578.4044818765733,
