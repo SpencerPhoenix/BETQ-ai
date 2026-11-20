@@ -1,0 +1,37 @@
+{
+  "id": "MARKET_PRIOR_ABLATION_2026_11_20_V1",
+  "purpose": "Reproducible consolidation and bounded sensitivity study, not a new untouched holdout or production model",
+  "baseCommit": "42eb972bb653ffbeb09f7c8e7043bdf5cf6aa631",
+  "sourceSha256": "5e1f14fe5b37df03d7ef9c3662402cc4e4fb6055bede8940cc2fc5af46cb3f01",
+  "source": "Retained nflverse schedules games.csv, CC BY 4.0, nflverse / Lee Sharpe",
+  "sourceDateCeiling": "2026-03-01",
+  "replaySeasons": [2020, 2021, 2022, 2023, 2024, 2025],
+  "evaluationSeasons": [2022, 2023, 2024, 2025],
+  "cohort": "All paired non-tied games with valid Elo and no-vig closing moneylines; no confidence, side, profit or matchup selection",
+  "training": "Each target season uses only the preceding two seasons; underlying Elo uses existing fitBeforeSeason and day-frozen updates",
+  "models": {
+    "market": "Unchanged raw de-vigged retrospective closing reference",
+    "elo": "Existing prior-season-fit, day-frozen Elo",
+    "fixedQuarterResidual": "sigmoid(logit(market) + 0.25 * (logit(elo) - logit(market)))",
+    "constrainedOffset": "Same formula; beta fit on two preceding seasons with sum log loss + 20*beta^2/2, constrained to [0,1], no intercept or market recalibration",
+    "marketCalibration": "Existing fitPriorLogistic residual=false, slope prior1 penalty20, intercept prior0 penalty2",
+    "calibratedResidual": "Existing fitPriorLogistic residual=true, residual prior0 penalty20; retained diagnostic control from earlier research"
+  },
+  "primary": "Paired mean log-loss gain versus unchanged raw market; positive is improvement",
+  "secondary": "Brier, directional counts with exact 0.5 abstentions, per-season results",
+  "uncertainty": "10000 common season-week block bootstrap draws, resampling weeks within each season; centered maximum absolute deviation simultaneous 95% log-loss intervals across all five non-market comparisons. Descriptive development uncertainty, not valid post-selection certification across past BETQ searches",
+  "seed": 20261120,
+  "bootstrapResamples": 10000,
+  "integrity": "Hash raw source and protocol; retain fits, exclusions and all game predictions; perturb target/future outcomes to verify fitted parameters and target opening-day probabilities unchanged; no network or implicit source download",
+  "limitations": [
+    "All evaluation seasons have been repeatedly examined; this is development research, not fresh confirmatory evidence",
+    "Historical sources may have revisions; no proof of historical source availability",
+    "Closing quotes have no verified observation times or execution; later information makes this an unequal-time retrospective benchmark",
+    "Bootstrap intervals condition on retained forecasts and do not model coefficient-estimation uncertainty or all prior search multiplicity",
+    "No 2026 prospective outcomes enter fitting or scoring"
+  ],
+  "automaticPromotionAllowed": false,
+  "wageringAllowed": false,
+  "verifiedROI": false,
+  "verifiedCLV": false
+}
