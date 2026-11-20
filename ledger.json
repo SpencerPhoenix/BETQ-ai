@@ -556,6 +556,16 @@
         "scopeLimited": false
       },
       "id": "480f0d1cdf27835d2be55e30d747dfa1f064cd8cbdf9f5a1343352db36c862e6"
+    },
+    {
+      "type": "CAPTURE_FAILED",
+      "gameId": "2026_11_IND_HOU",
+      "at": "2026-11-20T00:08:37.058Z",
+      "payload": {
+        "reservationId": "5892c259fd1c2134b2028aebb64cb0ede5a5c577c754a02cf69d3c45b0899f5f",
+        "reason": "SOURCE_MODEL_OR_WINDOW_UNAVAILABLE"
+      },
+      "id": "0dbcbb2fb015bdfd8a563df4ccd6cf8a08b75e61f0651c592235d7177c720f4a"
     }
   ]
 }
