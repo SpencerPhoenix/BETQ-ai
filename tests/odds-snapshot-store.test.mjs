@@ -139,3 +139,40 @@ test('consensus after persistence requires actual fresh market timestamps, not b
   assert.equal(result.available,shape==='fresh',shape);
  }
 });
+
+test('Failed shared snapshot read cannot authorize a duplicate paid fetch or budget reservation',async()=>{
+ let paid=0,reserved=0;
+ const source=createOddsSource({apiKey:'fixture',clock:()=>now,snapshotStore:{async read(){throw Error('private database URL');}},
+  budgetStore:{async reserve(){reserved++;return {};},async status(){return {};},async reconcile(){}},
+  fetchImpl:async()=>{paid++;return new Response('[]');}});
+ await assert.rejects(source.getOdds('americanfootball_nfl','h2h',{allowPaid:true}),error=>{
+  assert.equal(error.code,'SNAPSHOT_READ_FAILED');assert.equal(error.status,503);assert.doesNotMatch(error.message,/private database/);return true;
+ });assert.equal(paid,0);assert.equal(reserved,0);
+});
+test('Successful other-market restore cannot authorize spending after a failed market read',async()=>{
+ let paid=0,reserved=0;
+ const source=createOddsSource({apiKey:'fixture',clock:()=>now,snapshotStore:{async read(id){if(id===cacheId)throw Error('offline');return {...record(),cacheId:id,events:[]};}},
+  budgetStore:{async reserve(){reserved++;return {};},async status(){return {};},async reconcile(){}},fetchImpl:async()=>{paid++;return new Response('[]');}});
+ const results=await Promise.allSettled([source.getOdds('americanfootball_nfl','h2h',{allowPaid:true}),source.getOdds('americanfootball_nfl','spreads',{allowPaid:true})]);
+ assert.equal(results[0].status,'rejected');assert.equal(results[0].reason.code,'SNAPSHOT_READ_FAILED');assert.equal(results[1].value.cacheHit,true);
+ assert.equal(paid,0);assert.equal(reserved,0);
+});
+test('Multiple game selections and independent process caches reuse one fresh NFL market slate',async()=>{
+ let paid=0,reserved=0;const records=new Map();let reads=0;
+ const events=['game-a','game-b','game-c'].map((id,i)=>({...record().events[0],id,home_team:'Home'+i,away_team:'Away'+i,bookmakers:[]}));
+ const snapshotStore={async read(id){reads++;return records.get(id)||null;},async write(id,payload){records.set(id,{...payload});return {stored:true};}};
+ const budgetStore={async reserve(){reserved++;return {id:'14f0a5c2-846d-4d22-b1cf-1da5d63f6d40'};},async reconcile(){return {reconciled:true};},async status(){return {};}};
+ const options={apiKey:'fixture',clock:()=>now,snapshotStore,budgetStore,fetchImpl:async()=>{paid++;return new Response(JSON.stringify(events),{headers:{'x-requests-remaining':'99','x-requests-used':'1','x-requests-last':'1'}});}};
+ const first=createOddsSource(options),second=createOddsSource(options);
+ await first.getOdds('americanfootball_nfl','h2h',{allowPaid:true});
+ for(const source of [first,second])for(const game of events){const slate=await source.getOdds('americanfootball_nfl','h2h');assert.equal(slate.cacheHit,true);assert.equal(slate.events.find(x=>x.id===game.id).id,game.id);assert.equal(slate.receivedAt,new Date(now).toISOString());}
+ assert.equal(paid,1);assert.equal(reserved,1);assert.equal(reads,2);
+});
+test('Timed-out shared restore denies all concurrent paid attempts without reservations',async()=>{
+ let reads=0,reserved=0,paid=0;
+ const source=createOddsSource({apiKey:'fixture',clock:()=>now,snapshotStore:{read(){reads++;return new Promise(()=>{});}},
+  budgetStore:{async reserve(){reserved++;return {};},async status(){return {};},async reconcile(){}},fetchImpl:async()=>{paid++;return new Response('[]');}});
+ const results=await Promise.allSettled(Array.from({length:12},()=>source.getOdds('americanfootball_nfl','h2h',{allowPaid:true})));
+ assert.ok(results.every(r=>r.status==='rejected'&&r.reason.code==='SNAPSHOT_READ_FAILED'));
+ assert.equal(reads,1);assert.equal(reserved,0);assert.equal(paid,0);
+});
