@@ -3,9 +3,9 @@
   "season": 2026,
   "source": "NFLVERSE_DEPTH_CHARTS",
   "sourceUrl": "https://github.com/nflverse/nflverse-data/releases/download/depth_charts/depth_charts_2026.csv.gz",
-  "sourceLoadAt": "2026-11-20T16:05:07.000Z",
-  "collectedAt": "2026-11-20T17:01:58.432Z",
-  "sourceSha256": "6d4837a78cb81798bd7c0f37f45b70ce8e691e599d34b27bcaf2d198d3733dad",
+  "sourceLoadAt": "2026-11-21T15:17:24.000Z",
+  "collectedAt": "2026-11-21T16:14:17.406Z",
+  "sourceSha256": "d9ec3505b81baee7947c3dc7fc34be06e0f04b42692d22b2dd7de5a04f516a64",
   "teams": {
     "ARI": {
       "player": "Carson Beck",
@@ -60,8 +60,8 @@
       "playerId": "4432577"
     },
     "IND": {
-      "player": "Daniel Jones",
-      "playerId": "3917792"
+      "player": "Anthony Richardson Sr.",
+      "playerId": "4429084"
     },
     "JAX": {
       "player": "Trevor Lawrence",
