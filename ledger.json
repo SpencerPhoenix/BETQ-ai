@@ -3227,6 +3227,97 @@
         "challengerKey": "29a79eb1ae7ddb26ab4d548bb1650fc1b01724306687c7b2d646435deefe2c54"
       },
       "id": "0576fd858dd557890375cc69edf47f7ad04dfef39c21fec036850e4ed425b36b"
+    },
+    {
+      "type": "CUSTODY",
+      "gameId": "2026_11_MIA_BUF",
+      "at": "2026-11-22T16:41:31.000Z",
+      "payload": {
+        "captureId": "7bfb73b4e737b952e5646dbcca8706e0fa0f868edcce055ec7563945eb813ab6",
+        "remoteCommit": "f2ba98d9b6efb5559282aed86acab4281a4222e4",
+        "remoteObservedAt": "2026-11-22T16:41:31.000Z",
+        "assurance": "OPERATOR_OBSERVED_AUTHENTICATED_GITHUB_READBACK",
+        "timestampBasis": "GITHUB_DATE_UPPER_BOUND_1S"
+      },
+      "id": "a57483a9ab46247f1aa168ff2344bd5e8347453bb8f888c48f2a96be18c084fa"
+    },
+    {
+      "type": "CUSTODY",
+      "gameId": "2026_11_BAL_CAR",
+      "at": "2026-11-22T16:41:31.000Z",
+      "payload": {
+        "captureId": "63901ece82daae2c991211c28d11a5b1ef7a88d7039709cc86ada4f5442e2e40",
+        "remoteCommit": "f2ba98d9b6efb5559282aed86acab4281a4222e4",
+        "remoteObservedAt": "2026-11-22T16:41:31.000Z",
+        "assurance": "OPERATOR_OBSERVED_AUTHENTICATED_GITHUB_READBACK",
+        "timestampBasis": "GITHUB_DATE_UPPER_BOUND_1S"
+      },
+      "id": "2b546a0cf1b8160ae5e9950778a32811cb8267be3876205669b4ea132e7f9d96"
+    },
+    {
+      "type": "CUSTODY",
+      "gameId": "2026_11_NO_CHI",
+      "at": "2026-11-22T16:41:31.000Z",
+      "payload": {
+        "captureId": "ca4bb84e40795efe0ef5ef3643b957dc6f22e0dd001edcbfa7c8edc5ba384b86",
+        "remoteCommit": "f2ba98d9b6efb5559282aed86acab4281a4222e4",
+        "remoteObservedAt": "2026-11-22T16:41:31.000Z",
+        "assurance": "OPERATOR_OBSERVED_AUTHENTICATED_GITHUB_READBACK",
+        "timestampBasis": "GITHUB_DATE_UPPER_BOUND_1S"
+      },
+      "id": "50f2604fb8c79b931065382ac1bd1174d4c47a9e7b454d88f994c76bfe43b9e1"
+    },
+    {
+      "type": "CUSTODY",
+      "gameId": "2026_11_TEN_DAL",
+      "at": "2026-11-22T16:41:31.000Z",
+      "payload": {
+        "captureId": "0ef0630f4327f2405e53b6f47368e73af74e2abfba38cc7cb7d8e72893ce4afa",
+        "remoteCommit": "f2ba98d9b6efb5559282aed86acab4281a4222e4",
+        "remoteObservedAt": "2026-11-22T16:41:31.000Z",
+        "assurance": "OPERATOR_OBSERVED_AUTHENTICATED_GITHUB_READBACK",
+        "timestampBasis": "GITHUB_DATE_UPPER_BOUND_1S"
+      },
+      "id": "f68664d6fa34085063bc8339abd0fb2a7033211c74513625bb69a1ee73849bad"
+    },
+    {
+      "type": "CUSTODY",
+      "gameId": "2026_11_TB_DET",
+      "at": "2026-11-22T16:41:31.000Z",
+      "payload": {
+        "captureId": "483088438761991a21dc3110266f6dc07f772cef648438b202329c08d5bd97d5",
+        "remoteCommit": "f2ba98d9b6efb5559282aed86acab4281a4222e4",
+        "remoteObservedAt": "2026-11-22T16:41:31.000Z",
+        "assurance": "OPERATOR_OBSERVED_AUTHENTICATED_GITHUB_READBACK",
+        "timestampBasis": "GITHUB_DATE_UPPER_BOUND_1S"
+      },
+      "id": "e494f55d996e831ecee996bcd9532ccf2dc72636fac1a36efb9aed411618e1f1"
+    },
+    {
+      "type": "CUSTODY",
+      "gameId": "2026_11_ARI_KC",
+      "at": "2026-11-22T16:41:31.000Z",
+      "payload": {
+        "captureId": "37557a2e7249b325cc70143ec935fe947f845560682cc3e1c378126de30cd665",
+        "remoteCommit": "f2ba98d9b6efb5559282aed86acab4281a4222e4",
+        "remoteObservedAt": "2026-11-22T16:41:31.000Z",
+        "assurance": "OPERATOR_OBSERVED_AUTHENTICATED_GITHUB_READBACK",
+        "timestampBasis": "GITHUB_DATE_UPPER_BOUND_1S"
+      },
+      "id": "0e9819dc34b620452c39f93d6384219317fea50a55fe9071ad7818b99c2c9cab"
+    },
+    {
+      "type": "CUSTODY",
+      "gameId": "2026_11_PIT_PHI",
+      "at": "2026-11-22T16:41:31.000Z",
+      "payload": {
+        "captureId": "0576fd858dd557890375cc69edf47f7ad04dfef39c21fec036850e4ed425b36b",
+        "remoteCommit": "f2ba98d9b6efb5559282aed86acab4281a4222e4",
+        "remoteObservedAt": "2026-11-22T16:41:31.000Z",
+        "assurance": "OPERATOR_OBSERVED_AUTHENTICATED_GITHUB_READBACK",
+        "timestampBasis": "GITHUB_DATE_UPPER_BOUND_1S"
+      },
+      "id": "e1418d16d3f0a5392534e0cd713d8538a45e5d98f2c2db9cc2cb4a8991ce7797"
     }
   ]
 }
