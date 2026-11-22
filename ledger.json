@@ -9,7 +9,884 @@
     "upstreamIndependenceVerified": false
   },
   "createdAt": "2026-11-17T09:46:08.832Z",
-  "artifacts": {},
+  "artifacts": {
+    "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a": {
+      "schema": 1,
+      "version": "nfl-elo-1",
+      "type": "PREGAME_NFL_ELO_BASELINE",
+      "source": {
+        "project": "nflverse/nflverse-data",
+        "description": "NFL schedule release maintained by Lee Sharpe, published by nflverse",
+        "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+        "license": "CC BY 4.0",
+        "extractedUTC": "2026-11-20T19:05:58.458Z"
+      },
+      "generatedAt": "2026-11-20T19:05:58.458Z",
+      "completedGamesSha256": "680b8ee8d4da922bb8681ee1b2ebca63db3e68f40c43f15407ff570b5564c8ff",
+      "trainingInputSafety": {
+        "policy": "NFL_SCHEDULE_DELAYED_RESULTS_V1",
+        "asOf": "2026-11-20T19:05:58.309Z",
+        "minimumHoursAfterUtcGameDay": 12,
+        "acceptedGames": 7427,
+        "rejected": {
+          "recentOrFuture": 121,
+          "explicitNonfinal": 0,
+          "venueUnknown": 0,
+          "conflictingDuplicate": 0,
+          "invalid": 0
+        },
+        "independentlyVerifiedFinality": false,
+        "completeScheduleCoverageVerified": false,
+        "latestSeason": 2026,
+        "teams": {
+          "SEA": {
+            "games": 10,
+            "lastGameDate": "2026-11-15"
+          },
+          "NE": {
+            "games": 10,
+            "lastGameDate": "2026-11-15"
+          },
+          "LA": {
+            "games": 10,
+            "lastGameDate": "2026-11-15"
+          },
+          "SF": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "LAC": {
+            "games": 9,
+            "lastGameDate": "2026-11-16"
+          },
+          "ARI": {
+            "games": 10,
+            "lastGameDate": "2026-11-15"
+          },
+          "PIT": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "ATL": {
+            "games": 10,
+            "lastGameDate": "2026-11-15"
+          },
+          "IND": {
+            "games": 11,
+            "lastGameDate": "2026-11-19"
+          },
+          "BAL": {
+            "games": 10,
+            "lastGameDate": "2026-11-16"
+          },
+          "HOU": {
+            "games": 10,
+            "lastGameDate": "2026-11-19"
+          },
+          "BUF": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "CAR": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "CHI": {
+            "games": 9,
+            "lastGameDate": "2026-11-08"
+          },
+          "JAX": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "CLE": {
+            "games": 10,
+            "lastGameDate": "2026-11-15"
+          },
+          "NYG": {
+            "games": 9,
+            "lastGameDate": "2026-11-12"
+          },
+          "DAL": {
+            "games": 10,
+            "lastGameDate": "2026-11-15"
+          },
+          "MIN": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "GB": {
+            "games": 10,
+            "lastGameDate": "2026-11-15"
+          },
+          "LV": {
+            "games": 10,
+            "lastGameDate": "2026-11-15"
+          },
+          "MIA": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "DET": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "NO": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "TEN": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "NYJ": {
+            "games": 10,
+            "lastGameDate": "2026-11-15"
+          },
+          "CIN": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "TB": {
+            "games": 9,
+            "lastGameDate": "2026-11-08"
+          },
+          "PHI": {
+            "games": 9,
+            "lastGameDate": "2026-11-08"
+          },
+          "WAS": {
+            "games": 9,
+            "lastGameDate": "2026-11-12"
+          },
+          "KC": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "DEN": {
+            "games": 9,
+            "lastGameDate": "2026-11-08"
+          }
+        },
+        "limitations": [
+          "Score presence plus an age embargo is not independent proof of a final result.",
+          "Per-team counts describe accepted source rows, not reconciliation against every scheduled game.",
+          "Unknown venues, explicit nonfinal states and conflicting duplicate IDs are excluded."
+        ]
+      },
+      "finalityCoverage": null,
+      "lastGameDate": "2026-11-19",
+      "seasons": [
+        1999,
+        2026
+      ],
+      "completedGames": 7427,
+      "completed2026": 151,
+      "trainingProtocol": {
+        "parameterTuning": "2018–2022 games (prior games only)",
+        "calibration": "2023–2024 games (after hyperparameter selection)",
+        "untouchedTest": "2025 games (not used for hyperparameters or calibration)",
+        "liveRatings": "Delayed scored schedule rows through lastGameDate; see trainingInputSafety for unverified finality",
+        "leakageControl": "Chronological pregame ratings, season-to-season mean regression"
+      },
+      "params": {
+        "k": 40,
+        "homeAdv": 25,
+        "regression": 0.35,
+        "scale": 1.1
+      },
+      "tuning": {
+        "n": 1365,
+        "brier": 0.22538,
+        "logLoss": 0.64264,
+        "accuracy": 0.6278,
+        "ece": 0.0288,
+        "coinFlipBrier": 0.25,
+        "tiesExcluded": 7
+      },
+      "calibration": {
+        "n": 570,
+        "brier": 0.22262,
+        "logLoss": 0.63705,
+        "accuracy": 0.6491,
+        "ece": 0.0378,
+        "coinFlipBrier": 0.25,
+        "tiesExcluded": 0
+      },
+      "holdout": {
+        "n": 284,
+        "brier": 0.22235,
+        "logLoss": 0.63596,
+        "accuracy": 0.6585,
+        "ece": 0.053,
+        "coinFlipBrier": 0.25,
+        "tiesExcluded": 1
+      },
+      "readyForResearch": true,
+      "limitations": [
+        "Elo-only historical outcome model; no starters, injuries, weather, play-by-play EPA or current lineup updates",
+        "Research-only; a 2025 holdout does not establish real-money profitability or a wagering advantage",
+        "A season-end rating is not a same-day injury- or roster-aware projection",
+        "Team relocation aliases do not resolve all historical franchise and stadium changes",
+        "Market outcomes, spreads and totals do not share this moneyline-only model"
+      ],
+      "ratings": {
+        "ARI": 1392.176665074981,
+        "ATL": 1430.2202815678281,
+        "BAL": 1453.7326977859977,
+        "BUF": 1673.27637996629,
+        "CAR": 1457.5435771502575,
+        "CHI": 1611.5450304890646,
+        "CIN": 1560.9565396941487,
+        "CLE": 1480.4937686320802,
+        "DAL": 1445.304164208791,
+        "DEN": 1659.674743265848,
+        "DET": 1613.9226761294285,
+        "GB": 1543.0683203715664,
+        "HOU": 1507.8229628164424,
+        "IND": 1396.282532060102,
+        "JAX": 1607.6822333078833,
+        "KC": 1561.3758038213793,
+        "LA": 1578.4044818765733,
+        "LAC": 1427.8099767435726,
+        "LV": 1399.4493418488744,
+        "MIA": 1371.063932589499,
+        "MIN": 1605.231518161526,
+        "NE": 1559.6189790506492,
+        "NO": 1414.7377027873524,
+        "NYG": 1450.463693041788,
+        "NYJ": 1333.8491622700162,
+        "PHI": 1431.2768089280146,
+        "PIT": 1557.6447221081598,
+        "SEA": 1618.355351104032,
+        "SF": 1641.7521946424276,
+        "TB": 1445.8544465140874,
+        "TEN": 1310.0934616710592,
+        "WAS": 1459.315850320279
+      }
+    },
+    "29a79eb1ae7ddb26ab4d548bb1650fc1b01724306687c7b2d646435deefe2c54": {
+      "schema": 1,
+      "version": "nfl-efficiency-1",
+      "evaluationVersion": 2,
+      "generatedAt": "2026-11-17T19:21:25.237Z",
+      "source": "NFLVERSE_PBP_CC_BY_4_0",
+      "type": "INDEPENDENT_CHALLENGER_RESEARCH",
+      "training": {
+        "tune": "2018-2022",
+        "calibrate": "2023-2024",
+        "untouchedHoldout": "2025",
+        "minPriorGamesPerTeam": 4,
+        "trendGames": 8
+      },
+      "tuning": {
+        "n": 1302,
+        "brier": 0.22276,
+        "logLoss": 0.63791,
+        "accuracy": 0.6413
+      },
+      "calibration": {
+        "n": 570,
+        "brier": 0.22188,
+        "logLoss": 0.63586,
+        "accuracy": 0.6474
+      },
+      "holdout": {
+        "elo": {
+          "n": 284,
+          "brier": 0.22235,
+          "logLoss": 0.63596,
+          "accuracy": 0.6585
+        },
+        "challenger": {
+          "n": 284,
+          "brier": 0.21935,
+          "logLoss": 0.6295,
+          "accuracy": 0.662
+        },
+        "deltaBrier": 0.003,
+        "confidence95": {
+          "method": "PAIRED_BOOTSTRAP_2000",
+          "lower": 0.00025,
+          "upper": 0.00567,
+          "mean": 0.00299
+        },
+        "weekSensitivity": {
+          "method": "PAIRED_WEEK_BLOCK_BOOTSTRAP",
+          "n": 284,
+          "weeks": 22,
+          "repeats": 2000,
+          "meanImprovement": 0.002995,
+          "limitation": "Within-week resampling only; recurring teams and cross-week dependence remain.",
+          "available": true,
+          "lower": 0.000082,
+          "upper": 0.006022
+        },
+        "referenceSeasonPreviouslyInspected": true
+      },
+      "coefficients": {
+        "epa": 0,
+        "success": 1.7999999999999998,
+        "rest": 0.012
+      },
+      "coefficientScale": 0.6,
+      "readyForResearch": true,
+      "promotable": true,
+      "coverage": {
+        "historicalGames": 2377,
+        "featureReadyGames": 2305
+      },
+      "teamFeatures": {
+        "PHI": {
+          "n": 8,
+          "offEPA": -0.14198,
+          "defEPA": 0.05316,
+          "offSuccess": 0.34412,
+          "defSuccess": 0.41863,
+          "netEPA": -0.19514,
+          "netSuccess": -0.07451,
+          "latestGameDate": "2026-11-08"
+        },
+        "ATL": {
+          "n": 8,
+          "offEPA": -0.08256,
+          "defEPA": 0.05824,
+          "offSuccess": 0.39913,
+          "defSuccess": 0.46368,
+          "netEPA": -0.14079,
+          "netSuccess": -0.06455,
+          "latestGameDate": "2026-11-15"
+        },
+        "BAL": {
+          "n": 8,
+          "offEPA": -0.11143,
+          "defEPA": 0.02747,
+          "offSuccess": 0.38982,
+          "defSuccess": 0.4448,
+          "netEPA": -0.13891,
+          "netSuccess": -0.05498,
+          "latestGameDate": "2026-11-16"
+        },
+        "BUF": {
+          "n": 8,
+          "offEPA": 0.11994,
+          "defEPA": -0.13437,
+          "offSuccess": 0.45593,
+          "defSuccess": 0.40365,
+          "netEPA": 0.25431,
+          "netSuccess": 0.05229,
+          "latestGameDate": "2026-11-15"
+        },
+        "GB": {
+          "n": 8,
+          "offEPA": 0.02533,
+          "defEPA": -0.04708,
+          "offSuccess": 0.41527,
+          "defSuccess": 0.43877,
+          "netEPA": 0.07241,
+          "netSuccess": -0.0235,
+          "latestGameDate": "2026-11-15"
+        },
+        "CHI": {
+          "n": 8,
+          "offEPA": -0.025,
+          "defEPA": -0.06154,
+          "offSuccess": 0.45883,
+          "defSuccess": 0.39229,
+          "netEPA": 0.03654,
+          "netSuccess": 0.06654,
+          "latestGameDate": "2026-11-08"
+        },
+        "IND": {
+          "n": 8,
+          "offEPA": -0.16379,
+          "defEPA": -0.03175,
+          "offSuccess": 0.40658,
+          "defSuccess": 0.38464,
+          "netEPA": -0.13204,
+          "netSuccess": 0.02194,
+          "latestGameDate": "2026-11-15"
+        },
+        "CIN": {
+          "n": 8,
+          "offEPA": 0.20913,
+          "defEPA": 0.03506,
+          "offSuccess": 0.53051,
+          "defSuccess": 0.44098,
+          "netEPA": 0.17407,
+          "netSuccess": 0.08953,
+          "latestGameDate": "2026-11-15"
+        },
+        "CAR": {
+          "n": 8,
+          "offEPA": -0.0217,
+          "defEPA": -0.04129,
+          "offSuccess": 0.3969,
+          "defSuccess": 0.40623,
+          "netEPA": 0.01959,
+          "netSuccess": -0.00933,
+          "latestGameDate": "2026-11-15"
+        },
+        "DAL": {
+          "n": 8,
+          "offEPA": 0.08643,
+          "defEPA": 0.11448,
+          "offSuccess": 0.46063,
+          "defSuccess": 0.43801,
+          "netEPA": -0.02805,
+          "netSuccess": 0.02262,
+          "latestGameDate": "2026-11-15"
+        },
+        "NE": {
+          "n": 8,
+          "offEPA": -0.00849,
+          "defEPA": 0.11711,
+          "offSuccess": 0.4284,
+          "defSuccess": 0.45572,
+          "netEPA": -0.1256,
+          "netSuccess": -0.02731,
+          "latestGameDate": "2026-11-15"
+        },
+        "HOU": {
+          "n": 8,
+          "offEPA": 0.05831,
+          "defEPA": -0.01386,
+          "offSuccess": 0.41048,
+          "defSuccess": 0.41223,
+          "netEPA": 0.07217,
+          "netSuccess": -0.00175,
+          "latestGameDate": "2026-11-15"
+        },
+        "NYG": {
+          "n": 8,
+          "offEPA": 0.00682,
+          "defEPA": -0.03858,
+          "offSuccess": 0.39263,
+          "defSuccess": 0.41171,
+          "netEPA": 0.0454,
+          "netSuccess": -0.01908,
+          "latestGameDate": "2026-11-12"
+        },
+        "JAX": {
+          "n": 8,
+          "offEPA": 0.13221,
+          "defEPA": -0.10956,
+          "offSuccess": 0.46394,
+          "defSuccess": 0.39342,
+          "netEPA": 0.24177,
+          "netSuccess": 0.07053,
+          "latestGameDate": "2026-11-15"
+        },
+        "LAC": {
+          "n": 8,
+          "offEPA": -0.16886,
+          "defEPA": -0.0025,
+          "offSuccess": 0.34927,
+          "defSuccess": 0.42608,
+          "netEPA": -0.16636,
+          "netSuccess": -0.07682,
+          "latestGameDate": "2026-11-16"
+        },
+        "KC": {
+          "n": 8,
+          "offEPA": 0.11436,
+          "defEPA": -0.10116,
+          "offSuccess": 0.47928,
+          "defSuccess": 0.38621,
+          "netEPA": 0.21552,
+          "netSuccess": 0.09308,
+          "latestGameDate": "2026-11-15"
+        },
+        "CLE": {
+          "n": 8,
+          "offEPA": -0.05517,
+          "defEPA": -0.02404,
+          "offSuccess": 0.40365,
+          "defSuccess": 0.38946,
+          "netEPA": -0.03112,
+          "netSuccess": 0.01419,
+          "latestGameDate": "2026-11-15"
+        },
+        "PIT": {
+          "n": 8,
+          "offEPA": 0.03084,
+          "defEPA": 0.03831,
+          "offSuccess": 0.42549,
+          "defSuccess": 0.45174,
+          "netEPA": -0.00747,
+          "netSuccess": -0.02625,
+          "latestGameDate": "2026-11-15"
+        },
+        "DEN": {
+          "n": 8,
+          "offEPA": 0.02303,
+          "defEPA": 0.00578,
+          "offSuccess": 0.38172,
+          "defSuccess": 0.41567,
+          "netEPA": 0.01725,
+          "netSuccess": -0.03395,
+          "latestGameDate": "2026-11-08"
+        },
+        "SEA": {
+          "n": 8,
+          "offEPA": -0.01348,
+          "defEPA": -0.08479,
+          "offSuccess": 0.40887,
+          "defSuccess": 0.37772,
+          "netEPA": 0.07131,
+          "netSuccess": 0.03115,
+          "latestGameDate": "2026-11-15"
+        },
+        "MIN": {
+          "n": 8,
+          "offEPA": -0.15106,
+          "defEPA": -0.13371,
+          "offSuccess": 0.3767,
+          "defSuccess": 0.3916,
+          "netEPA": -0.01735,
+          "netSuccess": -0.0149,
+          "latestGameDate": "2026-11-15"
+        },
+        "SF": {
+          "n": 8,
+          "offEPA": 0.20747,
+          "defEPA": -0.01966,
+          "offSuccess": 0.5053,
+          "defSuccess": 0.43402,
+          "netEPA": 0.22713,
+          "netSuccess": 0.07128,
+          "latestGameDate": "2026-11-15"
+        },
+        "NO": {
+          "n": 8,
+          "offEPA": -0.07997,
+          "defEPA": -0.00015,
+          "offSuccess": 0.38888,
+          "defSuccess": 0.41681,
+          "netEPA": -0.07982,
+          "netSuccess": -0.02793,
+          "latestGameDate": "2026-11-15"
+        },
+        "TB": {
+          "n": 8,
+          "offEPA": -0.07695,
+          "defEPA": -0.17872,
+          "offSuccess": 0.40355,
+          "defSuccess": 0.38802,
+          "netEPA": 0.10177,
+          "netSuccess": 0.01553,
+          "latestGameDate": "2026-11-08"
+        },
+        "MIA": {
+          "n": 8,
+          "offEPA": -0.07699,
+          "defEPA": 0.0113,
+          "offSuccess": 0.37318,
+          "defSuccess": 0.44718,
+          "netEPA": -0.08829,
+          "netSuccess": -0.074,
+          "latestGameDate": "2026-11-15"
+        },
+        "TEN": {
+          "n": 8,
+          "offEPA": -0.0521,
+          "defEPA": 0.10024,
+          "offSuccess": 0.41436,
+          "defSuccess": 0.48676,
+          "netEPA": -0.15234,
+          "netSuccess": -0.07241,
+          "latestGameDate": "2026-11-15"
+        },
+        "ARI": {
+          "n": 8,
+          "offEPA": -0.15054,
+          "defEPA": 0.09941,
+          "offSuccess": 0.39584,
+          "defSuccess": 0.44263,
+          "netEPA": -0.24995,
+          "netSuccess": -0.0468,
+          "latestGameDate": "2026-11-15"
+        },
+        "WAS": {
+          "n": 8,
+          "offEPA": -0.02341,
+          "defEPA": 0.02914,
+          "offSuccess": 0.43059,
+          "defSuccess": 0.45664,
+          "netEPA": -0.05255,
+          "netSuccess": -0.02605,
+          "latestGameDate": "2026-11-12"
+        },
+        "LV": {
+          "n": 8,
+          "offEPA": -0.06714,
+          "defEPA": 0.1442,
+          "offSuccess": 0.40194,
+          "defSuccess": 0.49418,
+          "netEPA": -0.21134,
+          "netSuccess": -0.09224,
+          "latestGameDate": "2026-11-15"
+        },
+        "LA": {
+          "n": 8,
+          "offEPA": 0.06435,
+          "defEPA": -0.20957,
+          "offSuccess": 0.48087,
+          "defSuccess": 0.3623,
+          "netEPA": 0.27391,
+          "netSuccess": 0.11857,
+          "latestGameDate": "2026-11-15"
+        },
+        "DET": {
+          "n": 8,
+          "offEPA": 0.08604,
+          "defEPA": -0.04985,
+          "offSuccess": 0.47641,
+          "defSuccess": 0.39669,
+          "netEPA": 0.13589,
+          "netSuccess": 0.07972,
+          "latestGameDate": "2026-11-15"
+        },
+        "NYJ": {
+          "n": 8,
+          "offEPA": -0.03321,
+          "defEPA": 0.13318,
+          "offSuccess": 0.45283,
+          "defSuccess": 0.47099,
+          "netEPA": -0.16639,
+          "netSuccess": -0.01816,
+          "latestGameDate": "2026-11-15"
+        }
+      },
+      "limitations": [
+        "2018-2025 historical EPA values are retrospective and may be revised by nflverse",
+        "Quarterback / injured-starter status is not verified or modeled",
+        "Rest is derived from previous completed team game dates, not itinerary",
+        "Future games are excluded from feature history",
+        "A holdout Brier improvement does not establish profitable bookmaker execution",
+        "Challenger is never automatically promoted based solely on a positive point estimate"
+      ],
+      "trainingInputSafety": {
+        "policy": "NFL_SCHEDULE_DELAYED_RESULTS_V1",
+        "asOf": "2026-11-17T19:21:13.152Z",
+        "minimumHoursAfterUtcGameDay": 12,
+        "acceptedGames": 7426,
+        "rejected": {
+          "recentOrFuture": 122,
+          "explicitNonfinal": 0,
+          "venueUnknown": 0,
+          "conflictingDuplicate": 0,
+          "invalid": 0
+        },
+        "independentlyVerifiedFinality": false,
+        "completeScheduleCoverageVerified": false,
+        "latestSeason": 2026,
+        "teams": {
+          "SEA": {
+            "games": 10,
+            "lastGameDate": "2026-11-15"
+          },
+          "NE": {
+            "games": 10,
+            "lastGameDate": "2026-11-15"
+          },
+          "LA": {
+            "games": 10,
+            "lastGameDate": "2026-11-15"
+          },
+          "SF": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "LAC": {
+            "games": 9,
+            "lastGameDate": "2026-11-16"
+          },
+          "ARI": {
+            "games": 10,
+            "lastGameDate": "2026-11-15"
+          },
+          "PIT": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "ATL": {
+            "games": 10,
+            "lastGameDate": "2026-11-15"
+          },
+          "IND": {
+            "games": 10,
+            "lastGameDate": "2026-11-15"
+          },
+          "BAL": {
+            "games": 10,
+            "lastGameDate": "2026-11-16"
+          },
+          "HOU": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "BUF": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "CAR": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "CHI": {
+            "games": 9,
+            "lastGameDate": "2026-11-08"
+          },
+          "JAX": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "CLE": {
+            "games": 10,
+            "lastGameDate": "2026-11-15"
+          },
+          "NYG": {
+            "games": 9,
+            "lastGameDate": "2026-11-12"
+          },
+          "DAL": {
+            "games": 10,
+            "lastGameDate": "2026-11-15"
+          },
+          "MIN": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "GB": {
+            "games": 10,
+            "lastGameDate": "2026-11-15"
+          },
+          "LV": {
+            "games": 10,
+            "lastGameDate": "2026-11-15"
+          },
+          "MIA": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "DET": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "NO": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "TEN": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "NYJ": {
+            "games": 10,
+            "lastGameDate": "2026-11-15"
+          },
+          "CIN": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "TB": {
+            "games": 9,
+            "lastGameDate": "2026-11-08"
+          },
+          "PHI": {
+            "games": 9,
+            "lastGameDate": "2026-11-08"
+          },
+          "WAS": {
+            "games": 9,
+            "lastGameDate": "2026-11-12"
+          },
+          "KC": {
+            "games": 9,
+            "lastGameDate": "2026-11-15"
+          },
+          "DEN": {
+            "games": 9,
+            "lastGameDate": "2026-11-08"
+          }
+        },
+        "limitations": [
+          "Score presence plus an age embargo is not independent proof of a final result.",
+          "Per-team counts describe accepted source rows, not reconciliation against every scheduled game.",
+          "Unknown venues, explicit nonfinal states and conflicting duplicate IDs are excluded."
+        ]
+      },
+      "finalityCoverage": null,
+      "sourceManifest": {
+        "project": "nflverse/nflverse-data",
+        "attribution": "nflverse / nflfastR; CC BY 4.0",
+        "license": "CC BY 4.0",
+        "scheduleUrl": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+        "pbpReleases": [
+          {
+            "season": 2018,
+            "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2018.csv.gz",
+            "completeGames": 267,
+            "parsedBytes": 93444643
+          },
+          {
+            "season": 2019,
+            "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2019.csv.gz",
+            "completeGames": 267,
+            "parsedBytes": 93850470
+          },
+          {
+            "season": 2020,
+            "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2020.csv.gz",
+            "completeGames": 269,
+            "parsedBytes": 94680935
+          },
+          {
+            "season": 2021,
+            "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2021.csv.gz",
+            "completeGames": 285,
+            "parsedBytes": 99167764
+          },
+          {
+            "season": 2022,
+            "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2022.csv.gz",
+            "completeGames": 284,
+            "parsedBytes": 99104597
+          },
+          {
+            "season": 2023,
+            "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2023.csv.gz",
+            "completeGames": 285,
+            "parsedBytes": 99720219
+          },
+          {
+            "season": 2024,
+            "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2024.csv.gz",
+            "completeGames": 285,
+            "parsedBytes": 99483810
+          },
+          {
+            "season": 2025,
+            "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2025.csv.gz",
+            "completeGames": 285,
+            "parsedBytes": 97951485
+          },
+          {
+            "season": 2026,
+            "source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2026.csv.gz",
+            "completeGames": 150,
+            "parsedBytes": 52870656
+          }
+        ],
+        "sourceLastCompletedGame": "2026-11-16",
+        "playedGamesWithPbp": 2377,
+        "qualifyingPlays": 299673
+      },
+      "eloBaselineVersion": "nfl-elo-1",
+      "dataFingerprint": "d498b787949b44e448dbc94d7a3a2985ab5647cb7b0185875c48822f97e07867"
+    }
+  },
   "events": [
     {
       "type": "RUN",
@@ -1160,6 +2037,1196 @@
         "scopeLimited": false
       },
       "id": "6a75b75f0dbc7499e46afcc0e4f028a171507662809d68cee0365532f1e0777e"
+    },
+    {
+      "type": "CAPTURED",
+      "gameId": "2026_11_MIA_BUF",
+      "at": "2026-11-22T16:41:27.078Z",
+      "payload": {
+        "reservationId": "320442327e4ae8607cf2e2b2df9a7bca6c0e1120e44fc97a0ba36d02c423fba8",
+        "record": {
+          "schema": 1,
+          "policy": "BETQ_MODEL_ONLY_CAPTURE_V2",
+          "gameId": "2026_11_MIA_BUF",
+          "sourceUrl": "https://betq-ai.onrender.com/api/game-evaluation?gameId=2026_11_MIA_BUF",
+          "requestStartedAt": "2026-11-22T16:41:25.782Z",
+          "receivedAt": "2026-11-22T16:41:27.078Z",
+          "forecastEvaluatedAt": "2026-11-22T16:41:26.895Z",
+          "kickoff": "2026-11-22T18:00:00.000Z",
+          "responseSha256": "fb2963718b42279d26081215d483d7beaf141a9bfbe28e373f3c1ebc2ad520dc",
+          "artifactSha256": "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a",
+          "challengerArtifactSha256": "29a79eb1ae7ddb26ab4d548bb1650fc1b01724306687c7b2d646435deefe2c54",
+          "response": {
+            "schema": 1,
+            "gameId": "2026_11_MIA_BUF",
+            "evaluatedAt": "2026-11-22T16:41:26.895Z",
+            "use": "RESEARCH_ONLY",
+            "market": {
+              "available": false,
+              "reason": "NO_QUOTE_REQUESTED",
+              "providerCreditsUsed": 0
+            },
+            "injuryAdjusted": false,
+            "weatherAdjusted": false,
+            "verifiedStarters": false,
+            "verifiedBettingEdge": false,
+            "durablyArchived": false,
+            "gradeBaselineChanged": false,
+            "spreadProbability": null,
+            "totalProbability": null,
+            "validUntil": "2026-11-22T16:46:26.591Z",
+            "available": true,
+            "reason": null,
+            "fixture": {
+              "providerGameId": "ab998769-4feb-11f1-abca-2c54536568a9",
+              "home": "Buffalo Bills",
+              "away": "Miami Dolphins",
+              "kickoff": "2026-11-22T18:00:00.000Z",
+              "neutralSite": false,
+              "sourceUrl": "https://www.nfl.com/scores/2026/week-11",
+              "observedAt": "2026-11-22T16:41:26.591Z",
+              "sourcePublishedAt": null,
+              "sourceBodySha256": "de0b5085f6ef62a515d1d5598a37239c5b00339e20921f8ad66bfc6fc3a51a09"
+            },
+            "baseline": {
+              "available": true,
+              "method": "NFL_ELO_HISTORICAL_OUTCOMES",
+              "modelVersion": "nfl-elo-1",
+              "source": "NFLVERSE_SCHEDULES",
+              "independentOfOdds": true,
+              "homeWinProbability": 0.888146,
+              "awayWinProbability": 0.111854,
+              "homeElo": 1673.3,
+              "awayElo": 1371.1,
+              "modelBuiltAt": "2026-11-20T19:05:58.458Z",
+              "throughGameDate": "2026-11-19",
+              "holdoutN": 284,
+              "holdoutBrier": 0.22235,
+              "calibrationEce": 0.053,
+              "injuryAdjusted": false,
+              "weatherAdjusted": false,
+              "verifiedStarters": false,
+              "use": "RESEARCH_ONLY",
+              "venueAssumption": "HOME_SUPPLIED",
+              "venueSourceVerified": false,
+              "completeScheduleCoverageVerified": false,
+              "trainingFinalityIndependentlyVerified": false
+            },
+            "challenger": {
+              "available": true,
+              "modelVersion": "nfl-efficiency-1",
+              "independentOfOdds": true,
+              "status": "CHALLENGER_VALIDATED_HOLDOUT",
+              "researchOnly": true,
+              "automaticSelection": false,
+              "homeWinProbability": 0.908816,
+              "awayWinProbability": 0.091184,
+              "baselineEloProbability": 0.888146,
+              "holdout": {
+                "elo": {
+                  "n": 284,
+                  "brier": 0.22235,
+                  "logLoss": 0.63596,
+                  "accuracy": 0.6585
+                },
+                "challenger": {
+                  "n": 284,
+                  "brier": 0.21935,
+                  "logLoss": 0.6295,
+                  "accuracy": 0.662
+                },
+                "deltaBrier": 0.003,
+                "confidence95": {
+                  "method": "PAIRED_BOOTSTRAP_2000",
+                  "lower": 0.00025,
+                  "upper": 0.00567,
+                  "mean": 0.00299
+                },
+                "weekSensitivity": {
+                  "method": "PAIRED_WEEK_BLOCK_BOOTSTRAP",
+                  "n": 284,
+                  "weeks": 22,
+                  "repeats": 2000,
+                  "meanImprovement": 0.002995,
+                  "limitation": "Within-week resampling only; recurring teams and cross-week dependence remain.",
+                  "available": true,
+                  "lower": 0.000082,
+                  "upper": 0.006022
+                },
+                "referenceSeasonPreviouslyInspected": true
+              },
+              "inputs": {
+                "epaDifferential": 0.3426,
+                "successDifferential": 0.1263,
+                "restDaysDifferential": 0,
+                "homeOffEPA": 0.11994,
+                "homeDefAllowedEPA": -0.13437,
+                "awayOffEPA": -0.07699,
+                "awayDefAllowedEPA": 0.0113,
+                "priorHomeGames": 8,
+                "priorAwayGames": 8
+              },
+              "source": "NFLVERSE_PBP_CC_BY_4_0",
+              "generatedAt": "2026-11-17T19:21:25.237Z",
+              "injuryAdjusted": false,
+              "startingQuarterbackVerified": false,
+              "weatherAdjusted": false
+            },
+            "modelIdentity": {
+              "available": true,
+              "policy": "NFL_ELO_CANONICAL_ARTIFACT_V1",
+              "artifactCanonicalSha256": "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a",
+              "modelVersion": "nfl-elo-1",
+              "modelBuiltAt": "2026-11-20T19:05:58.458Z",
+              "modelLastResultDate": "2026-11-19",
+              "delivery": "DEPLOYMENT_BUNDLED",
+              "authentication": "RUNTIME_HTTPS_ASSERTION_NOT_INDEPENDENT_ATTESTATION",
+              "automaticPromotion": false
+            },
+            "limitations": [
+              "Outcome-only baseline: no quarterback, injury or weather adjustment.",
+              "No current odds or spread/total probabilities.",
+              "Newly evaluated response, not an archived forecast or proven betting edge."
+            ]
+          },
+          "cohort": "MODEL_ONLY_UNQUALIFIED",
+          "marketEvidenceEligible": false,
+          "independentlyAttestedCaptureTime": false,
+          "remoteDurableArchiveConfirmed": false,
+          "qualifiedScoringEligible": false,
+          "verifiedCLV": null,
+          "verifiedROI": null,
+          "limitations": [
+            "Local receipt time and digest are not independent timestamp attestation.",
+            "Publication before kickoff requires separate remote commit verification.",
+            "No market quote, trade, injury adjustment or retrospective replacement of frozen forecasts."
+          ],
+          "id": "205190c997af4b78ea687d2823a51a901ddf2baef0438b933bfabf2e221bbcec"
+        },
+        "artifactKey": "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a",
+        "challengerKey": "29a79eb1ae7ddb26ab4d548bb1650fc1b01724306687c7b2d646435deefe2c54"
+      },
+      "id": "7bfb73b4e737b952e5646dbcca8706e0fa0f868edcce055ec7563945eb813ab6"
+    },
+    {
+      "type": "CAPTURED",
+      "gameId": "2026_11_BAL_CAR",
+      "at": "2026-11-22T16:41:27.146Z",
+      "payload": {
+        "reservationId": "d4c7552a90b8afa72f7ce4070e3fda56eee63b5ed6437eeb9dd40de1641c53f7",
+        "record": {
+          "schema": 1,
+          "policy": "BETQ_MODEL_ONLY_CAPTURE_V2",
+          "gameId": "2026_11_BAL_CAR",
+          "sourceUrl": "https://betq-ai.onrender.com/api/game-evaluation?gameId=2026_11_BAL_CAR",
+          "requestStartedAt": "2026-11-22T16:41:27.109Z",
+          "receivedAt": "2026-11-22T16:41:27.146Z",
+          "forecastEvaluatedAt": "2026-11-22T16:41:27.127Z",
+          "kickoff": "2026-11-22T18:00:00.000Z",
+          "responseSha256": "1757c6450b13befd50305ecd7c28c52ab832418e9d57148f34c5329ba7c7f173",
+          "artifactSha256": "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a",
+          "challengerArtifactSha256": "29a79eb1ae7ddb26ab4d548bb1650fc1b01724306687c7b2d646435deefe2c54",
+          "response": {
+            "schema": 1,
+            "gameId": "2026_11_BAL_CAR",
+            "evaluatedAt": "2026-11-22T16:41:27.127Z",
+            "use": "RESEARCH_ONLY",
+            "market": {
+              "available": false,
+              "reason": "NO_QUOTE_REQUESTED",
+              "providerCreditsUsed": 0
+            },
+            "injuryAdjusted": false,
+            "weatherAdjusted": false,
+            "verifiedStarters": false,
+            "verifiedBettingEdge": false,
+            "durablyArchived": false,
+            "gradeBaselineChanged": false,
+            "spreadProbability": null,
+            "totalProbability": null,
+            "validUntil": "2026-11-22T16:46:26.591Z",
+            "available": true,
+            "reason": null,
+            "fixture": {
+              "providerGameId": "ab998b7f-4feb-11f1-abca-2c54536568a9",
+              "home": "Carolina Panthers",
+              "away": "Baltimore Ravens",
+              "kickoff": "2026-11-22T18:00:00.000Z",
+              "neutralSite": false,
+              "sourceUrl": "https://www.nfl.com/scores/2026/week-11",
+              "observedAt": "2026-11-22T16:41:26.591Z",
+              "sourcePublishedAt": null,
+              "sourceBodySha256": "de0b5085f6ef62a515d1d5598a37239c5b00339e20921f8ad66bfc6fc3a51a09"
+            },
+            "baseline": {
+              "available": true,
+              "method": "NFL_ELO_HISTORICAL_OUTCOMES",
+              "modelVersion": "nfl-elo-1",
+              "source": "NFLVERSE_SCHEDULES",
+              "independentOfOdds": true,
+              "homeWinProbability": 0.545482,
+              "awayWinProbability": 0.454518,
+              "homeElo": 1457.5,
+              "awayElo": 1453.7,
+              "modelBuiltAt": "2026-11-20T19:05:58.458Z",
+              "throughGameDate": "2026-11-19",
+              "holdoutN": 284,
+              "holdoutBrier": 0.22235,
+              "calibrationEce": 0.053,
+              "injuryAdjusted": false,
+              "weatherAdjusted": false,
+              "verifiedStarters": false,
+              "use": "RESEARCH_ONLY",
+              "venueAssumption": "HOME_SUPPLIED",
+              "venueSourceVerified": false,
+              "completeScheduleCoverageVerified": false,
+              "trainingFinalityIndependentlyVerified": false
+            },
+            "challenger": {
+              "available": true,
+              "modelVersion": "nfl-efficiency-1",
+              "independentOfOdds": true,
+              "status": "CHALLENGER_VALIDATED_HOLDOUT",
+              "researchOnly": true,
+              "automaticSelection": false,
+              "homeWinProbability": 0.568713,
+              "awayWinProbability": 0.431287,
+              "baselineEloProbability": 0.545482,
+              "holdout": {
+                "elo": {
+                  "n": 284,
+                  "brier": 0.22235,
+                  "logLoss": 0.63596,
+                  "accuracy": 0.6585
+                },
+                "challenger": {
+                  "n": 284,
+                  "brier": 0.21935,
+                  "logLoss": 0.6295,
+                  "accuracy": 0.662
+                },
+                "deltaBrier": 0.003,
+                "confidence95": {
+                  "method": "PAIRED_BOOTSTRAP_2000",
+                  "lower": 0.00025,
+                  "upper": 0.00567,
+                  "mean": 0.00299
+                },
+                "weekSensitivity": {
+                  "method": "PAIRED_WEEK_BLOCK_BOOTSTRAP",
+                  "n": 284,
+                  "weeks": 22,
+                  "repeats": 2000,
+                  "meanImprovement": 0.002995,
+                  "limitation": "Within-week resampling only; recurring teams and cross-week dependence remain.",
+                  "available": true,
+                  "lower": 0.000082,
+                  "upper": 0.006022
+                },
+                "referenceSeasonPreviouslyInspected": true
+              },
+              "inputs": {
+                "epaDifferential": 0.1585,
+                "successDifferential": 0.0457,
+                "restDaysDifferential": 1,
+                "homeOffEPA": -0.0217,
+                "homeDefAllowedEPA": -0.04129,
+                "awayOffEPA": -0.11143,
+                "awayDefAllowedEPA": 0.02747,
+                "priorHomeGames": 8,
+                "priorAwayGames": 8
+              },
+              "source": "NFLVERSE_PBP_CC_BY_4_0",
+              "generatedAt": "2026-11-17T19:21:25.237Z",
+              "injuryAdjusted": false,
+              "startingQuarterbackVerified": false,
+              "weatherAdjusted": false
+            },
+            "modelIdentity": {
+              "available": true,
+              "policy": "NFL_ELO_CANONICAL_ARTIFACT_V1",
+              "artifactCanonicalSha256": "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a",
+              "modelVersion": "nfl-elo-1",
+              "modelBuiltAt": "2026-11-20T19:05:58.458Z",
+              "modelLastResultDate": "2026-11-19",
+              "delivery": "DEPLOYMENT_BUNDLED",
+              "authentication": "RUNTIME_HTTPS_ASSERTION_NOT_INDEPENDENT_ATTESTATION",
+              "automaticPromotion": false
+            },
+            "limitations": [
+              "Outcome-only baseline: no quarterback, injury or weather adjustment.",
+              "No current odds or spread/total probabilities.",
+              "Newly evaluated response, not an archived forecast or proven betting edge."
+            ]
+          },
+          "cohort": "MODEL_ONLY_UNQUALIFIED",
+          "marketEvidenceEligible": false,
+          "independentlyAttestedCaptureTime": false,
+          "remoteDurableArchiveConfirmed": false,
+          "qualifiedScoringEligible": false,
+          "verifiedCLV": null,
+          "verifiedROI": null,
+          "limitations": [
+            "Local receipt time and digest are not independent timestamp attestation.",
+            "Publication before kickoff requires separate remote commit verification.",
+            "No market quote, trade, injury adjustment or retrospective replacement of frozen forecasts."
+          ],
+          "id": "e27784fd6dd3c57b404deff789cc6f5c778d577d01c8b6c59770ba611c272cbd"
+        },
+        "artifactKey": "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a",
+        "challengerKey": "29a79eb1ae7ddb26ab4d548bb1650fc1b01724306687c7b2d646435deefe2c54"
+      },
+      "id": "63901ece82daae2c991211c28d11a5b1ef7a88d7039709cc86ada4f5442e2e40"
+    },
+    {
+      "type": "CAPTURED",
+      "gameId": "2026_11_NO_CHI",
+      "at": "2026-11-22T16:41:27.213Z",
+      "payload": {
+        "reservationId": "da188a292f86928309e859eb7342e31e79af5599a47ef0dfd05954d25c472b1a",
+        "record": {
+          "schema": 1,
+          "policy": "BETQ_MODEL_ONLY_CAPTURE_V2",
+          "gameId": "2026_11_NO_CHI",
+          "sourceUrl": "https://betq-ai.onrender.com/api/game-evaluation?gameId=2026_11_NO_CHI",
+          "requestStartedAt": "2026-11-22T16:41:27.162Z",
+          "receivedAt": "2026-11-22T16:41:27.213Z",
+          "forecastEvaluatedAt": "2026-11-22T16:41:27.192Z",
+          "kickoff": "2026-11-22T18:00:00.000Z",
+          "responseSha256": "d12ee2d34d6f1aca76d3ab4ba75c21ba2cca362b3fd5b616281c8d8fbb4aafa3",
+          "artifactSha256": "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a",
+          "challengerArtifactSha256": "29a79eb1ae7ddb26ab4d548bb1650fc1b01724306687c7b2d646435deefe2c54",
+          "response": {
+            "schema": 1,
+            "gameId": "2026_11_NO_CHI",
+            "evaluatedAt": "2026-11-22T16:41:27.192Z",
+            "use": "RESEARCH_ONLY",
+            "market": {
+              "available": false,
+              "reason": "NO_QUOTE_REQUESTED",
+              "providerCreditsUsed": 0
+            },
+            "injuryAdjusted": false,
+            "weatherAdjusted": false,
+            "verifiedStarters": false,
+            "verifiedBettingEdge": false,
+            "durablyArchived": false,
+            "gradeBaselineChanged": false,
+            "spreadProbability": null,
+            "totalProbability": null,
+            "validUntil": "2026-11-22T16:46:26.591Z",
+            "available": true,
+            "reason": null,
+            "fixture": {
+              "providerGameId": "ab998f5e-4feb-11f1-abca-2c54536568a9",
+              "home": "Chicago Bears",
+              "away": "New Orleans Saints",
+              "kickoff": "2026-11-22T18:00:00.000Z",
+              "neutralSite": false,
+              "sourceUrl": "https://www.nfl.com/scores/2026/week-11",
+              "observedAt": "2026-11-22T16:41:26.591Z",
+              "sourcePublishedAt": null,
+              "sourceBodySha256": "de0b5085f6ef62a515d1d5598a37239c5b00339e20921f8ad66bfc6fc3a51a09"
+            },
+            "baseline": {
+              "available": true,
+              "method": "NFL_ELO_HISTORICAL_OUTCOMES",
+              "modelVersion": "nfl-elo-1",
+              "source": "NFLVERSE_SCHEDULES",
+              "independentOfOdds": true,
+              "homeWinProbability": 0.802898,
+              "awayWinProbability": 0.197102,
+              "homeElo": 1611.5,
+              "awayElo": 1414.7,
+              "modelBuiltAt": "2026-11-20T19:05:58.458Z",
+              "throughGameDate": "2026-11-19",
+              "holdoutN": 284,
+              "holdoutBrier": 0.22235,
+              "calibrationEce": 0.053,
+              "injuryAdjusted": false,
+              "weatherAdjusted": false,
+              "verifiedStarters": false,
+              "use": "RESEARCH_ONLY",
+              "venueAssumption": "HOME_SUPPLIED",
+              "venueSourceVerified": false,
+              "completeScheduleCoverageVerified": false,
+              "trainingFinalityIndependentlyVerified": false
+            },
+            "challenger": {
+              "available": true,
+              "modelVersion": "nfl-efficiency-1",
+              "independentOfOdds": true,
+              "status": "CHALLENGER_VALIDATED_HOLDOUT",
+              "researchOnly": true,
+              "automaticSelection": false,
+              "homeWinProbability": 0.840044,
+              "awayWinProbability": 0.159956,
+              "baselineEloProbability": 0.802898,
+              "holdout": {
+                "elo": {
+                  "n": 284,
+                  "brier": 0.22235,
+                  "logLoss": 0.63596,
+                  "accuracy": 0.6585
+                },
+                "challenger": {
+                  "n": 284,
+                  "brier": 0.21935,
+                  "logLoss": 0.6295,
+                  "accuracy": 0.662
+                },
+                "deltaBrier": 0.003,
+                "confidence95": {
+                  "method": "PAIRED_BOOTSTRAP_2000",
+                  "lower": 0.00025,
+                  "upper": 0.00567,
+                  "mean": 0.00299
+                },
+                "weekSensitivity": {
+                  "method": "PAIRED_WEEK_BLOCK_BOOTSTRAP",
+                  "n": 284,
+                  "weeks": 22,
+                  "repeats": 2000,
+                  "meanImprovement": 0.002995,
+                  "limitation": "Within-week resampling only; recurring teams and cross-week dependence remain.",
+                  "available": true,
+                  "lower": 0.000082,
+                  "upper": 0.006022
+                },
+                "referenceSeasonPreviouslyInspected": true
+              },
+              "inputs": {
+                "epaDifferential": 0.1164,
+                "successDifferential": 0.0945,
+                "restDaysDifferential": 7,
+                "homeOffEPA": -0.025,
+                "homeDefAllowedEPA": -0.06154,
+                "awayOffEPA": -0.07997,
+                "awayDefAllowedEPA": -0.00015,
+                "priorHomeGames": 8,
+                "priorAwayGames": 8
+              },
+              "source": "NFLVERSE_PBP_CC_BY_4_0",
+              "generatedAt": "2026-11-17T19:21:25.237Z",
+              "injuryAdjusted": false,
+              "startingQuarterbackVerified": false,
+              "weatherAdjusted": false
+            },
+            "modelIdentity": {
+              "available": true,
+              "policy": "NFL_ELO_CANONICAL_ARTIFACT_V1",
+              "artifactCanonicalSha256": "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a",
+              "modelVersion": "nfl-elo-1",
+              "modelBuiltAt": "2026-11-20T19:05:58.458Z",
+              "modelLastResultDate": "2026-11-19",
+              "delivery": "DEPLOYMENT_BUNDLED",
+              "authentication": "RUNTIME_HTTPS_ASSERTION_NOT_INDEPENDENT_ATTESTATION",
+              "automaticPromotion": false
+            },
+            "limitations": [
+              "Outcome-only baseline: no quarterback, injury or weather adjustment.",
+              "No current odds or spread/total probabilities.",
+              "Newly evaluated response, not an archived forecast or proven betting edge."
+            ]
+          },
+          "cohort": "MODEL_ONLY_UNQUALIFIED",
+          "marketEvidenceEligible": false,
+          "independentlyAttestedCaptureTime": false,
+          "remoteDurableArchiveConfirmed": false,
+          "qualifiedScoringEligible": false,
+          "verifiedCLV": null,
+          "verifiedROI": null,
+          "limitations": [
+            "Local receipt time and digest are not independent timestamp attestation.",
+            "Publication before kickoff requires separate remote commit verification.",
+            "No market quote, trade, injury adjustment or retrospective replacement of frozen forecasts."
+          ],
+          "id": "85d026df58b604c38d01e939239c81c209f916d04a36c49fb228c8f6f337dfa6"
+        },
+        "artifactKey": "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a",
+        "challengerKey": "29a79eb1ae7ddb26ab4d548bb1650fc1b01724306687c7b2d646435deefe2c54"
+      },
+      "id": "ca4bb84e40795efe0ef5ef3643b957dc6f22e0dd001edcbfa7c8edc5ba384b86"
+    },
+    {
+      "type": "CAPTURED",
+      "gameId": "2026_11_TEN_DAL",
+      "at": "2026-11-22T16:41:27.274Z",
+      "payload": {
+        "reservationId": "5f36481b06ae82c8397f467078e7905756f858123329e66d39ace87ff650ef8d",
+        "record": {
+          "schema": 1,
+          "policy": "BETQ_MODEL_ONLY_CAPTURE_V2",
+          "gameId": "2026_11_TEN_DAL",
+          "sourceUrl": "https://betq-ai.onrender.com/api/game-evaluation?gameId=2026_11_TEN_DAL",
+          "requestStartedAt": "2026-11-22T16:41:27.229Z",
+          "receivedAt": "2026-11-22T16:41:27.274Z",
+          "forecastEvaluatedAt": "2026-11-22T16:41:27.255Z",
+          "kickoff": "2026-11-22T18:00:00.000Z",
+          "responseSha256": "0892bc946a3c2cb222aff846467c7df68e32994a25c92a15ef41ce525475749c",
+          "artifactSha256": "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a",
+          "challengerArtifactSha256": "29a79eb1ae7ddb26ab4d548bb1650fc1b01724306687c7b2d646435deefe2c54",
+          "response": {
+            "schema": 1,
+            "gameId": "2026_11_TEN_DAL",
+            "evaluatedAt": "2026-11-22T16:41:27.255Z",
+            "use": "RESEARCH_ONLY",
+            "market": {
+              "available": false,
+              "reason": "NO_QUOTE_REQUESTED",
+              "providerCreditsUsed": 0
+            },
+            "injuryAdjusted": false,
+            "weatherAdjusted": false,
+            "verifiedStarters": false,
+            "verifiedBettingEdge": false,
+            "durablyArchived": false,
+            "gradeBaselineChanged": false,
+            "spreadProbability": null,
+            "totalProbability": null,
+            "validUntil": "2026-11-22T16:46:26.591Z",
+            "available": true,
+            "reason": null,
+            "fixture": {
+              "providerGameId": "ab99929a-4feb-11f1-abca-2c54536568a9",
+              "home": "Dallas Cowboys",
+              "away": "Tennessee Titans",
+              "kickoff": "2026-11-22T18:00:00.000Z",
+              "neutralSite": false,
+              "sourceUrl": "https://www.nfl.com/scores/2026/week-11",
+              "observedAt": "2026-11-22T16:41:26.591Z",
+              "sourcePublishedAt": null,
+              "sourceBodySha256": "de0b5085f6ef62a515d1d5598a37239c5b00339e20921f8ad66bfc6fc3a51a09"
+            },
+            "baseline": {
+              "available": true,
+              "method": "NFL_ELO_HISTORICAL_OUTCOMES",
+              "modelVersion": "nfl-elo-1",
+              "source": "NFLVERSE_SCHEDULES",
+              "independentOfOdds": true,
+              "homeWinProbability": 0.733894,
+              "awayWinProbability": 0.266106,
+              "homeElo": 1445.3,
+              "awayElo": 1310.1,
+              "modelBuiltAt": "2026-11-20T19:05:58.458Z",
+              "throughGameDate": "2026-11-19",
+              "holdoutN": 284,
+              "holdoutBrier": 0.22235,
+              "calibrationEce": 0.053,
+              "injuryAdjusted": false,
+              "weatherAdjusted": false,
+              "verifiedStarters": false,
+              "use": "RESEARCH_ONLY",
+              "venueAssumption": "HOME_SUPPLIED",
+              "venueSourceVerified": false,
+              "completeScheduleCoverageVerified": false,
+              "trainingFinalityIndependentlyVerified": false
+            },
+            "challenger": {
+              "available": true,
+              "modelVersion": "nfl-efficiency-1",
+              "independentOfOdds": true,
+              "status": "CHALLENGER_VALIDATED_HOLDOUT",
+              "researchOnly": true,
+              "automaticSelection": false,
+              "homeWinProbability": 0.76594,
+              "awayWinProbability": 0.23406,
+              "baselineEloProbability": 0.733894,
+              "holdout": {
+                "elo": {
+                  "n": 284,
+                  "brier": 0.22235,
+                  "logLoss": 0.63596,
+                  "accuracy": 0.6585
+                },
+                "challenger": {
+                  "n": 284,
+                  "brier": 0.21935,
+                  "logLoss": 0.6295,
+                  "accuracy": 0.662
+                },
+                "deltaBrier": 0.003,
+                "confidence95": {
+                  "method": "PAIRED_BOOTSTRAP_2000",
+                  "lower": 0.00025,
+                  "upper": 0.00567,
+                  "mean": 0.00299
+                },
+                "weekSensitivity": {
+                  "method": "PAIRED_WEEK_BLOCK_BOOTSTRAP",
+                  "n": 284,
+                  "weeks": 22,
+                  "repeats": 2000,
+                  "meanImprovement": 0.002995,
+                  "limitation": "Within-week resampling only; recurring teams and cross-week dependence remain.",
+                  "available": true,
+                  "lower": 0.000082,
+                  "upper": 0.006022
+                },
+                "referenceSeasonPreviouslyInspected": true
+              },
+              "inputs": {
+                "epaDifferential": 0.1243,
+                "successDifferential": 0.095,
+                "restDaysDifferential": 0,
+                "homeOffEPA": 0.08643,
+                "homeDefAllowedEPA": 0.11448,
+                "awayOffEPA": -0.0521,
+                "awayDefAllowedEPA": 0.10024,
+                "priorHomeGames": 8,
+                "priorAwayGames": 8
+              },
+              "source": "NFLVERSE_PBP_CC_BY_4_0",
+              "generatedAt": "2026-11-17T19:21:25.237Z",
+              "injuryAdjusted": false,
+              "startingQuarterbackVerified": false,
+              "weatherAdjusted": false
+            },
+            "modelIdentity": {
+              "available": true,
+              "policy": "NFL_ELO_CANONICAL_ARTIFACT_V1",
+              "artifactCanonicalSha256": "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a",
+              "modelVersion": "nfl-elo-1",
+              "modelBuiltAt": "2026-11-20T19:05:58.458Z",
+              "modelLastResultDate": "2026-11-19",
+              "delivery": "DEPLOYMENT_BUNDLED",
+              "authentication": "RUNTIME_HTTPS_ASSERTION_NOT_INDEPENDENT_ATTESTATION",
+              "automaticPromotion": false
+            },
+            "limitations": [
+              "Outcome-only baseline: no quarterback, injury or weather adjustment.",
+              "No current odds or spread/total probabilities.",
+              "Newly evaluated response, not an archived forecast or proven betting edge."
+            ]
+          },
+          "cohort": "MODEL_ONLY_UNQUALIFIED",
+          "marketEvidenceEligible": false,
+          "independentlyAttestedCaptureTime": false,
+          "remoteDurableArchiveConfirmed": false,
+          "qualifiedScoringEligible": false,
+          "verifiedCLV": null,
+          "verifiedROI": null,
+          "limitations": [
+            "Local receipt time and digest are not independent timestamp attestation.",
+            "Publication before kickoff requires separate remote commit verification.",
+            "No market quote, trade, injury adjustment or retrospective replacement of frozen forecasts."
+          ],
+          "id": "5a26d013a011b1e3e6e5b3492e6aa67e5542e6ef6b4a2c2603271f78a639ec48"
+        },
+        "artifactKey": "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a",
+        "challengerKey": "29a79eb1ae7ddb26ab4d548bb1650fc1b01724306687c7b2d646435deefe2c54"
+      },
+      "id": "0ef0630f4327f2405e53b6f47368e73af74e2abfba38cc7cb7d8e72893ce4afa"
+    },
+    {
+      "type": "CAPTURED",
+      "gameId": "2026_11_TB_DET",
+      "at": "2026-11-22T16:41:27.339Z",
+      "payload": {
+        "reservationId": "bf42dbad3f191ad60aff1094a742e52951cb0f86ed30b24a0bb34c90397a313d",
+        "record": {
+          "schema": 1,
+          "policy": "BETQ_MODEL_ONLY_CAPTURE_V2",
+          "gameId": "2026_11_TB_DET",
+          "sourceUrl": "https://betq-ai.onrender.com/api/game-evaluation?gameId=2026_11_TB_DET",
+          "requestStartedAt": "2026-11-22T16:41:27.293Z",
+          "receivedAt": "2026-11-22T16:41:27.339Z",
+          "forecastEvaluatedAt": "2026-11-22T16:41:27.321Z",
+          "kickoff": "2026-11-22T18:00:00.000Z",
+          "responseSha256": "29717d18db03db24c0221c56bee3379445cc892b78bec90c9ceb3e7838251d6d",
+          "artifactSha256": "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a",
+          "challengerArtifactSha256": "29a79eb1ae7ddb26ab4d548bb1650fc1b01724306687c7b2d646435deefe2c54",
+          "response": {
+            "schema": 1,
+            "gameId": "2026_11_TB_DET",
+            "evaluatedAt": "2026-11-22T16:41:27.321Z",
+            "use": "RESEARCH_ONLY",
+            "market": {
+              "available": false,
+              "reason": "NO_QUOTE_REQUESTED",
+              "providerCreditsUsed": 0
+            },
+            "injuryAdjusted": false,
+            "weatherAdjusted": false,
+            "verifiedStarters": false,
+            "verifiedBettingEdge": false,
+            "durablyArchived": false,
+            "gradeBaselineChanged": false,
+            "spreadProbability": null,
+            "totalProbability": null,
+            "validUntil": "2026-11-22T16:46:26.591Z",
+            "available": true,
+            "reason": null,
+            "fixture": {
+              "providerGameId": "ab999586-4feb-11f1-abca-2c54536568a9",
+              "home": "Detroit Lions",
+              "away": "Tampa Bay Buccaneers",
+              "kickoff": "2026-11-22T18:00:00.000Z",
+              "neutralSite": false,
+              "sourceUrl": "https://www.nfl.com/scores/2026/week-11",
+              "observedAt": "2026-11-22T16:41:26.591Z",
+              "sourcePublishedAt": null,
+              "sourceBodySha256": "de0b5085f6ef62a515d1d5598a37239c5b00339e20921f8ad66bfc6fc3a51a09"
+            },
+            "baseline": {
+              "available": true,
+              "method": "NFL_ELO_HISTORICAL_OUTCOMES",
+              "modelVersion": "nfl-elo-1",
+              "source": "NFLVERSE_SCHEDULES",
+              "independentOfOdds": true,
+              "homeWinProbability": 0.772508,
+              "awayWinProbability": 0.227492,
+              "homeElo": 1613.9,
+              "awayElo": 1445.9,
+              "modelBuiltAt": "2026-11-20T19:05:58.458Z",
+              "throughGameDate": "2026-11-19",
+              "holdoutN": 284,
+              "holdoutBrier": 0.22235,
+              "calibrationEce": 0.053,
+              "injuryAdjusted": false,
+              "weatherAdjusted": false,
+              "verifiedStarters": false,
+              "use": "RESEARCH_ONLY",
+              "venueAssumption": "HOME_SUPPLIED",
+              "venueSourceVerified": false,
+              "completeScheduleCoverageVerified": false,
+              "trainingFinalityIndependentlyVerified": false
+            },
+            "challenger": {
+              "available": true,
+              "modelVersion": "nfl-efficiency-1",
+              "independentOfOdds": true,
+              "status": "CHALLENGER_VALIDATED_HOLDOUT",
+              "researchOnly": true,
+              "automaticSelection": false,
+              "homeWinProbability": 0.778003,
+              "awayWinProbability": 0.221997,
+              "baselineEloProbability": 0.772508,
+              "holdout": {
+                "elo": {
+                  "n": 284,
+                  "brier": 0.22235,
+                  "logLoss": 0.63596,
+                  "accuracy": 0.6585
+                },
+                "challenger": {
+                  "n": 284,
+                  "brier": 0.21935,
+                  "logLoss": 0.6295,
+                  "accuracy": 0.662
+                },
+                "deltaBrier": 0.003,
+                "confidence95": {
+                  "method": "PAIRED_BOOTSTRAP_2000",
+                  "lower": 0.00025,
+                  "upper": 0.00567,
+                  "mean": 0.00299
+                },
+                "weekSensitivity": {
+                  "method": "PAIRED_WEEK_BLOCK_BOOTSTRAP",
+                  "n": 284,
+                  "weeks": 22,
+                  "repeats": 2000,
+                  "meanImprovement": 0.002995,
+                  "limitation": "Within-week resampling only; recurring teams and cross-week dependence remain.",
+                  "available": true,
+                  "lower": 0.000082,
+                  "upper": 0.006022
+                },
+                "referenceSeasonPreviouslyInspected": true
+              },
+              "inputs": {
+                "epaDifferential": 0.0341,
+                "successDifferential": 0.0642,
+                "restDaysDifferential": -7,
+                "homeOffEPA": 0.08604,
+                "homeDefAllowedEPA": -0.04985,
+                "awayOffEPA": -0.07695,
+                "awayDefAllowedEPA": -0.17872,
+                "priorHomeGames": 8,
+                "priorAwayGames": 8
+              },
+              "source": "NFLVERSE_PBP_CC_BY_4_0",
+              "generatedAt": "2026-11-17T19:21:25.237Z",
+              "injuryAdjusted": false,
+              "startingQuarterbackVerified": false,
+              "weatherAdjusted": false
+            },
+            "modelIdentity": {
+              "available": true,
+              "policy": "NFL_ELO_CANONICAL_ARTIFACT_V1",
+              "artifactCanonicalSha256": "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a",
+              "modelVersion": "nfl-elo-1",
+              "modelBuiltAt": "2026-11-20T19:05:58.458Z",
+              "modelLastResultDate": "2026-11-19",
+              "delivery": "DEPLOYMENT_BUNDLED",
+              "authentication": "RUNTIME_HTTPS_ASSERTION_NOT_INDEPENDENT_ATTESTATION",
+              "automaticPromotion": false
+            },
+            "limitations": [
+              "Outcome-only baseline: no quarterback, injury or weather adjustment.",
+              "No current odds or spread/total probabilities.",
+              "Newly evaluated response, not an archived forecast or proven betting edge."
+            ]
+          },
+          "cohort": "MODEL_ONLY_UNQUALIFIED",
+          "marketEvidenceEligible": false,
+          "independentlyAttestedCaptureTime": false,
+          "remoteDurableArchiveConfirmed": false,
+          "qualifiedScoringEligible": false,
+          "verifiedCLV": null,
+          "verifiedROI": null,
+          "limitations": [
+            "Local receipt time and digest are not independent timestamp attestation.",
+            "Publication before kickoff requires separate remote commit verification.",
+            "No market quote, trade, injury adjustment or retrospective replacement of frozen forecasts."
+          ],
+          "id": "556e330278df5f4fae887f8d7bec3d859cf8d5f3da34e4703b5b546d34067992"
+        },
+        "artifactKey": "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a",
+        "challengerKey": "29a79eb1ae7ddb26ab4d548bb1650fc1b01724306687c7b2d646435deefe2c54"
+      },
+      "id": "483088438761991a21dc3110266f6dc07f772cef648438b202329c08d5bd97d5"
+    },
+    {
+      "type": "CAPTURED",
+      "gameId": "2026_11_ARI_KC",
+      "at": "2026-11-22T16:41:27.404Z",
+      "payload": {
+        "reservationId": "a22e608773a0fe71dba1b723ce4fbe9bb6ed9520991477259e6b47eda147bdd2",
+        "record": {
+          "schema": 1,
+          "policy": "BETQ_MODEL_ONLY_CAPTURE_V2",
+          "gameId": "2026_11_ARI_KC",
+          "sourceUrl": "https://betq-ai.onrender.com/api/game-evaluation?gameId=2026_11_ARI_KC",
+          "requestStartedAt": "2026-11-22T16:41:27.365Z",
+          "receivedAt": "2026-11-22T16:41:27.404Z",
+          "forecastEvaluatedAt": "2026-11-22T16:41:27.386Z",
+          "kickoff": "2026-11-22T18:00:00.000Z",
+          "responseSha256": "7cd2153f3b3b8f6d2b09038bb11695445636484cc2da0591dccbe12ad055359d",
+          "artifactSha256": "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a",
+          "challengerArtifactSha256": "29a79eb1ae7ddb26ab4d548bb1650fc1b01724306687c7b2d646435deefe2c54",
+          "response": {
+            "schema": 1,
+            "gameId": "2026_11_ARI_KC",
+            "evaluatedAt": "2026-11-22T16:41:27.386Z",
+            "use": "RESEARCH_ONLY",
+            "market": {
+              "available": false,
+              "reason": "NO_QUOTE_REQUESTED",
+              "providerCreditsUsed": 0
+            },
+            "injuryAdjusted": false,
+            "weatherAdjusted": false,
+            "verifiedStarters": false,
+            "verifiedBettingEdge": false,
+            "durablyArchived": false,
+            "gradeBaselineChanged": false,
+            "spreadProbability": null,
+            "totalProbability": null,
+            "validUntil": "2026-11-22T16:46:26.591Z",
+            "available": true,
+            "reason": null,
+            "fixture": {
+              "providerGameId": "ab999891-4feb-11f1-abca-2c54536568a9",
+              "home": "Kansas City Chiefs",
+              "away": "Arizona Cardinals",
+              "kickoff": "2026-11-22T18:00:00.000Z",
+              "neutralSite": false,
+              "sourceUrl": "https://www.nfl.com/scores/2026/week-11",
+              "observedAt": "2026-11-22T16:41:26.591Z",
+              "sourcePublishedAt": null,
+              "sourceBodySha256": "de0b5085f6ef62a515d1d5598a37239c5b00339e20921f8ad66bfc6fc3a51a09"
+            },
+            "baseline": {
+              "available": true,
+              "method": "NFL_ELO_HISTORICAL_OUTCOMES",
+              "modelVersion": "nfl-elo-1",
+              "source": "NFLVERSE_SCHEDULES",
+              "independentOfOdds": true,
+              "homeWinProbability": 0.773764,
+              "awayWinProbability": 0.226236,
+              "homeElo": 1561.4,
+              "awayElo": 1392.2,
+              "modelBuiltAt": "2026-11-20T19:05:58.458Z",
+              "throughGameDate": "2026-11-19",
+              "holdoutN": 284,
+              "holdoutBrier": 0.22235,
+              "calibrationEce": 0.053,
+              "injuryAdjusted": false,
+              "weatherAdjusted": false,
+              "verifiedStarters": false,
+              "use": "RESEARCH_ONLY",
+              "venueAssumption": "HOME_SUPPLIED",
+              "venueSourceVerified": false,
+              "completeScheduleCoverageVerified": false,
+              "trainingFinalityIndependentlyVerified": false
+            },
+            "challenger": {
+              "available": true,
+              "modelVersion": "nfl-efficiency-1",
+              "independentOfOdds": true,
+              "status": "CHALLENGER_VALIDATED_HOLDOUT",
+              "researchOnly": true,
+              "automaticSelection": false,
+              "homeWinProbability": 0.814795,
+              "awayWinProbability": 0.185205,
+              "baselineEloProbability": 0.773764,
+              "holdout": {
+                "elo": {
+                  "n": 284,
+                  "brier": 0.22235,
+                  "logLoss": 0.63596,
+                  "accuracy": 0.6585
+                },
+                "challenger": {
+                  "n": 284,
+                  "brier": 0.21935,
+                  "logLoss": 0.6295,
+                  "accuracy": 0.662
+                },
+                "deltaBrier": 0.003,
+                "confidence95": {
+                  "method": "PAIRED_BOOTSTRAP_2000",
+                  "lower": 0.00025,
+                  "upper": 0.00567,
+                  "mean": 0.00299
+                },
+                "weekSensitivity": {
+                  "method": "PAIRED_WEEK_BLOCK_BOOTSTRAP",
+                  "n": 284,
+                  "weeks": 22,
+                  "repeats": 2000,
+                  "meanImprovement": 0.002995,
+                  "limitation": "Within-week resampling only; recurring teams and cross-week dependence remain.",
+                  "available": true,
+                  "lower": 0.000082,
+                  "upper": 0.006022
+                },
+                "referenceSeasonPreviouslyInspected": true
+              },
+              "inputs": {
+                "epaDifferential": 0.4655,
+                "successDifferential": 0.1399,
+                "restDaysDifferential": 0,
+                "homeOffEPA": 0.11436,
+                "homeDefAllowedEPA": -0.10116,
+                "awayOffEPA": -0.15054,
+                "awayDefAllowedEPA": 0.09941,
+                "priorHomeGames": 8,
+                "priorAwayGames": 8
+              },
+              "source": "NFLVERSE_PBP_CC_BY_4_0",
+              "generatedAt": "2026-11-17T19:21:25.237Z",
+              "injuryAdjusted": false,
+              "startingQuarterbackVerified": false,
+              "weatherAdjusted": false
+            },
+            "modelIdentity": {
+              "available": true,
+              "policy": "NFL_ELO_CANONICAL_ARTIFACT_V1",
+              "artifactCanonicalSha256": "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a",
+              "modelVersion": "nfl-elo-1",
+              "modelBuiltAt": "2026-11-20T19:05:58.458Z",
+              "modelLastResultDate": "2026-11-19",
+              "delivery": "DEPLOYMENT_BUNDLED",
+              "authentication": "RUNTIME_HTTPS_ASSERTION_NOT_INDEPENDENT_ATTESTATION",
+              "automaticPromotion": false
+            },
+            "limitations": [
+              "Outcome-only baseline: no quarterback, injury or weather adjustment.",
+              "No current odds or spread/total probabilities.",
+              "Newly evaluated response, not an archived forecast or proven betting edge."
+            ]
+          },
+          "cohort": "MODEL_ONLY_UNQUALIFIED",
+          "marketEvidenceEligible": false,
+          "independentlyAttestedCaptureTime": false,
+          "remoteDurableArchiveConfirmed": false,
+          "qualifiedScoringEligible": false,
+          "verifiedCLV": null,
+          "verifiedROI": null,
+          "limitations": [
+            "Local receipt time and digest are not independent timestamp attestation.",
+            "Publication before kickoff requires separate remote commit verification.",
+            "No market quote, trade, injury adjustment or retrospective replacement of frozen forecasts."
+          ],
+          "id": "188d3b791c326c901a9765c02734490ddce95fede371876373e5e8b3dc7c4d52"
+        },
+        "artifactKey": "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a",
+        "challengerKey": "29a79eb1ae7ddb26ab4d548bb1650fc1b01724306687c7b2d646435deefe2c54"
+      },
+      "id": "37557a2e7249b325cc70143ec935fe947f845560682cc3e1c378126de30cd665"
+    },
+    {
+      "type": "CAPTURED",
+      "gameId": "2026_11_PIT_PHI",
+      "at": "2026-11-22T16:41:27.483Z",
+      "payload": {
+        "reservationId": "2fa70db11e17ad57b8a03e5fcdb21359815e6a6ef40eea5281844f2ab618e30a",
+        "record": {
+          "schema": 1,
+          "policy": "BETQ_MODEL_ONLY_CAPTURE_V2",
+          "gameId": "2026_11_PIT_PHI",
+          "sourceUrl": "https://betq-ai.onrender.com/api/game-evaluation?gameId=2026_11_PIT_PHI",
+          "requestStartedAt": "2026-11-22T16:41:27.428Z",
+          "receivedAt": "2026-11-22T16:41:27.483Z",
+          "forecastEvaluatedAt": "2026-11-22T16:41:27.465Z",
+          "kickoff": "2026-11-22T18:00:00.000Z",
+          "responseSha256": "eacda148cdfcec34bd10a6fc94b7bb3573bcc2627d736c9681491163c1399133",
+          "artifactSha256": "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a",
+          "challengerArtifactSha256": "29a79eb1ae7ddb26ab4d548bb1650fc1b01724306687c7b2d646435deefe2c54",
+          "response": {
+            "schema": 1,
+            "gameId": "2026_11_PIT_PHI",
+            "evaluatedAt": "2026-11-22T16:41:27.465Z",
+            "use": "RESEARCH_ONLY",
+            "market": {
+              "available": false,
+              "reason": "NO_QUOTE_REQUESTED",
+              "providerCreditsUsed": 0
+            },
+            "injuryAdjusted": false,
+            "weatherAdjusted": false,
+            "verifiedStarters": false,
+            "verifiedBettingEdge": false,
+            "durablyArchived": false,
+            "gradeBaselineChanged": false,
+            "spreadProbability": null,
+            "totalProbability": null,
+            "validUntil": "2026-11-22T16:46:26.591Z",
+            "available": true,
+            "reason": null,
+            "fixture": {
+              "providerGameId": "abbf1908-4feb-11f1-abca-2c54536568a9",
+              "home": "Philadelphia Eagles",
+              "away": "Pittsburgh Steelers",
+              "kickoff": "2026-11-22T18:00:00.000Z",
+              "neutralSite": false,
+              "sourceUrl": "https://www.nfl.com/scores/2026/week-11",
+              "observedAt": "2026-11-22T16:41:26.591Z",
+              "sourcePublishedAt": null,
+              "sourceBodySha256": "de0b5085f6ef62a515d1d5598a37239c5b00339e20921f8ad66bfc6fc3a51a09"
+            },
+            "baseline": {
+              "available": true,
+              "method": "NFL_ELO_HISTORICAL_OUTCOMES",
+              "modelVersion": "nfl-elo-1",
+              "source": "NFLVERSE_SCHEDULES",
+              "independentOfOdds": true,
+              "homeWinProbability": 0.344823,
+              "awayWinProbability": 0.655177,
+              "homeElo": 1431.3,
+              "awayElo": 1557.6,
+              "modelBuiltAt": "2026-11-20T19:05:58.458Z",
+              "throughGameDate": "2026-11-19",
+              "holdoutN": 284,
+              "holdoutBrier": 0.22235,
+              "calibrationEce": 0.053,
+              "injuryAdjusted": false,
+              "weatherAdjusted": false,
+              "verifiedStarters": false,
+              "use": "RESEARCH_ONLY",
+              "venueAssumption": "HOME_SUPPLIED",
+              "venueSourceVerified": false,
+              "completeScheduleCoverageVerified": false,
+              "trainingFinalityIndependentlyVerified": false
+            },
+            "challenger": {
+              "available": true,
+              "modelVersion": "nfl-efficiency-1",
+              "independentOfOdds": true,
+              "status": "CHALLENGER_VALIDATED_HOLDOUT",
+              "researchOnly": true,
+              "automaticSelection": false,
+              "homeWinProbability": 0.344175,
+              "awayWinProbability": 0.655825,
+              "baselineEloProbability": 0.344823,
+              "holdout": {
+                "elo": {
+                  "n": 284,
+                  "brier": 0.22235,
+                  "logLoss": 0.63596,
+                  "accuracy": 0.6585
+                },
+                "challenger": {
+                  "n": 284,
+                  "brier": 0.21935,
+                  "logLoss": 0.6295,
+                  "accuracy": 0.662
+                },
+                "deltaBrier": 0.003,
+                "confidence95": {
+                  "method": "PAIRED_BOOTSTRAP_2000",
+                  "lower": 0.00025,
+                  "upper": 0.00567,
+                  "mean": 0.00299
+                },
+                "weekSensitivity": {
+                  "method": "PAIRED_WEEK_BLOCK_BOOTSTRAP",
+                  "n": 284,
+                  "weeks": 22,
+                  "repeats": 2000,
+                  "meanImprovement": 0.002995,
+                  "limitation": "Within-week resampling only; recurring teams and cross-week dependence remain.",
+                  "available": true,
+                  "lower": 0.000082,
+                  "upper": 0.006022
+                },
+                "referenceSeasonPreviouslyInspected": true
+              },
+              "inputs": {
+                "epaDifferential": -0.1877,
+                "successDifferential": -0.0483,
+                "restDaysDifferential": 7,
+                "homeOffEPA": -0.14198,
+                "homeDefAllowedEPA": 0.05316,
+                "awayOffEPA": 0.03084,
+                "awayDefAllowedEPA": 0.03831,
+                "priorHomeGames": 8,
+                "priorAwayGames": 8
+              },
+              "source": "NFLVERSE_PBP_CC_BY_4_0",
+              "generatedAt": "2026-11-17T19:21:25.237Z",
+              "injuryAdjusted": false,
+              "startingQuarterbackVerified": false,
+              "weatherAdjusted": false
+            },
+            "modelIdentity": {
+              "available": true,
+              "policy": "NFL_ELO_CANONICAL_ARTIFACT_V1",
+              "artifactCanonicalSha256": "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a",
+              "modelVersion": "nfl-elo-1",
+              "modelBuiltAt": "2026-11-20T19:05:58.458Z",
+              "modelLastResultDate": "2026-11-19",
+              "delivery": "DEPLOYMENT_BUNDLED",
+              "authentication": "RUNTIME_HTTPS_ASSERTION_NOT_INDEPENDENT_ATTESTATION",
+              "automaticPromotion": false
+            },
+            "limitations": [
+              "Outcome-only baseline: no quarterback, injury or weather adjustment.",
+              "No current odds or spread/total probabilities.",
+              "Newly evaluated response, not an archived forecast or proven betting edge."
+            ]
+          },
+          "cohort": "MODEL_ONLY_UNQUALIFIED",
+          "marketEvidenceEligible": false,
+          "independentlyAttestedCaptureTime": false,
+          "remoteDurableArchiveConfirmed": false,
+          "qualifiedScoringEligible": false,
+          "verifiedCLV": null,
+          "verifiedROI": null,
+          "limitations": [
+            "Local receipt time and digest are not independent timestamp attestation.",
+            "Publication before kickoff requires separate remote commit verification.",
+            "No market quote, trade, injury adjustment or retrospective replacement of frozen forecasts."
+          ],
+          "id": "7b7c7e8c4e14dc7b5e23b5b933bf01a0151f7a58448facbade281b5358bdda91"
+        },
+        "artifactKey": "cceab77509500621c10f8aae3d7ff4770c8da00d86ba9cf4915137d5e990de2a",
+        "challengerKey": "29a79eb1ae7ddb26ab4d548bb1650fc1b01724306687c7b2d646435deefe2c54"
+      },
+      "id": "0576fd858dd557890375cc69edf47f7ad04dfef39c21fec036850e4ed425b36b"
     }
   ]
 }
