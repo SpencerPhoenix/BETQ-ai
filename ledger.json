@@ -3318,6 +3318,370 @@
         "timestampBasis": "GITHUB_DATE_UPPER_BOUND_1S"
       },
       "id": "e1418d16d3f0a5392534e0cd713d8538a45e5d98f2c2db9cc2cb4a8991ce7797"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-22T22:09:52.396Z",
+      "payload": {
+        "runKey": "45076136112.1",
+        "failedWeeks": [],
+        "phase": "STARTED"
+      },
+      "id": "3f42eb4f09a908ce9821f1683198230c30ba5496bad09ddb4f003a34ab39e0fd"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-22T22:10:16.297Z",
+      "payload": {
+        "runKey": "45076136112.1",
+        "failedWeeks": []
+      },
+      "id": "f2d42aa89ba9b74a5d2e5b8cceb4fd02e559e9031dcd52c6cc9f629eba79a588"
+    },
+    {
+      "type": "MISSED",
+      "gameId": "2026_11_NYJ_LAC",
+      "at": "2026-11-22T22:10:16.297Z",
+      "payload": {
+        "kickoff": "2026-11-22T21:05:00.000Z",
+        "reason": "WINDOW_ELAPSED"
+      },
+      "id": "c274b7696ef840461c4d656d60d57007ce59d7159d60805d07bb9a4975e00e2d"
+    },
+    {
+      "type": "MISSED",
+      "gameId": "2026_11_JAX_NYG",
+      "at": "2026-11-22T22:10:16.297Z",
+      "payload": {
+        "kickoff": "2026-11-22T21:25:00.000Z",
+        "reason": "WINDOW_ELAPSED"
+      },
+      "id": "0d27ada189a0f57a3e604890736dc6fd75f4dc4c2c0a67a5ccd62dac5e3e1325"
+    },
+    {
+      "type": "MISSED",
+      "gameId": "2026_11_LV_DEN",
+      "at": "2026-11-22T22:10:16.297Z",
+      "payload": {
+        "kickoff": "2026-11-22T21:25:00.000Z",
+        "reason": "WINDOW_ELAPSED"
+      },
+      "id": "9925fc1d6fc4de63e24e062a7b4a6bc5213701d7673f7ac10e79d8601a2d3504"
+    },
+    {
+      "type": "FINAL",
+      "gameId": "2026_11_MIA_BUF",
+      "at": "2026-11-22T22:10:16.578Z",
+      "payload": {
+        "officialGame": {
+          "gameId": "2026_11_MIA_BUF",
+          "providerGameId": "ab998769-4feb-11f1-abca-2c54536568a9",
+          "season": 2026,
+          "week": 11,
+          "home": "BUF",
+          "away": "MIA",
+          "kickoff": "2026-11-22T18:00:00.000Z",
+          "gameDate": "2026-11-22",
+          "neutralSite": false,
+          "scheduleStatus": "SCHEDULED",
+          "summaryPhase": "FINAL",
+          "summaryQuarter": "END_OF_GAME",
+          "summaryState": "PRESENT",
+          "final": true,
+          "homeScore": 26,
+          "awayScore": 9
+        },
+        "officialSource": {
+          "url": "https://www.nfl.com/scores/2026/week-11",
+          "observedAt": "2026-11-22T22:09:52.514Z",
+          "bodySha256": "c64333e374a72002dae0c63bd1398aac29198328e70bb69a2773208d394e345a"
+        },
+        "nflverse": {
+          "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+          "bodySha256": "83783481eaff12f029af6154fdbb6c23b4c630ba3f94fe9d07641f2f45d129cb",
+          "receivedAt": "2026-11-22T22:10:16.489Z",
+          "gameId": "2026_11_MIA_BUF",
+          "date": "2026-11-22",
+          "home": "BUF",
+          "away": "MIA",
+          "homeScore": 26,
+          "awayScore": 9
+        }
+      },
+      "id": "edb9ecf5e574c641b66ddb782f4c1e912462056d70552d09369ae4978af599e2"
+    },
+    {
+      "type": "FINAL",
+      "gameId": "2026_11_BAL_CAR",
+      "at": "2026-11-22T22:10:16.591Z",
+      "payload": {
+        "officialGame": {
+          "gameId": "2026_11_BAL_CAR",
+          "providerGameId": "ab998b7f-4feb-11f1-abca-2c54536568a9",
+          "season": 2026,
+          "week": 11,
+          "home": "CAR",
+          "away": "BAL",
+          "kickoff": "2026-11-22T18:00:00.000Z",
+          "gameDate": "2026-11-22",
+          "neutralSite": false,
+          "scheduleStatus": "SCHEDULED",
+          "summaryPhase": "FINAL",
+          "summaryQuarter": "END_OF_GAME",
+          "summaryState": "PRESENT",
+          "final": true,
+          "homeScore": 35,
+          "awayScore": 33
+        },
+        "officialSource": {
+          "url": "https://www.nfl.com/scores/2026/week-11",
+          "observedAt": "2026-11-22T22:09:52.514Z",
+          "bodySha256": "c64333e374a72002dae0c63bd1398aac29198328e70bb69a2773208d394e345a"
+        },
+        "nflverse": {
+          "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+          "bodySha256": "83783481eaff12f029af6154fdbb6c23b4c630ba3f94fe9d07641f2f45d129cb",
+          "receivedAt": "2026-11-22T22:10:16.489Z",
+          "gameId": "2026_11_BAL_CAR",
+          "date": "2026-11-22",
+          "home": "CAR",
+          "away": "BAL",
+          "homeScore": 35,
+          "awayScore": 33
+        }
+      },
+      "id": "a1f7958daeb37f96e5a356611512747ac0836f26079a976525d85666c80b4ccc"
+    },
+    {
+      "type": "FINAL",
+      "gameId": "2026_11_NO_CHI",
+      "at": "2026-11-22T22:10:16.602Z",
+      "payload": {
+        "officialGame": {
+          "gameId": "2026_11_NO_CHI",
+          "providerGameId": "ab998f5e-4feb-11f1-abca-2c54536568a9",
+          "season": 2026,
+          "week": 11,
+          "home": "CHI",
+          "away": "NO",
+          "kickoff": "2026-11-22T18:00:00.000Z",
+          "gameDate": "2026-11-22",
+          "neutralSite": false,
+          "scheduleStatus": "SCHEDULED",
+          "summaryPhase": "FINAL",
+          "summaryQuarter": "END_OF_GAME",
+          "summaryState": "PRESENT",
+          "final": true,
+          "homeScore": 21,
+          "awayScore": 13
+        },
+        "officialSource": {
+          "url": "https://www.nfl.com/scores/2026/week-11",
+          "observedAt": "2026-11-22T22:09:52.514Z",
+          "bodySha256": "c64333e374a72002dae0c63bd1398aac29198328e70bb69a2773208d394e345a"
+        },
+        "nflverse": {
+          "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+          "bodySha256": "83783481eaff12f029af6154fdbb6c23b4c630ba3f94fe9d07641f2f45d129cb",
+          "receivedAt": "2026-11-22T22:10:16.489Z",
+          "gameId": "2026_11_NO_CHI",
+          "date": "2026-11-22",
+          "home": "CHI",
+          "away": "NO",
+          "homeScore": 21,
+          "awayScore": 13
+        }
+      },
+      "id": "335f80979fc044a467485a8e78212508b517a71fb8ea5900283aed30f2dc561b"
+    },
+    {
+      "type": "FINAL",
+      "gameId": "2026_11_TEN_DAL",
+      "at": "2026-11-22T22:10:16.613Z",
+      "payload": {
+        "officialGame": {
+          "gameId": "2026_11_TEN_DAL",
+          "providerGameId": "ab99929a-4feb-11f1-abca-2c54536568a9",
+          "season": 2026,
+          "week": 11,
+          "home": "DAL",
+          "away": "TEN",
+          "kickoff": "2026-11-22T18:00:00.000Z",
+          "gameDate": "2026-11-22",
+          "neutralSite": false,
+          "scheduleStatus": "SCHEDULED",
+          "summaryPhase": "FINAL",
+          "summaryQuarter": "END_OF_GAME",
+          "summaryState": "PRESENT",
+          "final": true,
+          "homeScore": 51,
+          "awayScore": 30
+        },
+        "officialSource": {
+          "url": "https://www.nfl.com/scores/2026/week-11",
+          "observedAt": "2026-11-22T22:09:52.514Z",
+          "bodySha256": "c64333e374a72002dae0c63bd1398aac29198328e70bb69a2773208d394e345a"
+        },
+        "nflverse": {
+          "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+          "bodySha256": "83783481eaff12f029af6154fdbb6c23b4c630ba3f94fe9d07641f2f45d129cb",
+          "receivedAt": "2026-11-22T22:10:16.489Z",
+          "gameId": "2026_11_TEN_DAL",
+          "date": "2026-11-22",
+          "home": "DAL",
+          "away": "TEN",
+          "homeScore": 51,
+          "awayScore": 30
+        }
+      },
+      "id": "b5df84c3f22047e2a8b1331f473cdc0d8da801a94d4e2e898082e06344fb7def"
+    },
+    {
+      "type": "FINAL",
+      "gameId": "2026_11_TB_DET",
+      "at": "2026-11-22T22:10:16.624Z",
+      "payload": {
+        "officialGame": {
+          "gameId": "2026_11_TB_DET",
+          "providerGameId": "ab999586-4feb-11f1-abca-2c54536568a9",
+          "season": 2026,
+          "week": 11,
+          "home": "DET",
+          "away": "TB",
+          "kickoff": "2026-11-22T18:00:00.000Z",
+          "gameDate": "2026-11-22",
+          "neutralSite": false,
+          "scheduleStatus": "SCHEDULED",
+          "summaryPhase": "FINAL",
+          "summaryQuarter": "END_OF_GAME",
+          "summaryState": "PRESENT",
+          "final": true,
+          "homeScore": 31,
+          "awayScore": 21
+        },
+        "officialSource": {
+          "url": "https://www.nfl.com/scores/2026/week-11",
+          "observedAt": "2026-11-22T22:09:52.514Z",
+          "bodySha256": "c64333e374a72002dae0c63bd1398aac29198328e70bb69a2773208d394e345a"
+        },
+        "nflverse": {
+          "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+          "bodySha256": "83783481eaff12f029af6154fdbb6c23b4c630ba3f94fe9d07641f2f45d129cb",
+          "receivedAt": "2026-11-22T22:10:16.489Z",
+          "gameId": "2026_11_TB_DET",
+          "date": "2026-11-22",
+          "home": "DET",
+          "away": "TB",
+          "homeScore": 31,
+          "awayScore": 21
+        }
+      },
+      "id": "7276fd16fb30deac71f68938bac5725c6745d822431095f534693b8cf7abaee8"
+    },
+    {
+      "type": "FINAL",
+      "gameId": "2026_11_ARI_KC",
+      "at": "2026-11-22T22:10:16.635Z",
+      "payload": {
+        "officialGame": {
+          "gameId": "2026_11_ARI_KC",
+          "providerGameId": "ab999891-4feb-11f1-abca-2c54536568a9",
+          "season": 2026,
+          "week": 11,
+          "home": "KC",
+          "away": "ARI",
+          "kickoff": "2026-11-22T18:00:00.000Z",
+          "gameDate": "2026-11-22",
+          "neutralSite": false,
+          "scheduleStatus": "SCHEDULED",
+          "summaryPhase": "FINAL",
+          "summaryQuarter": "END_OF_GAME",
+          "summaryState": "PRESENT",
+          "final": true,
+          "homeScore": 34,
+          "awayScore": 7
+        },
+        "officialSource": {
+          "url": "https://www.nfl.com/scores/2026/week-11",
+          "observedAt": "2026-11-22T22:09:52.514Z",
+          "bodySha256": "c64333e374a72002dae0c63bd1398aac29198328e70bb69a2773208d394e345a"
+        },
+        "nflverse": {
+          "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+          "bodySha256": "83783481eaff12f029af6154fdbb6c23b4c630ba3f94fe9d07641f2f45d129cb",
+          "receivedAt": "2026-11-22T22:10:16.489Z",
+          "gameId": "2026_11_ARI_KC",
+          "date": "2026-11-22",
+          "home": "KC",
+          "away": "ARI",
+          "homeScore": 34,
+          "awayScore": 7
+        }
+      },
+      "id": "6159cee7bcf4eba6c6e8fa45fcd9257f44ea86fe71bca4f5485b90e4bcac4fd9"
+    },
+    {
+      "type": "FINAL",
+      "gameId": "2026_11_PIT_PHI",
+      "at": "2026-11-22T22:10:16.647Z",
+      "payload": {
+        "officialGame": {
+          "gameId": "2026_11_PIT_PHI",
+          "providerGameId": "abbf1908-4feb-11f1-abca-2c54536568a9",
+          "season": 2026,
+          "week": 11,
+          "home": "PHI",
+          "away": "PIT",
+          "kickoff": "2026-11-22T18:00:00.000Z",
+          "gameDate": "2026-11-22",
+          "neutralSite": false,
+          "scheduleStatus": "SCHEDULED",
+          "summaryPhase": "FINAL",
+          "summaryQuarter": "END_OF_GAME",
+          "summaryState": "PRESENT",
+          "final": true,
+          "homeScore": 19,
+          "awayScore": 16
+        },
+        "officialSource": {
+          "url": "https://www.nfl.com/scores/2026/week-11",
+          "observedAt": "2026-11-22T22:09:52.514Z",
+          "bodySha256": "c64333e374a72002dae0c63bd1398aac29198328e70bb69a2773208d394e345a"
+        },
+        "nflverse": {
+          "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+          "bodySha256": "83783481eaff12f029af6154fdbb6c23b4c630ba3f94fe9d07641f2f45d129cb",
+          "receivedAt": "2026-11-22T22:10:16.489Z",
+          "gameId": "2026_11_PIT_PHI",
+          "date": "2026-11-22",
+          "home": "PHI",
+          "away": "PIT",
+          "homeScore": 19,
+          "awayScore": 16
+        }
+      },
+      "id": "5aa3886dbd014ace3f7c7bf979401b576561ad17d6051e150ae019c1c5f1beb6"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-22T22:10:16.658Z",
+      "payload": {
+        "runKey": "45076136112.1",
+        "failedWeeks": [],
+        "productionCompatible": true,
+        "productionHealth": {
+          "compatible": true,
+          "reason": null,
+          "httpStatus": 200
+        },
+        "finalSourceAvailable": true,
+        "resultConflicts": [],
+        "scopeLimited": false
+      },
+      "id": "ca7db1a2db0fe75b21fd5e0649213de4f9ed14adbfc659412f80c54596b12755"
     }
   ]
 }
