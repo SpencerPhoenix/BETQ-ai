@@ -3,9 +3,9 @@
   "season": 2026,
   "source": "NFLVERSE_DEPTH_CHARTS",
   "sourceUrl": "https://github.com/nflverse/nflverse-data/releases/download/depth_charts/depth_charts_2026.csv.gz",
-  "sourceLoadAt": "2026-11-21T15:17:24.000Z",
-  "collectedAt": "2026-11-21T16:14:17.406Z",
-  "sourceSha256": "d9ec3505b81baee7947c3dc7fc34be06e0f04b42692d22b2dd7de5a04f516a64",
+  "sourceLoadAt": "2026-11-22T15:12:52.000Z",
+  "collectedAt": "2026-11-22T16:24:07.284Z",
+  "sourceSha256": "fb1805472a4d454dd80d5d2f6432e8ecfd3896a6c4799b97d3d63862a435164d",
   "teams": {
     "ARI": {
       "player": "Carson Beck",
@@ -92,8 +92,8 @@
       "playerId": "14880"
     },
     "NE": {
-      "player": "Drake Maye",
-      "playerId": "4431452"
+      "player": "Tommy DeVito",
+      "playerId": "4240391"
     },
     "NO": {
       "player": "Tyler Shough",
