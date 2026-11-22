@@ -896,6 +896,270 @@
         "scopeLimited": false
       },
       "id": "511e45494f57b7e05e7da4a2e62356f9df1c75dc7fbdb58ed390ef2c4e45435e"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-22T16:41:21.984Z",
+      "payload": {
+        "runKey": "45045214484.1",
+        "failedWeeks": [],
+        "phase": "STARTED"
+      },
+      "id": "d18129f0c5019cbfd86b09c64c6e0fe5b9b7a1e595fc9d8548ebd4d37774745c"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-22T16:41:22.619Z",
+      "payload": {
+        "runKey": "45045214484.1",
+        "failedWeeks": []
+      },
+      "id": "335693a6ef2f93724206ac7f62999efac0b215278d027ff370770c30815f1924"
+    },
+    {
+      "type": "RESERVED",
+      "gameId": "2026_11_MIA_BUF",
+      "at": "2026-11-22T16:41:22.619Z",
+      "payload": {
+        "runKey": "45045214484.1",
+        "game": {
+          "gameId": "2026_11_MIA_BUF",
+          "providerGameId": "ab998769-4feb-11f1-abca-2c54536568a9",
+          "season": 2026,
+          "week": 11,
+          "home": "BUF",
+          "away": "MIA",
+          "kickoff": "2026-11-22T18:00:00.000Z",
+          "gameDate": "2026-11-22",
+          "neutralSite": false,
+          "scheduleStatus": "SCHEDULED",
+          "summaryPhase": "PREGAME",
+          "summaryQuarter": "Q1",
+          "summaryState": "PRESENT",
+          "final": false,
+          "homeScore": null,
+          "awayScore": null
+        },
+        "source": {
+          "url": "https://www.nfl.com/scores/2026/week-11",
+          "observedAt": "2026-11-22T16:41:22.088Z",
+          "bodySha256": "de0b5085f6ef62a515d1d5598a37239c5b00339e20921f8ad66bfc6fc3a51a09"
+        }
+      },
+      "id": "320442327e4ae8607cf2e2b2df9a7bca6c0e1120e44fc97a0ba36d02c423fba8"
+    },
+    {
+      "type": "RESERVED",
+      "gameId": "2026_11_BAL_CAR",
+      "at": "2026-11-22T16:41:22.619Z",
+      "payload": {
+        "runKey": "45045214484.1",
+        "game": {
+          "gameId": "2026_11_BAL_CAR",
+          "providerGameId": "ab998b7f-4feb-11f1-abca-2c54536568a9",
+          "season": 2026,
+          "week": 11,
+          "home": "CAR",
+          "away": "BAL",
+          "kickoff": "2026-11-22T18:00:00.000Z",
+          "gameDate": "2026-11-22",
+          "neutralSite": false,
+          "scheduleStatus": "SCHEDULED",
+          "summaryPhase": "PREGAME",
+          "summaryQuarter": "Q1",
+          "summaryState": "PRESENT",
+          "final": false,
+          "homeScore": null,
+          "awayScore": null
+        },
+        "source": {
+          "url": "https://www.nfl.com/scores/2026/week-11",
+          "observedAt": "2026-11-22T16:41:22.088Z",
+          "bodySha256": "de0b5085f6ef62a515d1d5598a37239c5b00339e20921f8ad66bfc6fc3a51a09"
+        }
+      },
+      "id": "d4c7552a90b8afa72f7ce4070e3fda56eee63b5ed6437eeb9dd40de1641c53f7"
+    },
+    {
+      "type": "RESERVED",
+      "gameId": "2026_11_NO_CHI",
+      "at": "2026-11-22T16:41:22.619Z",
+      "payload": {
+        "runKey": "45045214484.1",
+        "game": {
+          "gameId": "2026_11_NO_CHI",
+          "providerGameId": "ab998f5e-4feb-11f1-abca-2c54536568a9",
+          "season": 2026,
+          "week": 11,
+          "home": "CHI",
+          "away": "NO",
+          "kickoff": "2026-11-22T18:00:00.000Z",
+          "gameDate": "2026-11-22",
+          "neutralSite": false,
+          "scheduleStatus": "SCHEDULED",
+          "summaryPhase": "PREGAME",
+          "summaryQuarter": "Q1",
+          "summaryState": "PRESENT",
+          "final": false,
+          "homeScore": null,
+          "awayScore": null
+        },
+        "source": {
+          "url": "https://www.nfl.com/scores/2026/week-11",
+          "observedAt": "2026-11-22T16:41:22.088Z",
+          "bodySha256": "de0b5085f6ef62a515d1d5598a37239c5b00339e20921f8ad66bfc6fc3a51a09"
+        }
+      },
+      "id": "da188a292f86928309e859eb7342e31e79af5599a47ef0dfd05954d25c472b1a"
+    },
+    {
+      "type": "RESERVED",
+      "gameId": "2026_11_TEN_DAL",
+      "at": "2026-11-22T16:41:22.619Z",
+      "payload": {
+        "runKey": "45045214484.1",
+        "game": {
+          "gameId": "2026_11_TEN_DAL",
+          "providerGameId": "ab99929a-4feb-11f1-abca-2c54536568a9",
+          "season": 2026,
+          "week": 11,
+          "home": "DAL",
+          "away": "TEN",
+          "kickoff": "2026-11-22T18:00:00.000Z",
+          "gameDate": "2026-11-22",
+          "neutralSite": false,
+          "scheduleStatus": "SCHEDULED",
+          "summaryPhase": "PREGAME",
+          "summaryQuarter": "Q1",
+          "summaryState": "PRESENT",
+          "final": false,
+          "homeScore": null,
+          "awayScore": null
+        },
+        "source": {
+          "url": "https://www.nfl.com/scores/2026/week-11",
+          "observedAt": "2026-11-22T16:41:22.088Z",
+          "bodySha256": "de0b5085f6ef62a515d1d5598a37239c5b00339e20921f8ad66bfc6fc3a51a09"
+        }
+      },
+      "id": "5f36481b06ae82c8397f467078e7905756f858123329e66d39ace87ff650ef8d"
+    },
+    {
+      "type": "RESERVED",
+      "gameId": "2026_11_TB_DET",
+      "at": "2026-11-22T16:41:22.619Z",
+      "payload": {
+        "runKey": "45045214484.1",
+        "game": {
+          "gameId": "2026_11_TB_DET",
+          "providerGameId": "ab999586-4feb-11f1-abca-2c54536568a9",
+          "season": 2026,
+          "week": 11,
+          "home": "DET",
+          "away": "TB",
+          "kickoff": "2026-11-22T18:00:00.000Z",
+          "gameDate": "2026-11-22",
+          "neutralSite": false,
+          "scheduleStatus": "SCHEDULED",
+          "summaryPhase": "PREGAME",
+          "summaryQuarter": "Q1",
+          "summaryState": "PRESENT",
+          "final": false,
+          "homeScore": null,
+          "awayScore": null
+        },
+        "source": {
+          "url": "https://www.nfl.com/scores/2026/week-11",
+          "observedAt": "2026-11-22T16:41:22.088Z",
+          "bodySha256": "de0b5085f6ef62a515d1d5598a37239c5b00339e20921f8ad66bfc6fc3a51a09"
+        }
+      },
+      "id": "bf42dbad3f191ad60aff1094a742e52951cb0f86ed30b24a0bb34c90397a313d"
+    },
+    {
+      "type": "RESERVED",
+      "gameId": "2026_11_ARI_KC",
+      "at": "2026-11-22T16:41:22.619Z",
+      "payload": {
+        "runKey": "45045214484.1",
+        "game": {
+          "gameId": "2026_11_ARI_KC",
+          "providerGameId": "ab999891-4feb-11f1-abca-2c54536568a9",
+          "season": 2026,
+          "week": 11,
+          "home": "KC",
+          "away": "ARI",
+          "kickoff": "2026-11-22T18:00:00.000Z",
+          "gameDate": "2026-11-22",
+          "neutralSite": false,
+          "scheduleStatus": "SCHEDULED",
+          "summaryPhase": "PREGAME",
+          "summaryQuarter": "Q1",
+          "summaryState": "PRESENT",
+          "final": false,
+          "homeScore": null,
+          "awayScore": null
+        },
+        "source": {
+          "url": "https://www.nfl.com/scores/2026/week-11",
+          "observedAt": "2026-11-22T16:41:22.088Z",
+          "bodySha256": "de0b5085f6ef62a515d1d5598a37239c5b00339e20921f8ad66bfc6fc3a51a09"
+        }
+      },
+      "id": "a22e608773a0fe71dba1b723ce4fbe9bb6ed9520991477259e6b47eda147bdd2"
+    },
+    {
+      "type": "RESERVED",
+      "gameId": "2026_11_PIT_PHI",
+      "at": "2026-11-22T16:41:22.619Z",
+      "payload": {
+        "runKey": "45045214484.1",
+        "game": {
+          "gameId": "2026_11_PIT_PHI",
+          "providerGameId": "abbf1908-4feb-11f1-abca-2c54536568a9",
+          "season": 2026,
+          "week": 11,
+          "home": "PHI",
+          "away": "PIT",
+          "kickoff": "2026-11-22T18:00:00.000Z",
+          "gameDate": "2026-11-22",
+          "neutralSite": false,
+          "scheduleStatus": "SCHEDULED",
+          "summaryPhase": "PREGAME",
+          "summaryQuarter": "Q1",
+          "summaryState": "PRESENT",
+          "final": false,
+          "homeScore": null,
+          "awayScore": null
+        },
+        "source": {
+          "url": "https://www.nfl.com/scores/2026/week-11",
+          "observedAt": "2026-11-22T16:41:22.088Z",
+          "bodySha256": "de0b5085f6ef62a515d1d5598a37239c5b00339e20921f8ad66bfc6fc3a51a09"
+        }
+      },
+      "id": "2fa70db11e17ad57b8a03e5fcdb21359815e6a6ef40eea5281844f2ab618e30a"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-22T16:41:22.623Z",
+      "payload": {
+        "runKey": "45045214484.1",
+        "failedWeeks": [],
+        "productionCompatible": true,
+        "productionHealth": {
+          "compatible": true,
+          "reason": null,
+          "httpStatus": 200
+        },
+        "finalSourceAvailable": null,
+        "resultConflicts": [],
+        "scopeLimited": false
+      },
+      "id": "6a75b75f0dbc7499e46afcc0e4f028a171507662809d68cee0365532f1e0777e"
     }
   ]
 }
