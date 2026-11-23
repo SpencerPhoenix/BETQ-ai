@@ -7,17 +7,17 @@
     "description": "NFL schedule release maintained by Lee Sharpe, published by nflverse",
     "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
     "license": "CC BY 4.0",
-    "extractedUTC": "2026-11-20T19:05:58.458Z"
+    "extractedUTC": "2026-11-23T22:37:32.896Z"
   },
-  "generatedAt": "2026-11-20T19:05:58.458Z",
-  "completedGamesSha256": "680b8ee8d4da922bb8681ee1b2ebca63db3e68f40c43f15407ff570b5564c8ff",
+  "generatedAt": "2026-11-23T22:37:32.896Z",
+  "completedGamesSha256": "05f5e1b614ba9c3363358fe53f9fe2e15b94b8cc459be49ae90e8ff0f959e1a0",
   "trainingInputSafety": {
     "policy": "NFL_SCHEDULE_DELAYED_RESULTS_V1",
-    "asOf": "2026-11-20T19:05:58.309Z",
+    "asOf": "2026-11-23T22:37:32.666Z",
     "minimumHoursAfterUtcGameDay": 12,
-    "acceptedGames": 7427,
+    "acceptedGames": 7438,
     "rejected": {
-      "recentOrFuture": 121,
+      "recentOrFuture": 110,
       "explicitNonfinal": 0,
       "venueUnknown": 0,
       "conflictingDuplicate": 0,
@@ -40,20 +40,20 @@
         "lastGameDate": "2026-11-15"
       },
       "SF": {
-        "games": 9,
-        "lastGameDate": "2026-11-15"
+        "games": 10,
+        "lastGameDate": "2026-11-22"
       },
       "LAC": {
-        "games": 9,
-        "lastGameDate": "2026-11-16"
+        "games": 10,
+        "lastGameDate": "2026-11-22"
       },
       "ARI": {
-        "games": 10,
-        "lastGameDate": "2026-11-15"
+        "games": 11,
+        "lastGameDate": "2026-11-22"
       },
       "PIT": {
-        "games": 9,
-        "lastGameDate": "2026-11-15"
+        "games": 10,
+        "lastGameDate": "2026-11-22"
       },
       "ATL": {
         "games": 10,
@@ -64,96 +64,96 @@
         "lastGameDate": "2026-11-19"
       },
       "BAL": {
-        "games": 10,
-        "lastGameDate": "2026-11-16"
+        "games": 11,
+        "lastGameDate": "2026-11-22"
       },
       "HOU": {
         "games": 10,
         "lastGameDate": "2026-11-19"
       },
       "BUF": {
-        "games": 9,
-        "lastGameDate": "2026-11-15"
+        "games": 10,
+        "lastGameDate": "2026-11-22"
       },
       "CAR": {
-        "games": 9,
-        "lastGameDate": "2026-11-15"
+        "games": 10,
+        "lastGameDate": "2026-11-22"
       },
       "CHI": {
-        "games": 9,
-        "lastGameDate": "2026-11-08"
+        "games": 10,
+        "lastGameDate": "2026-11-22"
       },
       "JAX": {
-        "games": 9,
-        "lastGameDate": "2026-11-15"
+        "games": 10,
+        "lastGameDate": "2026-11-22"
       },
       "CLE": {
         "games": 10,
         "lastGameDate": "2026-11-15"
       },
       "NYG": {
-        "games": 9,
-        "lastGameDate": "2026-11-12"
+        "games": 10,
+        "lastGameDate": "2026-11-22"
       },
       "DAL": {
-        "games": 10,
-        "lastGameDate": "2026-11-15"
+        "games": 11,
+        "lastGameDate": "2026-11-22"
       },
       "MIN": {
-        "games": 9,
-        "lastGameDate": "2026-11-15"
+        "games": 10,
+        "lastGameDate": "2026-11-22"
       },
       "GB": {
         "games": 10,
         "lastGameDate": "2026-11-15"
       },
       "LV": {
-        "games": 10,
-        "lastGameDate": "2026-11-15"
+        "games": 11,
+        "lastGameDate": "2026-11-22"
       },
       "MIA": {
-        "games": 9,
-        "lastGameDate": "2026-11-15"
+        "games": 10,
+        "lastGameDate": "2026-11-22"
       },
       "DET": {
-        "games": 9,
-        "lastGameDate": "2026-11-15"
+        "games": 10,
+        "lastGameDate": "2026-11-22"
       },
       "NO": {
-        "games": 9,
-        "lastGameDate": "2026-11-15"
+        "games": 10,
+        "lastGameDate": "2026-11-22"
       },
       "TEN": {
-        "games": 9,
-        "lastGameDate": "2026-11-15"
+        "games": 10,
+        "lastGameDate": "2026-11-22"
       },
       "NYJ": {
-        "games": 10,
-        "lastGameDate": "2026-11-15"
+        "games": 11,
+        "lastGameDate": "2026-11-22"
       },
       "CIN": {
         "games": 9,
         "lastGameDate": "2026-11-15"
       },
       "TB": {
-        "games": 9,
-        "lastGameDate": "2026-11-08"
+        "games": 10,
+        "lastGameDate": "2026-11-22"
       },
       "PHI": {
-        "games": 9,
-        "lastGameDate": "2026-11-08"
+        "games": 10,
+        "lastGameDate": "2026-11-22"
       },
       "WAS": {
         "games": 9,
         "lastGameDate": "2026-11-12"
       },
       "KC": {
-        "games": 9,
-        "lastGameDate": "2026-11-15"
+        "games": 10,
+        "lastGameDate": "2026-11-22"
       },
       "DEN": {
-        "games": 9,
-        "lastGameDate": "2026-11-08"
+        "games": 10,
+        "lastGameDate": "2026-11-22"
       }
     },
     "limitations": [
@@ -163,13 +163,13 @@
     ]
   },
   "finalityCoverage": null,
-  "lastGameDate": "2026-11-19",
+  "lastGameDate": "2026-11-22",
   "seasons": [
     1999,
     2026
   ],
-  "completedGames": 7427,
-  "completed2026": 151,
+  "completedGames": 7438,
+  "completed2026": 162,
   "trainingProtocol": {
     "parameterTuning": "2018–2022 games (prior games only)",
     "calibration": "2023–2024 games (after hyperparameter selection)",
@@ -219,37 +219,37 @@
     "Market outcomes, spreads and totals do not share this moneyline-only model"
   ],
   "ratings": {
-    "ARI": 1392.176665074981,
+    "ARI": 1382.3206250650999,
     "ATL": 1430.2202815678281,
-    "BAL": 1453.7326977859977,
-    "BUF": 1673.27637996629,
-    "CAR": 1457.5435771502575,
-    "CHI": 1611.5450304890646,
+    "BAL": 1435.3873942433806,
+    "BUF": 1678.5554796159295,
+    "CAR": 1475.8888806928746,
+    "CHI": 1620.2686728280103,
     "CIN": 1560.9565396941487,
     "CLE": 1480.4937686320802,
-    "DAL": 1445.304164208791,
-    "DEN": 1659.674743265848,
-    "DET": 1613.9226761294285,
+    "DAL": 1456.684175664538,
+    "DEN": 1666.1630687220652,
+    "DET": 1623.8271492350239,
     "GB": 1543.0683203715664,
     "HOU": 1507.8229628164424,
     "IND": 1396.282532060102,
-    "JAX": 1607.6822333078833,
-    "KC": 1561.3758038213793,
+    "JAX": 1580.4184366314435,
+    "KC": 1571.2318438312604,
     "LA": 1578.4044818765733,
-    "LAC": 1427.8099767435726,
-    "LV": 1399.4493418488744,
-    "MIA": 1371.063932589499,
-    "MIN": 1605.231518161526,
+    "LAC": 1401.217668153302,
+    "LV": 1392.9610163926573,
+    "MIA": 1365.7848329398596,
+    "MIN": 1587.3261084856442,
     "NE": 1559.6189790506492,
-    "NO": 1414.7377027873524,
-    "NYG": 1450.463693041788,
-    "NYJ": 1333.8491622700162,
-    "PHI": 1431.2768089280146,
-    "PIT": 1557.6447221081598,
+    "NO": 1406.0140604484068,
+    "NYG": 1477.7274897182278,
+    "NYJ": 1360.441470860287,
+    "PHI": 1456.9518927967697,
+    "PIT": 1531.9696382394047,
     "SEA": 1618.355351104032,
-    "SF": 1641.7521946424276,
-    "TB": 1445.8544465140874,
-    "TEN": 1310.0934616710592,
+    "SF": 1659.6576043183095,
+    "TB": 1435.949973408492,
+    "TEN": 1298.7134502153122,
     "WAS": 1459.315850320279
   }
 }
