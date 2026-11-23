@@ -3682,6 +3682,56 @@
         "scopeLimited": false
       },
       "id": "ca7db1a2db0fe75b21fd5e0649213de4f9ed14adbfc659412f80c54596b12755"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-23T02:54:17.815Z",
+      "payload": {
+        "runKey": "45102807886.1",
+        "failedWeeks": [],
+        "phase": "STARTED"
+      },
+      "id": "d00b1ec7411846199654cc5e07259db96e4457a9a3761f2938d266a094b8f823"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-23T02:54:31.706Z",
+      "payload": {
+        "runKey": "45102807886.1",
+        "failedWeeks": []
+      },
+      "id": "6001250e12b12eab7af163aa603a658bf9458350f9e38bd60ad801827251df2c"
+    },
+    {
+      "type": "MISSED",
+      "gameId": "2026_11_MIN_SF",
+      "at": "2026-11-23T02:54:31.706Z",
+      "payload": {
+        "kickoff": "2026-11-23T01:20:00.000Z",
+        "reason": "WINDOW_ELAPSED"
+      },
+      "id": "c50b62b1cb44d3044e52e4260858b18ceba548ada1f10cdc0e3d719d75f11a66"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-23T02:54:32.091Z",
+      "payload": {
+        "runKey": "45102807886.1",
+        "failedWeeks": [],
+        "productionCompatible": true,
+        "productionHealth": {
+          "compatible": true,
+          "reason": null,
+          "httpStatus": 200
+        },
+        "finalSourceAvailable": true,
+        "resultConflicts": [],
+        "scopeLimited": false
+      },
+      "id": "80c93be44d9d9a891e2462ac8646f9adee17d91e31b61ed8378e20b157435902"
     }
   ]
 }
