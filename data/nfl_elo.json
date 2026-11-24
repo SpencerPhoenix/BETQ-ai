@@ -7,17 +7,17 @@
     "description": "NFL schedule release maintained by Lee Sharpe, published by nflverse",
     "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
     "license": "CC BY 4.0",
-    "extractedUTC": "2026-11-23T22:37:32.896Z"
+    "extractedUTC": "2026-11-24T21:10:11.960Z"
   },
-  "generatedAt": "2026-11-23T22:37:32.896Z",
-  "completedGamesSha256": "05f5e1b614ba9c3363358fe53f9fe2e15b94b8cc459be49ae90e8ff0f959e1a0",
+  "generatedAt": "2026-11-24T21:10:11.960Z",
+  "completedGamesSha256": "37a044d2248a759c170589c362d231919a69f697c5f79ea3351a732a8508dbbf",
   "trainingInputSafety": {
     "policy": "NFL_SCHEDULE_DELAYED_RESULTS_V1",
-    "asOf": "2026-11-23T22:37:32.666Z",
+    "asOf": "2026-11-24T21:10:11.797Z",
     "minimumHoursAfterUtcGameDay": 12,
-    "acceptedGames": 7438,
+    "acceptedGames": 7439,
     "rejected": {
-      "recentOrFuture": 110,
+      "recentOrFuture": 109,
       "explicitNonfinal": 0,
       "venueUnknown": 0,
       "conflictingDuplicate": 0,
@@ -132,8 +132,8 @@
         "lastGameDate": "2026-11-22"
       },
       "CIN": {
-        "games": 9,
-        "lastGameDate": "2026-11-15"
+        "games": 10,
+        "lastGameDate": "2026-11-23"
       },
       "TB": {
         "games": 10,
@@ -144,8 +144,8 @@
         "lastGameDate": "2026-11-22"
       },
       "WAS": {
-        "games": 9,
-        "lastGameDate": "2026-11-12"
+        "games": 10,
+        "lastGameDate": "2026-11-23"
       },
       "KC": {
         "games": 10,
@@ -163,13 +163,13 @@
     ]
   },
   "finalityCoverage": null,
-  "lastGameDate": "2026-11-22",
+  "lastGameDate": "2026-11-23",
   "seasons": [
     1999,
     2026
   ],
-  "completedGames": 7438,
-  "completed2026": 162,
+  "completedGames": 7439,
+  "completed2026": 163,
   "trainingProtocol": {
     "parameterTuning": "2018–2022 games (prior games only)",
     "calibration": "2023–2024 games (after hyperparameter selection)",
@@ -225,7 +225,7 @@
     "BUF": 1678.5554796159295,
     "CAR": 1475.8888806928746,
     "CHI": 1620.2686728280103,
-    "CIN": 1560.9565396941487,
+    "CIN": 1536.6149400222719,
     "CLE": 1480.4937686320802,
     "DAL": 1456.684175664538,
     "DEN": 1666.1630687220652,
@@ -250,6 +250,6 @@
     "SF": 1659.6576043183095,
     "TB": 1435.949973408492,
     "TEN": 1298.7134502153122,
-    "WAS": 1459.315850320279
+    "WAS": 1483.6574499921558
   }
 }
