@@ -3,9 +3,9 @@
   "season": 2026,
   "source": "NFLVERSE_DEPTH_CHARTS",
   "sourceUrl": "https://github.com/nflverse/nflverse-data/releases/download/depth_charts/depth_charts_2026.csv.gz",
-  "sourceLoadAt": "2026-11-23T19:11:07.000Z",
-  "collectedAt": "2026-11-23T20:20:10.190Z",
-  "sourceSha256": "eed50011903b49c6a1e015102894d50f13ccc31c4b7ca3f65760209f9be7dfb5",
+  "sourceLoadAt": "2026-11-24T18:50:30.000Z",
+  "collectedAt": "2026-11-24T19:34:02.699Z",
+  "sourceSha256": "727f4f8facab548646ed7d9628554fcea478c7d349a5bef5071a38af8e11a22c",
   "teams": {
     "ARI": {
       "player": "Carson Beck",
