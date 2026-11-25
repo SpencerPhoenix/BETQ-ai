@@ -3862,6 +3862,36 @@
         "scopeLimited": false
       },
       "id": "bf02b30b339ecb90e64674266770f24f44691ef5b58d253339f7ebb5eaf8eeaa"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-25T13:36:46.794Z",
+      "payload": {
+        "runKey": "45625333485.1",
+        "failedWeeks": [],
+        "phase": "STARTED"
+      },
+      "id": "d277018fc1cb360f8fe13421b2737131c90057ee18c329dec088988c0667b25a"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-25T13:37:06.424Z",
+      "payload": {
+        "runKey": "45625333485.1",
+        "failedWeeks": [],
+        "productionCompatible": false,
+        "productionHealth": {
+          "compatible": false,
+          "reason": "RUNTIME_MODEL_ARTIFACT_MISMATCH",
+          "httpStatus": 200
+        },
+        "finalSourceAvailable": true,
+        "resultConflicts": [],
+        "scopeLimited": false
+      },
+      "id": "3de971e68b0f87f7c2cad30c065401baca473ecf5c3b06ae34bc8e1cedf4f442"
     }
   ]
 }
