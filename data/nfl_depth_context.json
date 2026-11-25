@@ -3,9 +3,9 @@
   "season": 2026,
   "source": "NFLVERSE_DEPTH_CHARTS",
   "sourceUrl": "https://github.com/nflverse/nflverse-data/releases/download/depth_charts/depth_charts_2026.csv.gz",
-  "sourceLoadAt": "2026-11-24T18:50:30.000Z",
-  "collectedAt": "2026-11-24T19:34:02.699Z",
-  "sourceSha256": "727f4f8facab548646ed7d9628554fcea478c7d349a5bef5071a38af8e11a22c",
+  "sourceLoadAt": "2026-11-25T17:56:34.000Z",
+  "collectedAt": "2026-11-25T18:42:09.831Z",
+  "sourceSha256": "1fd6bfcc95bb2cbca2808e484fe2e80926b316990855005d7fd86542b67aaf01",
   "teams": {
     "ARI": {
       "player": "Carson Beck",
@@ -112,8 +112,8 @@
       "playerId": "4360698"
     },
     "PIT": {
-      "player": "Aaron Rodgers",
-      "playerId": "8439"
+      "player": "Mason Rudolph",
+      "playerId": "3116407"
     },
     "SEA": {
       "player": "Sam Darnold",
