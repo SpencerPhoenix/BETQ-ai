@@ -53,6 +53,7 @@ export function createOddsSource({
     if (!configured) throw new OddsError('SETUP_REQUIRED', 503, 'Set ODDS_API_KEY in the running server environment to enable live odds.');
     // Optional private storage is read-only on public loads. No fallback may
     // reset observation time, seed quota, or join an operator's paid request.
+    let snapshotReadFailed=false;
     if (!freshAt(cache.get(cacheId)) && snapshotStore && cacheId.startsWith('odds:')) {
       if (!restoring.has(cacheId)) {
         const restore = (async () => {
@@ -68,11 +69,12 @@ export function createOddsSource({
               }});
             }
             snapshotReadError = null;
-          } catch { snapshotReadError = 'SNAPSHOT_READ_FAILED'; }
+            return true;
+          } catch { snapshotReadError = 'SNAPSHOT_READ_FAILED'; return false; }
         })().finally(() => restoring.delete(cacheId));
         restoring.set(cacheId, restore);
       }
-      await restoring.get(cacheId);
+      snapshotReadFailed=(await restoring.get(cacheId))!==true;
     }
     const fresh = cache.get(cacheId);
     if (freshAt(fresh)) {
@@ -82,6 +84,10 @@ export function createOddsSource({
     // Do not treat a still-pending paid request as a cached observation.
     if (allowPaid !== true) throw new OddsError('PAID_REFRESH_REQUIRED', 409,
       'No fresh cached data. An authenticated operator must refresh the shared snapshot.');
+    // A failed shared read is not proof that another instance has no fresh slate.
+    // Keep this request-local: another market's successful read cannot clear it.
+    if(snapshotReadFailed)throw new OddsError('SNAPSHOT_READ_FAILED',503,
+      'Shared snapshot could not be checked. No paid refresh was authorized.');
     if (inflight.has(cacheId)) return inflight.get(cacheId);
     // Install the in-flight promise before awaiting the durable transaction.
     // Public cache-only reads never join this request or authorize any spending.
@@ -110,7 +116,8 @@ export function createOddsSource({
         last: intHeader(response.headers, 'x-requests-last')
       };
       Object.assign(headersSnapshot, quota);
-      try { await budgetStore.reconcile(reservation,quota); }
+      let reconciliation;
+      try { reconciliation=await budgetStore.reconcile(reservation,quota); }
       catch(error) {
         lastError={at:new Date(clock()).toISOString(),code:'BUDGET_RECONCILIATION_FAILED'};
         throw budgetError(error);
@@ -132,12 +139,16 @@ export function createOddsSource({
       lastSuccess = receivedAt;
       lastError = null;
       const payload = { events: data, receivedAt, cacheHit: false, quota };
+      let snapshotStored=false;
       cache.set(cacheId, { storedAt: Date.parse(receivedAt), payload });
       if (snapshotStore && cacheId.startsWith('odds:')) {
         try { const persisted = await bounded(() => snapshotStore.write(cacheId, payload));
-          snapshotWriteError = persisted?.stored === true ? null : 'SNAPSHOT_NOT_WRITTEN'; }
+          snapshotStored=persisted?.stored===true;
+          snapshotWriteError = snapshotStored ? null : 'SNAPSHOT_NOT_WRITTEN'; }
         catch { snapshotWriteError = 'SNAPSHOT_WRITE_FAILED'; }
       }
+      payload.refreshReceipt=Object.freeze({reconciled:reconciliation?.reconciled===true,
+        reservationId:reservation.id,snapshotStored});
       return payload;
     })().finally(() => { inflight.delete(cacheId); });
     inflight.set(cacheId, pending);

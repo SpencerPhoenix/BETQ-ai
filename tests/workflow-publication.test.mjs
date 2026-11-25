@@ -34,7 +34,7 @@ const readOnlyBaseline = {
   // New manual encrypted sample reviewed separately; no automatic collection.
   'bdl-result-sample': '7dd8a44daaed324435cef33ee1547c54188b121ab8551113a99b18844abde1d4',
   'retained-evidence-audit': '24a6bc9009daf141496935498722ace6ef3146ca64002bd79b20fe5da6c96991',
-  ci: '8be7ec2388c8fc47976e09f1d165b13146f066a9def5d7f91e2214ea8f7be62f',
+  ci: '8fa29a423896fba60ee842d3224950c94328f83fad458b854bf9580792b8b8f5',
   'audit-reliability': '7727e532ecd9231b0258dac0ad457ceeb263d48939e0958721432ea3258a8a51',
   'prospective-direction-audit': '546569fd5dade84b14e9a78a4bbd7a3a955287c211cc623337a8e10f673db688',
   'live-probe': 'd7830d7e50c4525e6127076f0b79674fd3a721bdf043a5095c4b96131429e351',
@@ -262,4 +262,19 @@ test('Model-only schedule publishes only a reserved ledger, with isolated creden
  assert.match(publisher,/BRANCH='evidence\/model-only-scheduled'/);
  assert.match(publisher,/force:false/);assert.match(publisher,/actual.data!==content/);
  assert.match(publisher,/delete env.GITHUB_TOKEN/);assert.match(publisher,/response.headers.get\('date'\)/);
+});
+
+
+test('Owner trial integration is confined to disposable localhost PostgreSQL without service secrets',async()=>{
+  const workflow=await read('ci');
+  const job=workflow.split('  owner-trial-postgres:')[1];
+  assert.ok(job);assert.match(job,/image: postgres:17/);
+  assert.match(job,/POSTGRES_DB: betq_owner_trial_ci/);
+  assert.match(job,/timeout-minutes: 8/);
+  assert.match(job,/npm ci --ignore-scripts --no-audit --no-fund/);
+  assert.doesNotMatch(job,/secrets\.|DATABASE_URL|ODDS_API_KEY|contents: write|workflow_dispatch/);
+  const script=await readFile(new URL('../scripts/verify-owner-trial-postgres.mjs',import.meta.url),'utf8');
+  assert.match(script,/isolatedTestEnvironment/);assert.match(script,/test-network-guard\.mjs/);
+  assert.match(script,/host:'127\.0\.0\.1',port:5432,database:'betq_owner_trial_ci'/);
+  assert.doesNotMatch(script,/fetch\(|ODDS_API_KEY|process\.env\.(?:DATABASE_URL|PGHOST|PGPASSWORD)/);
 });

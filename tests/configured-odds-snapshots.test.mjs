@@ -95,7 +95,9 @@ test('Actual HTTP slate and health use configured factory without authorizing ne
     const response=await fetch(base+'/api/slate?mode=live&sport=americanfootball_nfl&market=h2h');
     assert.equal(response.status,rows[0]?.snapshot===record?200:409);
     assert.doesNotMatch(await response.text(),/postgresql|restricted|db.invalid/);
-    await assert.rejects(source.getOdds('americanfootball_nfl','spreads',{allowPaid:true}),{code:'BUDGET_BASELINE_REQUIRED'});
+    // Nonempty h2h fixture cannot satisfy a spreads read: reject that unreadable
+    // shared snapshot before budget access. A genuine empty read reaches the budget gate.
+    await assert.rejects(source.getOdds('americanfootball_nfl','spreads',{allowPaid:true}),{code:rows.length?'SNAPSHOT_READ_FAILED':'BUDGET_BASELINE_REQUIRED'});
   }
   for(const store of [configuredOddsSnapshotStore({env:{...env,BETQ_ODDS_SNAPSHOT_DATABASE_URL:'postgresql://private-secret@db.invalid/betq?sslmode=disable'}}),
     configuredOddsSnapshotStore({env,clientFactory:async()=>{throw Error('private-secret');}})]){
