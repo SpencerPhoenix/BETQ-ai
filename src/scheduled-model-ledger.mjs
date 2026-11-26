@@ -66,17 +66,17 @@ export function assertLedgerAppend(previous,next){
  validateModelLedger(previous);validateModelLedger(next);
  if(previous.createdAt!==next.createdAt||next.events.length<previous.events.length||previous.events.some((e,i)=>!isDeepStrictEqual(e,next.events[i]))||Object.entries(previous.artifacts).some(([k,v])=>!isDeepStrictEqual(v,next.artifacts[k])))throw Error('MODEL_LEDGER_HISTORY_CHANGED');
 }
-export function reserveModelGames(ledger,officialReceipts,{now,runKey,failedWeeks=[]}){
- validateModelLedger(ledger);if(!/^\d+\.\d+$/.test(runKey))fail();const next=structuredClone(ledger);
+export function reserveModelGames(ledger,officialReceipts,{now,runKey,failedWeeks=[],allowReservations=true}){
+ validateModelLedger(ledger);if(!/^\d+\.\d+$/.test(runKey)||typeof allowReservations!=='boolean')fail();const next=structuredClone(ledger);
  ledgerEvent(next,'RUN',null,{runKey,failedWeeks},now);
  for(const receipt of officialReceipts){
   if(!instant(receipt.observedAt)||Date.parse(receipt.observedAt)>now||now-Date.parse(receipt.observedAt)>=300000)continue;
   for(const game of receipt.games){
    if(!validOfficial(game))continue;const at=Date.parse(game.kickoff),minutes=(at-now)/60000,id=game.gameId,old=reservation(next,id);
    if(at<now-7*86400000||at>now+7*86400000)continue;
-   if(old){if(old.payload.runKey!==runKey&&!first(next,'CAPTURED',id)&&!first(next,'CAPTURE_FAILED',id)&&!first(next,'MISSED',id))ledgerEvent(next,'MISSED',id,{kickoff:old.payload.game.kickoff,reason:'RESERVATION_UNRESOLVED'},now);continue;}
+   if(old){if((allowReservations||minutes<45)&&old.payload.runKey!==runKey&&!first(next,'CAPTURED',id)&&!first(next,'CAPTURE_FAILED',id)&&!first(next,'MISSED',id))ledgerEvent(next,'MISSED',id,{kickoff:old.payload.game.kickoff,reason:'RESERVATION_UNRESOLVED'},now);continue;}
    if(minutes<45){if(!first(next,'MISSED',id))ledgerEvent(next,'MISSED',id,{kickoff:game.kickoff,reason:at-45*60000<Date.parse(next.createdAt)?'POLICY_STARTED_AFTER_WINDOW':'WINDOW_ELAPSED'},now);continue;}
-   if(first(next,'MISSED',id)||minutes>90||game.final||game.scheduleStatus!=='SCHEDULED'||game.summaryPhase!=='PREGAME')continue;
+   if(!allowReservations||first(next,'MISSED',id)||minutes>90||game.final||game.scheduleStatus!=='SCHEDULED'||game.summaryPhase!=='PREGAME')continue;
    ledgerEvent(next,'RESERVED',id,{runKey,game,source:{url:receipt.sourceUrl,observedAt:receipt.observedAt,bodySha256:receipt.sourceBodySha256}},now);
   }
  }

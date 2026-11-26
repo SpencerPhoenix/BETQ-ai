@@ -5,7 +5,7 @@ import {GAME_CARD_ORIGIN} from './model-only-receipt.mjs';
 // Render Free can take 50+ seconds to wake. One bounded, odds-free health read
 // tolerates startup without retrying capture or changing any eligibility gate.
 export const MODEL_ONLY_HEALTH_TIMEOUT_MS=75000;
-export async function inspectModelOnlyHealth(artifact,{fetchImpl=fetch,clock=Date.now}={}){
+export async function inspectModelOnlyHealth(artifact,{fetchImpl=fetch,clock=Date.now,expectedRelease=null}={}){
  let httpStatus=null;
  const result=(compatible,reason)=>({compatible,reason,httpStatus});
  try{
@@ -16,7 +16,14 @@ export async function inspectModelOnlyHealth(artifact,{fetchImpl=fetch,clock=Dat
   if(health?.modelOnlyCaptureSchema!==2)return result(false,'HEALTH_CAPTURE_SCHEMA_UNSUPPORTED');
   const match=compareModelHealth(artifact,health,clock());
   const reasons=new Set(['MODEL_HEALTH_TIME_INVALID_OR_STALE','RUNTIME_MODEL_DELIVERY_UNAVAILABLE','RUNTIME_MODEL_ARTIFACT_MISMATCH']);
-  return result(match.compatible,match.compatible?null:reasons.has(match.reason)?match.reason:'EXPECTED_MODEL_UNAVAILABLE');
+  if(!match.compatible)return result(false,reasons.has(match.reason)?match.reason:'EXPECTED_MODEL_UNAVAILABLE');
+  if(expectedRelease){
+   if(health.modelOnlyRelease?.policy!==expectedRelease.policy)return result(false,'RUNTIME_RELEASE_IDENTITY_UNAVAILABLE');
+   if(health.modelOnlyRelease.commit!==expectedRelease.commit)return result(false,'RUNTIME_RELEASE_COMMIT_MISMATCH');
+   if(health.modelOnlyRelease.challengerCanonicalSha256!==expectedRelease.challengerCanonicalSha256)
+    return result(false,'RUNTIME_CHALLENGER_ARTIFACT_MISMATCH');
+  }
+  return result(true,null);
  }catch(error){
   return result(false,error?.name==='TimeoutError'||error?.name==='AbortError'?'HEALTH_TIMEOUT':error?.message==='BODY_TOO_LARGE'?'HEALTH_BODY_TOO_LARGE':error instanceof SyntaxError?'HEALTH_INVALID_JSON':'HEALTH_FETCH_OR_BODY_ERROR');
  }

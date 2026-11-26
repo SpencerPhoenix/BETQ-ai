@@ -6,6 +6,7 @@ import {createOfficialGameFeed,discoveryWeeks,gameScope} from '../src/on-demand-
 import {readBoundedText} from '../src/integrity.mjs';import {parseCsv,cleanGames} from '../src/nfl-elo.mjs';
 import {projectModelOnlyResponse} from '../src/model-only-projection.mjs';
 import {inspectModelOnlyHealth} from '../src/model-only-health.mjs';
+import {describeModelOnlyRelease} from '../src/model-delivery.mjs';
 import {GAME_CARD_ORIGIN} from '../src/model-only-receipt.mjs';
 import {emptyModelLedger,validateModelLedger,assertLedgerAppend,reserveModelGames,appendModelCapture,ledgerEvent,NFLVERSE_SCHEDULE,sameOfficialFinal} from '../src/scheduled-model-ledger.mjs';
 const [mode,path,...extra]=process.argv.slice(2),runKey=`${process.env.GITHUB_RUN_ID}.${process.env.GITHUB_RUN_ATTEMPT}`;
@@ -14,14 +15,20 @@ let original;try{const text=await readFile(path,'utf8');if(text.length>8000000)t
 async function saveCandidate(candidate){assertLedgerAppend(original,candidate);const text=JSON.stringify(candidate,null,2)+'\n';if(Buffer.byteLength(text)>8000000)throw Error('LEDGER_SIZE_LIMIT_REQUIRES_REVIEWED_ARCHIVAL');const temporary=resolve(path)+'.tmp';await writeFile(temporary,text,{mode:0o600});await rename(temporary,resolve(path));}
 let ledger=structuredClone(original);const clock=Date.now,root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const artifact=JSON.parse(await readFile(resolve(root,'data/nfl_elo.json'),'utf8')),challengerArtifact=JSON.parse(await readFile(resolve(root,'data/nfl_efficiency.json'),'utf8'));
+// Both workflow stages run the same verified checkout. Local offline replay can
+// still omit this setting; the production workflow refuses to start without it.
+const boundSha=process.env.BETQ_MODEL_ONLY_RELEASE_SHA;
+const expectedRelease=boundSha===undefined?null:describeModelOnlyRelease(boundSha,challengerArtifact);
+if(boundSha!==undefined&&!expectedRelease)throw Error('EXPECTED_RELEASE_IDENTITY_INVALID');
 if(mode==='reserve'){
  ledgerEvent(ledger,'RUN',null,{runKey,failedWeeks:[],phase:'STARTED'},clock());
  const scope=discoveryWeeks(clock()),weeks=new Set(scope.weeks);
  for(const e of ledger.events.filter(e=>e.type==='RESERVED'))if(clock()-Date.parse(e.payload.game.kickoff)<14*86400000&&gameScope(e.gameId).season===scope.season)weeks.add(gameScope(e.gameId).week);
  const feed=createOfficialGameFeed(),reads=await Promise.all([...weeks].slice(0,6).map(async week=>({week,...await feed.getWeek(scope.season,week)})));
  const receipts=reads.filter(r=>r.available).map(r=>r.receipt),failedWeeks=reads.filter(r=>!r.available).map(r=>r.week);
- const productionHealth=await inspectModelOnlyHealth(artifact,{clock}),productionCompatible=productionHealth.compatible;
- if(productionCompatible)ledger=reserveModelGames(ledger,receipts,{now:clock(),runKey,failedWeeks});
+ const productionHealth=await inspectModelOnlyHealth(artifact,{clock,expectedRelease}),productionCompatible=productionHealth.compatible;
+ // A release mismatch blocks new reservations, not coverage reporting on closed windows.
+ ledger=reserveModelGames(ledger,receipts,{now:clock(),runKey,failedWeeks,allowReservations:productionCompatible});
  const resultConflicts=[];let finalSourceAvailable=null;
  if(ledger.events.some(e=>e.type==='CUSTODY')){
   try{
@@ -51,9 +58,14 @@ if(mode==='reserve'){
    if(clock()>Date.parse(reserved.payload.game.kickoff)-45*60000)throw Error('WINDOW_CLOSED');
    const requestStartedAt=new Date().toISOString(),response=await fetch(GAME_CARD_ORIGIN+'/api/game-evaluation?gameId='+encodeURIComponent(reserved.gameId),{credentials:'omit',redirect:'error',headers:{Accept:'application/json'},signal:AbortSignal.timeout(20000)});
    if(!response.ok||!response.headers.get('content-type')?.includes('application/json'))throw Error('GAME_CARD_UNAVAILABLE');
+   if(expectedRelease&&(response.headers.get('x-betq-release-commit')!==expectedRelease.commit||
+      response.headers.get('x-betq-challenger-sha256')!==expectedRelease.challengerCanonicalSha256)){
+    await response.body?.cancel().catch(()=>{});
+    throw Error('GAME_CARD_RELEASE_CHANGED');
+   }
    const data=JSON.parse(await readBoundedText(response,100000));
    ledger=appendModelCapture(ledger,reserved.gameId,projectModelOnlyResponse(data),{artifact,challengerArtifact,requestStartedAt,receivedAt:new Date().toISOString(),runKey});
-  }catch{ledgerEvent(ledger,'CAPTURE_FAILED',reserved.gameId,{reservationId:reserved.id,reason:'SOURCE_MODEL_OR_WINDOW_UNAVAILABLE'},clock());}
+  }catch(error){ledgerEvent(ledger,'CAPTURE_FAILED',reserved.gameId,{reservationId:reserved.id,reason:error?.message==='GAME_CARD_RELEASE_CHANGED'?'GAME_CARD_RELEASE_CHANGED':'SOURCE_MODEL_OR_WINDOW_UNAVAILABLE'},clock());}
   await saveCandidate(ledger);
  }
 }

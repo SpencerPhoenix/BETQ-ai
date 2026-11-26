@@ -11,6 +11,18 @@ function canonical(v){
   if(v&&Object.getPrototypeOf(v)===Object.prototype)return '{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}';
   throw Error('MODEL_ARTIFACT_VALUE_INVALID');
 }
+// Hash the loaded challenger object, not its generated timestamp or a single prediction.
+export function describeModelOnlyRelease(commit,challenger){
+  if(typeof commit!=='string'||!/^[a-f0-9]{40}$/.test(commit)||!challenger||
+    challenger.schema!==1||challenger.version!=='nfl-efficiency-1'||
+    challenger.readyForResearch!==true||challenger.sourceManifest?.project!=='nflverse/nflverse-data')return null;
+  try{
+    const encoded=canonical(challenger);
+    if(Buffer.byteLength(encoded)>2000000)return null;
+    return {policy:'BETQ_MODEL_ONLY_RELEASE_V1',commit,
+      challengerCanonicalSha256:createHash('sha256').update(encoded).digest('hex')};
+  }catch{return null;}
+}
 export function describeModelDelivery(artifact,now=Date.now()){
   try{
     const built=canonicalTimestamp(artifact?.generatedAt),cutoff=Date.parse(artifact?.lastGameDate+'T00:00:00.000Z')+86400000;

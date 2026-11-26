@@ -17,13 +17,28 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 12
+    env:
+      BETQ_MODEL_ONLY_RELEASE_SHA: ${{ vars.BETQ_MODEL_ONLY_RELEASE_SHA }}
     steps:
+      - name: Require immutable release before checkout
+        shell: bash
+        run: |
+          if [[ ! "$BETQ_MODEL_ONLY_RELEASE_SHA" =~ ^[a-f0-9]{40}$ ]]; then
+            echo "::error::BETQ_MODEL_ONLY_RELEASE_SHA must pin one exact verified release"
+            exit 1
+          fi
       - name: Initialize runner-local ledger path
         run: echo "LEDGER_PATH=$RUNNER_TEMP/betq-model-only/ledger.json" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ env.BETQ_MODEL_ONLY_RELEASE_SHA }}
           persist-credentials: false
+      - name: Confirm bound checkout and release-control version
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$BETQ_MODEL_ONLY_RELEASE_SHA"
+          # An earlier release lacks fail-closed verification and is not admissible.
+          grep -Fq 'const expectedRelease=boundSha' scripts/run-model-only-cycle.mjs
       - uses: actions/setup-node@v4
         with:
           node-version: '26'

@@ -110,3 +110,18 @@ test('actual HTTP display-enriched response projects into unchanged strict V2 ca
  const record=freezeModelOnlyReceipt(projectModelOnlyResponse(body),options);
  assert.equal(record.response.baseline.homeWinProbability,expected);assert.equal(paid,0);
 });
+
+test('actual runtime publishes the same release in health and at the capture response',async t=>{
+ const nflEfficiency={schema:1,version:'nfl-efficiency-1',sourceManifest:{project:'nflverse/nflverse-data'},readyForResearch:true};
+ const server=http.createServer(createHandler({clock:()=>now,nflArtifact:artifact,nflEfficiency,
+   modelOnlyRuntimeCommit:'c'.repeat(40),officialGameFeed:{get:async()=>schedule()},source:{status:()=>({configured:false})}}));
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>server.close(resolve)));
+ const url=`http://127.0.0.1:${server.address().port}`;
+ const h=await (await fetch(url+'/api/health')).json();
+ const r=await fetch(url+'/api/game-evaluation?gameId='+gameId);
+ assert.equal(h.modelOnlyRelease.commit,'c'.repeat(40));
+ assert.equal(r.headers.get('x-betq-release-commit'),h.modelOnlyRelease.commit);
+ assert.match(h.modelOnlyRelease.challengerCanonicalSha256,/^[a-f0-9]{64}$/);
+ assert.equal(r.headers.get('x-betq-challenger-sha256'),h.modelOnlyRelease.challengerCanonicalSha256);
+ assert.equal((await r.json()).market.providerCreditsUsed,0);
+});
