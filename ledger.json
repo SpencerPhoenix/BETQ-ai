@@ -3982,6 +3982,86 @@
         "scopeLimited": false
       },
       "id": "b6196c1f1d007282c3475e8dee2add64691adcd3994cc282ecdd14c563491f0a"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-26T20:49:17.500Z",
+      "payload": {
+        "runKey": "45893767231.1",
+        "failedWeeks": [],
+        "phase": "STARTED"
+      },
+      "id": "c6f54bc9ed20903b9781c6ada8cb6724c4a5347478768eefecba73b7a244a232"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-26T20:49:18.184Z",
+      "payload": {
+        "runKey": "45893767231.1",
+        "failedWeeks": []
+      },
+      "id": "d6576d55fa8b200178935ed2909144b577576406a5e3e66e2df7d22377fe7bf4"
+    },
+    {
+      "type": "MISSED",
+      "gameId": "2026_11_CIN_WAS",
+      "at": "2026-11-26T20:49:18.184Z",
+      "payload": {
+        "kickoff": "2026-11-24T01:15:00.000Z",
+        "reason": "WINDOW_ELAPSED"
+      },
+      "id": "0d95bf27db6a08260b3c9faaf3ed2ef33be3981ec574cf1c6c6b550456ce6c68"
+    },
+    {
+      "type": "MISSED",
+      "gameId": "2026_12_GB_LA",
+      "at": "2026-11-26T20:49:18.184Z",
+      "payload": {
+        "kickoff": "2026-11-26T01:00:00.000Z",
+        "reason": "WINDOW_ELAPSED"
+      },
+      "id": "0bba0fd48ca4ca4bedea6079771c6038d71b46c0915a4938551c74118ef022b8"
+    },
+    {
+      "type": "MISSED",
+      "gameId": "2026_12_CHI_DET",
+      "at": "2026-11-26T20:49:18.184Z",
+      "payload": {
+        "kickoff": "2026-11-26T18:00:00.000Z",
+        "reason": "WINDOW_ELAPSED"
+      },
+      "id": "dc278fbe07f87d009dd388895d2ab975c2c0cb9d1ccf358561665e6651c3ee8b"
+    },
+    {
+      "type": "MISSED",
+      "gameId": "2026_12_PHI_DAL",
+      "at": "2026-11-26T20:49:18.184Z",
+      "payload": {
+        "kickoff": "2026-11-26T21:30:00.000Z",
+        "reason": "WINDOW_ELAPSED"
+      },
+      "id": "ed7c57cbbb21b29d6f130ca234029786ee39788f7b852e7b7255f0a92097f123"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-26T20:49:18.528Z",
+      "payload": {
+        "runKey": "45893767231.1",
+        "failedWeeks": [],
+        "productionCompatible": true,
+        "productionHealth": {
+          "compatible": true,
+          "reason": null,
+          "httpStatus": 200
+        },
+        "finalSourceAvailable": true,
+        "resultConflicts": [],
+        "scopeLimited": false
+      },
+      "id": "6100ff862a44db540560f21516d4326e98b65964876bcd61b88d93e7c180e5dc"
     }
   ]
 }
