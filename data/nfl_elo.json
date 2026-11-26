@@ -7,17 +7,17 @@
     "description": "NFL schedule release maintained by Lee Sharpe, published by nflverse",
     "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
     "license": "CC BY 4.0",
-    "extractedUTC": "2026-11-24T21:10:11.960Z"
+    "extractedUTC": "2026-11-26T20:10:08.508Z"
   },
-  "generatedAt": "2026-11-24T21:10:11.960Z",
-  "completedGamesSha256": "37a044d2248a759c170589c362d231919a69f697c5f79ea3351a732a8508dbbf",
+  "generatedAt": "2026-11-26T20:10:08.508Z",
+  "completedGamesSha256": "b712e9c6a6dae9322aede55da165a3003c62286ffcd897e5662f7604801fd9c5",
   "trainingInputSafety": {
     "policy": "NFL_SCHEDULE_DELAYED_RESULTS_V1",
-    "asOf": "2026-11-24T21:10:11.797Z",
+    "asOf": "2026-11-26T20:10:08.320Z",
     "minimumHoursAfterUtcGameDay": 12,
-    "acceptedGames": 7439,
+    "acceptedGames": 7440,
     "rejected": {
-      "recentOrFuture": 109,
+      "recentOrFuture": 108,
       "explicitNonfinal": 0,
       "venueUnknown": 0,
       "conflictingDuplicate": 0,
@@ -36,8 +36,8 @@
         "lastGameDate": "2026-11-15"
       },
       "LA": {
-        "games": 10,
-        "lastGameDate": "2026-11-15"
+        "games": 11,
+        "lastGameDate": "2026-11-25"
       },
       "SF": {
         "games": 10,
@@ -104,8 +104,8 @@
         "lastGameDate": "2026-11-22"
       },
       "GB": {
-        "games": 10,
-        "lastGameDate": "2026-11-15"
+        "games": 11,
+        "lastGameDate": "2026-11-25"
       },
       "LV": {
         "games": 11,
@@ -163,13 +163,13 @@
     ]
   },
   "finalityCoverage": null,
-  "lastGameDate": "2026-11-23",
+  "lastGameDate": "2026-11-25",
   "seasons": [
     1999,
     2026
   ],
-  "completedGames": 7439,
-  "completed2026": 163,
+  "completedGames": 7440,
+  "completed2026": 164,
   "trainingProtocol": {
     "parameterTuning": "2018–2022 games (prior games only)",
     "calibration": "2023–2024 games (after hyperparameter selection)",
@@ -230,12 +230,12 @@
     "DAL": 1456.684175664538,
     "DEN": 1666.1630687220652,
     "DET": 1623.8271492350239,
-    "GB": 1543.0683203715664,
+    "GB": 1526.5070495914213,
     "HOU": 1507.8229628164424,
     "IND": 1396.282532060102,
     "JAX": 1580.4184366314435,
     "KC": 1571.2318438312604,
-    "LA": 1578.4044818765733,
+    "LA": 1594.9657526567185,
     "LAC": 1401.217668153302,
     "LV": 1392.9610163926573,
     "MIA": 1365.7848329398596,
