@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';
 import {inspectModelOnlyHealth,modelOnlyRunStatus,MODEL_ONLY_HEALTH_TIMEOUT_MS} from '../src/model-only-health.mjs';
-import {describeModelDelivery} from '../src/model-delivery.mjs';
+import {describeModelDelivery,describeModelOnlyRelease} from '../src/model-delivery.mjs';
 const artifact=JSON.parse(await readFile(new URL('../data/nfl_elo.json',import.meta.url),'utf8'));
 const now=Date.parse(artifact.generatedAt)+1000,health=()=>({modelOnlyCaptureSchema:2,serverTime:new Date(now).toISOString(),nflModel:{deliveryIdentity:describeModelDelivery(artifact,now)}});
 const inspect=fetchImpl=>inspectModelOnlyHealth(artifact,{clock:()=>now,fetchImpl});
@@ -72,7 +72,27 @@ test('a 60-second cold start validates against the completion clock, not request
 });
 test('reservation and capture still evaluate current window after the health wait',async()=>{
  const text=await readFile(new URL('../scripts/run-model-only-cycle.mjs',import.meta.url),'utf8');
- assert.match(text,/if\(productionCompatible\)ledger=reserveModelGames\(ledger,receipts,\{now:clock\(\),runKey,failedWeeks\}\)/);
+ assert.match(text,/ledger=reserveModelGames\(ledger,receipts,\{now:clock\(\),runKey,failedWeeks,allowReservations:productionCompatible\}\)/);
  assert.match(text,/if\(clock\(\)>Date.parse\(reserved.payload.game.kickoff\)-45\*60000\)throw Error\('WINDOW_CLOSED'\)/);
  assert.match(text,/AbortSignal.timeout\(20000\)/);
+});
+
+test('same Elo at HTTP 200 cannot mask a different commit or challenger object',async()=>{
+ const challenger={schema:1,version:'nfl-efficiency-1',readyForResearch:true,sourceManifest:{project:'nflverse/nflverse-data'},features:{BUF:1}};
+ const commit='a'.repeat(40),expectedRelease=describeModelOnlyRelease(commit,challenger);
+ assert.equal(expectedRelease.commit,commit);
+ const run=release=>inspectModelOnlyHealth(artifact,{clock:()=>now,expectedRelease,
+  fetchImpl:async()=>Response.json({...health(),modelOnlyRelease:release})});
+ assert.equal((await run(expectedRelease)).compatible,true);
+ assert.equal((await run(null)).reason,'RUNTIME_RELEASE_IDENTITY_UNAVAILABLE');
+ assert.equal((await run({...expectedRelease,commit:'b'.repeat(40)})).reason,'RUNTIME_RELEASE_COMMIT_MISMATCH');
+ assert.equal((await run(describeModelOnlyRelease(commit,{...challenger,features:{BUF:2}}))).reason,'RUNTIME_CHALLENGER_ARTIFACT_MISMATCH');
+ assert.equal(describeModelOnlyRelease('main',challenger),null);
+});
+test('scheduled job checks out the configured immutable release, not moving main',async()=>{
+ const workflow=await readFile(new URL('../.github/workflows/model-only-scheduled.yml',import.meta.url),'utf8');
+ assert.match(workflow,/vars\.BETQ_MODEL_ONLY_RELEASE_SHA/);
+ assert.doesNotMatch(workflow,/ref:\s*main/);
+ const cycle=await readFile(new URL('../scripts/run-model-only-cycle.mjs',import.meta.url),'utf8');
+ assert.ok(cycle.indexOf("response.headers.get('x-betq-release-commit')")<cycle.indexOf('ledger=appendModelCapture'));
 });

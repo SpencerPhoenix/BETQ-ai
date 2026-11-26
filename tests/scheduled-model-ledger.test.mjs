@@ -63,3 +63,16 @@ test('cold-start health delay crossing reservation cutoff records a miss, never 
  assert.equal(l.events.filter(e=>e.type==='RESERVED').length,0);
  assert.equal(l.events.find(e=>e.type==='MISSED').payload.reason,'WINDOW_ELAPSED');
 });
+
+test('incompatible release records known closed windows, not in-window misses or reservations',()=>{
+ const source=receipt(),first=emptyModelLedger(now-3600000);
+ const blocked=at=>reserveModelGames(first,[{...source,observedAt:iso(at)}],{now:at,runKey:'1.1',allowReservations:false});
+ const close=Date.parse(source.games[0].kickoff)-45*60000;
+ assert.deepEqual(blocked(close).events.filter(e=>e.gameId===id),[]);
+ const late=blocked(close+1),miss=late.events.find(e=>e.gameId===id);
+ assert.equal(miss.type,'MISSED');
+ assert.equal(miss.payload.reason,'WINDOW_ELAPSED');
+ assert.equal(late.events.filter(e=>e.gameId===id).length,1);
+ assert.equal(reserveModelGames(late,[{...source,observedAt:iso(close+1)}],{now:close+1,runKey:'2.1'}).events.filter(e=>e.gameId===id).length,1);
+ assert.equal(reserveModelGames(first,[source],{now,runKey:'1.1'}).events.find(e=>e.gameId===id).type,'RESERVED');
+});

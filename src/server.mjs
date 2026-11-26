@@ -5,7 +5,7 @@ import {NFL_TEAMS} from './nfl-elo.mjs';
 import {createOfficialGameFeed,evaluateOnDemandGame,gameScope,discoverUpcomingGames} from './on-demand-game.mjs';
 import http from 'node:http';
 import {createHash,timingSafeEqual} from 'node:crypto';
-import {describeModelDelivery} from './model-delivery.mjs';
+import {describeModelDelivery,describeModelOnlyRelease} from './model-delivery.mjs';
 import {describeMarketCaptureContract,MARKET_CAPTURE_CONTRACT,MARKET_CAPTURE_CONTRACT_ID} from './evidence-compat.mjs';
 import {performance} from 'node:perf_hooks';
 import {collectionHealthFromJournal} from './collection-health.mjs';
@@ -178,6 +178,7 @@ export function createHandler({
   officialResultFeed = createOfficialResultFeed({clock,fetchImpl:null}),
   nflArtifact = NFL_ARTIFACT,
   nflEfficiency = NFL_EFFICIENCY,
+  modelOnlyRuntimeCommit = process.env.RENDER_GIT_COMMIT,
   nflInjuries = NFL_INJURIES,
   depthFeed = createDepthContextFeed({fetchImpl:null,clock}),
   officialInjuryArtifact = OFFICIAL_INJURY_REVIEWS,
@@ -226,6 +227,7 @@ export function createHandler({
     const identity=describeModelDelivery(nflArtifact,at);
     return identity.available?predictNflEvent({home_team:'Kansas City Chiefs',away_team:'Las Vegas Raiders'},nflArtifact,at):identity;
   };
+  const modelOnlyRelease=describeModelOnlyRelease(modelOnlyRuntimeCommit,nflEfficiency);
   const efficiencyReadiness=at=>!nflEfficiency?{available:false,reason:'CHALLENGER_ARTIFACT_NOT_AVAILABLE'}:challengerResearchForEvent({home_team:'Kansas City Chiefs',away_team:'Las Vegas Raiders',
     commence_time:new Date(at+86400000).toISOString()},0.5,nflEfficiency,at);
   const access = new Map();
@@ -278,6 +280,7 @@ export function createHandler({
           return reply(res, 200, {
           status: 'ok', app: 'BETQ.ai', version: '0.11.0', modelOnlyCaptureSchema:2,
           serverTime: new Date(healthNow).toISOString(), odds,
+          modelOnlyRelease,
           marketCaptureContract:describeMarketCaptureContract(),
           operatorRefresh:{configured:operatorConfigured,authenticationRequired:true,paidIntentRequired:true},
           captureReadiness:{ready:reason===null,reason,scope:'PROVIDER_REFRESH_PREREQUISITES_ONLY'},
@@ -325,7 +328,10 @@ export function createHandler({
           const schedule=await officialGameFeed.get(gameId);
           const evaluation=evaluateOnDemandGame(gameId,{schedule,artifact:nflArtifact,challengerArtifact:nflEfficiency,now:clock(),allowScheduledPreview:url.searchParams.get('preview')==='scheduled'});
           if(evaluation.available)evaluation.depthContext=depthContextForGame(await depthFeed.get(),gameId,evaluation.fixture,clock());
-          return reply(res,200,evaluation);
+          return reply(res,200,evaluation,modelOnlyRelease?{
+            'X-BETQ-Release-Commit':modelOnlyRelease.commit,
+            'X-BETQ-Challenger-Sha256':modelOnlyRelease.challengerCanonicalSha256
+          }:{});
         }
         if (url.pathname === '/api/model/nfl') {
           if (!nflArtifact) return reply(res, 200, {
