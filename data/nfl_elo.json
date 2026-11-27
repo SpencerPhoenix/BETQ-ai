@@ -7,17 +7,17 @@
     "description": "NFL schedule release maintained by Lee Sharpe, published by nflverse",
     "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
     "license": "CC BY 4.0",
-    "extractedUTC": "2026-11-26T20:10:08.508Z"
+    "extractedUTC": "2026-11-27T19:56:39.511Z"
   },
-  "generatedAt": "2026-11-26T20:10:08.508Z",
-  "completedGamesSha256": "b712e9c6a6dae9322aede55da165a3003c62286ffcd897e5662f7604801fd9c5",
+  "generatedAt": "2026-11-27T19:56:39.511Z",
+  "completedGamesSha256": "739025d3dabf4377f059e768d89f57b9a7caf716782cceafc3781e8894ed1d0f",
   "trainingInputSafety": {
     "policy": "NFL_SCHEDULE_DELAYED_RESULTS_V1",
-    "asOf": "2026-11-26T20:10:08.320Z",
+    "asOf": "2026-11-27T19:56:39.383Z",
     "minimumHoursAfterUtcGameDay": 12,
-    "acceptedGames": 7440,
+    "acceptedGames": 7443,
     "rejected": {
-      "recentOrFuture": 108,
+      "recentOrFuture": 105,
       "explicitNonfinal": 0,
       "venueUnknown": 0,
       "conflictingDuplicate": 0,
@@ -72,16 +72,16 @@
         "lastGameDate": "2026-11-19"
       },
       "BUF": {
-        "games": 10,
-        "lastGameDate": "2026-11-22"
+        "games": 11,
+        "lastGameDate": "2026-11-26"
       },
       "CAR": {
         "games": 10,
         "lastGameDate": "2026-11-22"
       },
       "CHI": {
-        "games": 10,
-        "lastGameDate": "2026-11-22"
+        "games": 11,
+        "lastGameDate": "2026-11-26"
       },
       "JAX": {
         "games": 10,
@@ -96,8 +96,8 @@
         "lastGameDate": "2026-11-22"
       },
       "DAL": {
-        "games": 11,
-        "lastGameDate": "2026-11-22"
+        "games": 12,
+        "lastGameDate": "2026-11-26"
       },
       "MIN": {
         "games": 10,
@@ -116,8 +116,8 @@
         "lastGameDate": "2026-11-22"
       },
       "DET": {
-        "games": 10,
-        "lastGameDate": "2026-11-22"
+        "games": 11,
+        "lastGameDate": "2026-11-26"
       },
       "NO": {
         "games": 10,
@@ -140,16 +140,16 @@
         "lastGameDate": "2026-11-22"
       },
       "PHI": {
-        "games": 10,
-        "lastGameDate": "2026-11-22"
+        "games": 11,
+        "lastGameDate": "2026-11-26"
       },
       "WAS": {
         "games": 10,
         "lastGameDate": "2026-11-23"
       },
       "KC": {
-        "games": 10,
-        "lastGameDate": "2026-11-22"
+        "games": 11,
+        "lastGameDate": "2026-11-26"
       },
       "DEN": {
         "games": 10,
@@ -163,13 +163,13 @@
     ]
   },
   "finalityCoverage": null,
-  "lastGameDate": "2026-11-25",
+  "lastGameDate": "2026-11-26",
   "seasons": [
     1999,
     2026
   ],
-  "completedGames": 7440,
-  "completed2026": 164,
+  "completedGames": 7443,
+  "completed2026": 167,
   "trainingProtocol": {
     "parameterTuning": "2018–2022 games (prior games only)",
     "calibration": "2023–2024 games (after hyperparameter selection)",
@@ -222,19 +222,19 @@
     "ARI": 1382.3206250650999,
     "ATL": 1430.2202815678281,
     "BAL": 1435.3873942433806,
-    "BUF": 1678.5554796159295,
+    "BUF": 1691.2864317402223,
     "CAR": 1475.8888806928746,
-    "CHI": 1620.2686728280103,
+    "CHI": 1641.9089383934431,
     "CIN": 1536.6149400222719,
     "CLE": 1480.4937686320802,
-    "DAL": 1456.684175664538,
+    "DAL": 1435.2628709511905,
     "DEN": 1666.1630687220652,
-    "DET": 1623.8271492350239,
+    "DET": 1602.186883669591,
     "GB": 1526.5070495914213,
     "HOU": 1507.8229628164424,
     "IND": 1396.282532060102,
     "JAX": 1580.4184366314435,
-    "KC": 1571.2318438312604,
+    "KC": 1558.5008917069676,
     "LA": 1594.9657526567185,
     "LAC": 1401.217668153302,
     "LV": 1392.9610163926573,
@@ -244,7 +244,7 @@
     "NO": 1406.0140604484068,
     "NYG": 1477.7274897182278,
     "NYJ": 1360.441470860287,
-    "PHI": 1456.9518927967697,
+    "PHI": 1478.3731975101173,
     "PIT": 1531.9696382394047,
     "SEA": 1618.355351104032,
     "SF": 1659.6576043183095,
