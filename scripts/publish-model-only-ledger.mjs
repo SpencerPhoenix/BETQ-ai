@@ -63,7 +63,7 @@ export async function prepareLedger(path,{api=githubClient()}={}){
  return sha;
 }
 export async function publishLedger(path,{api,mode,confirm}={}){
- if(!['reserve','final'].includes(mode)||typeof api!=='function')fail('PUBLICATION_MODE_INVALID');
+ if(!['reserve','final','settle'].includes(mode)||typeof api!=='function')fail('PUBLICATION_MODE_INVALID');
  const state=JSON.parse(await readFile(checkpointPath(path),'utf8'));
  if(state.repository!==REPOSITORY||state.branch!==BRANCH||!(state.sha===null||SHA.test(state.sha)))fail('PUBLICATION_CHECKPOINT_INVALID');
  let expected=state.sha;
@@ -71,7 +71,15 @@ export async function publishLedger(path,{api,mode,confirm}={}){
   const content=await readFile(path,'utf8');if(Buffer.byteLength(content)>LIMIT)fail('PUBLICATION_LEDGER_TOO_LARGE');const candidate=validateModelLedger(JSON.parse(content));
   const contentSha256=createHash('sha256').update(content).digest('hex');
   const current=await readHead(api);if(current!==expected)fail('PUBLICATION_BRANCH_MOVED');
-  if(current){const before=await readLedger(api,current);assertLedgerAppend(JSON.parse(before.data),candidate);if(before.data===content)return {sha:current,date:before.date,contentSha256};}
+  if(mode==='settle'&&(!current||state.custodyCommit!==current))fail('PUBLICATION_SETTLEMENT_BASE_MISSING');
+  if(current){
+   const before=await readLedger(api,current),previous=JSON.parse(before.data);
+   assertLedgerAppend(previous,candidate);
+   if(mode==='settle'&&(Object.keys(previous.artifacts).length!==Object.keys(candidate.artifacts).length||
+    candidate.events.slice(previous.events.length).some(e=>!['RUN','FINAL','RESULT_CONFLICT'].includes(e.type)||
+     (e.type==='RUN'&&e.payload.phase!=='SETTLEMENT'))))fail('PUBLICATION_SETTLEMENT_SCOPE_INVALID');
+   if(before.data===content)return {sha:current,date:before.date,contentSha256};
+  }
   const blob=(await api('/git/blobs',{method:'POST',body:{content,encoding:'utf-8'}})).data;
   if(!SHA.test(blob.sha))fail('PUBLICATION_BLOB_INVALID');
   const tree=(await api('/git/trees',{method:'POST',body:{tree:[{path:'ledger.json',mode:'100644',type:'blob',sha:blob.sha}]}})).data;
@@ -92,14 +100,16 @@ export async function publishLedger(path,{api,mode,confirm}={}){
   if(typeof confirm!=='function')fail('PUBLICATION_CONFIRMATION_MISSING');
   await confirm(path,first.sha,first.date);
   const second=await persist();
+  await writeFile(checkpointPath(path),JSON.stringify({...state,sha:second.sha,custodyCommit:second.sha}));
   return {captureCommit:first.sha,custodyCommit:second.sha,serverObservedAt:first.date};
  }
+ if(mode==='settle')return {settlementCommit:first.sha,serverObservedAt:first.date};
  await writeFile(checkpointPath(path),JSON.stringify({...state,sha:first.sha,reservationContentSha256:first.contentSha256,reservationServerDate:first.date}));
  return {reservationCommit:first.sha,serverObservedAt:first.date};
 }
 async function main(){
  assertWorkflowIdentity(process.env);
- const [mode,input,...extra]=process.argv.slice(2);if(extra.length||!input||!['prepare','reserve','final'].includes(mode))fail('PUBLICATION_ARGUMENTS_INVALID');
+ const [mode,input,...extra]=process.argv.slice(2);if(extra.length||!input||!['prepare','reserve','final','settle'].includes(mode))fail('PUBLICATION_ARGUMENTS_INVALID');
  const path=resolve(input);
  if(mode==='prepare')return console.log(JSON.stringify({prepared:true,priorCommit:await prepareLedger(path)}));
  if(!process.env.GITHUB_TOKEN)fail('PUBLICATION_TOKEN_MISSING');

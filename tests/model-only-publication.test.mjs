@@ -70,3 +70,22 @@ test('Publisher rejects invalid ledger and deletion of remote history before wri
  await assert.rejects(publishLedger(path,{api:m.api,mode:'reserve'}),/MODEL_LEDGER_HISTORY_CHANGED/);
  assert.equal(m.calls.filter(([,o])=>o.method==='POST').length,writes);
 });
+
+test('settlement can publish its phase after forecast publication, but not introduce a capture-stage run',async t=>{
+ const path=await fixture(t),m=mock();await prepareLedger(path,{api:m.api});
+ const ledger=appendRun(valid(),'123.1');await writeFile(path,JSON.stringify(ledger));
+ await assert.rejects(publishLedger(path,{api:m.api,mode:'settle'}),/PUBLICATION_SETTLEMENT_BASE_MISSING/);
+ await publishLedger(path,{api:m.api,mode:'reserve'});
+ await publishLedger(path,{api:m.api,mode:'final',confirm:async()=>{}});
+ const captureHead=m.head;
+ const at=Date.parse('2026-11-17T00:31:00.000Z');
+ ledgerEvent(ledger,'RUN',null,{runKey:'123.1',failedWeeks:[],phase:'SETTLEMENT'},at);
+ await writeFile(path,JSON.stringify(ledger));
+ const bad=appendRun(structuredClone(ledger),'123.2');await writeFile(path,JSON.stringify(bad));
+ const writes=m.calls.filter(([,o])=>o.method==='POST').length;
+ await assert.rejects(publishLedger(path,{api:m.api,mode:'settle'}),/PUBLICATION_SETTLEMENT_SCOPE_INVALID/);
+ assert.equal(m.calls.filter(([,o])=>o.method==='POST').length,writes);
+ await writeFile(path,JSON.stringify(ledger));
+ const settles=await publishLedger(path,{api:m.api,mode:'settle',confirm:()=>assert.fail('settlement never creates custody')});
+ assert.notEqual(settles.settlementCommit,captureHead);assert.equal(settles.settlementCommit,m.head);
+});

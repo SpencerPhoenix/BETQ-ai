@@ -8,5 +8,6 @@ if(!path||extra.length||!/^\d+\.\d+$/.test(runKey))throw Error('Expected LEDGER_
 const text=await readFile(path,'utf8');if(Buffer.byteLength(text)>8000000)throw Error('LEDGER_SIZE_LIMIT');
 const status=modelOnlyRunStatus(validateModelLedger(JSON.parse(text)),runKey);
 console.log(JSON.stringify(status));
-if(process.env.GITHUB_STEP_SUMMARY)await appendFile(process.env.GITHUB_STEP_SUMMARY,`## Model-only evidence run\n\n\`\`\`json\n${JSON.stringify(status,null,2)}\n\`\`\`\n\nA heartbeat is not a forecast. Capture counts do not establish predictive advantage.\n`);
-if(status.status==='DEGRADED'){console.error('::error::Model-only run degraded; published diagnostics preserved. See run summary.');process.exitCode=1;}
+if(process.env.GITHUB_STEP_SUMMARY)await appendFile(process.env.GITHUB_STEP_SUMMARY,`## Model-only evidence run\n\n- Forecast capture: **${status.capture.status}**\n- Postgame grading: **${status.grading.status}**\n\n\`\`\`json\n${JSON.stringify(status,null,2)}\n\`\`\`\n\nA heartbeat is not a forecast. Capture counts do not establish predictive advantage.\n`);
+if(status.grading.status==='DEGRADED')console.warn('::warning title=Postgame grading degraded::'+status.grading.reasons.join(', '));
+if(status.capture.status==='DEGRADED'){console.error('::error title=Forecast capture degraded::'+status.capture.reasons.join(', '));process.exitCode=1;}

@@ -255,7 +255,8 @@ test('Model-only schedule publishes only a reserved ledger, with isolated creden
  assert.match(text,/persist-credentials: false/);
  const steps=text.split(/^      - /m);
  const tokenSteps=steps.filter(s=>s.includes('GITHUB_TOKEN:'));
- assert.equal(tokenSteps.length,2);for(const step of tokenSteps)assert.match(step,/run: node scripts\/publish-model-only-ledger\.mjs (reserve|final)/);
+ assert.equal(tokenSteps.length,3);
+ assert.deepEqual(tokenSteps.map(step=>step.match(/run: node scripts\/publish-model-only-ledger\.mjs (reserve|final|settle)\b/)?.[1]),['reserve','final','settle']);
  assert.ok(text.indexOf('publish-model-only-ledger.mjs reserve')<text.indexOf('run-model-only-cycle.mjs capture'));
  assert.match(text,/if: always\(\)/);assert.match(text,/actions\/upload-artifact@v4/);
  const publisher=await readFile(new URL('../scripts/publish-model-only-ledger.mjs',import.meta.url),'utf8');

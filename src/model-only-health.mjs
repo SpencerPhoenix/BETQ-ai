@@ -33,13 +33,13 @@ export function modelOnlyRunStatus(ledger,runKey){
  const events=start<0?[]:ledger.events.slice(start),run=events.filter(e=>e.type==='RUN'&&e.payload.runKey===runKey).at(-1);
  const count=type=>events.filter(e=>e.type===type).length;
  const counts=Object.fromEntries(['RESERVED','CAPTURED','CUSTODY','FINAL','CAPTURE_FAILED','MISSED'].map(type=>[type,count(type)]));
- const reasons=[];
+ const reasons=[],gradingReasons=[];
  if(!run)reasons.push('RUN_RECORD_MISSING');
  else{
   if(run.payload.productionCompatible!==true)reasons.push('PRODUCTION_HEALTH_GATE_FAILED');
   if(run.payload.failedWeeks.length)reasons.push('OFFICIAL_WEEKS_UNAVAILABLE');
-  if(run.payload.finalSourceAvailable===false)reasons.push('FINAL_SOURCE_UNAVAILABLE');
-  if(run.payload.resultConflicts?.length)reasons.push('RESULT_CONFLICT');
+  if(run.payload.finalSourceAvailable===false)gradingReasons.push('FINAL_SOURCE_UNAVAILABLE');
+  if(run.payload.resultConflicts?.length)gradingReasons.push('RESULT_CONFLICT');
   if(run.payload.scopeLimited)reasons.push('DISCOVERY_SCOPE_LIMITED');
  }
  if(events.some(e=>e.type==='MISSED'&&['WINDOW_ELAPSED','RESERVATION_UNRESOLVED'].includes(e.payload?.reason)))reasons.push('CAPTURE_WINDOW_MISSED');
@@ -47,5 +47,8 @@ export function modelOnlyRunStatus(ledger,runKey){
  const reservations=events.filter(e=>e.type==='RESERVED'),captures=events.filter(e=>e.type==='CAPTURED');
  if(reservations.some(r=>!events.some(e=>e.gameId===r.gameId&&['CAPTURED','CAPTURE_FAILED'].includes(e.type)&&e.payload?.reservationId===r.id)))reasons.push('RESERVATION_UNRESOLVED');
  if(captures.some(c=>!events.some(e=>e.type==='CUSTODY'&&e.gameId===c.gameId&&e.payload?.captureId===c.id)))reasons.push('CAPTURE_CUSTODY_UNCONFIRMED');
- return {runKey,status:reasons.length?'DEGRADED':counts.CAPTURED?'CAPTURED_WITH_CUSTODY':counts.FINAL?'FINAL_RESULTS_RECORDED':'HEARTBEAT_NO_CAPTURE',reasons,counts,productionHealth:run?.payload.productionHealth??null,paidRequests:0};
+ const captureStatus=reasons.length?'DEGRADED':counts.CAPTURED?'CAPTURED_WITH_CUSTODY':'HEARTBEAT_NO_CAPTURE';
+ const gradingStatus=gradingReasons.length?'DEGRADED':counts.FINAL?'FINAL_RESULTS_RECORDED':run?.payload.finalSourceAvailable===true?'NO_NEW_FINALS':'NOT_DUE_OR_UNCHECKED';
+ return {runKey,status:[...reasons,...gradingReasons].length?'DEGRADED':counts.CAPTURED?captureStatus:counts.FINAL?'FINAL_RESULTS_RECORDED':captureStatus,
+  reasons:[...reasons,...gradingReasons],capture:{status:captureStatus,reasons},grading:{status:gradingStatus,reasons:gradingReasons},counts,productionHealth:run?.payload.productionHealth??null,paidRequests:0};
 }

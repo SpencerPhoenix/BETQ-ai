@@ -34,11 +34,15 @@ jobs:
           ref: ${{ env.BETQ_MODEL_ONLY_RELEASE_SHA }}
           persist-credentials: false
       - name: Confirm bound checkout and release-control version
+        id: release-control
         shell: bash
         run: |
           test "$(git rev-parse HEAD)" = "$BETQ_MODEL_ONLY_RELEASE_SHA"
           # An earlier release lacks fail-closed verification and is not admissible.
           grep -Fq 'const expectedRelease=boundSha' scripts/run-model-only-cycle.mjs
+          if grep -Fq "mode==='settle'" scripts/run-model-only-cycle.mjs; then
+            echo 'separate_settlement=true' >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/setup-node@v4
         with:
           node-version: '26'
@@ -57,7 +61,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/publish-model-only-ledger.mjs final "$LEDGER_PATH"
-      - name: Report capture versus degraded heartbeat after durable publication
+      - name: Check final scores only after durable forecast custody
+        if: steps.release-control.outputs.separate_settlement == 'true'
+        run: node scripts/run-model-only-cycle.mjs settle "$LEDGER_PATH"
+      - name: Publish settlement observations without modifying forecast custody
+        if: steps.release-control.outputs.separate_settlement == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/publish-model-only-ledger.mjs settle "$LEDGER_PATH"
+      - name: Report forecast capture and postgame grading separately
         run: node scripts/report-model-only-run.mjs "$LEDGER_PATH"
       - name: Preserve candidates and publication checkpoint for explicit operator recovery
         if: always()
