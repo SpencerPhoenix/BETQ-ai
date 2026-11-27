@@ -196,6 +196,25 @@ export function analyzeEvents(events, { sport, market = 'h2h', asOf = Date.now()
     opportunities.sort((a, b) =>
       (b.status === 'WATCH') - (a.status === 'WATCH')
       || (b.evPercent ?? -999) - (a.evPercent ?? -999));
+    // Observed full-game pair for the game card; separate from the best-price scanner.
+    // Select by recency, not by model output or price, and never combine bookmakers.
+    let spreadQuotePair = null;
+    if (!demo && sport === 'americanfootball_nfl' && market === 'spreads' &&
+        (!event.sport_key || event.sport_key === sport) && scheduledInstant(event.commence_time) > now &&
+        !['SCHEDULE_RECONCILIATION_REQUIRED','SCHEDULE_REVIEW_IDENTITY_MISMATCH'].includes(scheduleReview.status)) {
+      const candidates = [...groups.values()].flatMap(books => [...books.values()]).filter(q =>
+        /^[a-z0-9_-]{1,80}$/.test(q.id) && q.name.trim() && q.name.length <= 100 &&
+        q.sides.home.point === -q.sides.away.point &&
+        Object.values(q.sides).every(o => Math.abs(o.point) <= 1000 && Number.isInteger(o.point * 2) &&
+          Number.isInteger(o.price) && Math.abs(o.price) <= 1000000));
+      const pair = candidates.sort((a,b) => a.ageMs - b.ageMs || a.id.localeCompare(b.id) ||
+        a.contractId.localeCompare(b.contractId))[0];
+      if (pair) spreadQuotePair = ['home','away'].map(side => ({
+        eventId: String(event.id), market, period: 'full_game', contractId: pair.contractId, side,
+        point: pair.sides[side].point, americanOdds: pair.sides[side].price,
+        bookmaker: pair.name, bookmakerKey: pair.id, lastUpdated: pair.updatedAt
+      }));
+    }
     analyzed.push({
       id: String(event.id), sport: event.sport_key || sport,
       homeTeam: event.home_team, awayTeam: event.away_team,
@@ -204,6 +223,7 @@ export function analyzeEvents(events, { sport, market = 'h2h', asOf = Date.now()
       started: Date.parse(event.commence_time) <= now,
       bookmakerCount: new Set(event.bookmakers.filter(b=>b && typeof b==='object').map(b => b.key).filter(Boolean)).size,
       totalMarkets: groups.size, opportunities: opportunities.slice(0, 20),
+      ...(spreadQuotePair ? {spreadQuotePair} : {}),
       topSignal: opportunities.find(o => o.status === 'WATCH') || opportunities[0] || null,
       demo
     });
