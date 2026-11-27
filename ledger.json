@@ -5435,6 +5435,26 @@
         "scopeLimited": false
       },
       "id": "be7ac139c795ce72c1cea1a0e058f8a71c66aaf0f826ccaf8ef97ce84667d9bb"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-27T14:55:15.367Z",
+      "payload": {
+        "runKey": "46020135931.1",
+        "failedWeeks": [],
+        "productionCompatible": true,
+        "productionHealth": {
+          "compatible": true,
+          "reason": null,
+          "httpStatus": 200
+        },
+        "finalSourceAvailable": true,
+        "resultConflicts": [],
+        "scopeLimited": false,
+        "phase": "SETTLEMENT"
+      },
+      "id": "184862dda393b3704491ffd7800c400a67a0e2b908c3752bb3884848fb37f586"
     }
   ]
 }
