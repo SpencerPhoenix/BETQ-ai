@@ -5333,6 +5333,68 @@
         "scopeLimited": false
       },
       "id": "cb44aa14bc1310f7556b053ff2a4ad329266c404ac3c54d50ab7eb21d819f8ed"
+    },
+    {
+      "type": "FINAL",
+      "gameId": "2026_12_KC_BUF",
+      "at": "2026-11-27T04:58:02.196Z",
+      "payload": {
+        "officialGame": {
+          "gameId": "2026_12_KC_BUF",
+          "providerGameId": "abbf321b-4feb-11f1-abca-2c54536568a9",
+          "season": 2026,
+          "week": 12,
+          "home": "BUF",
+          "away": "KC",
+          "kickoff": "2026-11-27T01:20:00.000Z",
+          "gameDate": "2026-11-26",
+          "neutralSite": false,
+          "scheduleStatus": "SCHEDULED",
+          "summaryPhase": "FINAL",
+          "summaryQuarter": "END_OF_GAME",
+          "summaryState": "PRESENT",
+          "final": true,
+          "homeScore": 13,
+          "awayScore": 10
+        },
+        "officialSource": {
+          "url": "https://www.nfl.com/scores/2026/week-12",
+          "observedAt": "2026-11-27T04:58:01.723Z",
+          "bodySha256": "0b9d66a6018c5484d5ffe6002b6985b101eceea84ff010ed55410e3017dd2806"
+        },
+        "nflverse": {
+          "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+          "bodySha256": "4e5df8eb1a54c7aa7adc6c9d235832486f9c013241e1568aec0e3e960df637f2",
+          "receivedAt": "2026-11-27T04:58:02.094Z",
+          "gameId": "2026_12_KC_BUF",
+          "date": "2026-11-26",
+          "home": "BUF",
+          "away": "KC",
+          "homeScore": 13,
+          "awayScore": 10
+        }
+      },
+      "id": "c8875874f231b2adfac07fc79c3cfb8073e38fb4711eeb983e382096a5146d35"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-27T04:58:02.213Z",
+      "payload": {
+        "runKey": "45942903490.1",
+        "failedWeeks": [],
+        "productionCompatible": true,
+        "productionHealth": {
+          "compatible": true,
+          "reason": null,
+          "httpStatus": 200
+        },
+        "finalSourceAvailable": true,
+        "resultConflicts": [],
+        "scopeLimited": false,
+        "phase": "SETTLEMENT"
+      },
+      "id": "21cb19bd7485ed3d2201f508c2bebf444ac2eeb2623f04bd1d13bfd38e3a2a7e"
     }
   ]
 }
