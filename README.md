@@ -176,3 +176,28 @@ pages are not forcibly refreshed, and previously cached HTML from older secondar
 pages can persist for their former five-minute TTL on the initial upgrade.
 
 Offline release-cache regressions: `npm test -- tests/static-release.test.mjs tests/static-resource-delivery.test.mjs`.
+
+### Review descriptive forecast coverage and misses offline
+
+Run `node scripts/audit-descriptive-grades.mjs` for the bundled, retained NFL
+journal, or supply local copies with `--journal PATH --official-ledger PATH`.
+The official ledger is optional; without it only grades supported by the
+journal can be reported. An invalid supplied ledger fails closed. The CLI
+does not fetch sources, edit either input, or write a report file; redirect
+stdout to a new file if desired. Input SHA-256 hashes identify the exact copies.
+
+The report uses the **first frozen pregame baseline**, not the latest card.
+It counts games by week, calls out missing finals and held grades, and splits
+confidence-bin counts by result-evidence cohort. Miss rows show the original
+pick, probability, capture time/lead, and observed score, not why it lost.
+Lead-time bins are fixed at 24, 72, 120 and 144 hours and use unrounded elapsed
+time. Coverage is limited to supplied records; small, incomplete, or selected
+groups do not establish predictive performance or a causal relationship.
+Market evidence is counted separately, with no ROI, market edge or CLV claims.
+
+The optional-in-data paired timing diagnostic compares that unchanged first
+forecast (which must precede the window) to the latest eligible retained
+forecast captured 90–45 minutes
+before kickoff, for the same event and a gradeable result. It reports both
+paired and unpaired coverage. It does not fill in skipped games, replace
+the baseline, isolate the effect of timing, or promote any forecast rule.
