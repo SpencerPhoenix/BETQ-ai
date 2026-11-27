@@ -5697,6 +5697,19 @@
         "challengerKey": "3834a6cb85b5855b02e65a814c9f51b09def28f86b9139872a9240d1c82eb32c"
       },
       "id": "72125753bef36421f752227e22bedc327bd890635a99cb9e293e6f15b4ae9ce1"
+    },
+    {
+      "type": "CUSTODY",
+      "gameId": "2026_12_DEN_PIT",
+      "at": "2026-11-27T18:47:31.000Z",
+      "payload": {
+        "captureId": "72125753bef36421f752227e22bedc327bd890635a99cb9e293e6f15b4ae9ce1",
+        "remoteCommit": "bc01d1dce571097b062f37c5f671b34f590063d9",
+        "remoteObservedAt": "2026-11-27T18:47:31.000Z",
+        "assurance": "OPERATOR_OBSERVED_AUTHENTICATED_GITHUB_READBACK",
+        "timestampBasis": "GITHUB_DATE_UPPER_BOUND_1S"
+      },
+      "id": "b2fd26559e3406ed6746492bc178589de8696251efcdb12f673d78ef8f012938"
     }
   ]
 }
