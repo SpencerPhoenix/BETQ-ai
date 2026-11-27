@@ -62,7 +62,7 @@ with sync_playwright() as p:
   expect(page.locator('.pregame-comparison')).to_contain_text('Synthetic Practice QB')
   assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
   expect(page.locator('#result')).to_contain_text('Last-observed sportsbook snapshot')
-  expect(page.locator('#result')).to_contain_text('Spread analysis')
+  expect(page.locator('#spread-analysis')).to_contain_text('No fresh same-book spread pair')
   expect(page.locator('#result')).to_contain_text('Total analysis')
   expect(page.locator('.analysis-metric').filter(has_text='Projected score')).to_contain_text('Not supported')
   page.screenshot(path=str(OUT/f'analysis-{width}.png'),full_page=True)
@@ -76,19 +76,19 @@ with sync_playwright() as p:
  mode='cache'
  for width in [375,1440]:
   c=b.new_context(viewport={'width':width,'height':1000});c.route('**/*',route);page=c.new_page();page.clock.install(time=datetime(2026,11,16,20,0,tzinfo=timezone.utc));page.goto('http://betq.test/game-card')
-  expect(page.locator('#market-snapshot')).to_contain_text('Baltimore Ravens -3.5 · -110 · Fixture Book')
+  expect(page.locator('#spread-analysis')).to_contain_text('Baltimore Ravens -3.5 · -110 · Fixture Book')
   expect(page.locator('#market-snapshot')).to_contain_text('Over 45.5')
   expect(page.locator('#market-snapshot')).to_contain_text('2026-11-16T19:51:00.000Z')
-  expect(page.locator('#result')).to_contain_text('Not evaluated')
+  expect(page.locator('#spread-analysis')).to_contain_text('No BETQ cover forecast')
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
   page.screenshot(path=str(OUT/f'cached-lines-{width}.png'),full_page=True)
-  page.clock.fast_forward(61000);expect(page.locator('#market-snapshot')).to_contain_text('Cached lines expired');expect(page.locator('#market-snapshot')).not_to_contain_text('Fixture Book');expect(page.locator('#result')).to_be_visible();c.close()
+  page.clock.fast_forward(61000);expect(page.locator('#market-snapshot')).to_contain_text('Cached lines expired');expect(page.locator('#market-snapshot')).not_to_contain_text('Fixture Book');expect(page.locator('#spread-analysis')).to_contain_text('Cached spread expired');expect(page.locator('#spread-analysis')).not_to_contain_text('Fixture Book');expect(page.locator('#result')).to_be_visible();c.close()
  mode='near-cache'
  original_kickoff=r['fixture']['kickoff'];original_until=r['validUntil']
  r['fixture']['kickoff']='2026-11-16T20:02:00.000Z';r['validUntil']=r['fixture']['kickoff']
  for width in [375,1440]:
   c=b.new_context(viewport={'width':width,'height':1000});c.route('**/*',route);page=c.new_page();page.clock.install(time=datetime(2026,11,16,20,0,tzinfo=timezone.utc));page.goto('http://betq.test/game-card')
-  expect(page.locator('#market-snapshot')).to_contain_text('Baltimore Ravens -3.5')
+  expect(page.locator('#spread-analysis')).to_contain_text('Baltimore Ravens -3.5')
   expect(page.locator('#market-snapshot')).to_contain_text('Over 45.5')
   expect(page.locator('#market-snapshot')).to_contain_text('Baltimore Ravens to win')
   expect(page.locator('#market-snapshot')).to_contain_text('market may have moved, closed or been suspended')

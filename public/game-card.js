@@ -42,7 +42,7 @@ function selectCachedLines(slates,r,now=Date.now()){
  const eventIds=new Set();
  for(const market of ['h2h','spreads','totals']){
   const data=slates?.[market],received=instant(data?.receivedAt),kickoff=Date.parse(r.fixture.kickoff);
-  const group={market,quotes:[],reason:'No fresh matching quote in the shared cache.'};result.groups.push(group);
+  const group={market,quotes:[],reason:market==='spreads'?'No fresh same-book spread pair in the shared cache.':'No fresh matching quote in the shared cache.'};result.groups.push(group);
   if(!Number.isFinite(now)||!Number.isFinite(received)||received>now||now-received>=300000||
     !Number.isFinite(kickoff)||kickoff<=now||data?.source!=='THE_ODDS_API_V4'||data.demo!==false||data.cacheHit!==true||
     data.sport!=='americanfootball_nfl'||data.market!==market||!Array.isArray(data.events))continue;
@@ -50,9 +50,12 @@ function selectCachedLines(slates,r,now=Date.now()){
   if(matches.length!==1)continue;
   const e=matches[0];
   if(typeof e.id!=='string'||!e.id.trim()||data.events.filter(other=>other?.id===e.id).length!==1||e.demo!==false||e.started!==false||Date.parse(e.commenceTime)!==kickoff||
-    ['SCHEDULE_RECONCILIATION_REQUIRED','SCHEDULE_REVIEW_IDENTITY_MISMATCH'].includes(e.scheduleReview?.status)||!Array.isArray(e.opportunities)||!e.opportunities.length)continue;
-  const keys=new Set(),quotes=[];let expires=received+300000,invalid=false;
-  for(const q of e.opportunities){
+    ['SCHEDULE_RECONCILIATION_REQUIRED','SCHEDULE_REVIEW_IDENTITY_MISMATCH'].includes(e.scheduleReview?.status))continue;
+  const entries=market==='spreads'&&Object.hasOwn(e,'spreadQuotePair')?e.spreadQuotePair:e.opportunities;
+  if(!Array.isArray(entries)||!entries.length||entries.length>20||
+    (market==='spreads'&&Object.hasOwn(e,'spreadQuotePair')&&entries.length!==2))continue;
+  const keys=new Set();let quotes=[];let expires=received+300000,invalid=false;
+  for(const q of entries){
    const at=instant(q?.lastUpdated),point=q?.point;
    const pointValid=Number.isFinite(point)&&Math.abs(point)<=1000&&Number.isInteger(point*2);
    const contractValid=market==='h2h'?['home','away'].includes(q?.side)&&q.contractId==='h2h'&&point===null:
@@ -66,20 +69,48 @@ function selectCachedLines(slates,r,now=Date.now()){
    keys.add(key);expires=Math.min(expires,at+600000);
    const team=q.side==='home'?r.fixture.home:r.fixture.away;
    const label=market==='totals'?(q.side==='over'?'Over ':'Under ')+point:team+(market==='spreads'?' '+(point>0?'+':'')+point:' to win');
-   quotes.push({label,price:q.americanOdds,book:q.bookmaker,bookKey:q.bookmakerKey,quoteAt:q.lastUpdated,receivedAt:data.receivedAt});
+   quotes.push({label,price:q.americanOdds,book:q.bookmaker,bookKey:q.bookmakerKey,quoteAt:q.lastUpdated,receivedAt:data.receivedAt,side:q.side,point,contractId:q.contractId});
   }
   if(invalid||!quotes.length)continue;
-  eventIds.add(e.id);group.quotes=quotes;group.reason=null;
+  // Best prices on opposite sides can come from different books. Do not present them as one board.
+  eventIds.add(e.id);
+  if(market==='spreads'){
+   const byKey=new Map(quotes.map(q=>[q.contractId+'|'+q.side,q]));
+   quotes=quotes.filter(q=>{
+    const other=byKey.get(q.contractId+'|'+(q.side==='home'?'away':'home'));
+    return other&&q.point===-other.point&&q.bookKey===other.bookKey&&q.book===other.book&&q.quoteAt===other.quoteAt;
+   });
+   if(!quotes.length)continue;
+   expires=Math.min(received+300000,...quotes.map(q=>instant(q.quoteAt)+600000));
+  }
+  group.quotes=quotes;group.reason=null;
   result.expiresAt=Math.min(result.expiresAt,expires,kickoff,Date.parse(r.validUntil));
  }
  if(eventIds.size>1){for(const g of result.groups){g.quotes=[];g.reason='Provider game identity differs across cached markets.';}result.expiresAt=Infinity;}
  return result;
 }
+function renderSpreadStatus(root,group){
+ if(!root)return;
+ root.replaceChildren();
+ const h=document.createElement('h3');h.textContent='Spread analysis';root.append(h);
+ if(!group?.quotes.length){
+  paragraph(root,group?.reason||'Checking the shared cache for both sides at the same book and time.','availability');
+ }else{
+  paragraph(root,'Spread line found · last observed, not a live offer','availability');
+  for(const q of group.quotes){
+   paragraph(root,q.label+' · '+(q.price>0?'+':'')+q.price+' · '+q.book);
+   paragraph(root,'Observed quote '+q.quoteAt,'muted');
+  }
+ }
+ paragraph(root,'No BETQ cover forecast. The chance of winning outright is not the chance of covering.','muted');
+}
 function renderCachedLines(root,report){
+ renderSpreadStatus($('spread-analysis'),report.groups.find(g=>g.market==='spreads'));
  if(!root)return;root.replaceChildren();
  const h=document.createElement('h3');h.textContent='Last-observed sportsbook snapshot';root.append(h);
  for(const group of report.groups){
-  const label={h2h:'Moneyline',spreads:'Spread',totals:'Total'}[group.market];
+  if(group.market==='spreads')continue;
+  const label={h2h:'Moneyline',totals:'Total'}[group.market];
   const h4=document.createElement('h4');h4.textContent=label;root.append(h4);
   if(!group.quotes.length){paragraph(root,group.reason,'muted');continue;}
   for(const q of group.quotes){
@@ -116,14 +147,15 @@ function renderAnalysisCard(root,r){
  block('p','warning','Research estimate, not a validated betting recommendation.',summary);
  const grid=block('div','analysis-grid','');
  const market=section('Sportsbook snapshot',grid);market.id='market-snapshot';
- metric(market,'Spread','Not available');metric(market,'Total','Not available');metric(market,'Odds / bookmaker','Not available');
+ metric(market,'Total','Not available');metric(market,'Odds / bookmaker','Not available');
  block('p','muted','Checking existing shared cache only. No paid quote will be requested.',market);
  const model=section('BETQ model',grid);
  metric(model,r.fixture.away+' win',percent(away));metric(model,r.fixture.home+' win',percent(home));
  metric(model,'Fair spread / total','Not supported');metric(model,'Projected score','Not supported');
  block('p','muted','Win chance is not the chance of covering a spread.',model);
  const markets=block('div','analysis-grid','');
- for(const [name,reason] of [['Spread analysis','To choose against the spread, BETQ needs a current line and a tested scoring-margin model. The outright favorite may still fail to cover.'],['Total analysis','To choose over or under, BETQ needs a current total and a tested combined-score model. Winner probabilities do not provide either.']]){
+ const spread=block('section','analysis-panel','',markets);spread.id='spread-analysis';renderSpreadStatus(spread,null);
+ for(const [name,reason] of [['Total analysis','To choose over or under, BETQ needs a current total and a tested combined-score model. Winner probabilities do not provide either.']]){
   const card=section(name,markets);block('p','availability','Not evaluated',card);
   block('p','',reason,card);metric(card,'Pick / probability','Unavailable');metric(card,'Edge / stake','Not calculated');
  }
@@ -196,10 +228,10 @@ $('compare').addEventListener('click',()=>{
  const a=Number($('price').value);if(!Number.isFinite(a)||Math.abs(a)<100||Math.abs(a)>100000){$('comparison').textContent='Enter valid American odds of +100 or higher, or −100 or lower.';return;}
  const p=$('side').value==='home'?current.baseline.homeWinProbability:current.baseline.awayWinProbability;
  const decimal=a>0?1+a/100:1+100/-a,breakeven=1/decimal;
- $('comparison').textContent='User-entered price requires '+percent(breakeven)+' to break even. Unadjusted model: '+percent(p)+'. Arithmetic expected return: '+((p*decimal-1)*100).toFixed(1)+'%. Not a validated edge or recommended stake; quarterback/lineup effects remain unmodeled.';
+ $('comparison').textContent='User-entered moneyline price requires '+percent(breakeven)+' to break even. Unadjusted model: '+percent(p)+'. Arithmetic expected return: '+((p*decimal-1)*100).toFixed(1)+'%. Not a validated edge or recommended stake; quarterback/lineup effects remain unmodeled.';
 });
 setInterval(()=>{
- if(cachedLines&&(Date.now()>=cachedLines.expiresAt||Date.now()<cachedLines.checkedAt)){cachedLines=null;const root=$('market-snapshot');if(root){root.replaceChildren();paragraph(root,'Cached lines expired. Refresh the matchup to check the shared cache again.','warning');}}
+ if(cachedLines&&(Date.now()>=cachedLines.expiresAt||Date.now()<cachedLines.checkedAt)){cachedLines=null;renderSpreadStatus($('spread-analysis'),{quotes:[],reason:'Cached spread expired. Refresh the matchup to check again.'});const root=$('market-snapshot');if(root){root.replaceChildren();paragraph(root,'Cached lines expired. Refresh the matchup to check the shared cache again.','warning');}}
  for(const option of $('upcoming').options){const g=discoveredGames.get(option.value);if(g&&!fixtureFresh(g)){option.textContent=g.away+' at '+g.home+' · Schedule expired; select to recheck';}}
  if(contextExpires!==null&&Date.now()>=contextExpires){contextExpires=null;$('context').replaceChildren();paragraph($('context'),'Official context expired. Evaluate again to refresh.','warning');}if(current&&(!Number.isFinite(Date.parse(current.validUntil))||Date.now()>=Date.parse(current.validUntil))){current=null;$('status').textContent='This evaluation has expired. Refresh before using it.';$('result').hidden=true;$('quote').hidden=true;$('context').replaceChildren();paragraph($('context'),'Refresh required: the displayed evaluation/context is no longer current.','warning');}},1000);
 
