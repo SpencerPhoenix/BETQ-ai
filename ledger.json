@@ -5770,6 +5770,68 @@
         "scopeLimited": false
       },
       "id": "f77a4e413e134b2b2ad3474ba3e62c49e4de18d93b2a69a25218dbfcf53aabd2"
+    },
+    {
+      "type": "FINAL",
+      "gameId": "2026_12_DEN_PIT",
+      "at": "2026-11-27T23:23:06.143Z",
+      "payload": {
+        "officialGame": {
+          "gameId": "2026_12_DEN_PIT",
+          "providerGameId": "abbf352d-4feb-11f1-abca-2c54536568a9",
+          "season": 2026,
+          "week": 12,
+          "home": "PIT",
+          "away": "DEN",
+          "kickoff": "2026-11-27T20:00:00.000Z",
+          "gameDate": "2026-11-27",
+          "neutralSite": false,
+          "scheduleStatus": "SCHEDULED",
+          "summaryPhase": "FINAL",
+          "summaryQuarter": "END_OF_GAME",
+          "summaryState": "PRESENT",
+          "final": true,
+          "homeScore": 27,
+          "awayScore": 5
+        },
+        "officialSource": {
+          "url": "https://www.nfl.com/scores/2026/week-12",
+          "observedAt": "2026-11-27T23:23:05.671Z",
+          "bodySha256": "5141226c7f9eb3ac843dbceb78fa102455f75fd2a4beee3a74436b583895caac"
+        },
+        "nflverse": {
+          "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+          "bodySha256": "e0e29ae0ef5a515d3b24fdf1d21f8b17413a68d937cf0bcde7ff01a156092d36",
+          "receivedAt": "2026-11-27T23:23:06.027Z",
+          "gameId": "2026_12_DEN_PIT",
+          "date": "2026-11-27",
+          "home": "PIT",
+          "away": "DEN",
+          "homeScore": 27,
+          "awayScore": 5
+        }
+      },
+      "id": "3bce0e9f396809a804c2344005c060ff4503bec5721ccfb0bb8d0dc7ffb6764f"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-27T23:23:06.163Z",
+      "payload": {
+        "runKey": "46082139364.1",
+        "failedWeeks": [],
+        "productionCompatible": true,
+        "productionHealth": {
+          "compatible": true,
+          "reason": null,
+          "httpStatus": 200
+        },
+        "finalSourceAvailable": true,
+        "resultConflicts": [],
+        "scopeLimited": false,
+        "phase": "SETTLEMENT"
+      },
+      "id": "41de06679dccb459ba8f5781cc6919d3c441fe1d5fa27837166ace2ef9a8e197"
     }
   ]
 }
