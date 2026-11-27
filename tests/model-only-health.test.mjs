@@ -96,3 +96,38 @@ test('scheduled job checks out the configured immutable release, not moving main
  const cycle=await readFile(new URL('../scripts/run-model-only-cycle.mjs',import.meta.url),'utf8');
  assert.ok(cycle.indexOf("response.headers.get('x-betq-release-commit')")<cycle.indexOf('ledger=appendModelCapture'));
 });
+
+test('run #38 pattern can have durable capture and degraded grading simultaneously',()=>{
+ const result=report([run(),{type:'RESERVED',id:'r',gameId:'g'},
+  {type:'CAPTURED',id:'c',gameId:'g',payload:{reservationId:'r'}},{type:'CUSTODY',gameId:'g',payload:{captureId:'c'}},
+  run({phase:'SETTLEMENT',finalSourceAvailable:false})]);
+ assert.deepEqual(result.capture,{status:'CAPTURED_WITH_CUSTODY',reasons:[]});
+ assert.deepEqual(result.grading,{status:'DEGRADED',reasons:['FINAL_SOURCE_UNAVAILABLE']});
+ assert.equal(result.paidRequests,0);
+});
+
+test('settlement comes after readback and is not reachable from the reservation path',async()=>{
+ const workflow=await readFile(new URL('../.github/workflows/model-only-scheduled.yml',import.meta.url),'utf8');
+ assert.ok(workflow.indexOf('publish-model-only-ledger.mjs final')<workflow.indexOf('run-model-only-cycle.mjs settle'));
+ assert.ok(workflow.indexOf('run-model-only-cycle.mjs settle')<workflow.indexOf('publish-model-only-ledger.mjs settle'));
+ assert.match(workflow,/steps\.release-control\.outputs\.separate_settlement == 'true'/);
+ const cycle=await readFile(new URL('../scripts/run-model-only-cycle.mjs',import.meta.url),'utf8');
+ assert.ok(cycle.indexOf("}else if(mode==='settle'){")<cycle.indexOf('await fetch(NFLVERSE_SCHEDULE'));
+ assert.match(cycle,/if\(hasOfficialFinal\)\{/);
+});
+
+test('CLI reports postgame degradation as a distinct warning, not a failed capture',async()=>{
+ const {mkdtemp,writeFile,rm}=await import('node:fs/promises');const {tmpdir}=await import('node:os');const {join}=await import('node:path');
+ const {spawnSync}=await import('node:child_process');
+ const {emptyModelLedger,ledgerEvent}=await import('../src/scheduled-model-ledger.mjs');
+ const dir=await mkdtemp(join(tmpdir(),'model-health-graded-'));
+ try{
+  const ledger=emptyModelLedger(now),path=join(dir,'ledger.json');
+  ledgerEvent(ledger,'RUN',null,run({finalSourceAvailable:false}).payload,now);
+  await writeFile(path,JSON.stringify(ledger));
+  const result=spawnSync(process.execPath,[new URL('../scripts/report-model-only-run.mjs',import.meta.url).pathname,path],{env:{...process.env,GITHUB_RUN_ID:'1',GITHUB_RUN_ATTEMPT:'1'},encoding:'utf8'});
+  assert.equal(result.status,0,result.stderr);
+  assert.match(result.stderr,/::warning title=Postgame grading degraded::FINAL_SOURCE_UNAVAILABLE/);
+  assert.doesNotMatch(result.stderr,/::error/);
+ }finally{await rm(dir,{recursive:true,force:true});}
+});

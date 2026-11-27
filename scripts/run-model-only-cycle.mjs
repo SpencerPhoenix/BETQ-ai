@@ -10,7 +10,7 @@ import {describeModelOnlyRelease} from '../src/model-delivery.mjs';
 import {GAME_CARD_ORIGIN} from '../src/model-only-receipt.mjs';
 import {emptyModelLedger,validateModelLedger,assertLedgerAppend,reserveModelGames,appendModelCapture,ledgerEvent,NFLVERSE_SCHEDULE,sameOfficialFinal} from '../src/scheduled-model-ledger.mjs';
 const [mode,path,...extra]=process.argv.slice(2),runKey=`${process.env.GITHUB_RUN_ID}.${process.env.GITHUB_RUN_ATTEMPT}`;
-if(!['reserve','capture'].includes(mode)||!path||extra.length||!/^\d+\.\d+$/.test(runKey))throw Error('Expected reserve|capture NEW_LEDGER_PATH and workflow run identity');
+if(!['reserve','capture','settle'].includes(mode)||!path||extra.length||!/^\d+\.\d+$/.test(runKey))throw Error('Expected reserve|capture|settle LEDGER_PATH and workflow run identity');
 let original;try{const text=await readFile(path,'utf8');if(text.length>8000000)throw Error('LEDGER_SIZE_LIMIT');original=validateModelLedger(JSON.parse(text));}catch(e){if(e.code==='ENOENT'&&mode==='reserve')original=emptyModelLedger(Date.now());else throw e;}
 async function saveCandidate(candidate){assertLedgerAppend(original,candidate);const text=JSON.stringify(candidate,null,2)+'\n';if(Buffer.byteLength(text)>8000000)throw Error('LEDGER_SIZE_LIMIT_REQUIRES_REVIEWED_ARCHIVAL');const temporary=resolve(path)+'.tmp';await writeFile(temporary,text,{mode:0o600});await rename(temporary,resolve(path));}
 let ledger=structuredClone(original);const clock=Date.now,root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
@@ -29,17 +29,34 @@ if(mode==='reserve'){
  const productionHealth=await inspectModelOnlyHealth(artifact,{clock,expectedRelease}),productionCompatible=productionHealth.compatible;
  // A release mismatch blocks new reservations, not coverage reporting on closed windows.
  ledger=reserveModelGames(ledger,receipts,{now:clock(),runKey,failedWeeks,allowReservations:productionCompatible});
- const resultConflicts=[];let finalSourceAvailable=null;
- if(ledger.events.some(e=>e.type==='CUSTODY')){
+ ledgerEvent(ledger,'RUN',null,{runKey,failedWeeks,productionCompatible,productionHealth,finalSourceAvailable:null,resultConflicts:[],scopeLimited:weeks.size>6},clock());
+}else if(mode==='settle'){
+ const prior=ledger.events.filter(e=>e.type==='RUN'&&e.payload.runKey===runKey).at(-1)?.payload;
+ if(!prior||!Object.hasOwn(prior,'productionCompatible'))throw Error('SETTLEMENT_RUN_RECORD_REQUIRED');
+ const cutoff=clock(),{season}=discoveryWeeks(cutoff);
+ const custodied=new Set(ledger.events.filter(e=>e.type==='CUSTODY').map(e=>e.gameId));
+ const due=ledger.events.filter(e=>e.type==='RESERVED'&&custodied.has(e.gameId)&&e.payload.game.season===season&&
+  Date.parse(e.payload.game.kickoff)<cutoff&&cutoff-Date.parse(e.payload.game.kickoff)<14*86400000);
+ const eligibleIds=new Set(due.map(e=>e.gameId)),weeks=new Set(due.map(e=>e.payload.game.week));
+ const feed=createOfficialGameFeed(),reads=await Promise.all([...weeks].sort((a,b)=>b-a).slice(0,6).map(week=>feed.getWeek(season,week)));
+ const receipts=reads.filter(r=>r.available).map(r=>r.receipt);
+ const resultConflicts=[];let finalSourceAvailable=reads.some(r=>!r.available)||weeks.size>6?false:null;
+ const hasOfficialFinal=receipts.some(receipt=>receipt.games.some(game=>game.final&&eligibleIds.has(game.gameId)));
+ // Record an official withdrawal even if the second source is down or unnecessary.
+ for(const receipt of receipts)for(const game of receipt.games)
+  if(!game.final&&eligibleIds.has(game.gameId)&&ledger.events.some(e=>e.type==='FINAL'&&e.gameId===game.gameId))
+   resultConflicts.push({gameId:game.gameId,reason:'OFFICIAL_FINAL_STATE_WITHDRAWN'});
+ if(hasOfficialFinal){
   try{
    const response=await fetch(NFLVERSE_SCHEDULE,{credentials:'omit',signal:AbortSignal.timeout(15000)});if(!response.ok)throw Error('PUBLIC_SCHEDULE_UNAVAILABLE');
    const csv=await readBoundedText(response,12000000),receivedAt=new Date().toISOString(),hash=createHash('sha256').update(csv).digest('hex');
-   const games=cleanGames(parseCsv(csv),{today:receivedAt.slice(0,10)});finalSourceAvailable=true;
+   const rawGames=parseCsv(csv),games=cleanGames(rawGames,{today:receivedAt.slice(0,10)});
+   const rowCounts=new Map();for(const r of rawGames)if(eligibleIds.has(r.game_id))rowCounts.set(r.game_id,(rowCounts.get(r.game_id)??0)+1);
+   if(finalSourceAvailable!==false)finalSourceAvailable=true;
    for(const receipt of receipts)for(const game of receipt.games){
-    if(!ledger.events.some(e=>e.type==='CUSTODY'&&e.gameId===game.gameId))continue;
-    if(!game.final){if(ledger.events.some(e=>e.type==='FINAL'&&e.gameId===game.gameId))resultConflicts.push({gameId:game.gameId,reason:'OFFICIAL_FINAL_STATE_WITHDRAWN'});continue;}
+    if(!game.final||!eligibleIds.has(game.gameId))continue;
     const source=games.filter(g=>g.id===game.gameId),old=ledger.events.filter(e=>e.type==='FINAL'&&e.gameId===game.gameId).at(-1);
-    if(source.length!==1||source[0].home!==game.home||source[0].away!==game.away||source[0].homeScore!==game.homeScore||source[0].awayScore!==game.awayScore||source[0].date!==game.gameDate){resultConflicts.push({gameId:game.gameId,reason:'FINAL_SOURCES_DISAGREE_OR_MISSING'});continue;}
+    if(rowCounts.get(game.gameId)!==1||source.length!==1||source[0].home!==game.home||source[0].away!==game.away||source[0].homeScore!==game.homeScore||source[0].awayScore!==game.awayScore||source[0].date!==game.gameDate){resultConflicts.push({gameId:game.gameId,reason:'FINAL_SOURCES_DISAGREE_OR_MISSING'});continue;}
     const conflict=ledger.events.filter(e=>e.type==='RESULT_CONFLICT'&&e.gameId===game.gameId).at(-1);
     if(old&&(!conflict||ledger.events.indexOf(conflict)<ledger.events.indexOf(old))&&sameOfficialFinal(old.payload.officialGame,game))continue;
     const candidate=structuredClone(ledger);ledgerEvent(candidate,'FINAL',game.gameId,{officialGame:game,officialSource:{url:receipt.sourceUrl,observedAt:receipt.observedAt,bodySha256:receipt.sourceBodySha256},nflverse:{url:NFLVERSE_SCHEDULE,bodySha256:hash,receivedAt,gameId:game.gameId,date:source[0].date,home:source[0].home,away:source[0].away,homeScore:source[0].homeScore,awayScore:source[0].awayScore}},clock());
@@ -48,7 +65,7 @@ if(mode==='reserve'){
   }catch{finalSourceAvailable=false;}
  }
  for(const c of resultConflicts){const latest=ledger.events.filter(e=>e.gameId===c.gameId&&['RESULT_CONFLICT','FINAL'].includes(e.type)).at(-1);if(latest?.type!=='RESULT_CONFLICT'||latest.payload.reason!==c.reason)ledgerEvent(ledger,'RESULT_CONFLICT',c.gameId,{reason:c.reason},clock());}
- ledgerEvent(ledger,'RUN',null,{runKey,failedWeeks,productionCompatible,productionHealth,finalSourceAvailable,resultConflicts,scopeLimited:weeks.size>6},clock());
+ ledgerEvent(ledger,'RUN',null,{...prior,phase:'SETTLEMENT',finalSourceAvailable,resultConflicts},clock());
 }else{
  const proof=JSON.parse(await readFile(path+'.publication-checkpoint.json','utf8')),bytes=await readFile(path);
  if(!/^[a-f0-9]{40}$/.test(proof.sha||'')||proof.reservationContentSha256!==createHash('sha256').update(bytes).digest('hex')||!Number.isFinite(Date.parse(proof.reservationServerDate))||clock()-Date.parse(proof.reservationServerDate)>120000||Date.parse(proof.reservationServerDate)>clock()+1500)throw Error('RESERVATION_REMOTE_READBACK_REQUIRED');
