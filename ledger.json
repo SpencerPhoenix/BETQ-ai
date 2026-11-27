@@ -5220,6 +5220,19 @@
         "challengerKey": "3834a6cb85b5855b02e65a814c9f51b09def28f86b9139872a9240d1c82eb32c"
       },
       "id": "7c5d0012ab69a60355f3187f69c573698ba3b556cf4513f66918602819e1fa82"
+    },
+    {
+      "type": "CUSTODY",
+      "gameId": "2026_12_KC_BUF",
+      "at": "2026-11-27T00:07:04.000Z",
+      "payload": {
+        "captureId": "7c5d0012ab69a60355f3187f69c573698ba3b556cf4513f66918602819e1fa82",
+        "remoteCommit": "7f5e53bd2ef3d92a02c5010afe4234a17091a9d2",
+        "remoteObservedAt": "2026-11-27T00:07:04.000Z",
+        "assurance": "OPERATOR_OBSERVED_AUTHENTICATED_GITHUB_READBACK",
+        "timestampBasis": "GITHUB_DATE_UPPER_BOUND_1S"
+      },
+      "id": "0f6c37dfb00d7cdbfb1b023e8e0567a15564597ca4df9955e9ce9e09b500a967"
     }
   ]
 }
