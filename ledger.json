@@ -5730,6 +5730,46 @@
         "phase": "SETTLEMENT"
       },
       "id": "042502197a812538d8e8eaf98d0bcb4da9f44c34798c1ccd865822bab4ed2ea4"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-27T23:22:38.877Z",
+      "payload": {
+        "runKey": "46082139364.1",
+        "failedWeeks": [],
+        "phase": "STARTED"
+      },
+      "id": "bd53992a04e0b7378ff15008b98b8fef3dc1b28e111f332570c93314b831ca59"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-27T23:22:57.890Z",
+      "payload": {
+        "runKey": "46082139364.1",
+        "failedWeeks": []
+      },
+      "id": "9ed827680f52cb67d1c70b47ddb5a39a81f83f1f2f55c3bf25b921bfd7c42f7f"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-27T23:22:57.919Z",
+      "payload": {
+        "runKey": "46082139364.1",
+        "failedWeeks": [],
+        "productionCompatible": true,
+        "productionHealth": {
+          "compatible": true,
+          "reason": null,
+          "httpStatus": 200
+        },
+        "finalSourceAvailable": null,
+        "resultConflicts": [],
+        "scopeLimited": false
+      },
+      "id": "f77a4e413e134b2b2ad3474ba3e62c49e4de18d93b2a69a25218dbfcf53aabd2"
     }
   ]
 }
