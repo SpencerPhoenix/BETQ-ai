@@ -5710,6 +5710,26 @@
         "timestampBasis": "GITHUB_DATE_UPPER_BOUND_1S"
       },
       "id": "b2fd26559e3406ed6746492bc178589de8696251efcdb12f673d78ef8f012938"
+    },
+    {
+      "type": "RUN",
+      "gameId": null,
+      "at": "2026-11-27T18:47:34.949Z",
+      "payload": {
+        "runKey": "46051978314.1",
+        "failedWeeks": [],
+        "productionCompatible": true,
+        "productionHealth": {
+          "compatible": true,
+          "reason": null,
+          "httpStatus": 200
+        },
+        "finalSourceAvailable": true,
+        "resultConflicts": [],
+        "scopeLimited": false,
+        "phase": "SETTLEMENT"
+      },
+      "id": "042502197a812538d8e8eaf98d0bcb4da9f44c34798c1ccd865822bab4ed2ea4"
     }
   ]
 }
